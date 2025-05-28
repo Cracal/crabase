@@ -438,6 +438,7 @@ CraDeque *cra_deque_clone(CraDeque *deque, cra_deep_copy_val_fn deep_copy_val)
 
 static void cra_deque_ser_iter_init(void *obj, void *const it, size_t itbufsize)
 {
+    CRA_UNUSED_VALUE(itbufsize);
     assert(sizeof(CraDequeIter) <= itbufsize);
     CraDeque *list = (CraDeque *)obj;
     CraDequeIter _it = cra_deque_iter_init(list);

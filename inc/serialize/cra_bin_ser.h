@@ -31,8 +31,8 @@ CRA_API bool cra_bin_serialize_double(CraSerializer *ser, double val);
 CRA_API bool cra_bin_serialize_string_nz(CraSerializer *ser, const char *val, cra_ser_count_t length);
 static inline bool cra_bin_serialize_string(CraSerializer *ser, const char *val)
 {
-    size_t len = val == NULL ? 0 : strnlen(val, CRA_SER_COUNT_MAX);
-    if (len == CRA_SER_COUNT_MAX)
+    size_t len = val == NULL ? 0 : strlen(val);
+    if (len >= CRA_SER_COUNT_MAX)
     {
         ser->error = CRA_SER_ERROR_STRING_TOO_LONG;
         return false;

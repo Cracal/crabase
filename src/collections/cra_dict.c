@@ -358,6 +358,7 @@ fail:
 
 static void cra_dict_ser_iter_init(void *obj, void *const it, size_t itbufsize)
 {
+    CRA_UNUSED_VALUE(itbufsize);
     assert(sizeof(CraDictIter) <= itbufsize);
     CraDict *dict = (CraDict *)obj;
     CraDictIter _it = cra_dict_iter_init(dict);

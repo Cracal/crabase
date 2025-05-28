@@ -352,6 +352,7 @@ bool cra_alist_add_sort(CraAList *list, cra_compare_fn compare, void *val)
 
 static void cra_alist_ser_iter_init(void *obj, void *const it, size_t itbufsize)
 {
+    CRA_UNUSED_VALUE(itbufsize);
     assert(sizeof(CraAListIter) <= itbufsize);
     CraAList *list = (CraAList *)obj;
     CraAListIter _it = cra_alist_iter_init(list);

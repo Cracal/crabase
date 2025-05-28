@@ -468,6 +468,7 @@ CraLListNode *cra_llist_get_node(CraLList *list, size_t index)
 
 static void cra_llist_ser_iter_init(void *obj, void *const it, size_t itbufsize)
 {
+    CRA_UNUSED_VALUE(itbufsize);
     assert(sizeof(CraLListIter) <= itbufsize);
     CraLList *list = (CraLList *)obj;
     CraLListIter _it = cra_llist_iter_init(list);
