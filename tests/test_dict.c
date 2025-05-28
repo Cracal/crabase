@@ -44,9 +44,14 @@ void test_add(void)
 
     assert_always(!cra_dict_add(dict, &(int){3}, &(float){30.5f}));
     assert_always(cra_dict_put(dict, &(int){3}, &(float){300.5f}));
+    assert_always(cra_dict_get_ptr(dict, &(int){3}, (void **)&valptr) && cra_compare_float_p(valptr, &(float){300.5f}) == 0);
+    assert_always(cra_dict_put(dict, &(int){3}, &(float){3.5f}));
 
     for (CraDictIter it = cra_dict_iter_init(dict); cra_dict_iter_next(&it, (void **)&keyptr, (void **)&valptr);)
+    {
         printf("{k: %d, v: %f}\n", *keyptr, *valptr);
+        assert_always(cra_compare_float_p(valptr, &(float){*keyptr + .5f}) == 0);
+    }
 
     cra_dict_uninit(dict);
     cra_dealloc(dict);
@@ -71,6 +76,11 @@ void test_remove(void)
         assert_always(cra_dict_remove(dict, &i));
     }
     assert_always(dict->count == 20);
+    for (int i = 80; i < 100; i++)
+    {
+        assert_always(cra_dict_get(dict, &i, &val));
+        assert_always(cra_compare_float_p(&val, &(float){i + .5f}) == 0);
+    }
 
     printf("\n");
 
@@ -175,10 +185,12 @@ void test_clone(void)
         cra_dict_get_ptr(dict2, &i, (void **)&valasptr2);
         assert_always((*valasptr1)->i == (*valasptr2)->i);
         assert_always((*valasptr1)->f == (*valasptr2)->f);
+        assert_always(*valasptr1 != *valasptr2);
         cra_dict_get(dict, &i, &valas1);
         cra_dict_get(dict2, &i, &valas2);
         assert_always(valas1->i == valas2->i);
         assert_always(valas1->f == valas2->f);
+        assert_always(valas1 != valas2);
     }
 
     cra_dict_uninit(dict2);
@@ -200,6 +212,7 @@ void test_foreach(void)
     for (it = cra_dict_iter_init(dict); cra_dict_iter_next(&it, (void **)&keyptr, (void **)&valptr);)
     {
         printf("{%d: %d} ", *keyptr, *valptr);
+        assert_always(false);
     }
     printf("\n");
 
@@ -219,6 +232,7 @@ void test_foreach(void)
     for (it = cra_dict_iter_init(dict); cra_dict_iter_next(&it, (void **)&keyptr, (void **)&valptr);)
     {
         printf("{%d: %d} ", *keyptr, *valptr);
+        assert_always(false);
     }
     printf("\n");
 

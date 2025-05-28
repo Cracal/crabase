@@ -28,7 +28,7 @@ void test_new_delete(void)
 
 void test_insert_and_pop_at(void)
 {
-    int *valptr;
+    int *valptr, i;
     CraDeque *deque = cra_alloc(CraDeque);
     cra_deque_init0(int, deque, CRA_DEQUE_INFINITE, true, NULL);
 
@@ -36,7 +36,12 @@ void test_insert_and_pop_at(void)
     assert_always(cra_deque_insert(deque, 1, &(int){2}));
     assert_always(cra_deque_insert(deque, 1, &(int){1}));
 
-    for (int i = 0; i < 100; i++)
+    i = 0;
+    for (CraDequeIter it = cra_deque_iter_init(deque); cra_deque_iter_next(&it, (void **)(void **)&valptr); i++)
+        assert_always(i == *valptr);
+    printf("\n");
+
+    for (i = 0; i < 100; i++)
         assert_always(cra_deque_insert(deque, 1, &(int){i + 10}));
     cra_deque_push(deque, &(int){100});
     cra_deque_push_left(deque, &(int){-100});
@@ -45,11 +50,23 @@ void test_insert_and_pop_at(void)
     assert_always(cra_deque_pop_at(deque, 0, &val) && val == -100);
     assert_always(cra_deque_pop_at(deque, deque->count - 1, &val) && val == 100);
 
+    i = 0;
     for (CraDequeIter it = cra_deque_iter_init(deque); cra_deque_iter_next(&it, (void **)(void **)&valptr);)
+    {
         printf("%d  ", *valptr);
+        if (i == 1)
+            i = 109;
+        else if (i == 9)
+            i = 1;
+        assert_always(i == *valptr);
+        if (i < 3)
+            i++;
+        else
+            i--;
+    }
     printf("\n");
 
-    for (int i = 109; i >= 10; i--)
+    for (i = 109; i >= 10; i--)
         assert_always(cra_deque_pop_at(deque, 1, &val) && val == i);
 
     assert_always(cra_deque_pop_at(deque, 0, &val) && val == 0);
@@ -63,24 +80,32 @@ void test_insert_and_pop_at(void)
 
 void test_push(void)
 {
-    int *valptr;
+    int *valptr, i;
     CraDeque *deque = cra_alloc(CraDeque);
     cra_deque_init0(int, deque, CRA_DEQUE_INFINITE, true, _print_int);
 
-    for (int i = 0; i < 10; i++)
+    for (i = 0; i < 10; i++)
         assert_always(cra_deque_push(deque, &i));
 
-    for (CraDequeIter it = cra_deque_iter_init(deque); cra_deque_iter_next(&it, (void **)&valptr);)
+    i = 0;
+    for (CraDequeIter it = cra_deque_iter_init(deque); cra_deque_iter_next(&it, (void **)&valptr); i++)
+    {
         printf("%d  ", *valptr);
+        assert_always(i == *valptr);
+    }
     printf("\n");
 
     cra_deque_clear(deque);
 
-    for (int i = 0; i < 10; i++)
+    for (i = 0; i < 10; i++)
         assert_always(cra_deque_push_left(deque, &i));
 
-    for (CraDequeIter it = cra_deque_iter_init(deque); cra_deque_iter_next(&it, (void **)&valptr);)
+    i = 9;
+    for (CraDequeIter it = cra_deque_iter_init(deque); cra_deque_iter_next(&it, (void **)&valptr); i--)
+    {
         printf("%d  ", *valptr);
+        assert_always(i == *valptr);
+    }
     printf("\n");
 
     cra_deque_uninit(deque);
@@ -91,7 +116,7 @@ void test_push(void)
     deque = cra_alloc(CraDeque);
     cra_deque_init0(int, deque, 6, false, _print_int);
 
-    for (int i = 0; i < 20; i++)
+    for (i = 0; i < 20; i++)
         assert_always(cra_deque_push_left(deque, &i));
     assert_always(deque->count == 6);
 
@@ -101,7 +126,7 @@ void test_push(void)
 
     printf("\n");
 
-    for (int i = 0; i < 20; i++)
+    for (i = 0; i < 20; i++)
         assert_always(cra_deque_push(deque, &i));
     assert_always(deque->count == 6);
 
@@ -184,8 +209,12 @@ void test_reverse(void)
     cra_deque_reverse(deque);
 
     printf("after  reverse: ");
-    for (CraDequeIter it = cra_deque_iter_init(deque); cra_deque_iter_next(&it, (void **)&valptr);)
+    int i = 19;
+    for (CraDequeIter it = cra_deque_iter_init(deque); cra_deque_iter_next(&it, (void **)&valptr); i--)
+    {
         printf("%d  ", *valptr);
+        assert_always(i == *valptr);
+    }
     printf("\n");
 
     cra_deque_uninit(deque);
@@ -278,6 +307,7 @@ void test_clone(void)
         cra_deque_peek_ptr(que, (void **)&valasptr2);
         assert_always((*valasptr1)->i == (*valasptr2)->i);
         assert_always((*valasptr1)->f == (*valasptr2)->f);
+        assert_always(*valasptr1 != *valasptr2);
         cra_deque_pop_left(deque, NULL);
         cra_deque_pop_left(que, NULL);
     }
@@ -300,6 +330,7 @@ void test_foreach(void)
     for (it = cra_deque_iter_init(deque); cra_deque_iter_next(&it, (void **)&valptr);)
     {
         printf("%d ", *valptr);
+        assert_always(false);
     }
     printf("\n");
 
@@ -319,6 +350,7 @@ void test_foreach(void)
     for (it = cra_deque_iter_init(deque); cra_deque_iter_next(&it, (void **)&valptr);)
     {
         printf("%d ", *valptr);
+        assert_always(false);
     }
     printf("\n");
 
