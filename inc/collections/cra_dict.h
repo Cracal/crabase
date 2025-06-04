@@ -84,8 +84,8 @@ typedef struct
     cra_remove_val_fn remove_val_fn;
 } CraDictSerInitArgs;
 
-CRA_API const ICraTypeIter g_dict_ser_iter_i;
-CRA_API const ICraTypeInit g_dict_ser_init_i;
+CRA_API const CraTypeIter_i g_dict_ser_iter_i;
+CRA_API const CraTypeInit_i g_dict_ser_init_i;
 
 #define CRA_DICT_SER_ARGS(_name, _zero_memory, _key_size, _val_size, _hash_key_fn, _cmp_key_fn, _remove_key_fn, _remove_val_fn) \
     CraDictSerInitArgs _name = {_zero_memory, _key_size, _val_size, _hash_key_fn, _cmp_key_fn, _remove_key_fn, _remove_val_fn}

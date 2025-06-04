@@ -355,7 +355,7 @@ static bool cra_json_write_struct(CraSerializer *ser, void *val, const CraTypeMe
     return true;
 }
 
-static bool __cra_json_write_list(CraSerializer *ser, void *val, const CraTypeMeta *element_meta, const ICraTypeIter *iter_i, cra_ser_count_t count)
+static bool __cra_json_write_list(CraSerializer *ser, void *val, const CraTypeMeta *element_meta, const CraTypeIter_i *iter_i, cra_ser_count_t count)
 {
     unsigned char *buf;
 
@@ -425,7 +425,7 @@ static bool __cra_json_write_list(CraSerializer *ser, void *val, const CraTypeMe
     return true;
 }
 
-static bool cra_json_write_list(CraSerializer *ser, void *val, const CraTypeMeta *element_meta, const ICraTypeIter *iter_i)
+static bool cra_json_write_list(CraSerializer *ser, void *val, const CraTypeMeta *element_meta, const CraTypeIter_i *iter_i)
 {
     return __cra_json_write_list(ser, val, element_meta, iter_i, 0);
 }
@@ -435,7 +435,7 @@ static bool cra_json_write_array(CraSerializer *ser, void *val, cra_ser_count_t 
     return __cra_json_write_list(ser, val, element_meta, NULL, count);
 }
 
-static bool cra_json_write_dict(CraSerializer *ser, void *val, const CraTypeMeta *kv_meta, const ICraTypeIter *iter_i)
+static bool cra_json_write_dict(CraSerializer *ser, void *val, const CraTypeMeta *kv_meta, const CraTypeIter_i *iter_i)
 {
     unsigned char *buf;
 
@@ -1029,7 +1029,7 @@ static bool cra_json_read_once(CraSerializer *ser, void *val, size_t offset, con
 static bool cra_json_parse_all(CraSerializer *ser, void *retval, const CraTypeMeta *meta, bool auto_free_if_fail);
 
 static inline void *cra_json_alloc_init(CraSerializer *ser, void *retval, size_t valsize, bool is_ptr,
-                                        bool *auto_free_if_fail, const ICraTypeInit *init_i, void *args4init)
+                                        bool *auto_free_if_fail, const CraTypeInit_i *init_i, void *args4init)
 {
     void (*uninit_fn)(void *) = NULL;
     void (*dealloc_fn)(void *) = NULL;
@@ -1062,7 +1062,7 @@ static inline void *cra_json_alloc_init(CraSerializer *ser, void *retval, size_t
 }
 
 bool cra_json_read_struct(CraSerializer *ser, void *retval, size_t valsize, bool is_ptr, bool auto_free_if_fail,
-                          const CraTypeMeta *members_meta, const ICraTypeInit *init_i, void *args4init)
+                          const CraTypeMeta *members_meta, const CraTypeInit_i *init_i, void *args4init)
 {
     assert_always(members_meta->type != __CRA_TYPE_END_OF_META);
 
@@ -1088,7 +1088,7 @@ bool cra_json_read_struct(CraSerializer *ser, void *retval, size_t valsize, bool
 
 bool cra_json_read_list(CraSerializer *ser, void *retval, size_t valsize,
                         bool is_ptr, bool auto_free_if_fail, const CraTypeMeta *element_meta,
-                        const ICraTypeIter *iter_i, const ICraTypeInit *init_i, void *args4init)
+                        const CraTypeIter_i *iter_i, const CraTypeInit_i *init_i, void *args4init)
 {
     bool loop = true;
 
@@ -1224,7 +1224,7 @@ error_return:
 
 bool cra_json_read_dict(CraSerializer *ser, void *retval, size_t valsize,
                         bool is_ptr, bool auto_free_if_fail, const CraTypeMeta *kv_meta,
-                        const ICraTypeIter *iter_i, const ICraTypeInit *init_i, void *args4init)
+                        const CraTypeIter_i *iter_i, const CraTypeInit_i *init_i, void *args4init)
 {
     bool loop = true;
 
@@ -1505,7 +1505,7 @@ unsigned char *cra_json_stringify_struct0(unsigned char *buffer, size_t *buffer_
 
 void cra_json_parse_struct0(unsigned char *buffer, size_t buffer_length, void *retval,
                             size_t valsize, bool is_ptr, const CraTypeMeta *members_meta,
-                            const ICraTypeInit *init_i, void *args4init, CraSerError *error)
+                            const CraTypeInit_i *init_i, void *args4init, CraSerError *error)
 {
     CraSerializer ser;
     cra_json_parse_begin(&ser, buffer, buffer_length);
@@ -1514,7 +1514,7 @@ void cra_json_parse_struct0(unsigned char *buffer, size_t buffer_length, void *r
 }
 
 unsigned char *cra_json_stringify_list0(unsigned char *buffer, size_t *buffer_length, void *val,
-                                        const CraTypeMeta *element_meta, const ICraTypeIter *iter_i,
+                                        const CraTypeMeta *element_meta, const CraTypeIter_i *iter_i,
                                         bool format, CraSerError *error)
 {
     CraSerializer ser;
@@ -1526,7 +1526,7 @@ unsigned char *cra_json_stringify_list0(unsigned char *buffer, size_t *buffer_le
 
 void cra_json_parse_list0(unsigned char *buffer, size_t buffer_length, void *retval,
                           size_t valsize, bool is_ptr, const CraTypeMeta *element_meta,
-                          const ICraTypeIter *iter_i, const ICraTypeInit *init_i,
+                          const CraTypeIter_i *iter_i, const CraTypeInit_i *init_i,
                           void *args4init, CraSerError *error)
 {
     CraSerializer ser;
@@ -1557,7 +1557,7 @@ void cra_json_parse_array0(unsigned char *buffer, size_t buffer_length, void *re
 }
 
 unsigned char *cra_json_stringify_dict0(unsigned char *buffer, size_t *buffer_length, void *val,
-                                        const CraTypeMeta *kv_meta, const ICraTypeIter *iter_i,
+                                        const CraTypeMeta *kv_meta, const CraTypeIter_i *iter_i,
                                         bool format, CraSerError *error)
 {
     CraSerializer ser;
@@ -1568,8 +1568,8 @@ unsigned char *cra_json_stringify_dict0(unsigned char *buffer, size_t *buffer_le
 }
 
 void cra_json_parse_dict0(unsigned char *buffer, size_t buffer_length, void *retval, size_t valsize,
-                          bool is_ptr, const CraTypeMeta *kv_meta, const ICraTypeIter *iter_i,
-                          const ICraTypeInit *init_i, void *args4init, CraSerError *error)
+                          bool is_ptr, const CraTypeMeta *kv_meta, const CraTypeIter_i *iter_i,
+                          const CraTypeInit_i *init_i, void *args4init, CraSerError *error)
 {
     CraSerializer ser;
     cra_json_parse_begin(&ser, buffer, buffer_length);

@@ -490,13 +490,13 @@ static void cra_llist_ser_init(void *obj, void *args)
     cra_llist_init(list, params->element_size, params->zero_memory, params->remove_val_fn);
 }
 
-const ICraTypeIter g_llist_ser_iter_i = {
+const CraTypeIter_i g_llist_ser_iter_i = {
     .list.init = cra_llist_ser_iter_init,
     .list.next = (bool (*)(void *, void **))cra_llist_iter_next,
     .list.append = cra_llist_ser_iter_append,
 };
 
-const ICraTypeInit g_llist_ser_init_i = {
+const CraTypeInit_i g_llist_ser_init_i = {
     .alloc = NULL,
     .dealloc = NULL,
     .init = cra_llist_ser_init,

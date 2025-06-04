@@ -102,7 +102,7 @@ typedef union
         bool (*next)(void *it, void **retkeyptr, void **retvalptr);
         bool (*append)(void *obj, void *key, void *val);
     } dict;
-} ICraTypeIter;
+} CraTypeIter_i;
 
 #define CRA_SERI_ITER_SIZE 64
 
@@ -114,7 +114,7 @@ typedef struct
     // 必须
     void (*init)(void *obj, void *args);
     void (*uinit)(void *obj);
-} ICraTypeInit;
+} CraTypeInit_i;
 
 struct _CraTypeMeta
 {
@@ -126,8 +126,8 @@ struct _CraTypeMeta
     size_t noffset;
     const char *member;
     const CraTypeMeta *meta;
-    const ICraTypeIter *iter_i;
-    const ICraTypeInit *init_i;
+    const CraTypeIter_i *iter_i;
+    const CraTypeInit_i *init_i;
     void *args4init;
 };
 

@@ -739,7 +739,7 @@ void uninit_initx(void *obj)
     (void)++calledcnt;
 }
 
-const ICraTypeInit initx_i = {
+const CraTypeInit_i initx_i = {
     .alloc = alloc_inix,
     .dealloc = dealloc_inix,
     .init = init_initx,

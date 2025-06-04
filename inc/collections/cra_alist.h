@@ -80,8 +80,8 @@ typedef struct
     cra_remove_val_fn remove_val_fn;
 } CraAListSerInitArgs;
 
-CRA_API const ICraTypeIter g_alist_ser_iter_i;
-CRA_API const ICraTypeInit g_alist_ser_init_i;
+CRA_API const CraTypeIter_i g_alist_ser_iter_i;
+CRA_API const CraTypeInit_i g_alist_ser_init_i;
 
 #define CRA_ALIST_SER_ARGS(_name, _zero_memory, _element_size, _remove_val_fn) \
     CraAListSerInitArgs _name = {_zero_memory, _element_size, _remove_val_fn}

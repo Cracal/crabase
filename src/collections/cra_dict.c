@@ -376,13 +376,13 @@ static void cra_dict_ser_init(void *obj, void *args)
                   params->hash_key_fn, params->compare_key_fn, params->remove_key_fn, params->remove_val_fn);
 }
 
-const ICraTypeIter g_dict_ser_iter_i = {
+const CraTypeIter_i g_dict_ser_iter_i = {
     .dict.init = cra_dict_ser_iter_init,
     .dict.next = (bool (*)(void *, void **, void **))cra_dict_iter_next,
     .dict.append = (bool (*)(void *, void *, void *))cra_dict_add,
 };
 
-const ICraTypeInit g_dict_ser_init_i = {
+const CraTypeInit_i g_dict_ser_init_i = {
     .alloc = NULL,
     .dealloc = NULL,
     .init = cra_dict_ser_init,

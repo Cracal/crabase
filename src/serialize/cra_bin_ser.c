@@ -224,7 +224,7 @@ bool cra_bin_serialize_struct(CraSerializer *ser, void *val, const CraTypeMeta *
     return true;
 }
 
-static bool __cra_bin_serialize_list(CraSerializer *ser, void *val, const CraTypeMeta *element_meta, const ICraTypeIter *iter_i, cra_ser_count_t count)
+static bool __cra_bin_serialize_list(CraSerializer *ser, void *val, const CraTypeMeta *element_meta, const CraTypeIter_i *iter_i, cra_ser_count_t count)
 {
     unsigned char *buf;
 
@@ -281,7 +281,7 @@ static bool __cra_bin_serialize_list(CraSerializer *ser, void *val, const CraTyp
     return true;
 }
 
-bool cra_bin_serialize_list(CraSerializer *ser, void *val, const CraTypeMeta *element_meta, const ICraTypeIter *iter_i)
+bool cra_bin_serialize_list(CraSerializer *ser, void *val, const CraTypeMeta *element_meta, const CraTypeIter_i *iter_i)
 {
     return __cra_bin_serialize_list(ser, val, element_meta, iter_i, 0);
 }
@@ -291,7 +291,7 @@ bool cra_bin_serialize_array(CraSerializer *ser, void *val, cra_ser_count_t coun
     return __cra_bin_serialize_list(ser, val, element_meta, NULL, count);
 }
 
-bool cra_bin_serialize_dict(CraSerializer *ser, void *val, const CraTypeMeta *kv_meta, const ICraTypeIter *iter_i)
+bool cra_bin_serialize_dict(CraSerializer *ser, void *val, const CraTypeMeta *kv_meta, const CraTypeIter_i *iter_i)
 {
     unsigned char *buf;
 
@@ -667,7 +667,7 @@ static bool cra_bin_deserialize_once(CraSerializer *ser, void *val, size_t offse
 static bool cra_bin_deserialize_all(CraSerializer *ser, void *retval, const CraTypeMeta *meta, bool auto_free_if_fail);
 
 static inline void *cra_json_alloc_init(CraSerializer *ser, void *retval, size_t valsize, bool is_ptr,
-                                        bool *auto_free_if_fail, const ICraTypeInit *init_i, void *args4init)
+                                        bool *auto_free_if_fail, const CraTypeInit_i *init_i, void *args4init)
 {
     void (*uninit_fn)(void *) = NULL;
     void (*dealloc_fn)(void *) = NULL;
@@ -700,7 +700,7 @@ static inline void *cra_json_alloc_init(CraSerializer *ser, void *retval, size_t
 }
 
 bool cra_bin_deserialize_struct(CraSerializer *ser, void *retval, size_t valsize, bool is_ptr, bool auto_free_if_fail,
-                                const CraTypeMeta *members_meta, const ICraTypeInit *init_i, void *args4init)
+                                const CraTypeMeta *members_meta, const CraTypeInit_i *init_i, void *args4init)
 {
     unsigned char *buf;
 
@@ -737,7 +737,7 @@ bool cra_bin_deserialize_struct(CraSerializer *ser, void *retval, size_t valsize
 
 bool cra_bin_deserialize_list(CraSerializer *ser, void *retval, size_t valsize,
                               bool is_ptr, bool auto_free_if_fail, const CraTypeMeta *element_meta,
-                              const ICraTypeIter *iter_i, const ICraTypeInit *init_i, void *args4init)
+                              const CraTypeIter_i *iter_i, const CraTypeInit_i *init_i, void *args4init)
 {
     cra_ser_count_t count;
     unsigned char *buf;
@@ -863,7 +863,7 @@ error_return:
 
 bool cra_bin_deserialize_dict(CraSerializer *ser, void *retval, size_t valsize,
                               bool is_ptr, bool auto_free_if_fail, const CraTypeMeta *kv_meta,
-                              const ICraTypeIter *iter_i, const ICraTypeInit *init_i, void *args4init)
+                              const CraTypeIter_i *iter_i, const CraTypeInit_i *init_i, void *args4init)
 {
     cra_ser_count_t count;
     unsigned char *buf;
@@ -1049,7 +1049,7 @@ unsigned char *cra_bin_serialize_struct0(unsigned char *buffer, size_t *buffer_l
 
 void cra_bin_deserialize_struct0(unsigned char *buffer, size_t buffer_length, void *retval,
                                  size_t valsize, bool is_ptr, const CraTypeMeta *members_meta,
-                                 const ICraTypeInit *init_i, void *args4init, CraSerError *error)
+                                 const CraTypeInit_i *init_i, void *args4init, CraSerError *error)
 {
     CraSerializer ser;
     cra_bin_deserialize_begin(&ser, buffer, buffer_length);
@@ -1058,7 +1058,7 @@ void cra_bin_deserialize_struct0(unsigned char *buffer, size_t buffer_length, vo
 }
 
 unsigned char *cra_bin_serialize_list0(unsigned char *buffer, size_t *buffer_length, void *val,
-                                       const CraTypeMeta *element_meta, const ICraTypeIter *iter_i, CraSerError *error)
+                                       const CraTypeMeta *element_meta, const CraTypeIter_i *iter_i, CraSerError *error)
 {
     CraSerializer ser;
     cra_bin_serialize_begin(&ser, buffer, *buffer_length);
@@ -1068,7 +1068,7 @@ unsigned char *cra_bin_serialize_list0(unsigned char *buffer, size_t *buffer_len
 
 void cra_bin_deserialize_list0(unsigned char *buffer, size_t buffer_length, void *retval,
                                size_t valsize, bool is_ptr, const CraTypeMeta *element_meta,
-                               const ICraTypeIter *iter_i, const ICraTypeInit *init_i,
+                               const CraTypeIter_i *iter_i, const CraTypeInit_i *init_i,
                                void *args4init, CraSerError *error)
 {
     CraSerializer ser;
@@ -1096,7 +1096,7 @@ void cra_bin_deserialize_array0(unsigned char *buffer, size_t buffer_length, voi
 }
 
 unsigned char *cra_bin_serialize_dict0(unsigned char *buffer, size_t *buffer_length, void *val,
-                                       const CraTypeMeta *kv_meta, const ICraTypeIter *iter_i, CraSerError *error)
+                                       const CraTypeMeta *kv_meta, const CraTypeIter_i *iter_i, CraSerError *error)
 {
     CraSerializer ser;
     cra_bin_serialize_begin(&ser, buffer, *buffer_length);
@@ -1105,8 +1105,8 @@ unsigned char *cra_bin_serialize_dict0(unsigned char *buffer, size_t *buffer_len
 }
 
 void cra_bin_deserialize_dict0(unsigned char *buffer, size_t buffer_length, void *retval, size_t valsize,
-                               bool is_ptr, const CraTypeMeta *kv_meta, const ICraTypeIter *iter_i,
-                               const ICraTypeInit *init_i, void *args4init, CraSerError *error)
+                               bool is_ptr, const CraTypeMeta *kv_meta, const CraTypeIter_i *iter_i,
+                               const CraTypeInit_i *init_i, void *args4init, CraSerError *error)
 {
     CraSerializer ser;
     cra_bin_deserialize_begin(&ser, buffer, buffer_length);

@@ -75,8 +75,8 @@ typedef struct
     cra_remove_val_fn remove_val_fn;
 } CraDequeSerInitArgs;
 
-CRA_API const ICraTypeIter g_deque_ser_iter_i;
-CRA_API const ICraTypeInit g_deque_ser_init_i;
+CRA_API const CraTypeIter_i g_deque_ser_iter_i;
+CRA_API const CraTypeInit_i g_deque_ser_init_i;
 
 #define CRA_DEQUE_SER_ARGS(_name, _zero_memory, _que_max, _element_size, _remove_val_fn) \
     CraDequeSerInitArgs _name = {_zero_memory, _que_max, _element_size, _remove_val_fn}

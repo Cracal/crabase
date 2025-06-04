@@ -17,14 +17,14 @@ CRA_API unsigned char *cra_json_stringify_struct0(unsigned char *buffer, size_t 
                                                   CraSerError *error);
 CRA_API void cra_json_parse_struct0(unsigned char *buffer, size_t buffer_length, void *retval,
                                     size_t valsize, bool is_ptr, const CraTypeMeta *members_meta,
-                                    const ICraTypeInit *init_i, void *args4init, CraSerError *error);
+                                    const CraTypeInit_i *init_i, void *args4init, CraSerError *error);
 
 CRA_API unsigned char *cra_json_stringify_list0(unsigned char *buffer, size_t *buffer_length, void *val,
-                                                const CraTypeMeta *element_meta, const ICraTypeIter *iter_i,
+                                                const CraTypeMeta *element_meta, const CraTypeIter_i *iter_i,
                                                 bool format, CraSerError *error);
 CRA_API void cra_json_parse_list0(unsigned char *buffer, size_t buffer_length, void *retval,
                                   size_t valsize, bool is_ptr, const CraTypeMeta *element_meta,
-                                  const ICraTypeIter *iter_i, const ICraTypeInit *init_i,
+                                  const CraTypeIter_i *iter_i, const CraTypeInit_i *init_i,
                                   void *args4init, CraSerError *error);
 
 CRA_API unsigned char *cra_json_stringify_array0(unsigned char *buffer, size_t *buffer_length, void *val,
@@ -35,10 +35,10 @@ CRA_API void cra_json_parse_array0(unsigned char *buffer, size_t buffer_length, 
                                    CraSerError *error);
 
 CRA_API unsigned char *cra_json_stringify_dict0(unsigned char *buffer, size_t *buffer_length, void *val,
-                                                const CraTypeMeta *kv_meta, const ICraTypeIter *iter_i,
+                                                const CraTypeMeta *kv_meta, const CraTypeIter_i *iter_i,
                                                 bool format, CraSerError *error);
 CRA_API void cra_json_parse_dict0(unsigned char *buffer, size_t buffer_length, void *retval, size_t valsize,
-                                  bool is_ptr, const CraTypeMeta *kv_meta, const ICraTypeIter *iter_i,
-                                  const ICraTypeInit *init_i, void *args4init, CraSerError *error);
+                                  bool is_ptr, const CraTypeMeta *kv_meta, const CraTypeIter_i *iter_i,
+                                  const CraTypeInit_i *init_i, void *args4init, CraSerError *error);
 
 #endif

@@ -374,13 +374,13 @@ static void cra_alist_ser_init(void *obj, void *args)
     cra_alist_init(list, params->element_size, 8, params->zero_memory, params->remove_val_fn);
 }
 
-const ICraTypeIter g_alist_ser_iter_i = {
+const CraTypeIter_i g_alist_ser_iter_i = {
     .list.init = cra_alist_ser_iter_init,
     .list.next = (bool (*)(void *, void **))cra_alist_iter_next,
     .list.append = cra_alist_ser_iter_append,
 };
 
-const ICraTypeInit g_alist_ser_init_i = {
+const CraTypeInit_i g_alist_ser_init_i = {
     .alloc = NULL,
     .dealloc = NULL,
     .init = cra_alist_ser_init,
