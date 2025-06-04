@@ -168,7 +168,7 @@ void test_set(void)
     assert_always(list != NULL);
     cra_llist_init0(int, list, true, NULL);
 
-    for (int i = 0; i < 10; i++)
+    for (i = 0; i < 10; i++)
         assert_always(cra_llist_append(list, &i));
 
     assert_always(cra_llist_set(list, 3, &(int){300}));
@@ -225,7 +225,7 @@ void test_reverse(void)
     int *valptr, i;
     CraLList *list = cra_alloc(CraLList);
     cra_llist_init0(int, list, true, NULL);
-    for (int i = 0; i < 10; i++)
+    for (i = 0; i < 10; i++)
         cra_llist_append(list, &i);
 
     printf("before reverse: ");

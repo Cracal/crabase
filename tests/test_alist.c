@@ -168,7 +168,7 @@ void test_set(void)
     assert_always(list != NULL);
     cra_alist_init0(int, list, 10, true, NULL);
 
-    for (int i = 0; i < 10; i++)
+    for (i = 0; i < 10; i++)
         assert_always(cra_alist_append(list, &i));
 
     assert_always(cra_alist_set(list, 3, &(int){300}));

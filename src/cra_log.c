@@ -299,7 +299,7 @@ static CRA_THRD_FUNC(cra_log_thread)
     }
 
 #ifndef NDEBUG
-    printf("the log system created buf %u times in total.\n", s_create_buf_cnt);
+    printf("the log system has created buffers %u times in total.\n", s_create_buf_cnt);
 #endif
 
     if (buf1)

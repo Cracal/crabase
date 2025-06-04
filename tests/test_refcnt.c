@@ -31,12 +31,12 @@ void test_refcnt(void)
     CRA_REFCNT(int)
     ri;
     ri.o = 100;
-    cra_refcnt_init(&ri, false, uninit_int100);
+    cra_refcnt_init(&ri, false, false, uninit_int100);
     assert_always(ri.rc.cnt == 1);
     assert_always(cra_refcnt_unref(&ri));
     assert_always(ri.rc.cnt == 0);
 
-    cra_refcnt_init(&ri, false, uninit_int100);
+    cra_refcnt_init(&ri, false, false, uninit_int100);
     assert_always(ri.rc.cnt == 1);
     cra_refcnt_ref(&ri);
     assert_always(ri.rc.cnt == 2);
@@ -50,7 +50,7 @@ void test_refcnt(void)
     assert_always(ri.rc.cnt == 0);
 
     StruRc *rs = cra_alloc(StruRc);
-    cra_refcnt_init(rs, true, uninit_stru);
+    cra_refcnt_init(rs, true, false, uninit_stru);
     rs->o.i = 200;
     rs->o.f = 1.5f;
 
@@ -67,14 +67,14 @@ void test_refcnt_ptr(void)
 {
     CRA_REFCNT_PTR(int)(ri);
     int i = 100;
-    cra_refcnt_init_ptr(&ri, &i, false, false, uninit_int100);
+    cra_refcnt_init_ptr(&ri, &i, false, false, false, uninit_int100);
     assert_always(ri.rc.cnt == 1);
     assert_always(cra_refcnt_unref(&ri));
     assert_always(ri.rc.cnt == 0);
 
     int *pi = cra_alloc(int);
     *pi = 100;
-    cra_refcnt_init_ptr(&ri, pi, true, false, uninit_int100);
+    cra_refcnt_init_ptr(&ri, pi, true, false, false, uninit_int100);
     assert_always(ri.rc.cnt == 1);
     cra_refcnt_ref(&ri);
     assert_always(ri.rc.cnt == 2);
@@ -89,7 +89,7 @@ void test_refcnt_ptr(void)
 
     StruRcPtr rs;
     Stru s = {.i = 100, .f = 2.5f};
-    cra_refcnt_init_ptr(&rs, &s, false, false, uninit_stru);
+    cra_refcnt_init_ptr(&rs, &s, false, false, false, uninit_stru);
 
     cra_refcnt_ref(&rs);
     assert_always(rs.rc.cnt == 2);
@@ -104,7 +104,7 @@ void test_refcnt_ptr(void)
     Stru *ps = cra_alloc(Stru);
     ps->i = 200;
     ps->f = 3.5f;
-    cra_refcnt_init_ptr(&rs, ps, true, false, uninit_stru);
+    cra_refcnt_init_ptr(&rs, ps, true, false, false, uninit_stru);
 
     cra_refcnt_ref(&rs);
     assert_always(rs.rc.cnt == 2);
@@ -119,7 +119,7 @@ void test_refcnt_ptr(void)
     StruRcPtr *prs = cra_alloc(StruRcPtr);
     s.i = 300;
     s.f = 4.5f;
-    cra_refcnt_init_ptr(prs, &s, false, true, uninit_stru);
+    cra_refcnt_init_ptr(prs, &s, false, true, false, uninit_stru);
 
     cra_refcnt_ref(prs);
     assert_always(prs->rc.cnt == 2);
@@ -135,7 +135,7 @@ void test_refcnt_ptr(void)
     ps = cra_alloc(Stru);
     ps->i = 400;
     ps->f = 5.5f;
-    cra_refcnt_init_ptr(prs, ps, true, true, uninit_stru);
+    cra_refcnt_init_ptr(prs, ps, true, true, false, uninit_stru);
 
     cra_refcnt_ref(prs);
     assert_always(prs->rc.cnt == 2);
@@ -159,7 +159,7 @@ void test_multithread(void)
     StruRc *rs = cra_alloc(StruRc);
     rs->o.i = 1000;
     rs->o.f = 1000.5f;
-    cra_refcnt_init(rs, true, uninit_stru);
+    cra_refcnt_init(rs, true, false, uninit_stru);
 
     cra_thrd_t th;
     cra_refcnt_ref(rs);
@@ -171,6 +171,26 @@ void test_multithread(void)
     cra_thrd_join(th);
 }
 
+static void uninit_stru_rc(StruRc *rc)
+{
+    Stru *s = &rc->o;
+    cra_log_info("uninit Stru{i: %d, f: %f} refcnt: %u", s->i, s->f, rc->rc.cnt);
+}
+
+void test_refcnt_rc_head(void)
+{
+    StruRc *s = cra_alloc(StruRc);
+    s->o.f = 4.8f;
+    s->o.i = 1000;
+    cra_refcnt_init(s, true, true, (cra_uninit_fn)uninit_stru_rc);
+
+    cra_refcnt_ref(s);
+    assert_always(s->rc.cnt == 2);
+
+    cra_refcnt_unref0(s);
+    cra_refcnt_unref0(s);
+}
+
 int main(void)
 {
     cra_log_startup(CRA_LOG_LEVEL_TRACE, false, true);
@@ -178,6 +198,7 @@ int main(void)
     test_refcnt();
     test_refcnt_ptr();
     test_multithread();
+    test_refcnt_rc_head();
 
     cra_log_cleanup();
 
