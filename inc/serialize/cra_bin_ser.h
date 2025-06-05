@@ -13,7 +13,7 @@
 #include "cra_serialize.h"
 
 CRA_API void cra_bin_serialize_begin(CraSerializer *ser, unsigned char *buffer, size_t buffer_length);
-CRA_API unsigned char *cra_bin_serialize_end(CraSerializer *ser, size_t *buffer_length, CraSerError *error);
+CRA_API unsigned char *cra_bin_serialize_end(CraSerializer *ser, size_t *buffer_length, CraSerError_e *error);
 
 CRA_API bool cra_bin_serialize_bool(CraSerializer *ser, bool val);
 
@@ -50,7 +50,7 @@ CRA_API bool cra_bin_serialize_dict(CraSerializer *ser, void *val, const CraType
 // ------
 
 CRA_API void cra_bin_deserialize_begin(CraSerializer *ser, unsigned char *buffer, size_t buffer_length);
-CRA_API void cra_bin_deserialize_end(CraSerializer *ser, CraSerError *error);
+CRA_API void cra_bin_deserialize_end(CraSerializer *ser, CraSerError_e *error);
 
 CRA_API bool cra_bin_deserialize_bool(CraSerializer *ser, bool *retval);
 
@@ -125,32 +125,32 @@ CRA_API bool cra_bin_deserialize_dict(CraSerializer *ser, void *retval, size_t v
 //   --------------------------------
 
 CRA_API unsigned char *cra_bin_serialize_struct0(unsigned char *buffer, size_t *buffer_length, void *val,
-                                                 const CraTypeMeta *members_meta, CraSerError *error);
+                                                 const CraTypeMeta *members_meta, CraSerError_e *error);
 CRA_API void cra_bin_deserialize_struct0(unsigned char *buffer, size_t buffer_length, void *retval,
                                          size_t valsize, bool is_ptr, const CraTypeMeta *members_meta,
-                                         const CraTypeInit_i *init_i, void *args4init, CraSerError *error);
+                                         const CraTypeInit_i *init_i, void *args4init, CraSerError_e *error);
 
 CRA_API unsigned char *cra_bin_serialize_list0(unsigned char *buffer, size_t *buffer_length, void *val,
                                                const CraTypeMeta *element_meta, const CraTypeIter_i *iter_i,
-                                               CraSerError *error);
+                                               CraSerError_e *error);
 CRA_API void cra_bin_deserialize_list0(unsigned char *buffer, size_t buffer_length, void *retval,
                                        size_t valsize, bool is_ptr, const CraTypeMeta *element_meta,
                                        const CraTypeIter_i *iter_i, const CraTypeInit_i *init_i,
-                                       void *args4init, CraSerError *error);
+                                       void *args4init, CraSerError_e *error);
 
 CRA_API unsigned char *cra_bin_serialize_array0(unsigned char *buffer, size_t *buffer_length, void *val,
                                                 cra_ser_count_t count, const CraTypeMeta *element_meta,
-                                                CraSerError *error);
+                                                CraSerError_e *error);
 CRA_API void cra_bin_deserialize_array0(unsigned char *buffer, size_t buffer_length, void *retval, size_t valsize,
                                         bool is_ptr, cra_ser_count_t *countptr, const CraTypeMeta *element_meta,
-                                        CraSerError *error);
+                                        CraSerError_e *error);
 
 CRA_API unsigned char *cra_bin_serialize_dict0(unsigned char *buffer, size_t *buffer_length, void *val,
                                                const CraTypeMeta *kv_meta, const CraTypeIter_i *iter_i,
-                                               CraSerError *error);
+                                               CraSerError_e *error);
 CRA_API void cra_bin_deserialize_dict0(unsigned char *buffer, size_t buffer_length, void *retval, size_t valsize,
                                        bool is_ptr, const CraTypeMeta *kv_meta, const CraTypeIter_i *iter_i,
-                                       const CraTypeInit_i *init_i, void *args4init, CraSerError *error);
+                                       const CraTypeInit_i *init_i, void *args4init, CraSerError_e *error);
 
 CRA_API void cra_bin_serialize_print(const unsigned char *buffer, size_t buffer_length);
 

@@ -30,7 +30,7 @@ void test_begin_end(void)
     assert_always(ser.buffer == buff);
 
     size_t buffsize;
-    CraSerError error;
+    CraSerError_e error;
     unsigned char *resbuf = cra_bin_serialize_end(&ser, &buffsize, &error);
     assert_always(buffsize == 0);
     assert_always(resbuf == buff);
@@ -111,7 +111,7 @@ void test_begin_end(void)
 void test_base(void)
 {
     bool res;
-    CraSerError error;
+    CraSerError_e error;
     CraSerializer ser;
     unsigned char buff[1024];
     size_t buffsize;
@@ -309,7 +309,7 @@ void test_base(void)
 void test_string(void)
 {
     bool res;
-    CraSerError error;
+    CraSerError_e error;
     CraSerializer ser;
     unsigned char buff[1024];
     size_t buffsize;
@@ -469,7 +469,7 @@ void test_string(void)
 
 void test_string_nz(void)
 {
-    CraSerError error;
+    CraSerError_e error;
     CraSerializer ser;
     unsigned char buff[1024];
     size_t buffsize;
@@ -538,9 +538,9 @@ void test_string_nz(void)
         char *strnull;
     };
     CRA_TYPE_META_BEGIN(meta_a)
-    CRA_TYPE_META_MEMBER_STRING_NZ(struct A, stra, false)
-    CRA_TYPE_META_MEMBER_STRING_NZ(struct A, strp, true)
-    CRA_TYPE_META_MEMBER_STRING_NZ(struct A, strnull, true)
+    CRA_TYPE_META_STRING_NZ_MEMBER(struct A, stra, false)
+    CRA_TYPE_META_STRING_NZ_MEMBER(struct A, strp, true)
+    CRA_TYPE_META_STRING_NZ_MEMBER(struct A, strnull, true)
     CRA_TYPE_META_END();
 
     struct A a = {
@@ -577,12 +577,12 @@ void test_struct_base(void)
         double d;
     };
     CRA_TYPE_META_BEGIN(meta_a)
-    CRA_TYPE_META_MEMBER_INT32(struct A, i)
-    CRA_TYPE_META_MEMBER_DOUBLE(struct A, d)
+    CRA_TYPE_META_INT32_MEMBER(struct A, i)
+    CRA_TYPE_META_DOUBLE_MEMBER(struct A, d)
     CRA_TYPE_META_END();
 
     bool res;
-    CraSerError error;
+    CraSerError_e error;
     CraSerializer ser;
     unsigned char buff[1024];
     size_t buffsize;
@@ -652,7 +652,7 @@ void test_struct_struct(void)
         int i;
     };
     CRA_TYPE_META_BEGIN(meta_a)
-    CRA_TYPE_META_MEMBER_INT32(struct A, i)
+    CRA_TYPE_META_INT32_MEMBER(struct A, i)
     CRA_TYPE_META_END();
     struct B
     {
@@ -661,12 +661,12 @@ void test_struct_struct(void)
         struct A as;
     };
     CRA_TYPE_META_BEGIN(meta_b)
-    CRA_TYPE_META_MEMBER_STRUCT(struct B, anull, true, meta_a, NULL, NULL)
-    CRA_TYPE_META_MEMBER_STRUCT(struct B, ap, true, meta_a, NULL, NULL)
-    CRA_TYPE_META_MEMBER_STRUCT(struct B, as, false, meta_a, NULL, NULL)
+    CRA_TYPE_META_STRUCT_MEMBER(struct B, anull, true, meta_a, NULL, NULL)
+    CRA_TYPE_META_STRUCT_MEMBER(struct B, ap, true, meta_a, NULL, NULL)
+    CRA_TYPE_META_STRUCT_MEMBER(struct B, as, false, meta_a, NULL, NULL)
     CRA_TYPE_META_END();
 
-    CraSerError error;
+    CraSerError_e error;
     unsigned char buff[1024];
     size_t buffsize;
 
@@ -710,9 +710,9 @@ struct InitX
     char *str;
 };
 CRA_TYPE_META_BEGIN(meta_initx)
-CRA_TYPE_META_MEMBER_INT32(struct InitX, i)
-CRA_TYPE_META_MEMBER_DOUBLE(struct InitX, d)
-CRA_TYPE_META_MEMBER_STRING(struct InitX, str, true)
+CRA_TYPE_META_INT32_MEMBER(struct InitX, i)
+CRA_TYPE_META_DOUBLE_MEMBER(struct InitX, d)
+CRA_TYPE_META_STRING_MEMBER(struct InitX, str, true)
 CRA_TYPE_META_END();
 
 int calledcnt = 0;
@@ -756,7 +756,7 @@ void test_struct_with_init_i(void)
 
     unsigned char buff[1024];
     size_t buffsize;
-    CraSerError error;
+    CraSerError_e error;
 
     buffsize = sizeof(buff);
     cra_bin_serialize_struct0(buff, &buffsize, x, meta_initx, &error);
@@ -802,13 +802,13 @@ void test_list(void)
     alist = cra_alloc(CraAList);
     cra_alist_init0(int32_t, alist, 10, true, NULL);
     CRA_TYPE_META_BEGIN(meta_list_val)
-    CRA_TYPE_META_INT32()
+    CRA_TYPE_META_INT32_ELEMENT()
     CRA_TYPE_META_END();
     CRA_ALIST_SER_ARGS0(args4alist, alist);
 
     unsigned char buff[1024];
     size_t buffsize;
-    CraSerError error;
+    CraSerError_e error;
 
     // test empty
 
@@ -894,7 +894,7 @@ void test_list_element_is_pointer(void)
     cra_alist_init0(char *, &list, 10, true, (cra_remove_val_fn)free_str_p);
     CRA_ALIST_SER_ARGS0(args4list_str, &list);
     CRA_TYPE_META_BEGIN(meta_list_str)
-    CRA_TYPE_META_STRING(0, true)
+    CRA_TYPE_META_STRING_ELEMENT(0, true)
     CRA_TYPE_META_END();
 
     char *str;
@@ -911,7 +911,7 @@ void test_list_element_is_pointer(void)
 
     unsigned char buff[1024];
     size_t buffsize;
-    CraSerError error;
+    CraSerError_e error;
 
     buffsize = sizeof(buff);
     cra_bin_serialize_list0(buff, &buffsize, &list, meta_list_str, &g_alist_ser_iter_i, &error);
@@ -947,10 +947,10 @@ void test_array(void)
     int32_t array[] = {1, 2, 3, 4};
     cra_ser_count_t narray = sizeof(array) / sizeof(array[0]);
     CRA_TYPE_META_BEGIN(meta_int32)
-    CRA_TYPE_META_INT32()
+    CRA_TYPE_META_INT32_ELEMENT()
     CRA_TYPE_META_END();
 
-    CraSerError error;
+    CraSerError_e error;
     unsigned char buff[1024];
     size_t buffsize;
 
@@ -1004,11 +1004,11 @@ void test_array_in_struct(void)
         char **array;
     };
     CRA_TYPE_META_BEGIN(meta_str)
-    CRA_TYPE_META_STRING(0, true)
+    CRA_TYPE_META_STRING_ELEMENT(0, true)
     CRA_TYPE_META_END();
 
     CRA_TYPE_META_BEGIN(meta_a)
-    CRA_TYPE_META_MEMBER_ARRAY(struct A, array, true, meta_str)
+    CRA_TYPE_META_ARRAY_MEMBER(struct A, array, true, meta_str)
     CRA_TYPE_META_END();
 
     struct A a;
@@ -1025,7 +1025,7 @@ void test_array_in_struct(void)
         a.array[i] = str;
     }
 
-    CraSerError error;
+    CraSerError_e error;
     unsigned char buff[1024];
     size_t buffsize;
 
@@ -1055,12 +1055,12 @@ void test_dict(void)
     CraDict *dict2;
     unsigned char buff[1024];
     size_t buffsize;
-    CraSerError error;
+    CraSerError_e error;
 
     CRA_DICT_SER_ARGS(args4dict, false, sizeof(int32_t), sizeof(char[100]), (cra_hash_fn)cra_hash_int32_t_p, (cra_compare_fn)cra_compare_int_p, NULL, NULL);
     CRA_TYPE_META_BEGIN(meta_dict_kv)
-    CRA_TYPE_META_INT32()                          // key
-    CRA_TYPE_META_STRING(sizeof(char[100]), false) // val
+    CRA_TYPE_META_INT32_ELEMENT()                          // key
+    CRA_TYPE_META_STRING_ELEMENT(sizeof(char[100]), false) // val
     CRA_TYPE_META_END();
 
     // serialize dict
@@ -1113,8 +1113,8 @@ void test_dict_in_struct(void)
     CRA_DICT_SER_ARGS(args4dict_i_d, false, sizeof(int32_t), sizeof(double), (cra_hash_fn)cra_hash_int32_t_p, (cra_compare_fn)cra_compare_int32_t_p, NULL, NULL);
     CRA_UNUSED_VALUE(args4dict_i_d);
     CRA_TYPE_META_BEGIN(meta_dict_i_d)
-    CRA_TYPE_META_INT32()  // key
-    CRA_TYPE_META_DOUBLE() // val
+    CRA_TYPE_META_INT32_ELEMENT()  // key
+    CRA_TYPE_META_DOUBLE_ELEMENT() // val
     CRA_TYPE_META_END();
 
     struct A
@@ -1124,14 +1124,14 @@ void test_dict_in_struct(void)
         CraDict sdict;
     };
     CRA_TYPE_META_BEGIN(meta_a)
-    CRA_TYPE_META_MEMBER_DICT(struct A, dictnull, true, meta_dict_i_d, &g_dict_ser_iter_i, &g_dict_ser_init_i, &args4dict_i_d)
-    CRA_TYPE_META_MEMBER_DICT(struct A, pdict, true, meta_dict_i_d, &g_dict_ser_iter_i, &g_dict_ser_init_i, &args4dict_i_d)
-    CRA_TYPE_META_MEMBER_DICT(struct A, sdict, false, meta_dict_i_d, &g_dict_ser_iter_i, &g_dict_ser_init_i, &args4dict_i_d)
+    CRA_TYPE_META_DICT_MEMBER(struct A, dictnull, true, meta_dict_i_d, &g_dict_ser_iter_i, &g_dict_ser_init_i, &args4dict_i_d)
+    CRA_TYPE_META_DICT_MEMBER(struct A, pdict, true, meta_dict_i_d, &g_dict_ser_iter_i, &g_dict_ser_init_i, &args4dict_i_d)
+    CRA_TYPE_META_DICT_MEMBER(struct A, sdict, false, meta_dict_i_d, &g_dict_ser_iter_i, &g_dict_ser_init_i, &args4dict_i_d)
     CRA_TYPE_META_END();
 
     unsigned char buff[1024];
     size_t buffsize;
-    CraSerError error;
+    CraSerError_e error;
 
     int32_t key;
     double val;

@@ -48,48 +48,52 @@ void test_base(void)
         uint64_t u64n;
 
         float fM;
+        float fMp;
         float fm;
         float fn;
         double dM;
+        double dMp;
         double dm;
         double dn;
     };
     CRA_TYPE_META_BEGIN(meta_a)
-    CRA_TYPE_META_MEMBER_BOOL(struct A, bf)
-    CRA_TYPE_META_MEMBER_BOOL(struct A, bt)
+    CRA_TYPE_META_BOOL_MEMBER(struct A, bf)
+    CRA_TYPE_META_BOOL_MEMBER(struct A, bt)
 
-    CRA_TYPE_META_MEMBER_INT8(struct A, i8M)
-    CRA_TYPE_META_MEMBER_INT8(struct A, i8m)
-    CRA_TYPE_META_MEMBER_INT8(struct A, i8n)
-    CRA_TYPE_META_MEMBER_INT16(struct A, i16M)
-    CRA_TYPE_META_MEMBER_INT16(struct A, i16m)
-    CRA_TYPE_META_MEMBER_INT16(struct A, i16n)
-    CRA_TYPE_META_MEMBER_INT32(struct A, i32M)
-    CRA_TYPE_META_MEMBER_INT32(struct A, i32m)
-    CRA_TYPE_META_MEMBER_INT32(struct A, i32n)
-    CRA_TYPE_META_MEMBER_INT64(struct A, i64M)
-    CRA_TYPE_META_MEMBER_INT64(struct A, i64m)
-    CRA_TYPE_META_MEMBER_INT64(struct A, i64n)
+    CRA_TYPE_META_INT8_MEMBER(struct A, i8M)
+    CRA_TYPE_META_INT8_MEMBER(struct A, i8m)
+    CRA_TYPE_META_INT8_MEMBER(struct A, i8n)
+    CRA_TYPE_META_INT16_MEMBER(struct A, i16M)
+    CRA_TYPE_META_INT16_MEMBER(struct A, i16m)
+    CRA_TYPE_META_INT16_MEMBER(struct A, i16n)
+    CRA_TYPE_META_INT32_MEMBER(struct A, i32M)
+    CRA_TYPE_META_INT32_MEMBER(struct A, i32m)
+    CRA_TYPE_META_INT32_MEMBER(struct A, i32n)
+    CRA_TYPE_META_INT64_MEMBER(struct A, i64M)
+    CRA_TYPE_META_INT64_MEMBER(struct A, i64m)
+    CRA_TYPE_META_INT64_MEMBER(struct A, i64n)
 
-    CRA_TYPE_META_MEMBER_UINT8(struct A, u8M)
-    CRA_TYPE_META_MEMBER_UINT8(struct A, u8n)
-    CRA_TYPE_META_MEMBER_UINT16(struct A, u16M)
-    CRA_TYPE_META_MEMBER_UINT16(struct A, u16n)
-    CRA_TYPE_META_MEMBER_UINT32(struct A, u32M)
-    CRA_TYPE_META_MEMBER_UINT32(struct A, u32n)
-    CRA_TYPE_META_MEMBER_UINT64(struct A, u64M)
-    CRA_TYPE_META_MEMBER_UINT64(struct A, u64n)
+    CRA_TYPE_META_UINT8_MEMBER(struct A, u8M)
+    CRA_TYPE_META_UINT8_MEMBER(struct A, u8n)
+    CRA_TYPE_META_UINT16_MEMBER(struct A, u16M)
+    CRA_TYPE_META_UINT16_MEMBER(struct A, u16n)
+    CRA_TYPE_META_UINT32_MEMBER(struct A, u32M)
+    CRA_TYPE_META_UINT32_MEMBER(struct A, u32n)
+    CRA_TYPE_META_UINT64_MEMBER(struct A, u64M)
+    CRA_TYPE_META_UINT64_MEMBER(struct A, u64n)
 
-    CRA_TYPE_META_MEMBER_FLOAT(struct A, fM)
-    CRA_TYPE_META_MEMBER_FLOAT(struct A, fm)
-    CRA_TYPE_META_MEMBER_FLOAT(struct A, fn)
-    CRA_TYPE_META_MEMBER_DOUBLE(struct A, dM)
-    CRA_TYPE_META_MEMBER_DOUBLE(struct A, dm)
-    CRA_TYPE_META_MEMBER_DOUBLE(struct A, dn)
+    CRA_TYPE_META_FLOAT_MEMBER(struct A, fM)
+    CRA_TYPE_META_FLOAT_MEMBER(struct A, fMp)
+    CRA_TYPE_META_FLOAT_MEMBER(struct A, fm)
+    CRA_TYPE_META_FLOAT_MEMBER(struct A, fn)
+    CRA_TYPE_META_DOUBLE_MEMBER(struct A, dM)
+    CRA_TYPE_META_DOUBLE_MEMBER(struct A, dMp)
+    CRA_TYPE_META_DOUBLE_MEMBER(struct A, dm)
+    CRA_TYPE_META_DOUBLE_MEMBER(struct A, dn)
     CRA_TYPE_META_END();
 
     unsigned char *buff;
-    CraSerError error;
+    CraSerError_e error;
     size_t buffsize;
 
     struct A a = {
@@ -119,9 +123,11 @@ void test_base(void)
         .u64n = 100000,
 
         .fM = FLT_MAX,
+        .fMp = -FLT_MAX,
         .fm = FLT_MIN,
         .fn = -1.5f,
         .dM = DBL_MAX,
+        .dMp = -DBL_MAX,
         .dm = DBL_MIN,
         .dn = 6.5,
     };
@@ -146,21 +152,23 @@ void test_base(void)
     assert_always(a.i32M == aa->i32M);
     assert_always(a.i32m == aa->i32m);
     assert_always(a.i32n == aa->i32n);
-    assert_always((int64_t)(double)a.i64M == aa->i64M);
-    assert_always((int64_t)(double)a.i64m == aa->i64m);
-    assert_always((int64_t)(double)a.i64n == aa->i64n);
+    assert_always(a.i64M == aa->i64M);
+    assert_always(a.i64m == aa->i64m);
+    assert_always(a.i64n == aa->i64n);
     assert_always(a.u8M == aa->u8M);
     assert_always(a.u8n == aa->u8n);
     assert_always(a.u16M == aa->u16M);
     assert_always(a.u16n == aa->u16n);
     assert_always(a.u32M == aa->u32M);
     assert_always(a.u32n == aa->u32n);
-    assert_always((uint64_t)(double)a.u64M == aa->u64M);
-    assert_always((uint64_t)(double)a.u64n == aa->u64n);
+    assert_always(a.u64M == aa->u64M);
+    assert_always(a.u64n == aa->u64n);
     assert_always(cra_compare_float_p(&a.fM, &aa->fM) == 0);
+    assert_always(cra_compare_float_p(&a.fMp, &aa->fMp) == 0);
     assert_always(cra_compare_float_p(&a.fm, &aa->fm) == 0);
     assert_always(cra_compare_float_p(&a.fn, &aa->fn) == 0);
     assert_always(cra_compare_double_p(&a.dM, &aa->dM) == 0);
+    assert_always(cra_compare_double_p(&a.dMp, &aa->dMp) == 0);
     assert_always(cra_compare_double_p(&a.dm, &aa->dm) == 0);
     assert_always(cra_compare_double_p(&a.dn, &aa->dn) == 0);
 
@@ -169,26 +177,26 @@ void test_base(void)
     // 模拟少KV对和KV对顺序不对
 
     CRA_TYPE_META_BEGIN(meta_aa)
-    CRA_TYPE_META_MEMBER_BOOL(struct A, bt)
-    CRA_TYPE_META_MEMBER_BOOL(struct A, bf)
+    CRA_TYPE_META_BOOL_MEMBER(struct A, bt)
+    CRA_TYPE_META_BOOL_MEMBER(struct A, bf)
 
-    CRA_TYPE_META_MEMBER_UINT32(struct A, u32M)
-    CRA_TYPE_META_MEMBER_UINT32(struct A, u32n)
-    CRA_TYPE_META_MEMBER_UINT64(struct A, u64M)
-    CRA_TYPE_META_MEMBER_UINT64(struct A, u64n)
+    CRA_TYPE_META_UINT32_MEMBER(struct A, u32M)
+    CRA_TYPE_META_UINT32_MEMBER(struct A, u32n)
+    CRA_TYPE_META_UINT64_MEMBER(struct A, u64M)
+    CRA_TYPE_META_UINT64_MEMBER(struct A, u64n)
 
-    CRA_TYPE_META_MEMBER_INT8(struct A, i8M)
-    CRA_TYPE_META_MEMBER_INT8(struct A, i8n)
-    CRA_TYPE_META_MEMBER_INT16(struct A, i16M)
-    CRA_TYPE_META_MEMBER_INT16(struct A, i16m)
-    CRA_TYPE_META_MEMBER_INT16(struct A, i16n)
-    CRA_TYPE_META_MEMBER_INT32(struct A, i32M)
-    CRA_TYPE_META_MEMBER_INT32(struct A, i32m)
-    CRA_TYPE_META_MEMBER_INT32(struct A, i32n)
+    CRA_TYPE_META_INT8_MEMBER(struct A, i8M)
+    CRA_TYPE_META_INT8_MEMBER(struct A, i8n)
+    CRA_TYPE_META_INT16_MEMBER(struct A, i16M)
+    CRA_TYPE_META_INT16_MEMBER(struct A, i16m)
+    CRA_TYPE_META_INT16_MEMBER(struct A, i16n)
+    CRA_TYPE_META_INT32_MEMBER(struct A, i32M)
+    CRA_TYPE_META_INT32_MEMBER(struct A, i32m)
+    CRA_TYPE_META_INT32_MEMBER(struct A, i32n)
 
-    CRA_TYPE_META_MEMBER_FLOAT(struct A, fm)
-    CRA_TYPE_META_MEMBER_FLOAT(struct A, fn)
-    CRA_TYPE_META_MEMBER_DOUBLE(struct A, dn)
+    CRA_TYPE_META_FLOAT_MEMBER(struct A, fm)
+    CRA_TYPE_META_FLOAT_MEMBER(struct A, fn)
+    CRA_TYPE_META_DOUBLE_MEMBER(struct A, dn)
     CRA_TYPE_META_END();
 
     cra_json_parse_struct0(buff, buffsize, &aa, sizeof(struct A), true, meta_aa, NULL, NULL, &error);
@@ -213,8 +221,8 @@ void test_base(void)
     assert_always(0 == aa->u16n);
     assert_always(a.u32M == aa->u32M);
     assert_always(a.u32n == aa->u32n);
-    assert_always((uint64_t)(double)a.u64M == aa->u64M);
-    assert_always((uint64_t)(double)a.u64n == aa->u64n);
+    assert_always(a.u64M == aa->u64M);
+    assert_always(a.u64n == aa->u64n);
     assert_always(0 == aa->fM);
     assert_always(cra_compare_float_p(&a.fm, &aa->fm) == 0);
     assert_always(cra_compare_float_p(&a.fn, &aa->fn) == 0);
@@ -227,6 +235,124 @@ void test_base(void)
     cra_free(buff);
 }
 
+#if 1 // number
+
+struct D
+{
+    double M;
+    double N;
+    double m;
+    double zp;
+    double zn;
+    double z;
+    double p;
+    double n;
+};
+CRA_TYPE_META_BEGIN(meta_D)
+CRA_TYPE_META_DOUBLE_MEMBER(struct D, M)
+CRA_TYPE_META_DOUBLE_MEMBER(struct D, N)
+CRA_TYPE_META_DOUBLE_MEMBER(struct D, m)
+CRA_TYPE_META_DOUBLE_MEMBER(struct D, zp)
+CRA_TYPE_META_DOUBLE_MEMBER(struct D, zn)
+CRA_TYPE_META_DOUBLE_MEMBER(struct D, z)
+CRA_TYPE_META_DOUBLE_MEMBER(struct D, p)
+CRA_TYPE_META_DOUBLE_MEMBER(struct D, n)
+CRA_TYPE_META_END();
+
+struct I
+{
+    int64_t M;
+    int64_t N;
+    int64_t m;
+    int64_t zp;
+    int64_t zn;
+    int64_t z;
+    int64_t p;
+    int64_t n;
+};
+CRA_TYPE_META_BEGIN(meta_I)
+CRA_TYPE_META_INT64_MEMBER(struct I, M)
+CRA_TYPE_META_INT64_MEMBER(struct I, N)
+CRA_TYPE_META_INT64_MEMBER(struct I, m)
+CRA_TYPE_META_INT64_MEMBER(struct I, zp)
+CRA_TYPE_META_INT64_MEMBER(struct I, zn)
+CRA_TYPE_META_INT64_MEMBER(struct I, z)
+CRA_TYPE_META_INT64_MEMBER(struct I, p)
+CRA_TYPE_META_INT64_MEMBER(struct I, n)
+CRA_TYPE_META_END();
+
+void test_d2i(void)
+{
+    struct D d;
+    struct I i;
+    unsigned char buff[1024];
+    size_t buffsize;
+    CraSerError_e error;
+
+    d.M = DBL_MAX;
+    d.N = -DBL_MAX;
+    d.m = DBL_MIN;
+    d.zp = -0.0;
+    d.zn = +0.0;
+    d.z = 0.0;
+    d.p = -100.5;
+    d.n = 60.8;
+
+    buffsize = sizeof(buff);
+    cra_json_stringify_struct0(buff, &buffsize, &d, meta_D, FORMAT, &error);
+    assert_always(error == CRA_SER_ERROR_SUCCESS);
+
+    printf("%s\n\n", buff);
+
+    cra_json_parse_struct0(buff, buffsize, &i, sizeof(i), false, meta_I, NULL, NULL, &error);
+    assert_always(error == CRA_SER_ERROR_SUCCESS);
+    assert_always(i.M == CRA_MAX_SAFE_INT);
+    assert_always(i.N == CRA_MIN_SAFE_INT);
+    assert_always(i.m == 0);
+    assert_always(i.zp == 0);
+    assert_always(i.zn == 0);
+    assert_always(i.z == 0);
+    assert_always(i.p == (int64_t)d.p);
+    assert_always(i.n == (int64_t)d.n);
+}
+
+void test_i2d(void)
+{
+    struct D d;
+    struct I i;
+    unsigned char buff[1024];
+    size_t buffsize;
+    CraSerError_e error;
+
+    i.M = INT64_MAX;
+    i.N = -INT64_MAX;
+    i.m = INT64_MIN;
+    i.zp = -0;
+    i.zn = +0;
+    i.z = 0;
+    i.p = -100;
+    i.n = 60;
+
+    buffsize = sizeof(buff);
+    cra_json_stringify_struct0(buff, &buffsize, &i, meta_I, FORMAT, &error);
+    assert_always(error == CRA_SER_ERROR_SUCCESS);
+
+    printf("%s\n\n", buff);
+
+    cra_json_parse_struct0(buff, buffsize, &d, sizeof(d), false, meta_D, NULL, NULL, &error);
+    assert_always(error == CRA_SER_ERROR_SUCCESS);
+    assert_always(cra_compare_double_p(&d.M, &(double){(double)INT64_MAX}) == 0);
+    assert_always(cra_compare_double_p(&d.N, &(double){(double)-INT64_MAX}) == 0);
+    assert_always(cra_compare_double_p(&d.m, &(double){(double)INT64_MIN}) == 0);
+    assert_always(d.zp == 0.0);
+    assert_always(d.zn == 0.0);
+    assert_always(d.z == 0.0);
+    assert_always(d.p == (double)i.p);
+    assert_always(d.n == (double)i.n);
+}
+
+#endif // end number
+
 void test_string(void)
 {
     struct A
@@ -235,12 +361,12 @@ void test_string(void)
         char straempty[1];
     };
     CRA_TYPE_META_BEGIN(meta_a)
-    CRA_TYPE_META_MEMBER_STRING(struct A, strpempty, true)
-    CRA_TYPE_META_MEMBER_STRING(struct A, straempty, false)
+    CRA_TYPE_META_STRING_MEMBER(struct A, strpempty, true)
+    CRA_TYPE_META_STRING_MEMBER(struct A, straempty, false)
     CRA_TYPE_META_END();
 
     unsigned char buff[1024];
-    CraSerError error;
+    CraSerError_e error;
     size_t buffsize;
 
     // test empty string
@@ -273,12 +399,12 @@ void test_string(void)
         char escape[12];
     };
     CRA_TYPE_META_BEGIN(meta_b)
-    CRA_TYPE_META_MEMBER_STRING(struct B, strp, true)
-    CRA_TYPE_META_MEMBER_STRING(struct B, stra, false)
-    CRA_TYPE_META_MEMBER_STRING(struct B, strnull, true)
-    CRA_TYPE_META_MEMBER_STRING(struct B, chinese, true)
-    CRA_TYPE_META_MEMBER_STRING(struct B, emoji, true)
-    CRA_TYPE_META_MEMBER_STRING(struct B, escape, false)
+    CRA_TYPE_META_STRING_MEMBER(struct B, strp, true)
+    CRA_TYPE_META_STRING_MEMBER(struct B, stra, false)
+    CRA_TYPE_META_STRING_MEMBER(struct B, strnull, true)
+    CRA_TYPE_META_STRING_MEMBER(struct B, chinese, true)
+    CRA_TYPE_META_STRING_MEMBER(struct B, emoji, true)
+    CRA_TYPE_META_STRING_MEMBER(struct B, escape, false)
     CRA_TYPE_META_END();
 
     struct B b = {
@@ -317,8 +443,8 @@ void test_string(void)
         char *stra;
     };
     CRA_TYPE_META_BEGIN(meta_c)
-    CRA_TYPE_META_MEMBER_STRING(struct C, strp, false)
-    CRA_TYPE_META_MEMBER_STRING(struct C, stra, true)
+    CRA_TYPE_META_STRING_MEMBER(struct C, strp, false)
+    CRA_TYPE_META_STRING_MEMBER(struct C, stra, true)
     CRA_TYPE_META_END();
 
     struct C *c;
@@ -335,7 +461,7 @@ void test_string(void)
         char strnull[20];
     };
     CRA_TYPE_META_BEGIN(meta_d)
-    CRA_TYPE_META_MEMBER_STRING(struct D, strnull, false)
+    CRA_TYPE_META_STRING_MEMBER(struct D, strnull, false)
     CRA_TYPE_META_END();
 
     struct D *d;
@@ -348,7 +474,7 @@ void test_string(void)
         char strp[21];
     };
     CRA_TYPE_META_BEGIN(meta_e)
-    CRA_TYPE_META_MEMBER_STRING(struct E, strp, false)
+    CRA_TYPE_META_STRING_MEMBER(struct E, strp, false)
     CRA_TYPE_META_END();
 
     struct E *e;
@@ -364,15 +490,15 @@ void test_string_unicode(void)
         char *chinese;
     };
     CRA_TYPE_META_BEGIN(meta_a)
-    CRA_TYPE_META_MEMBER_STRING(struct A, emoji, true)
-    CRA_TYPE_META_MEMBER_STRING(struct A, chinese, true)
+    CRA_TYPE_META_STRING_MEMBER(struct A, emoji, true)
+    CRA_TYPE_META_STRING_MEMBER(struct A, chinese, true)
     CRA_TYPE_META_END();
 
     char json[] = "{"
                   "\"emoji\":\"\\uD83D\\uDE00\\/\","
                   "\"chinese\": \"\\u4f60\\u597d，\\u4e16\\u754c\""
                   "}";
-    CraSerError error;
+    CraSerError_e error;
     struct A *a;
 
     cra_json_parse_struct0((unsigned char *)json, sizeof(json), &a, sizeof(struct A), true, meta_a, NULL, NULL, &error);
@@ -392,8 +518,8 @@ void test_string_unicode(void)
         char chinese[16];
     };
     CRA_TYPE_META_BEGIN(meta_b)
-    CRA_TYPE_META_MEMBER_STRING(struct B, emoji, false)
-    CRA_TYPE_META_MEMBER_STRING(struct B, chinese, false)
+    CRA_TYPE_META_STRING_MEMBER(struct B, emoji, false)
+    CRA_TYPE_META_STRING_MEMBER(struct B, chinese, false)
     CRA_TYPE_META_END();
 
     struct B *b;
@@ -414,11 +540,11 @@ void test_struct_base(void)
         double d;
     };
     CRA_TYPE_META_BEGIN(meta_a)
-    CRA_TYPE_META_MEMBER_INT32(struct A, i)
-    CRA_TYPE_META_MEMBER_DOUBLE(struct A, d)
+    CRA_TYPE_META_INT32_MEMBER(struct A, i)
+    CRA_TYPE_META_DOUBLE_MEMBER(struct A, d)
     CRA_TYPE_META_END();
 
-    CraSerError error;
+    CraSerError_e error;
     unsigned char buff[1024];
     size_t buffsize;
 
@@ -451,14 +577,14 @@ void test_struct_base(void)
         struct A *null;
     };
     CRA_TYPE_META_BEGIN(meta_b)
-    CRA_TYPE_META_MEMBER_STRUCT(struct B, null, true, meta_a, NULL, NULL)
+    CRA_TYPE_META_STRUCT_MEMBER(struct B, null, true, meta_a, NULL, NULL)
     CRA_TYPE_META_END();
     struct BB
     {
         struct A null;
     };
     CRA_TYPE_META_BEGIN(meta_bb)
-    CRA_TYPE_META_MEMBER_STRUCT(struct BB, null, false, meta_a, NULL, NULL)
+    CRA_TYPE_META_STRUCT_MEMBER(struct BB, null, false, meta_a, NULL, NULL)
     CRA_TYPE_META_END();
 
     struct B b, *bb;
@@ -479,7 +605,7 @@ void test_struct_struct(void)
         int i;
     };
     CRA_TYPE_META_BEGIN(meta_a)
-    CRA_TYPE_META_MEMBER_INT32(struct A, i)
+    CRA_TYPE_META_INT32_MEMBER(struct A, i)
     CRA_TYPE_META_END();
     struct B
     {
@@ -488,12 +614,12 @@ void test_struct_struct(void)
         struct A as;
     };
     CRA_TYPE_META_BEGIN(meta_b)
-    CRA_TYPE_META_MEMBER_STRUCT(struct B, anull, true, meta_a, NULL, NULL)
-    CRA_TYPE_META_MEMBER_STRUCT(struct B, ap, true, meta_a, NULL, NULL)
-    CRA_TYPE_META_MEMBER_STRUCT(struct B, as, false, meta_a, NULL, NULL)
+    CRA_TYPE_META_STRUCT_MEMBER(struct B, anull, true, meta_a, NULL, NULL)
+    CRA_TYPE_META_STRUCT_MEMBER(struct B, ap, true, meta_a, NULL, NULL)
+    CRA_TYPE_META_STRUCT_MEMBER(struct B, as, false, meta_a, NULL, NULL)
     CRA_TYPE_META_END();
 
-    CraSerError error;
+    CraSerError_e error;
     unsigned char buff[1024];
     size_t buffsize;
 
@@ -537,9 +663,9 @@ struct InitX
     char *str;
 };
 CRA_TYPE_META_BEGIN(meta_initx)
-CRA_TYPE_META_MEMBER_INT32(struct InitX, i)
-CRA_TYPE_META_MEMBER_DOUBLE(struct InitX, d)
-CRA_TYPE_META_MEMBER_STRING(struct InitX, str, true)
+CRA_TYPE_META_INT32_MEMBER(struct InitX, i)
+CRA_TYPE_META_DOUBLE_MEMBER(struct InitX, d)
+CRA_TYPE_META_STRING_MEMBER(struct InitX, str, true)
 CRA_TYPE_META_END();
 
 int calledcnt = 0;
@@ -583,7 +709,7 @@ void test_struct_with_init_i(void)
 
     unsigned char buff[1024];
     size_t buffsize;
-    CraSerError error;
+    CraSerError_e error;
 
     buffsize = sizeof(buff);
     cra_json_stringify_struct0(buff, &buffsize, x, meta_initx, FORMAT, &error);
@@ -625,13 +751,13 @@ void test_list(void)
     alist = cra_alloc(CraAList);
     cra_alist_init0(int32_t, alist, 10, true, NULL);
     CRA_TYPE_META_BEGIN(meta_list_val)
-    CRA_TYPE_META_INT32()
+    CRA_TYPE_META_INT32_ELEMENT()
     CRA_TYPE_META_END();
     CRA_ALIST_SER_ARGS0(args4alist, alist);
 
     unsigned char buff[1024];
     size_t buffsize;
-    CraSerError error;
+    CraSerError_e error;
 
     // test empty
 
@@ -721,7 +847,7 @@ void test_list_element_is_pointer(void)
     cra_alist_init0(char *, &list, 10, true, (cra_remove_val_fn)free_str_p);
     CRA_ALIST_SER_ARGS0(args4list_str, &list);
     CRA_TYPE_META_BEGIN(meta_list_str)
-    CRA_TYPE_META_STRING(0, true)
+    CRA_TYPE_META_STRING_ELEMENT(0, true)
     CRA_TYPE_META_END();
 
     char *str;
@@ -738,7 +864,7 @@ void test_list_element_is_pointer(void)
 
     unsigned char buff[1024];
     size_t buffsize;
-    CraSerError error;
+    CraSerError_e error;
 
     buffsize = sizeof(buff);
     cra_json_stringify_list0(buff, &buffsize, &list, meta_list_str, &g_alist_ser_iter_i, FORMAT, &error);
@@ -770,10 +896,10 @@ void test_array(void)
     cra_ser_count_t narray;
     int32_t array[] = {1, 2, 3, 4};
     CRA_TYPE_META_BEGIN(meta_int32)
-    CRA_TYPE_META_INT32()
+    CRA_TYPE_META_INT32_ELEMENT()
     CRA_TYPE_META_END();
 
-    CraSerError error;
+    CraSerError_e error;
     unsigned char buff[1024];
     size_t buffsize;
 
@@ -845,11 +971,11 @@ void test_array_in_struct(void)
         char **array;
     };
     CRA_TYPE_META_BEGIN(meta_str)
-    CRA_TYPE_META_STRING(0, true)
+    CRA_TYPE_META_STRING_ELEMENT(0, true)
     CRA_TYPE_META_END();
 
     CRA_TYPE_META_BEGIN(meta_a)
-    CRA_TYPE_META_MEMBER_ARRAY(struct A, array, true, meta_str)
+    CRA_TYPE_META_ARRAY_MEMBER(struct A, array, true, meta_str)
     CRA_TYPE_META_END();
 
     struct A a;
@@ -866,7 +992,7 @@ void test_array_in_struct(void)
         a.array[i] = str;
     }
 
-    CraSerError error;
+    CraSerError_e error;
     unsigned char buff[1024];
     size_t buffsize;
 
@@ -896,12 +1022,12 @@ void test_dict(void)
     CraDict *dict2;
     unsigned char buff[1024];
     size_t buffsize;
-    CraSerError error;
+    CraSerError_e error;
 
     CRA_DICT_SER_ARGS(args4dict, false, sizeof(int32_t), sizeof(char[100]), (cra_hash_fn)cra_hash_int32_t_p, (cra_compare_fn)cra_compare_int_p, NULL, NULL);
     CRA_TYPE_META_BEGIN(meta_dict_kv)
-    CRA_TYPE_META_INT32()                          // key
-    CRA_TYPE_META_STRING(sizeof(char[100]), false) // val
+    CRA_TYPE_META_INT32_ELEMENT()                          // key
+    CRA_TYPE_META_STRING_ELEMENT(sizeof(char[100]), false) // val
     CRA_TYPE_META_END();
 
     // serialize dict
@@ -956,8 +1082,8 @@ void test_dict_in_struct(void)
     CRA_DICT_SER_ARGS(args4dict_i_d, false, sizeof(int32_t), sizeof(double), (cra_hash_fn)cra_hash_int32_t_p, (cra_compare_fn)cra_compare_int32_t_p, NULL, NULL);
     CRA_UNUSED_VALUE(args4dict_i_d);
     CRA_TYPE_META_BEGIN(meta_dict_i_d)
-    CRA_TYPE_META_INT32()  // key
-    CRA_TYPE_META_DOUBLE() // val
+    CRA_TYPE_META_INT32_ELEMENT()  // key
+    CRA_TYPE_META_DOUBLE_ELEMENT() // val
     CRA_TYPE_META_END();
 
     struct A
@@ -967,14 +1093,14 @@ void test_dict_in_struct(void)
         CraDict sdict;
     };
     CRA_TYPE_META_BEGIN(meta_a)
-    CRA_TYPE_META_MEMBER_DICT(struct A, dictnull, true, meta_dict_i_d, &g_dict_ser_iter_i, &g_dict_ser_init_i, &args4dict_i_d)
-    CRA_TYPE_META_MEMBER_DICT(struct A, pdict, true, meta_dict_i_d, &g_dict_ser_iter_i, &g_dict_ser_init_i, &args4dict_i_d)
-    CRA_TYPE_META_MEMBER_DICT(struct A, sdict, false, meta_dict_i_d, &g_dict_ser_iter_i, &g_dict_ser_init_i, &args4dict_i_d)
+    CRA_TYPE_META_DICT_MEMBER(struct A, dictnull, true, meta_dict_i_d, &g_dict_ser_iter_i, &g_dict_ser_init_i, &args4dict_i_d)
+    CRA_TYPE_META_DICT_MEMBER(struct A, pdict, true, meta_dict_i_d, &g_dict_ser_iter_i, &g_dict_ser_init_i, &args4dict_i_d)
+    CRA_TYPE_META_DICT_MEMBER(struct A, sdict, false, meta_dict_i_d, &g_dict_ser_iter_i, &g_dict_ser_init_i, &args4dict_i_d)
     CRA_TYPE_META_END();
 
     unsigned char buff[1024];
     size_t buffsize;
-    CraSerError error;
+    CraSerError_e error;
 
     int32_t key;
     double val;
@@ -1024,6 +1150,8 @@ void test_dict_in_struct(void)
 int main(void)
 {
     test_base();
+    test_d2i();
+    test_i2d();
     test_string();
     test_string_unicode();
     test_struct_base();

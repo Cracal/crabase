@@ -104,36 +104,54 @@ static bool cra_json_write_bool(CraSerializer *ser, bool val)
     return true;
 }
 
-static inline bool cra_json_compare_double(double a, double b)
+static bool cra_json_write_int(CraSerializer *ser, int64_t val)
 {
-    return fabs(a - b) < DBL_EPSILON;
+    int len;
+    unsigned char *buf;
+    char intstr[32] = {0};
+
+#ifdef CRA_COMPILER_MSVC
+    len = sprintf_s(intstr, sizeof(intstr), "%zd", val);
+#else
+    len = sprintf(intstr, "%zd", val);
+#endif
+
+    if (len < 0 || len > (int)(sizeof(intstr) - 1))
+    {
+        ser->error = CRA_SER_ERROR_INVALID_VALUE;
+        return false;
+    }
+
+    // write val
+    CRA_SERIALIZER_BUF(ser, buf, len + sizeof(""));
+    memcpy(buf, intstr, len);
+    buf[len] = '\0';
+    ser->index += len;
+    return true;
 }
 
 static bool cra_json_write_double(CraSerializer *ser, double val)
 {
     int len;
-    double dbl;
+    // double dbl;
     unsigned char *buf;
     char dblstr[32] = {0};
 
     if (isnan(val) || isinf(val))
     {
+        // FIXME: double of c cannot be null
         ser->error = CRA_SER_ERROR_FLOAT_NAN_OR_INF;
         return false;
     }
 
+    // -0.0
+    if (val == 0.0 && signbit(val))
+        val = 0.0;
+
 #ifdef CRA_COMPILER_MSVC
-    len = sprintf_s(dblstr, sizeof(dblstr), "%1.15g", val);
-    if ((sscanf_s(dblstr, "%lg", &dbl) != 1) || !cra_json_compare_double(dbl, val))
-    {
-        len = sprintf_s(dblstr, sizeof(dblstr), "%1.17g", val);
-    }
+    len = sprintf_s(dblstr, sizeof(dblstr), "%.17g", val);
 #else
-    len = sprintf(dblstr, "%1.15g", val);
-    if ((sscanf(dblstr, "%lg", &dbl) != 1) || !cra_json_compare_double(dbl, val))
-    {
-        len = sprintf(dblstr, "%1.17g", val);
-    }
+    len = sprintf(dblstr, "%.17g", val);
 #endif
 
     if (len < 0 || len > (int)(sizeof(dblstr) - 1))
@@ -512,6 +530,7 @@ static bool cra_json_write_dict(CraSerializer *ser, void *val, const CraTypeMeta
 static bool cra_json_write_once(CraSerializer *ser, void *val, size_t offset, const CraTypeMeta *meta)
 {
     double dbl;
+    int64_t i64;
     void *value = (void *)((char *)val + offset);
     switch (meta->type)
     {
@@ -521,29 +540,32 @@ static bool cra_json_write_once(CraSerializer *ser, void *val, size_t offset, co
             return false;
         break;
     case CRA_TYPE_INT8:
-        dbl = (double)(*(int8_t *)value);
-        goto write_dbl;
+        i64 = (int64_t)(*(int8_t *)value);
+        goto write_i64;
     case CRA_TYPE_INT16:
-        dbl = (double)(*(int16_t *)value);
-        goto write_dbl;
+        i64 = (int64_t)(*(int16_t *)value);
+        goto write_i64;
     case CRA_TYPE_INT32:
-        dbl = (double)(*(int32_t *)value);
-        goto write_dbl;
+        i64 = (int64_t)(*(int32_t *)value);
+        goto write_i64;
     case CRA_TYPE_INT64:
-        dbl = (double)(*(int64_t *)value);
-        goto write_dbl;
+        i64 = (int64_t)(*(int64_t *)value);
+        goto write_i64;
     case CRA_TYPE_UINT8:
-        dbl = (double)(*(uint8_t *)value);
-        goto write_dbl;
+        i64 = (int64_t)(*(uint8_t *)value);
+        goto write_i64;
     case CRA_TYPE_UINT16:
-        dbl = (double)(*(uint16_t *)value);
-        goto write_dbl;
+        i64 = (int64_t)(*(uint16_t *)value);
+        goto write_i64;
     case CRA_TYPE_UINT32:
-        dbl = (double)(*(uint32_t *)value);
-        goto write_dbl;
+        i64 = (int64_t)(*(uint32_t *)value);
+        goto write_i64;
     case CRA_TYPE_UINT64:
-        dbl = (double)(*(uint64_t *)value);
-        goto write_dbl;
+        i64 = (int64_t)(*(uint64_t *)value);
+    write_i64:
+        if (!cra_json_write_int(ser, i64))
+            return false;
+        break;
     case CRA_TYPE_FLOAT:
         dbl = (double)(*(float *)value);
         goto write_dbl;
@@ -610,7 +632,7 @@ static void cra_json_stringify_begin(CraSerializer *ser, unsigned char *buffer, 
     bzero(&ser->release, sizeof(ser->release));
 }
 
-static unsigned char *cra_json_stringify_end(CraSerializer *ser, size_t *buffer_length, CraSerError *error)
+static unsigned char *cra_json_stringify_end(CraSerializer *ser, size_t *buffer_length, CraSerError_e *error)
 {
     assert_always(ser != NULL);
     assert_always(ser->buffer != NULL);
@@ -739,6 +761,33 @@ bool cra_json_read_bool(CraSerializer *ser, bool *retval)
     }
     ser->error = CRA_SER_ERROR_INVALID_VALUE;
     return false;
+}
+
+bool cra_json_read_int(CraSerializer *ser, int64_t *retval)
+{
+    unsigned char *end = NULL;
+    unsigned char *buf = CRA_JSON_READ_GET_BUF(ser);
+    if (buf[0] == '-' || (buf[0] >= '0' && buf[0] <= '9'))
+    {
+        *retval = strtoll((char *)buf, (char **)&end, 10);
+        if (buf == end)
+        {
+        error_ret:
+            ser->error = CRA_SER_ERROR_INVALID_VALUE;
+            return false;
+        }
+        // 是浮点数时使用strtod保证取走完整的val
+        if (*end == '.' || *end == 'e' || *end == 'E')
+        {
+            end = NULL;
+            double dbl = strtod((char *)buf, (char **)&end);
+            if (buf == end || (isnan(dbl) || isinf(dbl)))
+                goto error_ret;
+            *retval = (int64_t)CRA_CLAMP(dbl, (double)CRA_MAX_SAFE_INT, (double)CRA_MIN_SAFE_INT);
+        }
+    }
+    ser->index += (end - buf);
+    return true;
 }
 
 bool cra_json_read_double(CraSerializer *ser, double *retval)
@@ -1319,6 +1368,7 @@ static bool cra_json_read_once(CraSerializer *ser, void *val, size_t offset, con
     }
 
     double dbl;
+    int64_t i64;
     switch (meta->type)
     {
     case CRA_TYPE_FALSE:
@@ -1327,44 +1377,43 @@ static bool cra_json_read_once(CraSerializer *ser, void *val, size_t offset, con
             return false;
         break;
     case CRA_TYPE_INT8:
-        if (!cra_json_read_double(ser, &dbl))
+        if (!cra_json_read_int(ser, &i64))
             return false;
-        *(int8_t *)value = (int8_t)dbl;
+        *(int8_t *)value = (int8_t)i64;
         break;
     case CRA_TYPE_INT16:
-        if (!cra_json_read_double(ser, &dbl))
+        if (!cra_json_read_int(ser, &i64))
             return false;
-        *(int16_t *)value = (int16_t)dbl;
+        *(int16_t *)value = (int16_t)i64;
         break;
     case CRA_TYPE_INT32:
-        if (!cra_json_read_double(ser, &dbl))
+        if (!cra_json_read_int(ser, &i64))
             return false;
-        *(int32_t *)value = (int32_t)dbl;
+        *(int32_t *)value = (int32_t)i64;
         break;
     case CRA_TYPE_INT64:
-        if (!cra_json_read_double(ser, &dbl))
+        if (!cra_json_read_int(ser, (int64_t *)value))
             return false;
-        *(int64_t *)value = (int64_t)dbl;
         break;
     case CRA_TYPE_UINT8:
-        if (!cra_json_read_double(ser, &dbl))
+        if (!cra_json_read_int(ser, &i64))
             return false;
-        *(uint8_t *)value = (uint8_t)dbl;
+        *(uint8_t *)value = (uint8_t)i64;
         break;
     case CRA_TYPE_UINT16:
-        if (!cra_json_read_double(ser, &dbl))
+        if (!cra_json_read_int(ser, &i64))
             return false;
-        *(uint16_t *)value = (uint16_t)dbl;
+        *(uint16_t *)value = (uint16_t)i64;
         break;
     case CRA_TYPE_UINT32:
-        if (!cra_json_read_double(ser, &dbl))
+        if (!cra_json_read_int(ser, &i64))
             return false;
-        *(uint32_t *)value = (uint32_t)dbl;
+        *(uint32_t *)value = (uint32_t)i64;
         break;
     case CRA_TYPE_UINT64:
-        if (!cra_json_read_double(ser, &dbl))
+        if (!cra_json_read_int(ser, &i64))
             return false;
-        *(uint64_t *)value = (uint64_t)dbl;
+        *(uint64_t *)value = (uint64_t)i64;
         break;
     case CRA_TYPE_FLOAT:
         if (!cra_json_read_double(ser, &dbl))
@@ -1427,7 +1476,7 @@ static void cra_json_parse_begin(CraSerializer *ser, unsigned char *buffer, size
     cra_ser_release_init(&ser->release);
 }
 
-static void cra_json_parse_end(CraSerializer *ser, CraSerError *error)
+static void cra_json_parse_end(CraSerializer *ser, CraSerError_e *error)
 {
     assert_always(ser != NULL);
     assert_always(ser->buffer != NULL);
@@ -1494,7 +1543,7 @@ error_return:
 
 unsigned char *cra_json_stringify_struct0(unsigned char *buffer, size_t *buffer_length, void *val,
                                           const CraTypeMeta *members_meta, bool format,
-                                          CraSerError *error)
+                                          CraSerError_e *error)
 {
     CraSerializer ser;
     assert_always(buffer_length != NULL);
@@ -1505,7 +1554,7 @@ unsigned char *cra_json_stringify_struct0(unsigned char *buffer, size_t *buffer_
 
 void cra_json_parse_struct0(unsigned char *buffer, size_t buffer_length, void *retval,
                             size_t valsize, bool is_ptr, const CraTypeMeta *members_meta,
-                            const CraTypeInit_i *init_i, void *args4init, CraSerError *error)
+                            const CraTypeInit_i *init_i, void *args4init, CraSerError_e *error)
 {
     CraSerializer ser;
     cra_json_parse_begin(&ser, buffer, buffer_length);
@@ -1515,7 +1564,7 @@ void cra_json_parse_struct0(unsigned char *buffer, size_t buffer_length, void *r
 
 unsigned char *cra_json_stringify_list0(unsigned char *buffer, size_t *buffer_length, void *val,
                                         const CraTypeMeta *element_meta, const CraTypeIter_i *iter_i,
-                                        bool format, CraSerError *error)
+                                        bool format, CraSerError_e *error)
 {
     CraSerializer ser;
     assert_always(buffer_length != NULL);
@@ -1527,7 +1576,7 @@ unsigned char *cra_json_stringify_list0(unsigned char *buffer, size_t *buffer_le
 void cra_json_parse_list0(unsigned char *buffer, size_t buffer_length, void *retval,
                           size_t valsize, bool is_ptr, const CraTypeMeta *element_meta,
                           const CraTypeIter_i *iter_i, const CraTypeInit_i *init_i,
-                          void *args4init, CraSerError *error)
+                          void *args4init, CraSerError_e *error)
 {
     CraSerializer ser;
     cra_json_parse_begin(&ser, buffer, buffer_length);
@@ -1537,7 +1586,7 @@ void cra_json_parse_list0(unsigned char *buffer, size_t buffer_length, void *ret
 
 unsigned char *cra_json_stringify_array0(unsigned char *buffer, size_t *buffer_length, void *val,
                                          cra_ser_count_t count, const CraTypeMeta *element_meta,
-                                         bool format, CraSerError *error)
+                                         bool format, CraSerError_e *error)
 {
     CraSerializer ser;
     assert_always(buffer_length != NULL);
@@ -1548,7 +1597,7 @@ unsigned char *cra_json_stringify_array0(unsigned char *buffer, size_t *buffer_l
 
 void cra_json_parse_array0(unsigned char *buffer, size_t buffer_length, void *retval, size_t valsize,
                            bool is_ptr, cra_ser_count_t *countptr, const CraTypeMeta *element_meta,
-                           CraSerError *error)
+                           CraSerError_e *error)
 {
     CraSerializer ser;
     cra_json_parse_begin(&ser, buffer, buffer_length);
@@ -1558,7 +1607,7 @@ void cra_json_parse_array0(unsigned char *buffer, size_t buffer_length, void *re
 
 unsigned char *cra_json_stringify_dict0(unsigned char *buffer, size_t *buffer_length, void *val,
                                         const CraTypeMeta *kv_meta, const CraTypeIter_i *iter_i,
-                                        bool format, CraSerError *error)
+                                        bool format, CraSerError_e *error)
 {
     CraSerializer ser;
     assert_always(buffer_length != NULL);
@@ -1569,7 +1618,7 @@ unsigned char *cra_json_stringify_dict0(unsigned char *buffer, size_t *buffer_le
 
 void cra_json_parse_dict0(unsigned char *buffer, size_t buffer_length, void *retval, size_t valsize,
                           bool is_ptr, const CraTypeMeta *kv_meta, const CraTypeIter_i *iter_i,
-                          const CraTypeInit_i *init_i, void *args4init, CraSerError *error)
+                          const CraTypeInit_i *init_i, void *args4init, CraSerError_e *error)
 {
     CraSerializer ser;
     cra_json_parse_begin(&ser, buffer, buffer_length);
