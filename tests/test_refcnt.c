@@ -11,8 +11,8 @@ typedef struct
     int i;
     float f;
 } Stru;
-typedef CRA_REFCNT(Stru) StruRc;
-typedef CRA_REFCNT_PTR(Stru) StruRcPtr;
+typedef CRA_REFCNT(Stru) Stru_rc;
+typedef CRA_REFCNT_PTR(Stru) Stru_rc_p;
 
 static void uninit_int100(void *pi)
 {
@@ -49,7 +49,7 @@ void test_refcnt(void)
     assert_always(cra_refcnt_unref(&ri));
     assert_always(ri.rc.cnt == 0);
 
-    StruRc *rs = cra_alloc(StruRc);
+    Stru_rc *rs = cra_alloc(Stru_rc);
     cra_refcnt_init(rs, false, false, true, false, uninit_stru);
     rs->o.i = 200;
     rs->o.f = 1.5f;
@@ -89,7 +89,7 @@ void test_refcnt_ptr(void)
     assert_always(cra_refcnt_unref(&ri));
     assert_always(ri.rc.cnt == 0);
 
-    StruRcPtr rs;
+    Stru_rc_p rs;
     Stru s = {.i = 100, .f = 2.5f};
     cra_refcnt_init(&rs, true, false, false, false, uninit_stru);
     rs.p = &s;
@@ -120,7 +120,7 @@ void test_refcnt_ptr(void)
 
     // ====================================
 
-    StruRcPtr *prs = cra_alloc(StruRcPtr);
+    Stru_rc_p *prs = cra_alloc(Stru_rc_p);
     s.i = 300;
     s.f = 4.5f;
     cra_refcnt_init(prs, true, false, true, false, uninit_stru);
@@ -136,7 +136,7 @@ void test_refcnt_ptr(void)
 
     // ====
 
-    prs = cra_alloc(StruRcPtr);
+    prs = cra_alloc(Stru_rc_p);
     ps = cra_alloc(Stru);
     ps->i = 400;
     ps->f = 5.5f;
@@ -154,7 +154,7 @@ void test_refcnt_ptr(void)
 
 static CRA_THRD_FUNC(thread_func)
 {
-    StruRc *rs = (StruRc *)arg;
+    Stru_rc *rs = (Stru_rc *)arg;
     cra_log_info("thread: Stru{i: %d, f: %f}", rs->o.i, rs->o.f);
     cra_refcnt_unref0(rs);
     return (cra_thrd_ret_t){0};
@@ -162,7 +162,7 @@ static CRA_THRD_FUNC(thread_func)
 
 void test_multithread(void)
 {
-    StruRc *rs = cra_alloc(StruRc);
+    Stru_rc *rs = cra_alloc(Stru_rc);
     rs->o.i = 1000;
     rs->o.f = 1000.5f;
     cra_refcnt_init(rs, false, false, true, false, uninit_stru);
@@ -177,7 +177,7 @@ void test_multithread(void)
     cra_thrd_join(th);
 }
 
-static void uninit_stru_rc(StruRc *rc)
+static void uninit_stru_rc(Stru_rc *rc)
 {
     Stru *s = &rc->o;
     cra_log_info("uninit Stru{i: %d, f: %f} refcnt: %u", s->i, s->f, rc->rc.cnt);
@@ -185,7 +185,7 @@ static void uninit_stru_rc(StruRc *rc)
 
 void test_refcnt_rc_head(void)
 {
-    StruRc *s = cra_alloc(StruRc);
+    Stru_rc *s = cra_alloc(Stru_rc);
     s->o.f = 4.8f;
     s->o.i = 1000;
     cra_refcnt_init(s, false, false, true, true, (cra_uninit_fn)uninit_stru_rc);
