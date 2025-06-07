@@ -2,30 +2,16 @@
 #include "cra_assert.h"
 #include "cra_malloc.h"
 
-static inline void _cra_refcnt_init(void *rc, void *ptr, bool freeptr, bool freeself, bool uninit_param_with_rc_head, cra_uninit_fn uninit)
+void cra_refcnt_init(void *rc, bool is_obj_ptr, bool free_obj_ptr, bool free_rc, bool uninit_param_with_rc_head, cra_uninit_fn uninit)
 {
     assert_always(rc != NULL);
-    assert_always(uninit != NULL);
     __CraRefcnt *ref = (__CraRefcnt *)rc;
-    ref->isptr = !!ptr;
-    ref->freeptr = freeptr;
-    ref->freeself = freeself;
+    ref->isptr = is_obj_ptr;
+    ref->freeptr = free_obj_ptr;
+    ref->freeself = free_rc;
     ref->uninit_param_with_rc = uninit_param_with_rc_head;
     ref->cnt = 1;
     ref->uninit = uninit;
-    if (!!ptr)
-        ((CRA_REFCNT_PTR(void *) *)rc)->p = ptr;
-}
-
-void cra_refcnt_init(void *rc, bool freeself, bool uninit_param_with_rc_head, cra_uninit_fn uninit)
-{
-    _cra_refcnt_init(rc, NULL, false, freeself, uninit_param_with_rc_head, uninit);
-}
-
-void cra_refcnt_init_ptr(void *rc, void *ptr, bool freeptr, bool freeself, bool uninit_param_with_rc_head, cra_uninit_fn uninit)
-{
-    assert_always(ptr != NULL);
-    _cra_refcnt_init(rc, ptr, freeptr, freeself, uninit_param_with_rc_head, uninit);
 }
 
 bool cra_refcnt_unref(void *rc)
