@@ -1178,6 +1178,86 @@ void test_dict_in_struct(void)
     cra_dealloc(aa.pdict);
 }
 
+#if 1 // 测试结构字段数不同
+
+struct Old
+{
+    int32_t i;
+    char *str;
+};
+CRA_TYPE_META_BEGIN(meta_old)
+CRA_TYPE_META_INT32_MEMBER(struct Old, i)
+CRA_TYPE_META_STRING_MEMBER(struct Old, str, true)
+CRA_TYPE_META_END();
+struct New
+{
+    float f; // 新字段在结构中位置随意
+    int32_t i;
+    char *str;
+};
+CRA_TYPE_META_BEGIN(meta_new)
+CRA_TYPE_META_INT32_MEMBER(struct New, i)
+CRA_TYPE_META_STRING_MEMBER(struct New, str, true)
+CRA_TYPE_META_FLOAT_MEMBER(struct New, f) // 保证新的字段的meta在旧的meta后面
+CRA_TYPE_META_END();
+
+void test_new2old(void)
+{
+    unsigned char buff[1024];
+    size_t buffsize;
+    CraSerError_e error;
+
+    struct New n = {1.5f, 100, "hello world"};
+    buffsize = sizeof(buff);
+    cra_bin_serialize_struct0(buff, &buffsize, &n, meta_new, &error);
+    assert_always(error == CRA_SER_ERROR_SUCCESS);
+
+    cra_bin_serialize_print(buff, buffsize);
+
+    struct Old o;
+    cra_bin_deserialize_struct0(buff, buffsize, &o, sizeof(o), false, meta_old, NULL, NULL, &error);
+    assert_always(error == CRA_SER_ERROR_SUCCESS);
+    assert_always(o.i == n.i);
+    assert_always(strcmp(o.str, n.str) == 0);
+
+    cra_free(o.str);
+}
+
+// 设置缺省值
+static void init_new(struct New *n, void *ignore)
+{
+    CRA_UNUSED_VALUE(ignore);
+    n->f = 2.8f;
+    n->i = 200;
+    n->str = NULL;
+}
+
+void test_old2new(void)
+{
+    unsigned char buff[1024];
+    size_t buffsize;
+    CraSerError_e error;
+
+    struct Old o = {100, "hello world"};
+    buffsize = sizeof(buff);
+    cra_bin_serialize_struct0(buff, &buffsize, &o, meta_old, &error);
+    assert_always(error == CRA_SER_ERROR_SUCCESS);
+
+    cra_bin_serialize_print(buff, buffsize);
+
+    struct New n;
+    const CraTypeInit_i init_i = {0, 0, (void (*)(void *, void *))init_new, 0};
+    cra_bin_deserialize_struct0(buff, buffsize, &n, sizeof(n), false, meta_new, &init_i, NULL, &error);
+    assert_always(error == CRA_SER_ERROR_SUCCESS);
+    assert_always(o.i == n.i);
+    assert_always(strcmp(o.str, n.str) == 0);
+    assert_always(cra_compare_float_p(&n.f, &(float){2.8f}) == 0);
+
+    cra_free(n.str);
+}
+
+#endif
+
 int main(void)
 {
     test_begin_end();
@@ -1193,6 +1273,8 @@ int main(void)
     test_array_in_struct();
     test_dict();
     test_dict_in_struct();
+    test_new2old();
+    test_old2new();
 
     cra_memory_leak_report(stdout);
     return 0;

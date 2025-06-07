@@ -699,6 +699,16 @@ static inline void *cra_json_alloc_init(CraSerializer *ser, void *retval, size_t
     return retval;
 }
 
+#define CRA_BUF_HAS_CHAR(_ser) ((_ser)->index + 1 < (_ser)->length)
+#define CRA_BUF_IS_OBJ_END(_ser) ((CraType_e)(*((_ser)->buffer + (_ser)->index)) == __CRA_TYPE_END)
+
+static inline bool cra_bin_skip_values_and_check_flag(CraSerializer *ser)
+{
+    while (CRA_BUF_HAS_CHAR(ser) && !CRA_BUF_IS_OBJ_END(ser))
+        ++ser->index;
+    return CRA_BUF_IS_OBJ_END(ser);
+}
+
 bool cra_bin_deserialize_struct(CraSerializer *ser, void *retval, size_t valsize, bool is_ptr, bool auto_free_if_fail,
                                 const CraTypeMeta *members_meta, const CraTypeInit_i *init_i, void *args4init)
 {
@@ -725,8 +735,12 @@ bool cra_bin_deserialize_struct(CraSerializer *ser, void *retval, size_t valsize
     CRA_SERIALIZER_BUF(ser, buf, 1);
     if (__CRA_TYPE_END != (CraType_e)*buf)
     {
-        (ser)->error = CRA_SER_ERROR_INVALID_VALUE;
-        return false;
+        // skip the rest of values
+        if (!cra_bin_skip_values_and_check_flag(ser))
+        {
+            (ser)->error = CRA_SER_ERROR_INVALID_VALUE;
+            return false;
+        }
     }
     ++ser->index;
 
@@ -1027,7 +1041,7 @@ static bool cra_bin_deserialize_once(CraSerializer *ser, void *val, size_t offse
 static bool cra_bin_deserialize_all(CraSerializer *ser, void *val, const CraTypeMeta *meta, bool auto_free_if_fail)
 {
     CraTypeMeta *m = (CraTypeMeta *)meta;
-    while (m->type != __CRA_TYPE_END_OF_META)
+    while (m->type != __CRA_TYPE_END_OF_META && (CRA_BUF_HAS_CHAR(ser) && !CRA_BUF_IS_OBJ_END(ser)))
     {
         if (!cra_bin_deserialize_once(ser, val, m->offset, m, auto_free_if_fail))
             return false;
