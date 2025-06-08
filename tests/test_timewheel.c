@@ -134,6 +134,48 @@ void test_timeout_less_than_tick(void)
     cra_timewheel_uninit(&wheel);
 }
 
+static void on_remove(CraTimer_base *timer)
+{
+    cra_log_info("remove timer[%u, %u].", timer->timeout_ms, timer->repeat);
+    cra_dealloc(timer);
+}
+
+void test_timer_clear(void)
+{
+    CraTimer_base *t1, *t2, *t3, *t4, *stop;
+    CraTimewheel *wheel;
+
+    wheel = cra_alloc(CraTimewheel);
+    cra_timewheel_init(wheel, 50, 20);
+
+    t1 = cra_alloc(CraTimer_base);
+    t2 = cra_alloc(CraTimer_base);
+    t3 = cra_alloc(CraTimer_base);
+    t4 = cra_alloc(CraTimer_base);
+    stop = cra_alloc(CraTimer_base);
+    cra_timer_base_init(t1, UINT32_MAX, 500, on_timeout1, on_remove);
+    cra_timer_base_init(t2, UINT32_MAX, 1000, on_timeout1, on_remove);
+    cra_timer_base_init(t3, UINT32_MAX, 2000, on_timeout1, on_remove);
+    cra_timer_base_init(t4, UINT32_MAX, 3000, on_timeout1, on_remove);
+    cra_timer_base_init(stop, 1, 10000, stop_timewheel, on_remove);
+
+    cra_timewheel_add(wheel, t1);
+    cra_timewheel_add(wheel, t2);
+    cra_timewheel_add(wheel, t3);
+    cra_timewheel_add(wheel, t4);
+    cra_timewheel_add(wheel, stop);
+
+    flag = true;
+    while (flag)
+    {
+        cra_msleep(50);
+        cra_timewheel_tick(wheel);
+    }
+
+    cra_timewheel_uninit(wheel);
+    cra_dealloc(wheel);
+}
+
 int main(void)
 {
     cra_log_startup(CRA_LOG_LEVEL_DEBUG, false, true);
@@ -143,6 +185,8 @@ int main(void)
     test_timewheel2();
     cra_log_info("----------------------- ^_^ -----------------------");
     test_timeout_less_than_tick();
+    cra_log_info("----------------------- ^_^ -----------------------");
+    test_timer_clear();
 
     cra_log_cleanup();
     cra_memory_leak_report(stdout);

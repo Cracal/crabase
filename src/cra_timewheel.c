@@ -154,6 +154,13 @@ void cra_timewheel_init(CraTimewheel *wheel, unsigned int tick_ms, unsigned int 
     __cra_timewheel_init(wheel, tick_ms, wheel_size, cra_freenodelist_new());
 }
 
+static void cra_timewheel_on_timer_remove(CraTimer_base **pt)
+{
+    CraTimer_base *timer = *pt;
+    if (timer->on_remove_timer)
+        timer->on_remove_timer(timer);
+}
+
 void cra_timewheel_uninit(CraTimewheel *wheel)
 {
     if (wheel->upper_wheel)
@@ -165,6 +172,7 @@ void cra_timewheel_uninit(CraTimewheel *wheel)
     {
         if (wheel->wheel_buckets[i])
         {
+            wheel->wheel_buckets[i]->remove_val = (cra_remove_val_fn)cra_timewheel_on_timer_remove;
             cra_llist_uninit(wheel->wheel_buckets[i]);
             cra_dealloc(wheel->wheel_buckets[i]);
         }
