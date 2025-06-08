@@ -47,7 +47,7 @@ static inline void cra_freenodelist_put(CraLList *list, CraLListNode *node)
 
 #endif // end free node list
 
-void cra_timer_base_init(CraTimer_base *base, unsigned int repeat, unsigned int timeout_ms, cra_timer_fn on_timeout, cra_timer_fn on_timeout_cancel)
+void cra_timer_base_init(CraTimer_base *base, unsigned int repeat, unsigned int timeout_ms, cra_timer_fn on_timeout, cra_timer_fn on_remove_timer)
 {
     assert(repeat > 0);
     assert(timeout_ms > 0);
@@ -57,7 +57,7 @@ void cra_timer_base_init(CraTimer_base *base, unsigned int repeat, unsigned int 
     base->repeat = repeat;
     base->timeout_ms = timeout_ms;
     base->on_timeout = on_timeout;
-    base->on_timeout_cancel = on_timeout_cancel;
+    base->on_remove_timer = on_remove_timer;
 }
 
 #define CRA_TIMER_IN_NODE(_node) (*(CraTimer_base **)(_node)->val)
@@ -127,8 +127,8 @@ static void cra_timewheel_tick_inner(CraTimewheel *wheel, CraTimewheel *lower_wh
         if (!timer->active)
         {
         release_timer:
-            if (timer->on_timeout_cancel)
-                timer->on_timeout_cancel(timer);
+            if (timer->on_remove_timer)
+                timer->on_remove_timer(timer);
             cra_freenodelist_put(wheel->freenodelist, curr);
             continue;
         }

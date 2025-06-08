@@ -23,11 +23,11 @@ struct _CraTimer_base
     bool active;
     unsigned int repeat;
     unsigned int timeout_ms;
-    cra_timer_fn on_timeout;        // timeout && active == true
-    cra_timer_fn on_timeout_cancel; // timeout && (active == false || repeat == 0)
+    cra_timer_fn on_timeout;      // timeout && active == true
+    cra_timer_fn on_remove_timer; // 当定时器被移出time wheel时调用
 };
 
-CRA_API void cra_timer_base_init(CraTimer_base *base, unsigned int repeat, unsigned int timeout_ms, cra_timer_fn on_timeout, cra_timer_fn on_timeout_cancel);
+CRA_API void cra_timer_base_init(CraTimer_base *base, unsigned int repeat, unsigned int timeout_ms, cra_timer_fn on_timeout, cra_timer_fn on_remove_timer);
 
 static inline bool cra_timer_base_is_active(CraTimer_base *base) { return base->active; }
 static inline void cra_timer_base_cancel(CraTimer_base *base) { base->active = false; }
