@@ -15,7 +15,7 @@
 
 #define CRA_BLK_DEQUE_INFINITE CRA_DEQUE_INFINITE
 
-typedef struct
+typedef struct _CraBlkDeque
 {
     CraDeque deque;
     bool blocking_in;  // 阻塞入队

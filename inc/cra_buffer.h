@@ -12,7 +12,7 @@
 #define __CRA_BUFFER_H__
 #include "cra_defs.h"
 
-typedef struct
+typedef struct _CraBuffer
 {
     unsigned int size;
     unsigned int read_idx;

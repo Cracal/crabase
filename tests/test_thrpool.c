@@ -9,7 +9,7 @@
  *
  */
 #include "cra_malloc.h"
-#include "threads/cra_thrpool.h"
+#include "threads/cra_thrdpool.h"
 
 #define PLUS 1000
 
@@ -35,7 +35,7 @@ static void test_thread_pool(void)
 
     tp = cra_alloc(CraThrPool);
     assert_always(!!tp);
-    cra_thrpool_init(tp, num_threads, num_items);
+    cra_thrdpool_init(tp, num_threads, num_items);
 
     vals = cra_malloc(sizeof(*vals) * num_items);
     bzero(vals, sizeof(*vals) * num_items);
@@ -43,12 +43,12 @@ static void test_thread_pool(void)
     for (i = 0; i < num_items; i++)
     {
         vals[i] = i;
-        cra_thrpool_add_task1(tp, worker, vals + i);
+        cra_thrdpool_add_task1(tp, worker, vals + i);
     }
 
-    cra_thrpool_wait(tp);
+    cra_thrdpool_wait(tp);
 
-    cra_thrpool_uninit(tp);
+    cra_thrdpool_uninit(tp);
     cra_dealloc(tp);
 
     for (i = 0; i < num_items; i++)
@@ -69,22 +69,22 @@ static void test_thread_pool2(void)
     int num_items = 100;
 
     tp = cra_alloc(CraThrPool);
-    cra_thrpool_init(tp, num_threads, 10);
-    // cra_thrpool_set_discard_policy(tp, CRA_TPTASK_DISCARD_LAST);
-    cra_thrpool_set_discard_policy(tp, CRA_TPTASK_DISCARD_FIRST);
-    // cra_thrpool_set_discard_policy(tp, CRA_TPTASK_DISCARD_SELF);
+    cra_thrdpool_init(tp, num_threads, 10);
+    // cra_thrdpool_set_discard_policy(tp, CRA_TPTASK_DISCARD_LAST);
+    cra_thrdpool_set_discard_policy(tp, CRA_TPTASK_DISCARD_FIRST);
+    // cra_thrdpool_set_discard_policy(tp, CRA_TPTASK_DISCARD_SELF);
     vals = cra_malloc(sizeof(*vals) * num_items);
     bzero(vals, sizeof(*vals) * num_items);
 
     for (i = 0; i < num_items; i++)
     {
         vals[i] = i;
-        cra_thrpool_add_task1(tp, worker, vals + i);
+        cra_thrdpool_add_task1(tp, worker, vals + i);
     }
 
-    cra_thrpool_wait(tp);
+    cra_thrdpool_wait(tp);
 
-    cra_thrpool_uninit(tp);
+    cra_thrdpool_uninit(tp);
     cra_dealloc(tp);
 
     for (i = 0; i < num_items; i++)
@@ -104,20 +104,20 @@ static void test_thread_pool3(void)
     int num_items = 100;
 
     tp = cra_alloc(CraThrPool);
-    cra_thrpool_init(tp, num_threads, num_items);
-    cra_thrpool_set_discard_policy(tp, CRA_TPTASK_DISCARD_FIRST);
+    cra_thrdpool_init(tp, num_threads, num_items);
+    cra_thrdpool_set_discard_policy(tp, CRA_TPTASK_DISCARD_FIRST);
     vals = cra_malloc(sizeof(*vals) * num_items);
     bzero(vals, sizeof(*vals) * num_items);
 
     for (i = 0; i < num_items; i++)
     {
         vals[i] = i;
-        cra_thrpool_add_task1(tp, worker, vals + i);
+        cra_thrdpool_add_task1(tp, worker, vals + i);
     }
 
-    // cra_thrpool_wait(tp);
+    // cra_thrdpool_wait(tp);
 
-    cra_thrpool_uninit(tp);
+    cra_thrdpool_uninit(tp);
     cra_dealloc(tp);
 
     for (i = 0; i < num_items; i++)

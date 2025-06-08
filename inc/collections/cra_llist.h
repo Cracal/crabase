@@ -20,7 +20,7 @@ typedef struct _CraLListNode
     char val[];
 } CraLListNode;
 
-typedef struct
+typedef struct _CraLList
 {
     bool zero_memory;
     size_t ele_size;
@@ -31,7 +31,7 @@ typedef struct
     cra_remove_val_fn remove_val;
 } CraLList;
 
-typedef struct
+typedef struct _CraLListIter
 {
     CraLListNode *curr;
     CraLListNode *head;
@@ -89,7 +89,7 @@ CRA_API CraLListNode *cra_llist_get_node(CraLList *list, size_t index);
 
 // =================
 
-typedef struct
+typedef struct _CraLListSerInitArgs
 {
     bool zero_memory;
     size_t element_size;

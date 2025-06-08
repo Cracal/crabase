@@ -13,7 +13,7 @@
 #include "cra_collects.h"
 #include "serialize/cra_serialize.h"
 
-typedef struct
+typedef struct _CraAList
 {
     bool zero_memory;
     size_t ele_size;
@@ -23,7 +23,7 @@ typedef struct
     cra_remove_val_fn remove_val;
 } CraAList;
 
-typedef struct
+typedef struct _CraAListIter
 {
     size_t index;
     CraAList *list;
@@ -73,7 +73,7 @@ CRA_API bool cra_alist_add_sort(CraAList *list, cra_compare_fn compare, void *va
 
 // =================
 
-typedef struct
+typedef struct _CraAListSerInitArgs
 {
     bool zero_memory;
     size_t element_size;

@@ -13,14 +13,14 @@
 #include "cra_collects.h"
 #include "serialize/cra_serialize.h"
 
-typedef struct
+typedef struct _CraDictEntry
 {
     cra_hash_t hashcode;
     ssize_t next;
     char kv[];
 } CraDictEntry;
 
-typedef struct
+typedef struct _CraDict
 {
     bool zero_memory;
     size_t key_size;
@@ -38,7 +38,7 @@ typedef struct
     cra_remove_val_fn remove_val;
 } CraDict;
 
-typedef struct
+typedef struct _CraDictIter
 {
     ssize_t index;
     CraDict *dict;
@@ -73,7 +73,7 @@ CRA_API CraDict *cra_dict_clone(CraDict *dict, cra_deep_copy_val_fn deep_copy_ke
 
 // =========
 
-typedef struct
+typedef struct _CraDictSerInitArgs
 {
     bool zero_memory;
     size_t key_size;

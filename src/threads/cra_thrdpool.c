@@ -1,5 +1,5 @@
 /**
- * @file cra_thrpool.c
+ * @file cra_thrdpool.c
  * @author Cracal
  * @brief 线程池
  * @version 0.1
@@ -10,12 +10,12 @@
  */
 #include "cra_malloc.h"
 #include "threads/cra_cdl.h"
-#include "threads/cra_thrpool.h"
+#include "threads/cra_thrdpool.h"
 
 typedef struct
 {
     CraThrPoolArgs2 args;
-    cra_thrpool_task_fn2 func;
+    cra_thrdpool_task_fn2 func;
 } CraThrPoolTask;
 
 struct _CraThrPoolWorker
@@ -25,7 +25,7 @@ struct _CraThrPoolWorker
     cra_thrd_t thrd;
 };
 
-static CRA_THRD_FUNC(__cra_thrpool_worker)
+static CRA_THRD_FUNC(__cra_thrdpool_worker)
 {
     CraThrPoolTask task;
     CraThrPoolWorker *worker = (CraThrPoolWorker *)arg;
@@ -60,7 +60,7 @@ static CRA_THRD_FUNC(__cra_thrpool_worker)
     return (cra_thrd_ret_t){0};
 }
 
-void cra_thrpool_init(CraThrPool *pool, int threads, size_t task_max)
+void cra_thrdpool_init(CraThrPool *pool, int threads, size_t task_max)
 {
     assert(threads > 0 && task_max > 0);
     pool->can_in = true;
@@ -80,7 +80,7 @@ void cra_thrpool_init(CraThrPool *pool, int threads, size_t task_max)
     {
         pool->threads[i].pool = pool;
         pool->threads[i].cdl = &cdl;
-        if (!cra_thrd_create(&pool->threads[i].thrd, __cra_thrpool_worker, &pool->threads[i]))
+        if (!cra_thrd_create(&pool->threads[i].thrd, __cra_thrdpool_worker, &pool->threads[i]))
             goto error_ret;
     }
 
@@ -92,18 +92,18 @@ void cra_thrpool_init(CraThrPool *pool, int threads, size_t task_max)
 
 error_ret:
     cra_cdl_uninit(&cdl);
-    cra_thrpool_uninit(pool);
+    cra_thrdpool_uninit(pool);
 }
 
-void cra_thrpool_uninit(CraThrPool *pool)
+void cra_thrdpool_uninit(CraThrPool *pool)
 {
     pool->handle_exist_task = false;
-    cra_thrpool_wait(pool);
+    cra_thrdpool_wait(pool);
     cra_blkdeque_uninit(&pool->task_que);
     cra_free(pool->threads);
 }
 
-void cra_thrpool_wait(CraThrPool *pool)
+void cra_thrdpool_wait(CraThrPool *pool)
 {
     pool->can_in = false;
     pool->is_running = false;
@@ -116,7 +116,7 @@ void cra_thrpool_wait(CraThrPool *pool)
     }
 }
 
-static inline bool cra_thrpool_discard_task(CraThrPool *pool)
+static inline bool cra_thrdpool_discard_task(CraThrPool *pool)
 {
     if (cra_blkdeque_get_count(&pool->task_que) < pool->task_max)
         return true;
@@ -138,7 +138,7 @@ static inline bool cra_thrpool_discard_task(CraThrPool *pool)
     return false;
 }
 
-bool cra_thrpool_add_task2(CraThrPool *pool, cra_thrpool_task_fn2 func, void *arg1, void *arg2)
+bool cra_thrdpool_add_task2(CraThrPool *pool, cra_thrdpool_task_fn2 func, void *arg1, void *arg2)
 {
     CraThrPoolTask task;
 
@@ -153,10 +153,10 @@ bool cra_thrpool_add_task2(CraThrPool *pool, cra_thrpool_task_fn2 func, void *ar
 add_task:
     if (cra_blkdeque_push_nonblocking(&pool->task_que, &task))
         return true;
-    if (cra_thrpool_discard_task(pool))
+    if (cra_thrdpool_discard_task(pool))
         goto add_task;
 
 end:
-    fprintf(stderr, "cra_thrpool_add_task() -- 任务被拒绝.\n");
+    fprintf(stderr, "cra_thrdpool_add_task() -- 任务被拒绝.\n");
     return false;
 }

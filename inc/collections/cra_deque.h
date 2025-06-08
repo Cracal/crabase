@@ -12,7 +12,7 @@
 #define __CRA_DEQUE_H__
 #include "cra_llist.h"
 
-typedef struct
+typedef struct _CraDeque
 {
     bool zero_memory;
     size_t ele_size;
@@ -24,7 +24,7 @@ typedef struct
     cra_remove_val_fn remove_val;
 } CraDeque;
 
-typedef struct
+typedef struct _CraDequeIter
 {
     size_t index;
     CraLListNode *curr;
@@ -67,7 +67,7 @@ CRA_API CraDeque *cra_deque_clone(CraDeque *deque, cra_deep_copy_val_fn deep_cop
 
 // =================
 
-typedef struct
+typedef struct _CraDequeSerInitArgs
 {
     bool zero_memory;
     size_t que_max;

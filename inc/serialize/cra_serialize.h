@@ -16,7 +16,7 @@ typedef uint32_t cra_ser_count_t;
 #define CRA_SER_COUNT_MAX UINT32_MAX
 #define CRA_SER_SWAP_COUNT CRA_SER_SWAP32
 
-typedef enum
+typedef enum _CraSerError_e
 {
     CRA_SER_ERROR_SUCCESS = 0,           // success
     CRA_SER_ERROR_NOBUF,                 // (de)serializer no more buffer
@@ -35,7 +35,7 @@ typedef enum
     CRA_SER_ERROR_JSON_CANNOT_BE_KEY,    // this value(type) cannot be a key
 } CraSerError_e;
 
-typedef enum
+typedef enum _CraType_e
 {
     CRA_TYPE_FALSE = 0,
     CRA_TYPE_TRUE = 1,
@@ -58,7 +58,7 @@ typedef enum
     __CRA_TYPE_END_OF_META,
 } CraType_e;
 
-typedef struct
+typedef struct _CraSerReleaseNode
 {
     bool free;
     void *ptr;
@@ -66,7 +66,7 @@ typedef struct
     void (*dealloc)(void *);
 } CraSerReleaseNode;
 
-typedef struct
+typedef struct _CraSerRelease
 {
     size_t current;
     size_t n_nodes;
@@ -74,7 +74,7 @@ typedef struct
     CraSerReleaseNode *nodes2;
 } CraSerRelease;
 
-typedef struct
+typedef struct _CraSerializer
 {
     CraSerError_e error;
     uint16_t nested;
@@ -88,7 +88,7 @@ typedef struct
 
 typedef struct _CraTypeMeta CraTypeMeta;
 
-typedef union
+typedef union _CraTypeIter_i
 {
     struct
     {
@@ -106,7 +106,7 @@ typedef union
 
 #define CRA_SERI_ITER_SIZE 64
 
-typedef struct
+typedef struct _CraTypeInit_i
 {
     // 可选
     void *(*alloc)(void);

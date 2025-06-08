@@ -12,7 +12,7 @@
 #define __CRA_LOG_H__
 #include "cra_defs.h"
 
-typedef enum
+typedef enum _CraLogLevel_e
 {
     CRA_LOG_LEVEL_TRACE,
     CRA_LOG_LEVEL_DEBUG,
