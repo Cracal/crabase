@@ -27,18 +27,7 @@ struct _CraTimer_base
     cra_timer_fn on_timeout_cancel; // timeout && (active == false || repeat == 0)
 };
 
-static inline void cra_timer_base_init(CraTimer_base *base, unsigned int repeat, unsigned int timeout_ms, cra_timer_fn on_timeout, cra_timer_fn on_timeout_cancel)
-{
-    assert(repeat > 0);
-    assert(timeout_ms > 0);
-    assert(on_timeout != NULL);
-
-    base->active = true;
-    base->repeat = repeat;
-    base->timeout_ms = timeout_ms;
-    base->on_timeout = on_timeout;
-    base->on_timeout_cancel = on_timeout_cancel;
-}
+CRA_API void cra_timer_base_init(CraTimer_base *base, unsigned int repeat, unsigned int timeout_ms, cra_timer_fn on_timeout, cra_timer_fn on_timeout_cancel);
 
 static inline bool cra_timer_base_is_active(CraTimer_base *base) { return base->active; }
 static inline void cra_timer_base_cancel(CraTimer_base *base) { base->active = false; }

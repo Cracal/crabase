@@ -108,6 +108,32 @@ void test_timewheel2(void)
     cra_dealloc(wheel);
 }
 
+static void stop_timewheel(CraTimer_base *timer)
+{
+    CRA_UNUSED_VALUE(timer);
+    flag = false;
+}
+
+void test_timeout_less_than_tick(void)
+{
+    CraTimer_base timer;
+    cra_timer_base_init(&timer, 3, 8, on_timeout1, stop_timewheel);
+
+    CraTimewheel wheel;
+    cra_timewheel_init(&wheel, 1000, 64);
+
+    cra_timewheel_add(&wheel, &timer);
+
+    flag = true;
+    while (flag)
+    {
+        cra_sleep(1);
+        cra_timewheel_tick(&wheel);
+    }
+
+    cra_timewheel_uninit(&wheel);
+}
+
 int main(void)
 {
     cra_log_startup(CRA_LOG_LEVEL_DEBUG, false, true);
@@ -115,6 +141,8 @@ int main(void)
     test_timewheel();
     cra_log_info("----------------------- ^_^ -----------------------");
     test_timewheel2();
+    cra_log_info("----------------------- ^_^ -----------------------");
+    test_timeout_less_than_tick();
 
     cra_log_cleanup();
     cra_memory_leak_report(stdout);

@@ -47,6 +47,19 @@ static inline void cra_freenodelist_put(CraLList *list, CraLListNode *node)
 
 #endif // end free node list
 
+void cra_timer_base_init(CraTimer_base *base, unsigned int repeat, unsigned int timeout_ms, cra_timer_fn on_timeout, cra_timer_fn on_timeout_cancel)
+{
+    assert(repeat > 0);
+    assert(timeout_ms > 0);
+    assert(on_timeout != NULL);
+
+    base->active = true;
+    base->repeat = repeat;
+    base->timeout_ms = timeout_ms;
+    base->on_timeout = on_timeout;
+    base->on_timeout_cancel = on_timeout_cancel;
+}
+
 #define CRA_TIMER_IN_NODE(_node) (*(CraTimer_base **)(_node)->val)
 
 static void __cra_timewheel_init(CraTimewheel *wheel, unsigned int tick_ms, unsigned int wheel_size, CraLList *freenodelist)
@@ -61,6 +74,7 @@ static void __cra_timewheel_init(CraTimewheel *wheel, unsigned int tick_ms, unsi
 
 static bool cra_timewheel_add_node_to(CraTimewheel *wheel, CraLListNode *timernode, unsigned int remain_timeout_ms)
 {
+    remain_timeout_ms = CRA_MAX(remain_timeout_ms, wheel->tick_ms);
     unsigned int bucket = ((wheel->current + remain_timeout_ms / wheel->tick_ms) % wheel->wheel_size);
     CraLList *list = wheel->wheel_buckets[bucket];
     if (!list)
