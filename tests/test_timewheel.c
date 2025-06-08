@@ -88,7 +88,7 @@ static void on_timeout3(CraTimer_base *timer)
 void test_timewheel2(void)
 {
     CRA_REFCNT(MyTimer2) *t = (void *)cra_alloc(CRA_REFCNT(MyTimer2));
-    cra_refcnt_init(t, false, false, true, false, on_free_mytimer2);
+    cra_refcnt_init(t, true, false, on_free_mytimer2);
     cra_timer_base_init(&t->o.base, 10, 500, on_timeout3, on_cancel);
     t->o.start = 100;
     t->o.end = "hello world";
