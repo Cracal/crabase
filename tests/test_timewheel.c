@@ -32,25 +32,25 @@ void test_timewheel(void)
 {
     CraTimer_base t1;
     MyTimer t2;
-    CraTimewheel *wheel;
+    CraTimewheel wheel;
 
-    wheel = cra_timewheel_create(50, 20);
+    cra_timewheel_init(&wheel, 50, 20);
 
     cra_timer_base_init(&t1, UINT32_MAX, 1000, on_timeout1, NULL);
     cra_timer_base_init((CraTimer_base *)&t2, 1, 5000, on_timeout2, NULL);
     t2.t1 = &t1;
 
-    assert_always(cra_timewheel_add(wheel, &t1));
-    assert_always(cra_timewheel_add(wheel, (CraTimer_base *)&t2));
+    assert_always(cra_timewheel_add(&wheel, &t1));
+    assert_always(cra_timewheel_add(&wheel, (CraTimer_base *)&t2));
 
     flag = true;
     while (flag)
     {
         cra_msleep(50);
-        cra_timewheel_tick(wheel);
+        cra_timewheel_tick(&wheel);
     }
 
-    cra_timewheel_destroy(wheel);
+    cra_timewheel_uninit(&wheel);
 }
 
 // ==========================
@@ -93,7 +93,8 @@ void test_timewheel2(void)
     t->o.start = 100;
     t->o.end = "hello world";
 
-    CraTimewheel *wheel = cra_timewheel_create(50, 25);
+    CraTimewheel *wheel = cra_alloc(CraTimewheel);
+    cra_timewheel_init(wheel, 50, 25);
     cra_timewheel_add(wheel, &t->o.base);
 
     flag = true;
@@ -103,7 +104,8 @@ void test_timewheel2(void)
         cra_timewheel_tick(wheel);
     }
 
-    cra_timewheel_destroy(wheel);
+    cra_timewheel_uninit(wheel);
+    cra_dealloc(wheel);
 }
 
 int main(void)
