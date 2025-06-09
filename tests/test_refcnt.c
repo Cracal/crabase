@@ -11,8 +11,8 @@ typedef struct
     int i;
     float f;
 } Stru;
-typedef CRA_REFCNT(Stru) Stru_rc;
-typedef CRA_REFCNT_PTR(Stru) Stru_rc_p;
+typedef CRA_REFCNT_DEF(Stru) Stru_rc;
+typedef CRA_REFCNT_PTR_DEF(Stru) Stru_rc_p;
 
 static void uninit_int100(void *pi)
 {
@@ -28,74 +28,74 @@ static void uninit_stru(void *ps)
 
 void test_refcnt(void)
 {
-    CRA_REFCNT(int)
+    CRA_REFCNT_DEF(int)
     ri;
-    ri.o = 100;
+    *CRA_REFCNT_OBJ(&ri) = 100;
     cra_refcnt_init(&ri, false, false, uninit_int100);
-    assert_always(ri.rc.cnt == 1);
+    assert_always(CRA_REFCNT_RC(&ri)->cnt == 1);
     assert_always(cra_refcnt_unref(&ri));
-    assert_always(ri.rc.cnt == 0);
+    assert_always(CRA_REFCNT_RC(&ri)->cnt == 0);
 
     cra_refcnt_init(&ri, false, false, uninit_int100);
-    assert_always(ri.rc.cnt == 1);
+    assert_always(CRA_REFCNT_RC(&ri)->cnt == 1);
     cra_refcnt_ref(&ri);
-    assert_always(ri.rc.cnt == 2);
+    assert_always(CRA_REFCNT_RC(&ri)->cnt == 2);
     assert_always(!cra_refcnt_unref(&ri));
-    assert_always(ri.rc.cnt == 1);
+    assert_always(CRA_REFCNT_RC(&ri)->cnt == 1);
     cra_refcnt_ref(&ri);
-    assert_always(ri.rc.cnt == 2);
+    assert_always(CRA_REFCNT_RC(&ri)->cnt == 2);
     assert_always(!cra_refcnt_unref(&ri));
-    assert_always(ri.rc.cnt == 1);
+    assert_always(CRA_REFCNT_RC(&ri)->cnt == 1);
     assert_always(cra_refcnt_unref(&ri));
-    assert_always(ri.rc.cnt == 0);
+    assert_always(CRA_REFCNT_RC(&ri)->cnt == 0);
 
     Stru_rc *rs = cra_alloc(Stru_rc);
     cra_refcnt_init(rs, true, false, uninit_stru);
-    rs->o.i = 200;
-    rs->o.f = 1.5f;
+    CRA_REFCNT_OBJ(rs)->i = 200;
+    CRA_REFCNT_OBJ(rs)->f = 1.5f;
 
     cra_refcnt_ref(rs);
-    assert_always(rs->rc.cnt == 2);
+    assert_always(CRA_REFCNT_RC(rs)->cnt == 2);
 
     cra_refcnt_unref0(rs);
-    assert_always(rs->rc.cnt == 1);
+    assert_always(CRA_REFCNT_RC(rs)->cnt == 1);
     cra_refcnt_unref_clear((void **)&rs);
     assert_always(rs == NULL);
 }
 
 void test_refcnt_ptr(void)
 {
-    CRA_REFCNT_PTR(int)(ri);
+    CRA_REFCNT_PTR_DEF(int)(ri);
     int *pi = cra_alloc(int);
     *pi = 100;
     cra_refcnt_init(&ri, false, true, uninit_int100);
-    ri.p = pi;
-    assert_always(ri.rc.cnt == 1);
+    CRA_REFCNT_PTR(&ri) = pi;
+    assert_always(CRA_REFCNT_RC(&ri)->cnt == 1);
     cra_refcnt_ref(&ri);
-    assert_always(ri.rc.cnt == 2);
+    assert_always(CRA_REFCNT_RC(&ri)->cnt == 2);
     assert_always(!cra_refcnt_unref(&ri));
-    assert_always(ri.rc.cnt == 1);
+    assert_always(CRA_REFCNT_RC(&ri)->cnt == 1);
     cra_refcnt_ref(&ri);
-    assert_always(ri.rc.cnt == 2);
+    assert_always(CRA_REFCNT_RC(&ri)->cnt == 2);
     assert_always(!cra_refcnt_unref(&ri));
-    assert_always(ri.rc.cnt == 1);
+    assert_always(CRA_REFCNT_RC(&ri)->cnt == 1);
     assert_always(cra_refcnt_unref(&ri));
-    assert_always(ri.rc.cnt == 0);
+    assert_always(CRA_REFCNT_RC(&ri)->cnt == 0);
 
     Stru_rc_p rs;
     Stru *ps = cra_alloc(Stru);
     ps->i = 200;
     ps->f = 3.5f;
     cra_refcnt_init(&rs, false, true, uninit_stru);
-    rs.p = ps;
+    CRA_REFCNT_PTR(&rs) = ps;
 
     cra_refcnt_ref(&rs);
-    assert_always(rs.rc.cnt == 2);
+    assert_always(CRA_REFCNT_RC(&rs)->cnt == 2);
 
     cra_refcnt_unref0(&rs);
-    assert_always(rs.rc.cnt == 1);
+    assert_always(CRA_REFCNT_RC(&rs)->cnt == 1);
     cra_refcnt_unref0(&rs);
-    assert_always(rs.rc.cnt == 0);
+    assert_always(CRA_REFCNT_RC(&rs)->cnt == 0);
 
     // ====================================
 
@@ -104,13 +104,13 @@ void test_refcnt_ptr(void)
     ps->i = 400;
     ps->f = 5.5f;
     cra_refcnt_init(prs, true, true, uninit_stru);
-    prs->p = ps;
+    CRA_REFCNT_PTR(prs) = ps;
 
     cra_refcnt_ref(prs);
-    assert_always(prs->rc.cnt == 2);
+    assert_always(CRA_REFCNT_RC(prs)->cnt == 2);
 
     cra_refcnt_unref0(prs);
-    assert_always(prs->rc.cnt == 1);
+    assert_always(CRA_REFCNT_RC(prs)->cnt == 1);
     cra_refcnt_unref_clear((void **)&prs);
     assert_always(prs == NULL);
 }
@@ -118,7 +118,7 @@ void test_refcnt_ptr(void)
 static CRA_THRD_FUNC(thread_func)
 {
     Stru_rc *rs = (Stru_rc *)arg;
-    cra_log_info("thread: Stru{i: %d, f: %f}", rs->o.i, rs->o.f);
+    cra_log_info("thread: Stru{i: %d, f: %f}", CRA_REFCNT_OBJ(rs)->i, CRA_REFCNT_OBJ(rs)->f);
     cra_refcnt_unref0(rs);
     return (cra_thrd_ret_t){0};
 }
@@ -126,8 +126,8 @@ static CRA_THRD_FUNC(thread_func)
 void test_multithread(void)
 {
     Stru_rc *rs = cra_alloc(Stru_rc);
-    rs->o.i = 1000;
-    rs->o.f = 1000.5f;
+    CRA_REFCNT_OBJ(rs)->i = 1000;
+    CRA_REFCNT_OBJ(rs)->f = 1000.5f;
     cra_refcnt_init(rs, true, false, uninit_stru);
 
     cra_thrd_t th;

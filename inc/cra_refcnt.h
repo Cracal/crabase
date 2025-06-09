@@ -26,24 +26,28 @@ typedef struct
     cra_uninit_fn uninit; // 反初始化回调函数
 } CraRefcnt;
 
-#define CRA_REFCNT_NAME(_Type, _name) \
-    struct _name                      \
-    {                                 \
-        CraRefcnt rc;                 \
-        _Type o;                      \
-    }
-
-#define CRA_REFCNT_PTR_NAME(_Type, _name) \
+#define CRA_REFCNT_NAME_DEF(_Type, _name) \
     struct _name                          \
     {                                     \
         CraRefcnt rc;                     \
-        _Type *p;                         \
+        _Type o;                          \
     }
 
-#define CRA_REFCNT(_Type) \
-    CRA_REFCNT_NAME(_Type, )
-#define CRA_REFCNT_PTR(_Type) \
-    CRA_REFCNT_PTR_NAME(_Type, )
+#define CRA_REFCNT_PTR_NAME_DEF(_Type, _name) \
+    struct _name                              \
+    {                                         \
+        CraRefcnt rc;                         \
+        _Type *p;                             \
+    }
+
+#define CRA_REFCNT_DEF(_Type) \
+    CRA_REFCNT_NAME_DEF(_Type, )
+#define CRA_REFCNT_PTR_DEF(_Type) \
+    CRA_REFCNT_PTR_NAME_DEF(_Type, )
+
+#define CRA_REFCNT_RC(_rc) (&(_rc)->rc)
+#define CRA_REFCNT_OBJ(_rc) (&(_rc)->o)
+#define CRA_REFCNT_PTR(_rc) ((_rc)->p)
 
 CRA_API void cra_refcnt_init(void *rc, bool free_rc, bool free_obj, cra_uninit_fn uninit);
 

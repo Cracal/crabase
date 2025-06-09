@@ -71,7 +71,7 @@ static void on_free_mytimer2(void *timer)
 static void on_cancel(CraTimer_base *timer)
 {
     MyTimer2 *t = container_of(timer, MyTimer2, base);
-    CRA_REFCNT(MyTimer2) *trc = (void *)container_of(t, CRA_REFCNT(MyTimer2), o);
+    CRA_REFCNT_DEF(MyTimer2) *trc = (void *)container_of(t, CRA_REFCNT_DEF(MyTimer2), o);
     cra_refcnt_unref0(trc);
 
     flag = false;
@@ -80,22 +80,22 @@ static void on_cancel(CraTimer_base *timer)
 static void on_timeout3(CraTimer_base *timer)
 {
     MyTimer2 *t = container_of(timer, MyTimer2, base);
-    CRA_REFCNT(MyTimer2) *trc = (void *)container_of(t, CRA_REFCNT(MyTimer2), o);
+    CRA_REFCNT_DEF(MyTimer2) *trc = (void *)container_of(t, CRA_REFCNT_DEF(MyTimer2), o);
     cra_log_info("timeout! [timer: 0x%x, tick: %ums, repeat: %u, refcnt: %u, start: %d, end: %s]",
                  timer, timer->timeout_ms, timer->repeat, trc->rc.cnt, t->start, t->end);
 }
 
 void test_timewheel2(void)
 {
-    CRA_REFCNT(MyTimer2) *t = (void *)cra_alloc(CRA_REFCNT(MyTimer2));
+    CRA_REFCNT_DEF(MyTimer2) *t = (void *)cra_alloc(CRA_REFCNT_DEF(MyTimer2));
     cra_refcnt_init(t, true, false, on_free_mytimer2);
-    cra_timer_base_init(&t->o.base, 10, 500, on_timeout3, on_cancel);
-    t->o.start = 100;
-    t->o.end = "hello world";
+    cra_timer_base_init(&CRA_REFCNT_OBJ(t)->base, 10, 500, on_timeout3, on_cancel);
+    CRA_REFCNT_OBJ(t)->start = 100;
+    CRA_REFCNT_OBJ(t)->end = "hello world";
 
     CraTimewheel *wheel = cra_alloc(CraTimewheel);
     cra_timewheel_init(wheel, 50, 25);
-    cra_timewheel_add(wheel, &t->o.base);
+    cra_timewheel_add(wheel, &CRA_REFCNT_OBJ(t)->base);
 
     flag = true;
     while (flag)
