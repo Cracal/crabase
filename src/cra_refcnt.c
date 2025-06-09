@@ -5,7 +5,7 @@
 void cra_refcnt_init(void *rc, bool free_rc, bool free_obj, cra_uninit_fn uninit)
 {
     assert_always(rc != NULL);
-    __CraRefcnt *ref = (__CraRefcnt *)rc;
+    CraRefcnt *ref = (CraRefcnt *)rc;
     ref->freeptr = free_obj;
     ref->freeself = free_rc;
     ref->cnt = 1;
@@ -15,7 +15,7 @@ void cra_refcnt_init(void *rc, bool free_rc, bool free_obj, cra_uninit_fn uninit
 bool cra_refcnt_unref(void *rc)
 {
     assert_always(rc != NULL);
-    __CraRefcnt *ref = (__CraRefcnt *)rc;
+    CraRefcnt *ref = (CraRefcnt *)rc;
     if (__CRA_REFCNT_DEC(&ref->cnt) == 1)
     {
         void *ptr = ref->freeptr ? ((CRA_REFCNT_PTR(void) *)rc)->p : (void *)&((CRA_REFCNT(int) *)rc)->o;

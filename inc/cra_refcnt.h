@@ -24,19 +24,19 @@ typedef struct
     bool freeself;        // 计数为0时，是否释放引用计数占用的内存。引用计数是堆上的内存时应设为true
     cra_refcnt_t cnt;     // 计数
     cra_uninit_fn uninit; // 反初始化回调函数
-} __CraRefcnt;
+} CraRefcnt;
 
 #define CRA_REFCNT_NAME(_Type, _name) \
     struct _name                      \
     {                                 \
-        __CraRefcnt rc;               \
+        CraRefcnt rc;                 \
         _Type o;                      \
     }
 
 #define CRA_REFCNT_PTR_NAME(_Type, _name) \
     struct _name                          \
     {                                     \
-        __CraRefcnt rc;                   \
+        CraRefcnt rc;                     \
         _Type *p;                         \
     }
 
@@ -49,7 +49,7 @@ CRA_API void cra_refcnt_init(void *rc, bool free_rc, bool free_obj, cra_uninit_f
 
 static inline void cra_refcnt_ref(void *rc)
 {
-    __CraRefcnt *ref = (__CraRefcnt *)rc;
+    CraRefcnt *ref = (CraRefcnt *)rc;
     __CRA_REFCNT_INC(&ref->cnt);
 }
 
