@@ -15,67 +15,67 @@
 #include "cra_locker.h"
 #include "cra_blk_deque.h"
 
-typedef enum _CraThrPoolDiscardPolicy_e
+typedef enum _CraThrdPoolDiscardPolicy_e
 {
     CRA_TPTASK_DISCARD_SELF = 0,
     CRA_TPTASK_DISCARD_FIRST,
     CRA_TPTASK_DISCARD_LAST,
-} CraThrPoolDiscardPolicy_e;
+} CraThrdPoolDiscardPolicy_e;
 
-typedef struct _CraThrPoolWorker CraThrPoolWorker;
+typedef struct _CraThrdPoolWorker CraThrdPoolWorker;
 
-typedef struct _CraThrPool
+typedef struct _CraThrdPool
 {
     bool can_in;
     bool is_running;
     bool handle_exist_task;
-    CraThrPoolDiscardPolicy_e discard_policy;
+    CraThrdPoolDiscardPolicy_e discard_policy;
     cra_atomic_int32_t idle_threads;
     int threadcnt;
     size_t task_max;
     CraBlkDeque task_que;
-    CraThrPoolWorker *threads;
-} CraThrPool;
+    CraThrdPoolWorker *threads;
+} CraThrdPool;
 
 typedef struct
 {
     cra_tid_t tid;
-} CraThrPoolArgs0;
+} CraThrdPoolArgs0;
 
 typedef struct
 {
-    CraThrPoolArgs0;
+    CraThrdPoolArgs0;
     void *arg1;
-} CraThrPoolArgs1;
+} CraThrdPoolArgs1;
 
 typedef struct
 {
-    CraThrPoolArgs1;
+    CraThrdPoolArgs1;
     void *arg2;
-} CraThrPoolArgs2;
+} CraThrdPoolArgs2;
 
-typedef void (*cra_thrdpool_task_fn0)(const CraThrPoolArgs0 *);
-typedef void (*cra_thrdpool_task_fn1)(const CraThrPoolArgs1 *);
-typedef void (*cra_thrdpool_task_fn2)(const CraThrPoolArgs2 *);
+typedef void (*cra_thrdpool_task_fn0)(const CraThrdPoolArgs0 *);
+typedef void (*cra_thrdpool_task_fn1)(const CraThrdPoolArgs1 *);
+typedef void (*cra_thrdpool_task_fn2)(const CraThrdPoolArgs2 *);
 
 #define CRA_THRDPOOL_TASK_INFINITE CRA_BLK_DEQUE_INFINITE
 
-CRA_API void cra_thrdpool_init(CraThrPool *pool, int threads, size_t task_max);
-CRA_API void cra_thrdpool_uninit(CraThrPool *pool);
+CRA_API void cra_thrdpool_init(CraThrdPool *pool, int threads, size_t task_max);
+CRA_API void cra_thrdpool_uninit(CraThrdPool *pool);
 
-CRA_API void cra_thrdpool_wait(CraThrPool *pool);
+CRA_API void cra_thrdpool_wait(CraThrdPool *pool);
 
-static inline void cra_thrdpool_set_discard_policy(CraThrPool *pool, CraThrPoolDiscardPolicy_e policy)
+static inline void cra_thrdpool_set_discard_policy(CraThrdPool *pool, CraThrdPoolDiscardPolicy_e policy)
 {
     pool->discard_policy = policy;
 }
 
-CRA_API bool cra_thrdpool_add_task2(CraThrPool *pool, cra_thrdpool_task_fn2 func, void *arg1, void *arg2);
-static inline bool cra_thrdpool_add_task1(CraThrPool *pool, cra_thrdpool_task_fn1 func, void *arg)
+CRA_API bool cra_thrdpool_add_task2(CraThrdPool *pool, cra_thrdpool_task_fn2 func, void *arg1, void *arg2);
+static inline bool cra_thrdpool_add_task1(CraThrdPool *pool, cra_thrdpool_task_fn1 func, void *arg)
 {
     return cra_thrdpool_add_task2(pool, (cra_thrdpool_task_fn2)func, arg, NULL);
 }
-static inline bool cra_thrdpool_add_task0(CraThrPool *pool, cra_thrdpool_task_fn0 func)
+static inline bool cra_thrdpool_add_task0(CraThrdPool *pool, cra_thrdpool_task_fn0 func)
 {
     return cra_thrdpool_add_task2(pool, (cra_thrdpool_task_fn2)func, NULL, NULL);
 }

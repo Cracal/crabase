@@ -14,23 +14,23 @@
 
 typedef struct
 {
-    CraThrPoolArgs2 args;
+    CraThrdPoolArgs2 args;
     cra_thrdpool_task_fn2 func;
-} CraThrPoolTask;
+} CraThrdPoolTask;
 
-struct _CraThrPoolWorker
+struct _CraThrdPoolWorker
 {
     CraCDL *cdl;
-    CraThrPool *pool;
+    CraThrdPool *pool;
     cra_thrd_t thrd;
 };
 
 static CRA_THRD_FUNC(__cra_thrdpool_worker)
 {
-    CraThrPoolTask task;
-    CraThrPoolWorker *worker = (CraThrPoolWorker *)arg;
+    CraThrdPoolTask task;
+    CraThrdPoolWorker *worker = (CraThrdPoolWorker *)arg;
     CraBlkDeque *taskque = &worker->pool->task_que;
-    CraThrPool *pool = worker->pool;
+    CraThrdPool *pool = worker->pool;
     cra_tid_t tid = cra_thrd_get_current_tid();
 
     cra_cdl_count_down(worker->cdl);
@@ -60,7 +60,7 @@ static CRA_THRD_FUNC(__cra_thrdpool_worker)
     return (cra_thrd_ret_t){0};
 }
 
-void cra_thrdpool_init(CraThrPool *pool, int threads, size_t task_max)
+void cra_thrdpool_init(CraThrdPool *pool, int threads, size_t task_max)
 {
     assert(threads > 0 && task_max > 0);
     pool->can_in = true;
@@ -69,8 +69,8 @@ void cra_thrdpool_init(CraThrPool *pool, int threads, size_t task_max)
     pool->idle_threads = threads;
     pool->threadcnt = 0;
     pool->task_max = task_max;
-    cra_blkdeque_init0(CraThrPoolTask, &pool->task_que, task_max, false, NULL);
-    pool->threads = (CraThrPoolWorker *)cra_malloc(sizeof(CraThrPoolWorker) * threads);
+    cra_blkdeque_init0(CraThrdPoolTask, &pool->task_que, task_max, false, NULL);
+    pool->threads = (CraThrdPoolWorker *)cra_malloc(sizeof(CraThrdPoolWorker) * threads);
 
 #if 1 // create threads
     CraCDL cdl;
@@ -95,7 +95,7 @@ error_ret:
     cra_thrdpool_uninit(pool);
 }
 
-void cra_thrdpool_uninit(CraThrPool *pool)
+void cra_thrdpool_uninit(CraThrdPool *pool)
 {
     pool->handle_exist_task = false;
     cra_thrdpool_wait(pool);
@@ -103,7 +103,7 @@ void cra_thrdpool_uninit(CraThrPool *pool)
     cra_free(pool->threads);
 }
 
-void cra_thrdpool_wait(CraThrPool *pool)
+void cra_thrdpool_wait(CraThrdPool *pool)
 {
     pool->can_in = false;
     pool->is_running = false;
@@ -116,7 +116,7 @@ void cra_thrdpool_wait(CraThrPool *pool)
     }
 }
 
-static inline bool cra_thrdpool_discard_task(CraThrPool *pool)
+static inline bool cra_thrdpool_discard_task(CraThrdPool *pool)
 {
     if (cra_blkdeque_get_count(&pool->task_que) < pool->task_max)
         return true;
@@ -138,9 +138,9 @@ static inline bool cra_thrdpool_discard_task(CraThrPool *pool)
     return false;
 }
 
-bool cra_thrdpool_add_task2(CraThrPool *pool, cra_thrdpool_task_fn2 func, void *arg1, void *arg2)
+bool cra_thrdpool_add_task2(CraThrdPool *pool, cra_thrdpool_task_fn2 func, void *arg1, void *arg2)
 {
-    CraThrPoolTask task;
+    CraThrdPoolTask task;
 
     if (pool == NULL || !pool->can_in)
         goto end;

@@ -13,7 +13,7 @@
 
 #define PLUS 1000
 
-static void worker(const CraThrPoolArgs1 *args)
+static void worker(const CraThrdPoolArgs1 *args)
 {
     int *val = (int *)args->arg1;
     int old = *val;
@@ -27,13 +27,13 @@ static void worker(const CraThrPoolArgs1 *args)
 
 static void test_thread_pool(void)
 {
-    CraThrPool *tp;
+    CraThrdPool *tp;
     int *vals;
     int i;
     int num_threads = 10;
     int num_items = 1000;
 
-    tp = cra_alloc(CraThrPool);
+    tp = cra_alloc(CraThrdPool);
     assert_always(!!tp);
     cra_thrdpool_init(tp, num_threads, num_items);
 
@@ -62,13 +62,13 @@ static void test_thread_pool(void)
 
 static void test_thread_pool2(void)
 {
-    CraThrPool *tp;
+    CraThrdPool *tp;
     int *vals;
     int i;
     int num_threads = 10;
     int num_items = 100;
 
-    tp = cra_alloc(CraThrPool);
+    tp = cra_alloc(CraThrdPool);
     cra_thrdpool_init(tp, num_threads, 10);
     // cra_thrdpool_set_discard_policy(tp, CRA_TPTASK_DISCARD_LAST);
     cra_thrdpool_set_discard_policy(tp, CRA_TPTASK_DISCARD_FIRST);
@@ -97,13 +97,13 @@ static void test_thread_pool2(void)
 
 static void test_thread_pool3(void)
 {
-    CraThrPool *tp;
+    CraThrdPool *tp;
     int *vals;
     int i;
     int num_threads = 10;
     int num_items = 100;
 
-    tp = cra_alloc(CraThrPool);
+    tp = cra_alloc(CraThrdPool);
     cra_thrdpool_init(tp, num_threads, num_items);
     cra_thrdpool_set_discard_policy(tp, CRA_TPTASK_DISCARD_FIRST);
     vals = cra_malloc(sizeof(*vals) * num_items);
