@@ -8,6 +8,7 @@
  * @copyright Copyright (c) 2024
  *
  */
+#include <time.h>
 #include "cra_malloc.h"
 #include "collections/cra_deque.h"
 
@@ -358,6 +359,96 @@ void test_foreach(void)
     cra_dealloc(deque);
 }
 
+void test_test(void)
+{
+    CraDeque *deque = cra_alloc(CraDeque);
+    cra_deque_init0(int, deque, CRA_DEQUE_INFINITE, true, NULL);
+
+    int i, j, n, v;
+    srand((unsigned int)time(NULL));
+    for (i = 0; i < 10; i++)
+    {
+        n = (rand() + 1) % 10000;
+        for (j = 0; j < n; j++)
+            cra_deque_push(deque, &j);
+
+        n = (rand() + 1) % deque->count;
+        for (j = 0; j < n; j++)
+        {
+            cra_deque_pop_left(deque, &v);
+            assert_always(v == j);
+        }
+
+        for (; cra_deque_pop_left(deque, &v); j++)
+            assert_always(v == j);
+    }
+    assert_always(deque->count == 0);
+
+    for (i = 0; i < 100; i++)
+    {
+        n = (rand() + 1) % 10000;
+        for (j = 0; j < n; j++)
+            cra_deque_push_left(deque, &j);
+
+        n = (rand() + 1) % deque->count;
+        for (j = 0; j < n; j++)
+        {
+            cra_deque_pop(deque, &v);
+            assert_always(v == j);
+        }
+
+        for (; cra_deque_pop(deque, &v); j++)
+            assert_always(v == j);
+    }
+    assert_always(deque->count == 0);
+
+    int *pv;
+    int idx, last_idx;
+    int check[10000];
+    bzero(check, sizeof(check));
+    for (i = 0; i < 100; i++)
+    {
+        last_idx = 0;
+        n = (rand() + 1) % 10000;
+        for (j = 0; j < n; j++)
+        {
+            idx = deque->count == 0 ? 0 : (rand() % deque->count);
+            cra_deque_insert(deque, idx, &j);
+            if (idx > last_idx)
+            {
+                last_idx = idx;
+            }
+            else
+            {
+                memmove(check + idx + 1, check + idx, (last_idx - idx) * sizeof(int));
+                if (deque->count > 1)
+                    last_idx++;
+            }
+            check[idx] = j;
+        }
+        j = 0;
+        for (CraDequeIter it = cra_deque_iter_init(deque); cra_deque_iter_next(&it, &pv); j++)
+        {
+            assert_always(*pv == check[j]);
+        }
+
+        while (true)
+        {
+            idx = deque->count == 0 ? 0 : (rand() % deque->count);
+            if (!cra_deque_pop_at(deque, idx, &j))
+                break;
+
+            assert_always(check[idx] == j);
+            memmove(check + idx, check + idx + 1, (last_idx - idx + 1) * sizeof(int));
+            last_idx--;
+        }
+    }
+    assert_always(deque->count == 0);
+
+    cra_deque_uninit(deque);
+    cra_dealloc(deque);
+}
+
 int main(void)
 {
     test_new_delete();
@@ -368,6 +459,7 @@ int main(void)
     test_reverse();
     test_clone();
     test_foreach();
+    test_test();
 
     cra_memory_leak_report(stdout);
     return 0;

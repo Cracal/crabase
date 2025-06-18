@@ -8,8 +8,75 @@
  * @copyright Copyright (c) 2024
  *
  */
+#include <time.h>
 #include "cra_malloc.h"
 #include "collections/cra_llist.h"
+
+void test_list_node(void)
+{
+    CraLListNode *node = cra_llist_create_node(10);
+    assert_always(node != NULL);
+    cra_llist_destroy_node(&node);
+    assert_always(node == NULL);
+
+    CraLList list;
+    cra_llist_init0(int, &list, true, NULL);
+
+    node = cra_llist_get_free_node(&list);
+    assert_always(node != NULL);
+    assert_always(*(int *)node->val == 0);
+
+    *(int *)node->val = 100;
+    cra_llist_insert_node(&list, 0, node);
+    assert_always(list.count == 1);
+
+    cra_llist_unlink_node(&list, node);
+    assert_always(list.count == 0);
+    assert_always(node->next == NULL && node->prev == NULL);
+
+    cra_llist_insert_node(&list, 0, node);
+    assert_always(list.count == 1);
+    cra_llist_remove_at(&list, 0);
+    assert_always(list.count == 0);
+    assert_always(list.freelist_count == 1);
+    node = NULL;
+    node = cra_llist_get_free_node(&list);
+    assert_always(node != NULL);
+    assert_always(list.freelist_count == 0);
+
+    *(int *)node->val = 1;
+    cra_llist_insert_node(&list, 0, node); // empty
+    assert_always(list.count == 1);
+    node = cra_llist_get_free_node(&list);
+    *(int *)node->val = 5;
+    cra_llist_insert_node(&list, 1, node); // tail
+    assert_always(list.count == 2);
+    node = cra_llist_get_free_node(&list);
+    *(int *)node->val = 3;
+    cra_llist_insert_node(&list, 1, node); // middle
+    assert_always(list.count == 3);
+    node = cra_llist_get_free_node(&list);
+    *(int *)node->val = 2;
+    cra_llist_insert_node(&list, 1, node); // middle clsoe to left
+    assert_always(list.count == 4);
+    node = cra_llist_get_free_node(&list);
+    *(int *)node->val = 4;
+    cra_llist_insert_node(&list, list.count - 1, node); // middle clsoe to right
+    assert_always(list.count == 5);
+
+    int *pi, i = 1;
+    for (CraLListIter it = cra_llist_iter_init(&list); cra_llist_iter_next(&it, &pi); i++)
+    {
+        node = cra_llist_get_node(&list, i - 1);
+        assert_always(node != NULL);
+        assert_always(i == *(int *)node->val);
+        assert_always(i == *pi);
+        printf("%d ", *pi);
+    }
+    printf("\n");
+
+    cra_llist_uninit(&list);
+}
 
 static void _print_int(void *pi) { printf("val: %d\n", *(int *)pi); }
 
@@ -469,8 +536,99 @@ void test_foreach(void)
     cra_dealloc(list);
 }
 
+void test_test(void)
+{
+    CraLList *list = cra_alloc(CraLList);
+    cra_llist_init0(int, list, true, NULL);
+
+    int i, j, n, v;
+    srand((unsigned int)time(NULL));
+    for (i = 0; i < 10; i++)
+    {
+        n = (rand() + 1) % 10000;
+        for (j = 0; j < n; j++)
+            cra_llist_append(list, &j);
+
+        n = (rand() + 1) % list->count;
+        for (j = 0; j < n; j++)
+        {
+            cra_llist_pop_front(list, &v);
+            assert_always(v == j);
+        }
+
+        for (; cra_llist_pop_front(list, &v); j++)
+            assert_always(v == j);
+    }
+    assert_always(list->count == 0);
+
+    for (i = 0; i < 100; i++)
+    {
+        n = (rand() + 1) % 10000;
+        for (j = 0; j < n; j++)
+            cra_llist_prepend(list, &j);
+
+        n = (rand() + 1) % list->count;
+        for (j = 0; j < n; j++)
+        {
+            cra_llist_pop_back(list, &v);
+            assert_always(v == j);
+        }
+
+        for (; cra_llist_pop_back(list, &v); j++)
+            assert_always(v == j);
+    }
+    assert_always(list->count == 0);
+
+    int *pv;
+    int idx, last_idx;
+    int check[10000];
+    bzero(check, sizeof(check));
+    for (i = 0; i < 100; i++)
+    {
+        last_idx = 0;
+        n = (rand() + 1) % 10000;
+        for (j = 0; j < n; j++)
+        {
+            idx = list->count == 0 ? 0 : (rand() % list->count);
+            cra_llist_insert(list, idx, &j);
+            if (idx > last_idx)
+            {
+                last_idx = idx;
+            }
+            else
+            {
+                memmove(check + idx + 1, check + idx, (last_idx - idx) * sizeof(int));
+                if (list->count > 1)
+                    last_idx++;
+            }
+            check[idx] = j;
+        }
+        j = 0;
+        for (CraLListIter it = cra_llist_iter_init(list); cra_llist_iter_next(&it, &pv); j++)
+        {
+            assert_always(*pv == check[j]);
+        }
+
+        while (true)
+        {
+            idx = list->count == 0 ? 0 : (rand() % list->count);
+            if (!cra_llist_pop(list, idx, &j))
+                break;
+
+            assert_always(check[idx] == j);
+            memmove(check + idx, check + idx + 1, (last_idx - idx + 1) * sizeof(int));
+            last_idx--;
+        }
+    }
+    assert_always(list->count == 0);
+
+    cra_llist_uninit(list);
+    cra_dealloc(list);
+}
+
 int main(void)
 {
+    test_list_node();
     test_new_delete();
     test_add();
     test_remove();
@@ -481,6 +639,7 @@ int main(void)
     test_clone();
     test_sort();
     test_foreach();
+    test_test();
 
     cra_memory_leak_report(stdout);
     return 0;

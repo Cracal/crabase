@@ -8,6 +8,7 @@
  * @copyright Copyright (c) 2024
  *
  */
+#include <time.h>
 #include "cra_malloc.h"
 #include "collections/cra_dict.h"
 
@@ -240,6 +241,62 @@ void test_foreach(void)
     cra_dealloc(dict);
 }
 
+void test_test(void)
+{
+    CraDict *dict = cra_alloc(CraDict);
+    cra_dict_init0(int, int, dict, true, (cra_hash_fn)cra_hash_int_p, (cra_compare_fn)cra_compare_int_p, NULL, NULL);
+
+    int i, j, n, v;
+    srand((unsigned int)time(NULL));
+    for (i = 0; i < 100; i++)
+    {
+        n = (rand() + 1) % 100000;
+        for (j = 0; j < n; j++)
+            cra_dict_put(dict, &j, &(int){j + 100});
+
+        n = (rand() + 1) % dict->count;
+        for (j = 0; j < n; j++)
+        {
+            cra_dict_pop(dict, &j, &v);
+            assert_always(v == j + 100);
+        }
+
+        for (; cra_dict_pop(dict, &j, &v); j++)
+            assert_always(v == j + 100);
+    }
+    assert_always(dict->count == 0);
+
+    int idx, *pk, *pv;
+    int *check = cra_malloc(sizeof(int) * 1000000);
+    bzero(check, sizeof(check));
+    for (i = 0; i < 100; i++)
+    {
+        n = (rand() + 1) % 1000000;
+        for (j = 0; j < n; j++)
+        {
+            idx = rand() % 1000000;
+            cra_dict_put(dict, &idx, &j);
+            check[idx] = j;
+        }
+        for (CraDictIter it = cra_dict_iter_init(dict); cra_dict_iter_next(&it, &pk, &pv);)
+        {
+            assert_always(*pv == check[*pk]);
+        }
+
+        while (cra_dict_get_count(dict) > 0)
+        {
+            idx = rand() % 1000000;
+            if (cra_dict_pop(dict, &idx, &j))
+                assert_always(check[idx] == j);
+        }
+    }
+    assert_always(dict->count == 0);
+    cra_free(check);
+
+    cra_dict_uninit(dict);
+    cra_dealloc(dict);
+}
+
 int main(void)
 {
     test_new_delete();
@@ -248,6 +305,7 @@ int main(void)
     test_get();
     test_clone();
     test_foreach();
+    test_test();
 
     cra_memory_leak_report(stdout);
     return 0;

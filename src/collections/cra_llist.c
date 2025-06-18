@@ -69,25 +69,25 @@ static inline void __cra_llist_insert_node(CraLList *list, size_t index, CraLLis
         node->next = node;
         list->head = node;
     }
-    // 尾插
-    else if (index == list->count)
-    {
-        curr = list->head;
-        goto link_node;
-    }
-    // 头插和中插
     else
-    {
-        curr = list->head;
-        for (size_t i = 0; i < list->count - 1; i++)
+    { // 尾插
+        if (index == list->count)
         {
-            if (i == index)
-                break;
-            curr = curr->next;
+            curr = list->head;
         }
-        if (index == 0)
-            list->head = node;
-    link_node:
+        // 头插和中插
+        else
+        {
+            curr = list->head;
+            for (size_t i = 0; i < list->count - 1; i++)
+            {
+                if (i == index)
+                    break;
+                curr = curr->next;
+            }
+            if (index == 0)
+                list->head = node;
+        }
         node->next = curr;
         node->prev = curr->prev;
         curr->prev->next = node;

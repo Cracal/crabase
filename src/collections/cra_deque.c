@@ -13,6 +13,9 @@
 
 #define CRA_DEQUE_ELE_COUNT 32
 #define CRA_DEQUE_CENTER ((CRA_DEQUE_ELE_COUNT - 1) >> 1)
+#define CRA_DEQUE_EMPTY_INDEX               \
+    deque->left_idx = CRA_DEQUE_CENTER + 1; \
+    deque->right_idx = CRA_DEQUE_CENTER
 
 CraDequeIter cra_deque_iter_init(CraDeque *deque)
 {
@@ -60,8 +63,7 @@ void cra_deque_init(CraDeque *deque, size_t element_size, size_t que_max,
     deque->zero_memory = zero_memory;
     deque->remove_val = remove_val;
     deque->count = 0;
-    deque->left_idx = CRA_DEQUE_CENTER + 1;
-    deque->right_idx = CRA_DEQUE_CENTER;
+    CRA_DEQUE_EMPTY_INDEX;
 }
 
 void cra_deque_uninit(CraDeque *deque)
@@ -85,8 +87,7 @@ void cra_deque_clear(CraDeque *deque)
 
     while (deque->list.count > 1)
         cra_llist_remove_back(&deque->list);
-    deque->left_idx = CRA_DEQUE_CENTER + 1;
-    deque->right_idx = CRA_DEQUE_CENTER;
+    CRA_DEQUE_EMPTY_INDEX;
 }
 
 bool cra_deque_insert(CraDeque *deque, size_t index, void *val)
@@ -99,46 +100,69 @@ bool cra_deque_insert(CraDeque *deque, size_t index, void *val)
     else if (index == deque->count)
         return cra_deque_push(deque, val);
 
+    bool ret = true;
     CraLList *list = &deque->list;
-    size_t list_idx = index / CRA_DEQUE_ELE_COUNT;
-    size_t idx = (list_idx == 0 ? deque->left_idx + index : index) % CRA_DEQUE_ELE_COUNT;
-    CraLListNode *next = NULL, *curr = list->head->prev;
+    // 计算目标链表结点下标
+    size_t node_idx = (index + deque->left_idx) / CRA_DEQUE_ELE_COUNT;
+    // 计算目标在结点中的下标
+    size_t real_idx = (index + deque->left_idx) % CRA_DEQUE_ELE_COUNT;
 
-    for (size_t temp_idx, temp_end, i = list->count;;)
+    size_t move_count = 0;
+    CraLListNode *curr = list->head->prev, *next = NULL;
+    for (size_t i = list->count - 1;; --i)
     {
-        if (!next)
+        // 是最后面的结点
+        if (curr->next == list->head)
         {
-            temp_end = deque->right_idx;
-            if (temp_end == CRA_DEQUE_ELE_COUNT - 1)
+            if (deque->right_idx == CRA_DEQUE_ELE_COUNT - 1)
             {
+                move_count = CRA_DEQUE_ELE_COUNT - 1;
                 next = cra_llist_get_free_node(list);
-                deque->right_idx = 0;
                 cra_llist_insert_node(list, list->count, next);
+                deque->right_idx = 0;
             }
             else
             {
-                temp_end = ++deque->right_idx;
+                next = NULL;
+                ++deque->right_idx;
+                // 在++后，因为没有next，所以单独move的那一个元素要一起移动
+                move_count = deque->right_idx;
             }
         }
+
+        // 非目标结点时
+        if (i > node_idx)
+        {
+            // 将本结点的最后一个元素移动到下一个结点的第一个位置
+            if (!!next)
+                memmove(next->val, curr->val + (CRA_DEQUE_ELE_COUNT - 1) * deque->ele_size, deque->ele_size);
+            // 移动本结点元素，空出要插入的位置
+            memmove(curr->val + deque->ele_size, curr->val, move_count * deque->ele_size);
+        }
+        // 在目标结点时
         else
         {
-            temp_end = CRA_DEQUE_ELE_COUNT - 1;
-        }
-        if (!!next)
-            memcpy(next->val, curr->val + (CRA_DEQUE_ELE_COUNT - 1) * deque->ele_size, deque->ele_size);
-        temp_idx = (--i == list_idx) ? idx : 0;
-        memmove(curr->val + (temp_idx + 1) * deque->ele_size, curr->val + temp_idx * deque->ele_size, (temp_end - temp_idx) * deque->ele_size);
+            move_count -= real_idx;
+            // 将本结点的最后一个元素移动到下一个结点的第一个位置
+            if (!!next)
+                memmove(next->val, curr->val + (CRA_DEQUE_ELE_COUNT - 1) * deque->ele_size, deque->ele_size);
+            // 移动本结点元素，空出要插入的位置
+            memmove(curr->val + (real_idx + 1) * deque->ele_size, curr->val + real_idx * deque->ele_size, move_count * deque->ele_size);
 
-        if (i == list_idx)
+            // 插入
+            memcpy(curr->val + real_idx * deque->ele_size, val, deque->ele_size);
             break;
+        }
 
         next = curr;
         curr = curr->prev;
+
+        move_count = CRA_DEQUE_ELE_COUNT - 1;
     }
-    memcpy(curr->val + idx * deque->ele_size, val, deque->ele_size);
-    if (deque->count++ == deque->que_max)
-        cra_deque_pop(deque, NULL);
-    return true;
+    if (deque->count == deque->que_max)
+        ret = cra_deque_pop_left(deque, NULL);
+    ++deque->count;
+    return ret;
 }
 
 bool cra_deque_push(CraDeque *deque, void *val)
@@ -146,7 +170,8 @@ bool cra_deque_push(CraDeque *deque, void *val)
     bool ret = true;
     CraLListNode *curr;
     CraLList *list = &deque->list;
-    if (deque->right_idx >= CRA_DEQUE_ELE_COUNT - 1)
+    assert(deque->right_idx < CRA_DEQUE_ELE_COUNT);
+    if (deque->right_idx == CRA_DEQUE_ELE_COUNT - 1)
     {
         curr = cra_llist_get_free_node(list);
         cra_llist_insert_node(list, list->count, curr);
@@ -155,11 +180,12 @@ bool cra_deque_push(CraDeque *deque, void *val)
     else
     {
         curr = list->head->prev;
-        deque->right_idx++;
+        ++deque->right_idx;
     }
     memcpy(curr->val + deque->right_idx * deque->ele_size, val, deque->ele_size);
-    if (deque->count++ == deque->que_max)
+    if (deque->count == deque->que_max)
         ret = cra_deque_pop_left(deque, NULL);
+    ++deque->count;
     return ret;
 }
 
@@ -177,11 +203,12 @@ bool cra_deque_push_left(CraDeque *deque, void *val)
     else
     {
         curr = list->head;
-        deque->left_idx--;
+        --deque->left_idx;
     }
     memcpy(curr->val + deque->left_idx * deque->ele_size, val, deque->ele_size);
-    if (deque->count++ == deque->que_max)
+    if (deque->count == deque->que_max)
         ret = cra_deque_pop(deque, NULL);
+    ++deque->count;
     return ret;
 }
 
@@ -196,45 +223,75 @@ static inline bool __cra_deque_pop_at(CraDeque *deque, size_t index, void *retva
         return cra_deque_pop(deque, retval);
 
     CraLList *list = &deque->list;
-    size_t list_idx = index / CRA_DEQUE_ELE_COUNT;
-    size_t idx = (list_idx == 0 ? deque->left_idx + index : index) % CRA_DEQUE_ELE_COUNT;
-    CraLListNode *curr = list->head;
+    // 计算目标链表结点下标
+    size_t node_idx = (index + deque->left_idx) / CRA_DEQUE_ELE_COUNT;
+    // 计算目标在结点中的下标
+    size_t real_idx = (index + deque->left_idx) % CRA_DEQUE_ELE_COUNT;
 
-    for (size_t i = 0; i < list_idx; i++)
+    size_t move_count = 0;
+    CraLListNode *curr = list->head, *next, *node;
+    // 找到目标结点
+    for (size_t i = 0; i < node_idx; ++i)
         curr = curr->next;
-    if (retval)
-        memcpy(retval, curr->val + idx * deque->ele_size, deque->ele_size);
-    else if (deque->remove_val)
-        deque->remove_val(curr->val + idx * deque->ele_size);
+    next = curr->next;
+    node = curr;
 
-    for (size_t temp_idx, temp_end, i = list_idx; i < list->count;)
+    // copy value
+    if (retval)
+        memcpy(retval, curr->val + real_idx * deque->ele_size, deque->ele_size);
+    // on remove val
+    else if (deque->remove_val)
+        deque->remove_val(curr->val + real_idx * deque->ele_size);
+
+    for (;;)
     {
-        temp_idx = i == list_idx ? idx : 0;
-        temp_end = ++i == list->count ? deque->right_idx : CRA_DEQUE_ELE_COUNT - 1;
-        if (temp_end == 0)
-            goto exit_loop;
-        memmove(curr->val + temp_idx * deque->ele_size, curr->val + (temp_idx + 1) * deque->ele_size, (temp_end - temp_idx) * deque->ele_size);
-        if (i < list->count)
+        if (next == list->head)
+            move_count = deque->right_idx;
+        else
+            move_count = CRA_DEQUE_ELE_COUNT - 1;
+
+        // 在目标结点时
+        if (curr == node)
         {
-            memcpy(curr->val + temp_end * deque->ele_size, curr->next->val, deque->ele_size);
+            // 移动本结点的元素并覆盖目标位置
+            memmove(curr->val + real_idx * deque->ele_size, curr->val + (real_idx + 1) * deque->ele_size, (move_count - real_idx) * deque->ele_size);
+        }
+        // 非目标结点时
+        else
+        {
+            // 移动本结点的元素并覆盖目标位置
+            memmove(curr->val, curr->val + deque->ele_size, move_count * deque->ele_size);
+        }
+        // 不是最后一个结点时，移动下一个结点的第一个元素到本结点末尾
+        if (next != list->head)
+            memmove(curr->val + (CRA_DEQUE_ELE_COUNT - 1) * deque->ele_size, next->val, deque->ele_size);
+        else
+        {
+            if (deque->zero_memory)
+                bzero(curr->val + deque->right_idx * deque->ele_size, deque->ele_size);
+            break; // done
+        }
+
+        curr = curr->next;
+        next = curr->next;
+    }
+    if (deque->right_idx == 0)
+    {
+        if (list->count > 1)
+        {
+            cra_llist_remove_back(list);
+            deque->right_idx = CRA_DEQUE_ELE_COUNT - 1;
         }
         else
         {
-        exit_loop:
-            if (deque->zero_memory)
-                bzero(curr->val + temp_end * deque->ele_size, deque->ele_size);
-            break;
+            CRA_DEQUE_EMPTY_INDEX;
         }
-
-        curr = curr->next;
     }
-    if (deque->right_idx-- == 0)
+    else
     {
-        if (list->count > 1)
-            cra_llist_remove_back(list);
-        deque->right_idx = CRA_DEQUE_ELE_COUNT - 1;
+        --deque->right_idx;
     }
-    deque->count--;
+    --deque->count;
     return true;
 }
 
@@ -268,14 +325,20 @@ bool cra_deque_pop(CraDeque *deque, void *retval)
         if (deque->right_idx == 0)
         {
             if (list->count > 1)
+            {
                 cra_llist_remove_back(list);
-            deque->right_idx = CRA_DEQUE_ELE_COUNT - 1;
+                deque->right_idx = CRA_DEQUE_ELE_COUNT - 1;
+            }
+            else
+            {
+                CRA_DEQUE_EMPTY_INDEX;
+            }
         }
         else
         {
-            deque->right_idx--;
+            --deque->right_idx;
         }
-        deque->count--;
+        --deque->count;
         return true;
     }
     return false;
@@ -291,7 +354,10 @@ bool cra_deque_pop_left(CraDeque *deque, void *retval)
         curr = list->head;
         // copy value
         if (retval)
+        {
             memcpy(retval, curr->val + deque->left_idx * deque->ele_size, deque->ele_size);
+            assert_always(*(void **)retval != NULL);
+        }
         // on remove val
         else if (deque->remove_val)
             deque->remove_val(curr->val + deque->left_idx * deque->ele_size);
@@ -300,15 +366,21 @@ bool cra_deque_pop_left(CraDeque *deque, void *retval)
 
         if (deque->left_idx == CRA_DEQUE_ELE_COUNT - 1)
         {
-            deque->left_idx = 0;
             if (list->count > 1)
+            {
                 cra_llist_remove_front(list);
+                deque->left_idx = 0;
+            }
+            else
+            {
+                CRA_DEQUE_EMPTY_INDEX;
+            }
         }
         else
         {
-            deque->left_idx++;
+            ++deque->left_idx;
         }
-        deque->count--;
+        --deque->count;
         return true;
     }
     return false;
