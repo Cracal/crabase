@@ -130,12 +130,13 @@ bool cra_deque_insert(CraDeque *deque, size_t index, void *val)
             }
         }
 
+        // 将本结点的最后一个元素移动到下一个结点的第一个位置
+        if (!!next)
+            memmove(next->val, curr->val + (CRA_DEQUE_ELE_COUNT - 1) * deque->ele_size, deque->ele_size);
+
         // 非目标结点时
         if (i > node_idx)
         {
-            // 将本结点的最后一个元素移动到下一个结点的第一个位置
-            if (!!next)
-                memmove(next->val, curr->val + (CRA_DEQUE_ELE_COUNT - 1) * deque->ele_size, deque->ele_size);
             // 移动本结点元素，空出要插入的位置
             memmove(curr->val + deque->ele_size, curr->val, move_count * deque->ele_size);
         }
@@ -143,9 +144,6 @@ bool cra_deque_insert(CraDeque *deque, size_t index, void *val)
         else
         {
             move_count -= real_idx;
-            // 将本结点的最后一个元素移动到下一个结点的第一个位置
-            if (!!next)
-                memmove(next->val, curr->val + (CRA_DEQUE_ELE_COUNT - 1) * deque->ele_size, deque->ele_size);
             // 移动本结点元素，空出要插入的位置
             memmove(curr->val + (real_idx + 1) * deque->ele_size, curr->val + real_idx * deque->ele_size, move_count * deque->ele_size);
 
@@ -246,7 +244,7 @@ static inline bool __cra_deque_pop_at(CraDeque *deque, size_t index, void *retva
     for (;;)
     {
         if (next == list->head)
-            move_count = deque->right_idx;
+            move_count = deque->right_idx; // is last node
         else
             move_count = CRA_DEQUE_ELE_COUNT - 1;
 
