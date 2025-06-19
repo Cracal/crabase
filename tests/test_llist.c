@@ -65,7 +65,7 @@ void test_list_node(void)
     assert_always(list.count == 5);
 
     int *pi, i = 1;
-    for (CraLListIter it = cra_llist_iter_init(&list); cra_llist_iter_next(&it, &pi); i++)
+    for (CraLListIter it = cra_llist_iter_init(&list); cra_llist_iter_next(&it, (void **)&pi); i++)
     {
         node = cra_llist_get_node(&list, i - 1);
         assert_always(node != NULL);
@@ -604,7 +604,7 @@ void test_test(void)
             check[idx] = j;
         }
         j = 0;
-        for (CraLListIter it = cra_llist_iter_init(list); cra_llist_iter_next(&it, &pv); j++)
+        for (CraLListIter it = cra_llist_iter_init(list); cra_llist_iter_next(&it, (void **)&pv); j++)
         {
             assert_always(*pv == check[j]);
         }

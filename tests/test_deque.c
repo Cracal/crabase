@@ -427,7 +427,7 @@ void test_test(void)
             check[idx] = j;
         }
         j = 0;
-        for (CraDequeIter it = cra_deque_iter_init(deque); cra_deque_iter_next(&it, &pv); j++)
+        for (CraDequeIter it = cra_deque_iter_init(deque); cra_deque_iter_next(&it, (void **)&pv); j++)
         {
             assert_always(*pv == check[j]);
         }

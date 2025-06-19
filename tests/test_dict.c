@@ -268,7 +268,7 @@ void test_test(void)
 
     int idx, *pk, *pv;
     int *check = cra_malloc(sizeof(int) * 1000000);
-    bzero(check, sizeof(check));
+    bzero(check, sizeof(sizeof(int) * 1000000));
     for (i = 0; i < 100; i++)
     {
         n = (rand() + 1) % 1000000;
@@ -278,7 +278,7 @@ void test_test(void)
             cra_dict_put(dict, &idx, &j);
             check[idx] = j;
         }
-        for (CraDictIter it = cra_dict_iter_init(dict); cra_dict_iter_next(&it, &pk, &pv);)
+        for (CraDictIter it = cra_dict_iter_init(dict); cra_dict_iter_next(&it, (void **)&pk, (void **)&pv);)
         {
             assert_always(*pv == check[*pk]);
         }

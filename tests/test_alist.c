@@ -538,7 +538,7 @@ void test_test(void)
             check[idx] = j;
         }
         j = 0;
-        for (CraAListIter it = cra_alist_iter_init(list); cra_alist_iter_next(&it, &pv); j++)
+        for (CraAListIter it = cra_alist_iter_init(list); cra_alist_iter_next(&it, (void **)&pv); j++)
         {
             assert_always(*pv == check[j]);
         }
