@@ -354,10 +354,7 @@ bool cra_deque_pop_left(CraDeque *deque, void *retval)
         curr = list->head;
         // copy value
         if (retval)
-        {
             memcpy(retval, curr->val + deque->left_idx * deque->ele_size, deque->ele_size);
-            assert_always(*(void **)retval != NULL);
-        }
         // on remove val
         else if (deque->remove_val)
             deque->remove_val(curr->val + deque->left_idx * deque->ele_size);
