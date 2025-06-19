@@ -14,8 +14,7 @@ void cra_blkdeque_init(CraBlkDeque *que, size_t element_size, size_t que_max,
                        bool zero_memory, cra_remove_val_fn remove_val)
 {
     cra_deque_init(&que->deque, element_size, CRA_DEQUE_INFINITE, zero_memory, remove_val);
-    que->blocking_in = true;
-    que->blocking_out = true;
+    que->state = CRA_BLKDEQUE_STATE_NORMAL;
     que->que_max = que_max;
     cra_cond_init(&que->not_full);
     cra_cond_init(&que->not_empty);
@@ -25,10 +24,6 @@ void cra_blkdeque_init(CraBlkDeque *que, size_t element_size, size_t que_max,
 void cra_blkdeque_uninit(CraBlkDeque *que)
 {
     cra_deque_uninit(&que->deque);
-    // 不再阻塞
-    cra_blkdeque_dont_block_in(que);
-    cra_blkdeque_dont_block_out(que);
-
     cra_cond_destroy(&que->not_full);
     cra_cond_destroy(&que->not_empty);
     cra_mutex_destroy(&que->mutex);
@@ -62,19 +57,21 @@ bool cra_blkdeque_is_empty(CraBlkDeque *que)
     return ret;
 }
 
-void cra_blkdeque_dont_block_in(CraBlkDeque *que)
+void cra_blkdeque_terminate_wait_empty(CraBlkDeque *que)
 {
     cra_mutex_lock(&que->mutex);
-    que->blocking_in = false;
+    que->state = CRA_BLKDEQUE_STATE_TERMINATING;
+    cra_cond_broadcast(&que->not_empty);
     cra_cond_broadcast(&que->not_full);
     cra_mutex_unlock(&que->mutex);
 }
 
-void cra_blkdeque_dont_block_out(CraBlkDeque *que)
+void cra_blkdeque_terminate(CraBlkDeque *que)
 {
     cra_mutex_lock(&que->mutex);
-    que->blocking_out = false;
+    que->state = CRA_BLKDEQUE_STATE_TERMINATED;
     cra_cond_broadcast(&que->not_empty);
+    cra_cond_broadcast(&que->not_full);
     cra_mutex_unlock(&que->mutex);
 }
 
@@ -82,14 +79,14 @@ bool cra_blkdeque_push_nonblocking(CraBlkDeque *que, void *val)
 {
     bool ret;
     cra_mutex_lock(&que->mutex);
-    // 不是无限队列并且队列满时不添加，返回false
-    if (que->que_max != CRA_BLK_DEQUE_INFINITE && que->deque.count >= que->que_max)
+    // 不是无限队列并且队列满或不是正常状态时不添加，返回false
+    if ((que->que_max != CRA_BLK_DEQUE_INFINITE && que->deque.count >= que->que_max) ||
+        !cra_blkdeque_is_normal(que))
     {
         ret = false;
         goto end;
     }
-    ret = cra_deque_push(&que->deque, val);
-    if (ret)
+    if ((ret = cra_deque_push(&que->deque, val)))
         cra_cond_signal(&que->not_empty);
 end:
     cra_mutex_unlock(&que->mutex);
@@ -100,14 +97,14 @@ bool cra_blkdeque_push_left_nonblocking(CraBlkDeque *que, void *val)
 {
     bool ret;
     cra_mutex_lock(&que->mutex);
-    // 不是无限队列并且队列满时不添加，返回false
-    if (que->que_max != CRA_BLK_DEQUE_INFINITE && que->deque.count >= que->que_max)
+    // 不是无限队列并且队列满或不是正常状态时不添加，返回false
+    if ((que->que_max != CRA_BLK_DEQUE_INFINITE && que->deque.count >= que->que_max) ||
+        !cra_blkdeque_is_normal(que))
     {
         ret = false;
         goto end;
     }
-    ret = cra_deque_push_left(&que->deque, val);
-    if (ret)
+    if ((ret = cra_deque_push_left(&que->deque, val)))
         cra_cond_signal(&que->not_empty);
 end:
     cra_mutex_unlock(&que->mutex);
@@ -118,13 +115,12 @@ bool cra_blkdeque_pop_nonblocking(CraBlkDeque *que, void *retval)
 {
     bool ret;
     cra_mutex_lock(&que->mutex);
-    if (que->deque.count == 0)
+    if (que->deque.count == 0 || cra_blkdeque_is_terminated(que))
     {
         ret = false;
         goto end;
     }
-    ret = cra_deque_pop(&que->deque, retval);
-    if (ret)
+    if ((ret = cra_deque_pop(&que->deque, retval)))
         cra_cond_signal(&que->not_full);
 end:
     cra_mutex_unlock(&que->mutex);
@@ -135,13 +131,12 @@ bool cra_blkdeque_pop_left_nonblocking(CraBlkDeque *que, void *retval)
 {
     bool ret;
     cra_mutex_lock(&que->mutex);
-    if (que->deque.count == 0)
+    if (que->deque.count == 0 || cra_blkdeque_is_terminated(que))
     {
         ret = false;
         goto end;
     }
-    ret = cra_deque_pop_left(&que->deque, retval);
-    if (ret)
+    if ((ret = cra_deque_pop_left(&que->deque, retval)))
         cra_cond_signal(&que->not_full);
 end:
     cra_mutex_unlock(&que->mutex);
@@ -152,11 +147,16 @@ bool cra_blkdeque_push(CraBlkDeque *que, void *val)
 {
     bool ret;
     cra_mutex_lock(&que->mutex);
+    if (!cra_blkdeque_is_normal(que))
+    {
+        ret = false;
+        goto end;
+    }
     if (que->que_max != CRA_BLK_DEQUE_INFINITE)
     {
         while (que->deque.count >= que->que_max)
         {
-            if (que->blocking_in)
+            if (cra_blkdeque_is_normal(que))
             {
                 cra_cond_wait(&que->not_full, &que->mutex);
             }
@@ -167,10 +167,10 @@ bool cra_blkdeque_push(CraBlkDeque *que, void *val)
             }
         }
     }
-    ret = cra_deque_push(&que->deque, val);
-    if (ret)
+    if ((ret = cra_deque_push(&que->deque, val)))
         cra_cond_signal(&que->not_empty);
-    ret = true;
+    else
+        ret = true;
 end:
     cra_mutex_unlock(&que->mutex);
     return ret;
@@ -180,11 +180,16 @@ bool cra_blkdeque_push_left(CraBlkDeque *que, void *val)
 {
     bool ret;
     cra_mutex_lock(&que->mutex);
+    if (!cra_blkdeque_is_normal(que))
+    {
+        ret = false;
+        goto end;
+    }
     if (que->que_max != CRA_BLK_DEQUE_INFINITE)
     {
         while (que->deque.count >= que->que_max)
         {
-            if (que->blocking_in)
+            if (cra_blkdeque_is_normal(que))
             {
                 cra_cond_wait(&que->not_full, &que->mutex);
             }
@@ -195,10 +200,10 @@ bool cra_blkdeque_push_left(CraBlkDeque *que, void *val)
             }
         }
     }
-    ret = cra_deque_push_left(&que->deque, val);
-    if (ret)
+    if ((ret = cra_deque_push_left(&que->deque, val)))
         cra_cond_signal(&que->not_empty);
-    ret = true;
+    else
+        ret = true;
 end:
     cra_mutex_unlock(&que->mutex);
     return ret;
@@ -208,9 +213,14 @@ bool cra_blkdeque_pop(CraBlkDeque *que, void *retval)
 {
     bool ret;
     cra_mutex_lock(&que->mutex);
+    if (cra_blkdeque_is_terminated(que))
+    {
+        ret = false;
+        goto end;
+    }
     while (que->deque.count == 0)
     {
-        if (que->blocking_out)
+        if (!cra_blkdeque_is_terminated(que))
         {
             cra_cond_wait(&que->not_empty, &que->mutex);
         }
@@ -220,10 +230,10 @@ bool cra_blkdeque_pop(CraBlkDeque *que, void *retval)
             goto end;
         }
     }
-    ret = cra_deque_pop(&que->deque, retval);
-    if (ret)
+    if ((ret = cra_deque_pop(&que->deque, retval)))
         cra_cond_signal(&que->not_full);
-    ret = true;
+    else
+        ret = true;
 end:
     cra_mutex_unlock(&que->mutex);
     return ret;
@@ -233,9 +243,14 @@ bool cra_blkdeque_pop_left(CraBlkDeque *que, void *retval)
 {
     bool ret;
     cra_mutex_lock(&que->mutex);
+    if (cra_blkdeque_is_terminated(que))
+    {
+        ret = false;
+        goto end;
+    }
     while (que->deque.count == 0)
     {
-        if (que->blocking_out)
+        if (!cra_blkdeque_is_terminated(que))
         {
             cra_cond_wait(&que->not_empty, &que->mutex);
         }
@@ -245,10 +260,10 @@ bool cra_blkdeque_pop_left(CraBlkDeque *que, void *retval)
             goto end;
         }
     }
-    ret = cra_deque_pop_left(&que->deque, retval);
-    if (ret)
+    if ((ret = cra_deque_pop_left(&que->deque, retval)))
         cra_cond_signal(&que->not_full);
-    ret = true;
+    else
+        ret = true;
 end:
     cra_mutex_unlock(&que->mutex);
     return ret;

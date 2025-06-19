@@ -35,26 +35,12 @@ static CRA_THRD_FUNC(__cra_thrdpool_worker)
 
     cra_cdl_count_down(worker->cdl);
 
-    while (true)
+    while (cra_blkdeque_pop_left(taskque, &task))
     {
-        if (!cra_blkdeque_pop_left(taskque, &task))
-            break;
-
         cra_atomic_dec32(&pool->idle_threads);
         task.args.tid = tid;
         task.func(&task.args);
         cra_atomic_inc32(&pool->idle_threads);
-
-        // 终止条件：
-        // 线程池状态已停止；
-        // 并且
-        // 如果不需要处理在任务队列中的任务则直接退出；
-        // 否则，处理完所有任务后再退出
-        if (!pool->is_running &&
-            (!pool->handle_exist_task || cra_blkdeque_is_empty(taskque)))
-        {
-            break;
-        }
     }
 
     return (cra_thrd_ret_t){0};
@@ -93,12 +79,14 @@ void cra_thrdpool_init(CraThrdPool *pool, int threads, size_t task_max)
 error_ret:
     cra_cdl_uninit(&cdl);
     cra_thrdpool_uninit(pool);
+    assert_always(false); // !!!
 }
 
 void cra_thrdpool_uninit(CraThrdPool *pool)
 {
     pool->handle_exist_task = false;
-    cra_thrdpool_wait(pool);
+    if (pool->is_running)
+        cra_thrdpool_wait(pool);
     cra_blkdeque_uninit(&pool->task_que);
     cra_free(pool->threads);
 }
@@ -107,8 +95,10 @@ void cra_thrdpool_wait(CraThrdPool *pool)
 {
     pool->can_in = false;
     pool->is_running = false;
-    cra_blkdeque_dont_block_in(&pool->task_que);
-    cra_blkdeque_dont_block_out(&pool->task_que);
+    if (pool->handle_exist_task)
+        cra_blkdeque_terminate_wait_empty(&pool->task_que);
+    else
+        cra_blkdeque_terminate(&pool->task_que);
 
     for (int i = 0; i < pool->threadcnt; i++)
     {

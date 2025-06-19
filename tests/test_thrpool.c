@@ -31,7 +31,7 @@ static void test_thread_pool(void)
     int *vals;
     int i;
     int num_threads = 10;
-    int num_items = 1000;
+    int num_items = 10000;
 
     tp = cra_alloc(CraThrdPool);
     assert_always(!!tp);
@@ -87,10 +87,15 @@ static void test_thread_pool2(void)
     cra_thrdpool_uninit(tp);
     cra_dealloc(tp);
 
+    int ndiscard = 0;
     for (i = 0; i < num_items; i++)
     {
+        if (vals[i] == i)
+            ++ndiscard;
         printf("main: %d\n", vals[i]);
     }
+    printf("discard count: %d\n", ndiscard);
+    assert_always(ndiscard > 0);
 
     cra_free(vals);
 }
@@ -101,7 +106,7 @@ static void test_thread_pool3(void)
     int *vals;
     int i;
     int num_threads = 10;
-    int num_items = 100;
+    int num_items = 1000;
 
     tp = cra_alloc(CraThrdPool);
     cra_thrdpool_init(tp, num_threads, num_items);
@@ -120,10 +125,15 @@ static void test_thread_pool3(void)
     cra_thrdpool_uninit(tp);
     cra_dealloc(tp);
 
+    int ndone = 0;
     for (i = 0; i < num_items; i++)
     {
+        if (vals[i] == i + PLUS)
+            ++ndone;
         printf("main: %d\n", vals[i]);
     }
+    printf("completed count: %d\n", ndone);
+    assert_always(ndone < num_items);
 
     cra_free(vals);
 }

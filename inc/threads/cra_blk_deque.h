@@ -15,11 +15,17 @@
 
 #define CRA_BLK_DEQUE_INFINITE CRA_DEQUE_INFINITE
 
+typedef enum
+{
+    CRA_BLKDEQUE_STATE_NORMAL,
+    CRA_BLKDEQUE_STATE_TERMINATING,
+    CRA_BLKDEQUE_STATE_TERMINATED,
+} CraBlkDequeState_e;
+
 typedef struct _CraBlkDeque
 {
     CraDeque deque;
-    bool blocking_in;  // 阻塞入队
-    bool blocking_out; // 阻塞出队
+    CraBlkDequeState_e state;
     size_t que_max;
     cra_cond_t not_full;
     cra_cond_t not_empty;
@@ -47,8 +53,17 @@ CRA_API void cra_blkdeque_clear(CraBlkDeque *que);
 CRA_API bool cra_blkdeque_is_full(CraBlkDeque *que);
 CRA_API bool cra_blkdeque_is_empty(CraBlkDeque *que);
 
-CRA_API void cra_blkdeque_dont_block_in(CraBlkDeque *que);
-CRA_API void cra_blkdeque_dont_block_out(CraBlkDeque *que);
+CRA_API void cra_blkdeque_terminate(CraBlkDeque *que);
+CRA_API void cra_blkdeque_terminate_wait_empty(CraBlkDeque *que);
+static inline bool cra_blkdeque_is_terminated(CraBlkDeque *que)
+{
+    return que->state == CRA_BLKDEQUE_STATE_TERMINATED ||
+           (que->state == CRA_BLKDEQUE_STATE_TERMINATING && cra_blkdeque_get_count(que) == 0);
+}
+static inline bool cra_blkdeque_is_normal(CraBlkDeque *que)
+{
+    return que->state == CRA_BLKDEQUE_STATE_NORMAL;
+}
 
 CRA_API bool cra_blkdeque_push_nonblocking(CraBlkDeque *que, void *val);
 CRA_API bool cra_blkdeque_push_left_nonblocking(CraBlkDeque *que, void *val);
