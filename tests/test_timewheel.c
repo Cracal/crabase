@@ -63,10 +63,11 @@ typedef struct
     char *end;
 } MyTimer2;
 
-static void on_free_mytimer2(void *timer)
+static void on_free_mytimer2(CraRefcnt *timer)
 {
-    MyTimer2 *t = (MyTimer2 *)timer;
-    cra_log_info("free MyTimer2{start: %d, end: \"%s\"}[0x%x]", t->start, t->end, t);
+    CRA_REFCNT_DEF(MyTimer2) *t = (void *)timer;
+    cra_log_info("free MyTimer2{start: %d, end: \"%s\"}[0x%x]", CRA_REFCNT_OBJ(t)->start, CRA_REFCNT_OBJ(t)->end, t);
+    cra_dealloc(t);
 }
 
 static void on_cancel(CraTimer_base *timer)
@@ -88,8 +89,8 @@ static void on_timeout3(CraTimer_base *timer)
 
 void test_timewheel2(void)
 {
-    CRA_REFCNT_DEF(MyTimer2) *t = (void *)cra_alloc(CRA_REFCNT_DEF(MyTimer2));
-    cra_refcnt_init(t, true, false, on_free_mytimer2);
+    CRA_REFCNT_DEF(MyTimer2) *t = cra_alloc(CRA_REFCNT_DEF(MyTimer2));
+    cra_refcnt_init(t, on_free_mytimer2);
     cra_timer_base_init(&CRA_REFCNT_OBJ(t)->base, 10, 500, on_timeout3, on_cancel);
     CRA_REFCNT_OBJ(t)->start = 100;
     CRA_REFCNT_OBJ(t)->end = "hello world";
