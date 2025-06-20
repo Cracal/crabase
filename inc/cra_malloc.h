@@ -12,10 +12,33 @@
 #define __CRA_MALLOC_H__
 #include "cra_defs.h"
 
-CRA_API void *__cra_malloc(size_t size);
-CRA_API void *__cra_calloc(size_t num, size_t size);
-CRA_API void *__cra_realloc(void *oldptr, size_t newsize);
-CRA_API void __cra_free(void *ptr);
+#if defined(CRA_COMPILER_GNUC)
+#define ATTR_MALLOC __attribute__((malloc, returns_nonnull, alloc_size(1), warn_unused_result))
+#define ATTR_CALLOC __attribute__((malloc, returns_nonnull, alloc_size(1, 2), warn_unused_result))
+#define ATTR_REALLO __attribute__((returns_nonnull, nonnull(1), alloc_size(2), warn_unused_result))
+#define ATTR_FREEEE __attribute__((nonnull(1)))
+
+#elif defined(CRA_COMPILER_MSVC)
+#define ATTR_MALLOC _Ret_notnull_ _Check_return_ _CRTALLOCATOR
+#define ATTR_CALLOC _Ret_notnull_ _Check_return_ _CRTALLOCATOR
+#define ATTR_REALLO _Ret_notnull_ _Check_return_ _CRTALLOCATOR
+#define ATTR_FREEEE
+#else
+#define ATTR_MALLOC
+#define ATTR_CALLOC
+#define ATTR_REALLO
+#define ATTR_FREEEE
+#endif
+
+CRA_API ATTR_MALLOC void *__cra_malloc(size_t size);
+CRA_API ATTR_CALLOC void *__cra_calloc(size_t num, size_t size);
+CRA_API ATTR_REALLO void *__cra_realloc(void *oldptr, size_t newsize);
+CRA_API ATTR_FREEEE void __cra_free(void *ptr);
+
+#undef ATTR_MALLOC
+#undef ATTR_CALLOC
+#undef ATTR_REALLO
+#undef ATTR_FREEEE
 
 CRA_API void *__cra_malloc_dbg(size_t size, char *file, int line);
 CRA_API void *__cra_calloc_dbg(size_t num, size_t size, char *file, int line);

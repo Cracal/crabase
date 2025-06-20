@@ -31,7 +31,6 @@ target_compile_definitions(mem_detect_config INTERFACE
 )
 
 add_definitions(-DCRA_LOG_FILE_LINE)
-add_definitions(-DCRA_WITH_MY_ASSERT)
 add_definitions(-DCRA_BUILD_DLL)
 
 include_directories(inc)

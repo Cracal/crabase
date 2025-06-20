@@ -38,7 +38,7 @@ void *__cra_realloc(void *oldptr, size_t newsize)
 
 void __cra_free(void *ptr)
 {
-    assert_always(ptr != NULL);
+    assert(ptr != NULL);
     free(ptr);
 }
 

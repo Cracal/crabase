@@ -1,4 +1,5 @@
 #include "cra_malloc.h"
+#include "cra_assert.h"
 
 void test_error(void)
 {
@@ -11,11 +12,11 @@ void test_error(void)
     p = __cra_calloc(1, 0);
     p = __cra_calloc(0, 0);
 
-    p = __cra_realloc(NULL, 1);
+    // p = __cra_realloc(NULL, 1);
     void *o = __cra_malloc(10);
     p = __cra_realloc(o, 0);
 
-    __cra_free(NULL);
+    // __cra_free(NULL);
 }
 
 void test_normal(void)
