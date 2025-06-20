@@ -1,6 +1,5 @@
 #include "cra_refcnt.h"
 #include "cra_assert.h"
-#include "cra_malloc.h"
 
 void cra_refcnt_init(void *rc, cra_refcnt_delete_fn on_delete)
 {
