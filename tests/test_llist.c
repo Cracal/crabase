@@ -10,6 +10,7 @@
  */
 #include <time.h>
 #include "cra_malloc.h"
+#include "cra_assert.h"
 #include "collections/cra_llist.h"
 
 void test_list_node(void)
@@ -368,7 +369,7 @@ void test_clone(void)
     cra_llist_init0(A_s *, list1, true, free_as);
     for (int i = 0; i < 8; i++)
     {
-        as1 = (A_s *)cra_malloc(sizeof(A_s));
+        as1 = cra_malloc(sizeof(A_s));
         as1->i = i + 1;
         as1->f = i + .5f;
         cra_llist_append(list1, &as1);

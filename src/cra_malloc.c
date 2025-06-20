@@ -10,6 +10,37 @@
  */
 #include "cra_malloc.h"
 #include "cra_atomic.h"
+#include "cra_assert.h"
+
+void *__cra_malloc(size_t size)
+{
+    assert(size > 0);
+    void *ptr = malloc(size);
+    assert_always(ptr != NULL);
+    return ptr;
+}
+
+void *__cra_calloc(size_t num, size_t size)
+{
+    assert(num > 0 && size > 0);
+    void *ptr = calloc(num, size);
+    assert_always(ptr != NULL);
+    return ptr;
+}
+
+void *__cra_realloc(void *oldptr, size_t newsize)
+{
+    assert(oldptr != NULL && newsize > 0);
+    void *newptr = realloc(oldptr, newsize);
+    assert_always(newptr != NULL);
+    return newptr;
+}
+
+void __cra_free(void *ptr)
+{
+    assert_always(ptr != NULL);
+    free(ptr);
+}
 
 typedef struct _CraMallocBlkNode
 {
@@ -67,15 +98,12 @@ void *__cra_realloc_dbg(void *ptr, size_t newsize, char *file, int line)
         {
             curr->size = newsize;
             curr->block = newptr;
-            CRA_MALLOC_UNLOCK();
-            goto success_ret;
+            break;
         }
     }
     CRA_MALLOC_UNLOCK();
-
-    __cra_malloc_set_block(newptr, newsize, file, line);
-
-success_ret:
+    if (curr == NULL)
+        __cra_malloc_set_block(newptr, newsize, file, line);
     return newptr;
 }
 
@@ -97,18 +125,16 @@ void __cra_free_dbg(void *ptr)
 
             __cra_free(curr->block);
             __cra_free(curr);
-            // return;
-            goto _finally_block;
+            break;
         }
         last = curr;
         curr = curr->next;
     }
+    CRA_MALLOC_UNLOCK();
 
     // ptr不是通过`cra_malloc()`和`cra_realloc()`申请的内存
-    __cra_free(ptr);
-
-_finally_block:
-    CRA_MALLOC_UNLOCK();
+    if (curr == NULL)
+        __cra_free(ptr);
 }
 
 void __cra_memory_leak_report(FILE *fp)
@@ -125,8 +151,8 @@ void __cra_memory_leak_report(FILE *fp)
         for (; curr != NULL; curr = curr->next)
         {
             ++count;
-            fprintf(fp, "memory leak (%p, size: %zu) in %s:%d.\n",
-                    curr->block, curr->size, curr->file, curr->line);
+            fprintf(fp, "memory leak (0x%zx, size: %zu) in %s:%d.\n",
+                    (size_t)curr->block, curr->size, curr->file, curr->line);
         }
         fprintf(fp, "leak memory count: %d.\n", count);
     }

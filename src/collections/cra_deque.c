@@ -8,6 +8,7 @@
  * @copyright Copyright (c) 2021
  *
  */
+#include "cra_assert.h"
 #include "cra_malloc.h"
 #include "collections/cra_deque.h"
 

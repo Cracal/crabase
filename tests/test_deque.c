@@ -10,6 +10,7 @@
  */
 #include <time.h>
 #include "cra_malloc.h"
+#include "cra_assert.h"
 #include "collections/cra_deque.h"
 
 static void _print_int(void *pi) { printf("val: %d\n", *(int *)pi); }
@@ -286,7 +287,7 @@ void test_clone(void)
     A_s *as;
     for (int i = 0; i < 1000; i++)
     {
-        as = (A_s *)cra_malloc(sizeof(A_s));
+        as = cra_malloc(sizeof(A_s));
         as->i = i + 1;
         as->f = i + 1.5f;
         cra_deque_push(deque, &as);

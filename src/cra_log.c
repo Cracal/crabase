@@ -11,6 +11,7 @@
 #include <stdarg.h>
 #include "cra_log.h"
 #include "cra_time.h"
+#include "cra_assert.h"
 #include "cra_malloc.h"
 #include "threads/cra_locker.h"
 #include "threads/cra_thread.h"
@@ -120,7 +121,7 @@ unsigned int s_create_buf_cnt = 0;
 
 static inline CraLogBuffer *cra_create_buf(void)
 {
-    CraLogBuffer *buf = (CraLogBuffer *)cra_malloc(sizeof(CraLogBuffer));
+    CraLogBuffer *buf = cra_alloc(CraLogBuffer);
     buf->current = 0;
     return buf;
 }

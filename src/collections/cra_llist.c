@@ -8,6 +8,7 @@
  * @copyright Copyright (c) 2021
  *
  */
+#include "cra_assert.h"
 #include "cra_malloc.h"
 #include "collections/cra_llist.h"
 
@@ -15,7 +16,7 @@
 
 static inline CraLListNode *__cra_llist_create_node(size_t element_size)
 {
-    return (CraLListNode *)cra_malloc(sizeof(CraLListNode) + element_size);
+    return cra_malloc(sizeof(CraLListNode) + element_size);
 }
 
 static inline void __cra_llist_destroy_node(CraLListNode *node)

@@ -25,12 +25,10 @@ else()
     endif()
 endif()
 
-if(CMAKE_BUILD_TYPE AND (CMAKE_BUILD_TYPE STREQUAL "Release"))
-    message("==== Release mode ====")
-else()
-    add_definitions(-DCRA_MEMORY_LEAK_DETECTOR)
-    message("==== Debug mode ====")
-endif()
+add_library(mem_detect_config INTERFACE)
+target_compile_definitions(mem_detect_config INTERFACE
+    $<$<CONFIG:Debug>:CRA_MEMORY_LEAK_DETECTOR>
+)
 
 add_definitions(-DCRA_LOG_FILE_LINE)
 add_definitions(-DCRA_WITH_MY_ASSERT)
@@ -46,6 +44,7 @@ aux_source_directory(src SRC)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/tests)
 
 add_library(${PROJECT_NAME} SHARED ${SRC})
+target_link_libraries(${PROJECT_NAME} PRIVATE mem_detect_config)
 
 include(CTest)
 enable_testing()

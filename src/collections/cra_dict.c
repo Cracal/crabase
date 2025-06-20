@@ -8,6 +8,7 @@
  * @copyright Copyright (c) 2021
  *
  */
+#include "cra_assert.h"
 #include "cra_malloc.h"
 #include "collections/cra_dict.h"
 
@@ -89,8 +90,8 @@ void cra_dict_init(CraDict *dict, size_t key_size, size_t val_size, bool zero_me
     dict->remove_key = remove_key;
     dict->remove_val = remove_val;
 
-    dict->buckets = (ssize_t *)cra_malloc(dict->capacity * sizeof(ssize_t));
-    dict->entries = (CraDictEntry *)cra_malloc(CRA_DICT_USABLE_FRACTION(dict->capacity) * dict->entry_size);
+    dict->buckets = cra_malloc(dict->capacity * sizeof(ssize_t));
+    dict->entries = cra_malloc(CRA_DICT_USABLE_FRACTION(dict->capacity) * dict->entry_size);
 
     // set to [-1, -1, -1, ...]
     memset(dict->buckets, 0xff, dict->capacity * sizeof(ssize_t));
@@ -140,8 +141,8 @@ static void __cra_dict_resize(CraDict *dict, ssize_t newcapacity)
     newcapacity = __cra_next_prime(newcapacity);
     new_entries_capacity = CRA_DICT_USABLE_FRACTION(newcapacity);
 
-    newbuckets = (ssize_t *)cra_realloc(dict->buckets, newcapacity * sizeof(ssize_t));
-    newentries = (CraDictEntry *)cra_realloc(dict->entries, new_entries_capacity * dict->entry_size);
+    newbuckets = cra_realloc(dict->buckets, newcapacity * sizeof(ssize_t));
+    newentries = cra_realloc(dict->entries, new_entries_capacity * dict->entry_size);
 
     // set to [-1, -1, ...]
     memset(newbuckets, 0xff, newcapacity * sizeof(ssize_t));

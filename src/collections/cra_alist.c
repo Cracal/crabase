@@ -8,6 +8,7 @@
  * @copyright Copyright (c) 2024
  *
  */
+#include "cra_assert.h"
 #include "cra_malloc.h"
 #include "collections/cra_alist.h"
 
@@ -112,7 +113,7 @@ bool cra_alist_resize(CraAList *list, size_t new_capacity)
     // 新容量必须大于alist存有的元素个数
     if (new_capacity < list->count)
         return false;
-    newarr = (unsigned char *)cra_realloc(list->array, new_capacity * list->ele_size);
+    newarr = cra_realloc(list->array, new_capacity * list->ele_size);
     if (list->zero_memory && new_capacity > list->capacity)
         bzero(newarr + list->capacity * list->ele_size, (new_capacity - list->capacity) * list->ele_size);
     list->array = newarr;

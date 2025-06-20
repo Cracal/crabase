@@ -10,6 +10,7 @@
  */
 #include <float.h>
 #include "cra_malloc.h"
+#include "cra_assert.h"
 #include "serialize/cra_bin_ser.h"
 #include "collections/cra_alist.h"
 #include "collections/cra_llist.h"
@@ -900,7 +901,7 @@ void test_list_element_is_pointer(void)
     char *str;
     for (int i = 0; i < 10; i++)
     {
-        str = (char *)cra_malloc(10);
+        str = cra_malloc(10);
 #ifdef CRA_COMPILER_MSVC
         sprintf_s(str, 10, "hello %d", i);
 #else
@@ -1013,7 +1014,7 @@ void test_array_in_struct(void)
 
     struct A a;
     a.narray = 8;
-    a.array = (char **)cra_malloc(sizeof(char *) * a.narray);
+    a.array = cra_malloc(sizeof(char *) * a.narray);
     for (cra_ser_count_t i = 0; i < a.narray; i++)
     {
         char *str = cra_malloc(10);

@@ -18,8 +18,8 @@
 - locker (mutex & conditional variable)
 - blocking double-ended queue
 - count down latch
-- thread
 - thread pool
+- thread
 
 ## other
 
@@ -28,6 +28,6 @@
 - logger
 - memory pool(object pool)
 - reference count
-- time
 - time wheel
+- time
 - ...

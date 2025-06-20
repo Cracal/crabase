@@ -1,4 +1,5 @@
 #include "cra_malloc.h"
+#include "cra_assert.h"
 #include "cra_mempool.h"
 
 #define CRA_MEMPOOL_LOCK while (cra_atomic_flag_test_and_set(&pool->locker))
@@ -15,7 +16,7 @@ void cra_mempool_init(CraMemPool *pool, size_t itemsize, unsigned int count)
     CRA_MEMPOOL_UNLOCK; // init locker
     pool->count = count;
     pool->itemsize = itemsize;
-    pool->memory = (unsigned char *)cra_malloc(itemsize * count);
+    pool->memory = cra_malloc(itemsize * count);
     cra_deque_init0(void *, &pool->stack, CRA_DEQUE_INFINITE, false, NULL);
     for (unsigned int i = 0; i < count; ++i)
     {

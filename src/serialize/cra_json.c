@@ -10,6 +10,7 @@
  */
 #include <math.h>
 #include <float.h>
+#include "cra_assert.h"
 #include "cra_malloc.h"
 #include "serialize/cra_json.h"
 #include "serialize/cra_ser_inner.h"
@@ -627,7 +628,7 @@ static void cra_json_stringify_begin(CraSerializer *ser, unsigned char *buffer, 
     else
     {
         ser->noalloc = false;
-        ser->buffer = (unsigned char *)cra_malloc(buffer_length);
+        ser->buffer = cra_malloc(buffer_length);
     }
     bzero(&ser->release, sizeof(ser->release));
 }
@@ -929,7 +930,7 @@ static bool cra_json_read_string(CraSerializer *ser, char *retval, cra_ser_count
     if (is_char_ptr)
     {
         max_length = (cra_ser_count_t)(len + sizeof(""));
-        str = *(unsigned char **)retval = (unsigned char *)cra_malloc(max_length);
+        str = *(unsigned char **)retval = cra_malloc(max_length);
         if (auto_free_if_fail)
             cra_ser_release_add(&ser->release, true, str, NULL, NULL);
     }

@@ -1,5 +1,6 @@
 #include "time.h"
 #include "cra_malloc.h"
+#include "cra_assert.h"
 #include "cra_mempool.h"
 #include "threads/cra_thread.h"
 

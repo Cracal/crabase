@@ -1,4 +1,5 @@
 #include "cra_malloc.h"
+#include "cra_assert.h"
 #include "cra_timewheel.h"
 #include "collections/cra_llist.h"
 
@@ -67,7 +68,7 @@ static void __cra_timewheel_init(CraTimewheel *wheel, unsigned int tick_ms, unsi
     wheel->tick_ms = tick_ms;
     wheel->wheel_size = wheel_size;
     wheel->current = 0;
-    wheel->wheel_buckets = (CraLList **)cra_calloc(wheel->wheel_size, sizeof(CraLList *));
+    wheel->wheel_buckets = cra_calloc(wheel->wheel_size, sizeof(CraLList *));
     wheel->freenodelist = freenodelist;
     wheel->upper_wheel = NULL;
 }

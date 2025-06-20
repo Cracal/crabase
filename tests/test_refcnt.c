@@ -1,6 +1,7 @@
 #include "threads/cra_thread.h"
 #include "cra_refcnt.h"
 #include "cra_malloc.h"
+#include "cra_assert.h"
 #include "cra_log.h"
 
 #undef CRA_LOG_NAME

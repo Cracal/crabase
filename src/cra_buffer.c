@@ -1,4 +1,5 @@
 #include "cra_buffer.h"
+#include "cra_assert.h"
 #include "cra_malloc.h"
 
 void cra_buffer_init(CraBuffer *buffer, unsigned int init_size)
@@ -9,7 +10,7 @@ void cra_buffer_init(CraBuffer *buffer, unsigned int init_size)
     buffer->size = init_size;
     buffer->read_idx = 0;
     buffer->write_idx = 0;
-    buffer->buffer = (unsigned char *)cra_malloc(init_size);
+    buffer->buffer = cra_malloc(init_size);
 }
 
 void cra_buffer_uninit(CraBuffer *buffer)
@@ -22,7 +23,7 @@ static void cra_buffer_expand(CraBuffer *buffer, unsigned int len)
 {
     if (cra_buffer_writable(buffer) + buffer->read_idx < len)
     {
-        buffer->buffer = (unsigned char *)cra_realloc(buffer->buffer, buffer->write_idx + len);
+        buffer->buffer = cra_realloc(buffer->buffer, buffer->write_idx + len);
         buffer->size = buffer->write_idx + len;
     }
     else

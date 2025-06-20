@@ -10,6 +10,7 @@
  */
 #include <time.h>
 #include "cra_malloc.h"
+#include "cra_assert.h"
 #include "collections/cra_alist.h"
 
 static void _print_int(void *pi) { printf("val: %d\n", *(int *)pi); }
@@ -302,7 +303,7 @@ void test_clone(void)
     cra_alist_init0(A_s *, list1, 10, true, free_as);
     for (int i = 0; i < 8; i++)
     {
-        as1 = (A_s *)cra_malloc(sizeof(A_s));
+        as1 = cra_malloc(sizeof(A_s));
         as1->i = i + 1;
         as1->f = i + .5f;
         cra_alist_append(list1, &as1);

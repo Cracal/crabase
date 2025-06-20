@@ -9,6 +9,7 @@
  *
  */
 #include "cra_malloc.h"
+#include "cra_assert.h"
 #include "cra_buffer.h"
 
 static void test_new_delete(void)

@@ -10,6 +10,7 @@
  */
 #include <math.h>
 #include "cra_endian.h"
+#include "cra_assert.h"
 #include "cra_malloc.h"
 #include "serialize/cra_bin_ser.h"
 #include "serialize/cra_ser_inner.h"
@@ -43,7 +44,7 @@ void cra_bin_serialize_begin(CraSerializer *ser, unsigned char *buffer, size_t b
     else
     {
         ser->noalloc = false;
-        ser->buffer = (unsigned char *)cra_malloc(buffer_length);
+        ser->buffer = cra_malloc(buffer_length);
     }
     bzero(&ser->release, sizeof(ser->release));
 }
@@ -630,7 +631,7 @@ static bool __cra_bin_deserialize_string_nz(CraSerializer *ser, char *retval, cr
     // read string
     if (is_char_ptr)
     {
-        retval = *(char **)retval = (char *)cra_malloc(len + ((!retlength || len == 0) ? 1 : 0));
+        retval = *(char **)retval = cra_malloc(len + ((!retlength || len == 0) ? 1 : 0));
         if (auto_free_if_fail)
             cra_ser_release_add(&ser->release, true, retval, NULL, NULL);
     }

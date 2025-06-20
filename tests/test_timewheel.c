@@ -1,5 +1,6 @@
 #include "cra_log.h"
 #include "cra_malloc.h"
+#include "cra_assert.h"
 #include "cra_refcnt.h"
 #include "cra_timewheel.h"
 

@@ -9,6 +9,7 @@
  *
  */
 #include "cra_malloc.h"
+#include "cra_assert.h"
 #include "threads/cra_thrdpool.h"
 
 #define PLUS 1000
