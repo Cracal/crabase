@@ -12,6 +12,21 @@
 #define __CRA_LOG_H__
 #include "cra_defs.h"
 
+// default: 260 bytes
+#define CRA_LOG_PATH_MAX 260
+
+// default: 2MB
+#define CRA_LOG_BUFFER_SIZE (2 * 1024 * 1024)
+
+// default : 8KB
+#define CRA_LOG_MSG_MAX 8192
+
+// default: 3s
+#define CRA_LOG_WRITE_INTERVAL (3 * 1000)
+
+// default: CRA_LOG_PATH_MAX + 100
+#define CRA_LOG_FILENAME_MAX (CRA_LOG_PATH_MAX + 100)
+
 typedef enum _CraLogLevel_e
 {
     CRA_LOG_LEVEL_TRACE,

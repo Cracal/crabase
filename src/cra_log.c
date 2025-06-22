@@ -27,6 +27,7 @@
 #define exist(_name) _access(_name, 0)
 #define mkdir(_path, _mode) _mkdir(_path)
 
+#define fopen cra_fopen
 static inline FILE *cra_fopen(const char *name, const char *mode)
 {
     FILE *fp;
@@ -34,7 +35,6 @@ static inline FILE *cra_fopen(const char *name, const char *mode)
         return NULL;
     return fp;
 }
-#define fopen cra_fopen
 
 #else
 
@@ -81,28 +81,6 @@ end:
 #define mkdirs cra_mkdirs
 
 #endif // end file
-
-// default: 260 chars
-#ifndef CRA_LOG_PATH_MAX
-#define CRA_LOG_PATH_MAX 260
-#endif
-
-// default: 2MB
-#ifndef CRA_LOG_BUFFER_SIZE
-#define CRA_LOG_BUFFER_SIZE (2 * 1024 * 1024)
-#endif
-
-// default : 8KB
-#ifndef CRA_LOG_MSG_MAX
-#define CRA_LOG_MSG_MAX 8192
-#endif
-
-// default: 3s
-#ifndef CRA_LOG_WRITE_INTERVAL
-#define CRA_LOG_WRITE_INTERVAL (3 * 1000)
-#endif
-
-#define CRA_LOG_FILENAME_MAX (CRA_LOG_PATH_MAX + 100)
 
 #define CRA_LOG_CHECK_CLOSE_FP                                         \
     if (s_logger.fp && s_logger.fp != stdout && s_logger.fp != stderr) \
@@ -163,6 +141,7 @@ typedef struct
     size_t filecurrsize;
     char filename[CRA_LOG_FILENAME_MAX];
 
+    CraDateTime currdt;
     CraDateTime lastdt;
     void (*time_fn)(CraDateTime *);
     char *time_msg_fmt;
@@ -199,8 +178,8 @@ static inline const char *cra_level_to_str(CraLogLevel_e level)
 
 static bool cra_log_create_logfile(void)
 {
-    CraDateTime *dt = &s_logger.lastdt;
     // 日志文件名的时间部分
+    CraDateTime *dt = &s_logger.currdt;
     snprintf(s_logger.filename + s_logger.filestart, CRA_LOG_FILENAME_MAX,
              s_logger.time_file_fmt, dt->year, dt->mon, dt->day,
              dt->hour, dt->min, dt->sec, dt->ms);
@@ -223,21 +202,21 @@ error_ret:
     return false;
 }
 
-#define CRA_LOG_ADD_AND_CHECK_FILESIZE(_len)                                          \
-    do                                                                                \
-    {                                                                                 \
-        if (s_logger.filestart != -1)                                                 \
-        {                                                                             \
-            CraDateTime _dt;                                                          \
-            (s_logger.filecurrsize) += (_len);                                        \
-            s_logger.time_fn(&_dt);                                                   \
-            if ((_dt.mon + _dt.day) != (s_logger.lastdt.mon + s_logger.lastdt.day) || \
-                (s_logger.filecurrsize) >= s_logger.filemax)                          \
-            {                                                                         \
-                memcpy(&s_logger.lastdt, &_dt, sizeof(CraDateTime));                  \
-                cra_log_create_logfile();                                             \
-            }                                                                         \
-        }                                                                             \
+#define CRA_LOG_ADD_AND_CHECK_FILESIZE(_len)                                    \
+    do                                                                          \
+    {                                                                           \
+        if (s_logger.filestart != -1)                                           \
+        {                                                                       \
+            (s_logger.filecurrsize) += (_len);                                  \
+            CraDateTime *_currdt = &s_logger.currdt;                            \
+            CraDateTime *_lastdt = &s_logger.lastdt;                            \
+            if ((s_logger.filecurrsize) >= s_logger.filemax ||                  \
+                (_currdt->mon + _currdt->day) != (_lastdt->mon + _lastdt->day)) \
+            {                                                                   \
+                memcpy(_lastdt, _currdt, sizeof(*_lastdt));                     \
+                cra_log_create_logfile();                                       \
+            }                                                                   \
+        }                                                                       \
     } while (0)
 
 static CRA_THRD_FUNC(cra_log_thread)
@@ -320,8 +299,10 @@ static void cra_log_write_log(const char *message, size_t len)
     {
         if (s_logger.fp)
         {
-            fputs(message, s_logger.fp);
+            fwrite(message, len, 1, s_logger.fp);
+            cra_mutex_lock(&s_logger.mutex);
             CRA_LOG_ADD_AND_CHECK_FILESIZE(len);
+            cra_mutex_unlock(&s_logger.mutex);
         }
         return;
     }
@@ -373,6 +354,8 @@ bool cra_log_startup(CraLogLevel_e level, bool run_write_thread, bool with_local
         s_logger.time_msg_fmt = CRA_LOG_TIME_FMT_UTC;
         s_logger.time_file_fmt = CRA_LOG_LOG_FILE_TIME_UTC;
     }
+    s_logger.time_fn(&s_logger.currdt);
+    memcpy(&s_logger.lastdt, &s_logger.currdt, sizeof(s_logger.currdt));
 
     s_logger.level = level;
 
@@ -446,7 +429,7 @@ CraLogLevel_e cra_log_get_level(void) { return s_logger.level; }
 
 void cra_log_output_to_fp(FILE *fp)
 {
-    assert(s_logger.initialized);
+    assert_always(s_logger.initialized);
     cra_mutex_lock(&s_logger.mutex);
     CRA_LOG_CHECK_CLOSE_FP;
     s_logger.fp = fp;
@@ -460,6 +443,7 @@ bool cra_log_output_to_file(const char *path, const char *main_name, size_t size
     bool ret;
     size_t path_len = strlen(path);
 
+    assert_always(s_logger.initialized);
     assert_always(size_per_file > 100);
     assert_always(path_len + strlen(main_name) < CRA_LOG_FILENAME_MAX - CRA_LOG_FILENAME_DATETIME_SIZE);
 
@@ -479,9 +463,6 @@ bool cra_log_output_to_file(const char *path, const char *main_name, size_t size
     s_logger.filestart = len;
     s_logger.filemax = size_per_file;
 
-    CraDateTime dt;
-    s_logger.time_fn(&dt);
-    memcpy(&s_logger.lastdt, &dt, sizeof(CraDateTime));
     ret = cra_log_create_logfile();
 
     cra_mutex_unlock(&s_logger.mutex);
@@ -497,19 +478,20 @@ void __cra_log_message(const char *logname, CraLogLevel_e level, const char *fmt
     size_t len;
     va_list ap;
     cra_tid_t tid;
-    CraDateTime dt;
+    CraDateTime *dt;
     char message[CRA_LOG_MSG_MAX];
 
-    assert(s_logger.initialized);
+    assert_always(s_logger.initialized);
 
     if (level < s_logger.level)
         return;
 
     // time
-    s_logger.time_fn(&dt);
+    dt = &s_logger.currdt;
+    s_logger.time_fn(dt);
     len = snprintf(message, sizeof(message), s_logger.time_msg_fmt,
-                   dt.year, dt.mon, dt.day,
-                   dt.hour, dt.min, dt.sec, dt.ms);
+                   dt->year, dt->mon, dt->day,
+                   dt->hour, dt->min, dt->sec, dt->ms);
 
     // tid
     tid = cra_thrd_get_current_tid();
@@ -551,6 +533,7 @@ void __cra_log_message(const char *logname, CraLogLevel_e level, const char *fmt
     {
         if (message[len - 1] != '\n')
         {
+            // [...XX\0] => [...XX\n\0]
             message[len++] = '\n';
             message[len] = '\0';
         }
