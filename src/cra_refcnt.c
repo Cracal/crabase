@@ -1,30 +1,28 @@
 #include "cra_refcnt.h"
 #include "cra_assert.h"
 
-void cra_refcnt_init(void *rc, cra_refcnt_delete_fn on_delete)
+void cra_refcnt_init(CraRefcnt *ref, cra_uninit_fn uninit)
 {
-    assert(rc != NULL);
-    CraRefcnt *ref = (CraRefcnt *)rc;
+    assert(ref != NULL);
     ref->cnt = 1;
-    ref->on_delete = on_delete;
+    ref->uninit = uninit;
 }
 
-bool cra_refcnt_unref(void *rc)
+bool cra_refcnt_unref(CraRefcnt *ref)
 {
-    assert(rc != NULL);
-    CraRefcnt *ref = (CraRefcnt *)rc;
+    assert(ref != NULL);
     if (__CRA_REFCNT_DEC(&ref->cnt) == 1)
     {
-        if (ref->on_delete)
-            ref->on_delete(rc);
+        if (ref->uninit)
+            ref->uninit(ref);
         return true;
     }
     return false;
 }
 
-void cra_refcnt_unref_clear(void **prc)
+void cra_refcnt_unref_clear(CraRefcnt **refptr)
 {
-    assert(prc != NULL);
-    cra_refcnt_unref(*prc);
-    *prc = NULL;
+    assert(refptr != NULL);
+    cra_refcnt_unref(*refptr);
+    *refptr = NULL;
 }

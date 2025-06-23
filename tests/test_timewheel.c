@@ -74,7 +74,7 @@ static void on_cancel(CraTimer_base *timer)
 {
     MyTimer2 *t = container_of(timer, MyTimer2, base);
     CRA_REFCNT_DEF(MyTimer2) *trc = (void *)container_of(t, CRA_REFCNT_DEF(MyTimer2), o);
-    cra_refcnt_unref0(trc);
+    cra_refcnt_unref0(CRA_REFCNT_RC(trc));
 
     flag = false;
 }
@@ -90,7 +90,7 @@ static void on_timeout3(CraTimer_base *timer)
 void test_timewheel2(void)
 {
     CRA_REFCNT_DEF(MyTimer2) *t = cra_alloc(CRA_REFCNT_DEF(MyTimer2));
-    cra_refcnt_init(t, on_free_mytimer2);
+    cra_refcnt_init(CRA_REFCNT_RC(t), on_free_mytimer2);
     cra_timer_base_init(&CRA_REFCNT_OBJ(t)->base, 10, 500, on_timeout3, on_cancel);
     CRA_REFCNT_OBJ(t)->start = 100;
     CRA_REFCNT_OBJ(t)->end = "hello world";

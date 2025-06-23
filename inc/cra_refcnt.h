@@ -17,11 +17,11 @@ typedef cra_atomic_int64_t cra_refcnt_t;
 #define __CRA_REFCNT_DEC cra_atomic_dec64
 
 typedef struct _CraRefcnt CraRefcnt;
-typedef void (*cra_refcnt_delete_fn)(CraRefcnt *rc);
+typedef void (*cra_uninit_fn)(CraRefcnt *rc);
 struct _CraRefcnt
 {
-    cra_refcnt_t cnt;               // 计数
-    cra_refcnt_delete_fn on_delete; // delete回调函数
+    cra_refcnt_t cnt;     // 计数
+    cra_uninit_fn uninit; // uninit回调函数
 };
 
 #define CRA_REFCNT_NAME_DEF(_Type, _name) \
@@ -47,16 +47,12 @@ struct _CraRefcnt
 #define CRA_REFCNT_OBJ(_rc) (&(_rc)->o)
 #define CRA_REFCNT_PTR(_rc) ((_rc)->p)
 
-CRA_API void cra_refcnt_init(void *rc, cra_refcnt_delete_fn on_delete);
+CRA_API void cra_refcnt_init(CraRefcnt *ref, cra_uninit_fn uninit);
 
-static inline void cra_refcnt_ref(void *rc)
-{
-    CraRefcnt *ref = (CraRefcnt *)rc;
-    __CRA_REFCNT_INC(&ref->cnt);
-}
+static inline void cra_refcnt_ref(CraRefcnt *ref) { __CRA_REFCNT_INC(&ref->cnt); }
 
-CRA_API bool cra_refcnt_unref(void *rc);
-static inline void cra_refcnt_unref0(void *rc) { cra_refcnt_unref(rc); }
-CRA_API void cra_refcnt_unref_clear(void **prc);
+CRA_API bool cra_refcnt_unref(CraRefcnt *ref);
+static inline void cra_refcnt_unref0(CraRefcnt *ref) { cra_refcnt_unref(ref); }
+CRA_API void cra_refcnt_unref_clear(CraRefcnt **refptr);
 
 #endif
