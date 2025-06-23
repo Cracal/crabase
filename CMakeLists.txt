@@ -32,6 +32,7 @@ target_compile_definitions(mem_detect_config INTERFACE
 
 add_definitions(-DCRA_LOG_FILE_LINE)
 add_definitions(-DCRA_BUILD_DLL)
+add_definitions(-DCRA_RANDOM_STR_INIT_HASHCODE)
 
 include_directories(inc)
 
