@@ -2,7 +2,7 @@
 #include "cra_assert.h"
 #include "cra_malloc.h"
 
-void cra_buffer_init(CraBuffer *buffer, unsigned int init_size)
+void cra_buffer_init(CraBuffer *buffer, size_t init_size)
 {
     assert(buffer != NULL);
     assert_always(init_size > 0);
@@ -19,31 +19,34 @@ void cra_buffer_uninit(CraBuffer *buffer)
     bzero(buffer, sizeof(*buffer));
 }
 
-static void cra_buffer_expand(CraBuffer *buffer, unsigned int len)
+size_t cra_buffer_resize(CraBuffer *buffer, size_t new_size)
 {
-    if (cra_buffer_writable(buffer) + buffer->read_idx < len)
+    size_t readable = cra_buffer_readable(buffer);
+    if (buffer->read_idx > 0)
     {
-        buffer->buffer = cra_realloc(buffer->buffer, buffer->write_idx + len);
-        buffer->size = buffer->write_idx + len;
-    }
-    else
-    {
-        memmove(buffer->buffer, cra_buffer_read_start(buffer), buffer->read_idx);
+        memmove(buffer->buffer, cra_buffer_read_start(buffer), readable);
         buffer->write_idx -= buffer->read_idx;
         buffer->read_idx = 0;
     }
+
+    if (new_size != 0 && (new_size = CRA_MAX(new_size, readable)) != buffer->size)
+    {
+        buffer->buffer = cra_realloc(buffer->buffer, new_size);
+        buffer->size = new_size;
+    }
+    return buffer->size;
 }
 
-void cra_buffer_append(CraBuffer *buffer, const void *data, unsigned int len)
+void cra_buffer_append(CraBuffer *buffer, const void *data, size_t len)
 {
     if (cra_buffer_writable(buffer) < len)
-        cra_buffer_expand(buffer, len);
+        cra_buffer_resize(buffer, CRA_MAX(buffer->size + (buffer->size >> 1), buffer->size + len));
 
     memcpy(cra_buffer_write_start(buffer), data, len);
     buffer->write_idx += len;
 }
 
-unsigned int cra_buffer_retrieve(CraBuffer *buffer, void *data, unsigned int len)
+size_t cra_buffer_retrieve(CraBuffer *buffer, void *data, size_t len)
 {
     len = CRA_MIN(cra_buffer_readable(buffer), len);
     memcpy(data, cra_buffer_read_start(buffer), len);
@@ -53,14 +56,14 @@ unsigned int cra_buffer_retrieve(CraBuffer *buffer, void *data, unsigned int len
     return len;
 }
 
-unsigned int cra_buffer_append_size(CraBuffer *buffer, unsigned int len)
+size_t cra_buffer_append_size(CraBuffer *buffer, size_t len)
 {
     len = CRA_MIN(len, cra_buffer_writable(buffer));
     buffer->write_idx += len;
     return len;
 }
 
-unsigned int cra_buffer_retrieve_size(CraBuffer *buffer, unsigned int len)
+size_t cra_buffer_retrieve_size(CraBuffer *buffer, size_t len)
 {
     len = CRA_MIN(len, cra_buffer_readable(buffer));
     buffer->read_idx += len;
