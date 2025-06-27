@@ -14,7 +14,7 @@
 
 typedef struct _CraTimewheel CraTimewheel;
 typedef struct _CraTimer_base CraTimer_base;
-typedef void (*cra_timer_fn)(CraTimer_base *);
+typedef void (*cra_timer_base_fn)(CraTimer_base *);
 
 #if 1 // timer
 
@@ -23,11 +23,12 @@ struct _CraTimer_base
     bool active;
     unsigned int repeat;
     unsigned int timeout_ms;
-    cra_timer_fn on_timeout;      // timeout && active == true
-    cra_timer_fn on_remove_timer; // 当定时器被移出time wheel时调用
+    cra_timer_base_fn on_timeout;      // timeout && active == true
+    cra_timer_base_fn on_remove_timer; // 当定时器被移出time wheel时调用
 };
 
-CRA_API void cra_timer_base_init(CraTimer_base *base, unsigned int repeat, unsigned int timeout_ms, cra_timer_fn on_timeout, cra_timer_fn on_remove_timer);
+CRA_API void cra_timer_base_init(CraTimer_base *base, unsigned int repeat, unsigned int timeout_ms,
+                                 cra_timer_base_fn on_timeout, cra_timer_base_fn on_remove_timer);
 
 static inline bool cra_timer_base_is_active(CraTimer_base *base) { return base->active; }
 static inline void cra_timer_base_cancel(CraTimer_base *base) { base->active = false; }

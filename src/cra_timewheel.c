@@ -48,7 +48,8 @@ static inline void cra_freenodelist_put(CraLList *list, CraLListNode *node)
 
 #endif // end free node list
 
-void cra_timer_base_init(CraTimer_base *base, unsigned int repeat, unsigned int timeout_ms, cra_timer_fn on_timeout, cra_timer_fn on_remove_timer)
+void cra_timer_base_init(CraTimer_base *base, unsigned int repeat, unsigned int timeout_ms,
+                         cra_timer_base_fn on_timeout, cra_timer_base_fn on_remove_timer)
 {
     assert(repeat > 0);
     assert(timeout_ms > 0);
