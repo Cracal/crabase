@@ -1,7 +1,7 @@
 #include "cra_refcnt.h"
 #include "cra_assert.h"
 
-void cra_refcnt_init(CraRefcnt *ref, cra_uninit_fn uninit)
+void cra_refcnt_init(CraRefcnt *ref, cra_refcnt_uninit_fn uninit)
 {
     assert(ref != NULL);
     ref->cnt = 1;
