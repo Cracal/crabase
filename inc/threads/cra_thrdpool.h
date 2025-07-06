@@ -33,26 +33,35 @@ typedef struct _CraThrdPool
     cra_atomic_int32_t idle_threads;
     int threadcnt;
     size_t task_max;
-    CraBlkDeque task_que;
+    CraBlkDeque task_que; // BlkDeque<CraThrdPoolArgs2>
     CraThrdPoolWorker *threads;
 } CraThrdPool;
 
-typedef struct
-{
-    cra_tid_t tid;
-} CraThrdPoolArgs0;
+#define CRA_THRDPOOL_ARGS0 \
+    struct                 \
+    {                      \
+        cra_tid_t tid;     \
+    }
+#define CRA_THRDPOOL_ARGS1  \
+    struct                  \
+    {                       \
+        CRA_THRDPOOL_ARGS0; \
+        void *arg1;         \
+    }
+#define CRA_THRDPOOL_ARGS2  \
+    struct                  \
+    {                       \
+        CRA_THRDPOOL_ARGS1; \
+        void *arg2;         \
+    }
 
-typedef struct
-{
-    CraThrdPoolArgs0;
-    void *arg1;
-} CraThrdPoolArgs1;
+typedef CRA_THRDPOOL_ARGS0 CraThrdPoolArgs0;
+typedef CRA_THRDPOOL_ARGS1 CraThrdPoolArgs1;
+typedef CRA_THRDPOOL_ARGS2 CraThrdPoolArgs2;
 
-typedef struct
-{
-    CraThrdPoolArgs1;
-    void *arg2;
-} CraThrdPoolArgs2;
+#undef CRA_THRDPOOL_ARGS0
+#undef CRA_THRDPOOL_ARGS1
+#undef CRA_THRDPOOL_ARGS2
 
 typedef void (*cra_thrdpool_task_fn0)(const CraThrdPoolArgs0 *);
 typedef void (*cra_thrdpool_task_fn1)(const CraThrdPoolArgs1 *);

@@ -902,6 +902,7 @@ void test_list_element_is_pointer(void)
     for (int i = 0; i < 10; i++)
     {
         str = cra_malloc(10);
+        assert_always(str != NULL);
 #ifdef CRA_COMPILER_MSVC
         sprintf_s(str, 10, "hello %d", i);
 #else
@@ -1018,6 +1019,7 @@ void test_array_in_struct(void)
     for (cra_ser_count_t i = 0; i < a.narray; i++)
     {
         char *str = cra_malloc(10);
+        assert_always(str != NULL);
 #ifdef CRA_COMPILER_MSVC
         sprintf_s(str, 10, "hello %d", i);
 #else
@@ -1252,7 +1254,7 @@ void test_old2new(void)
     assert_always(error == CRA_SER_ERROR_SUCCESS);
     assert_always(o.i == n.i);
     assert_always(strcmp(o.str, n.str) == 0);
-    assert_always(cra_compare_float_p(&n.f, &(float){2.8f}) == 0);
+    assert_always(cra_compare_float(n.f, 2.8f) == 0);
 
     cra_free(n.str);
 }

@@ -57,8 +57,8 @@
 
 #elif defined(__GNUC__)
 
-#if __GNUC__ < 14
-#warning "没有在低于14的版本上测试过，可能会出错"
+#if __GNUC__ < 13
+#warning "没有在低于13的版本上测试过，可能会出错"
 #endif
 
 #define CRA_COMPILER_GNUC

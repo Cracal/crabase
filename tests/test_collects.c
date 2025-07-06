@@ -45,17 +45,18 @@ void test_compare(void)
     assert_always(cra_compare_string("BC", "BC") == 0);
     assert_always(cra_compare_string("ABC", "BC") < 0);
     assert_always(cra_compare_string("BC", "ABC") > 0);
-    assert_always(cra_compare_string_p(&(char *){"BC"}, &(char *){"BC"}) == 0);
-    assert_always(cra_compare_string_p(&(char *){"ABC"}, &(char *){"BC"}) < 0);
-    assert_always(cra_compare_string_p(&(char *){"BC"}, &(char *){"ABC"}) > 0);
+    assert_always(cra_compare_string_p((const char **)&(char *){"BC"}, (const char **)&(char *){"BC"}) == 0);
+    assert_always(cra_compare_string_p((const char **)&(char *){"ABC"}, (const char **)&(char *){"BC"}) < 0);
+    assert_always(cra_compare_string_p((const char **)&(char *){"BC"}, (const char **)&(char *){"ABC"}) > 0);
 
-    int a = 100, b = 100;
-    assert_always(cra_compare_ptr(&a, &a) == 0);
-    assert_always(cra_compare_ptr(&a, &b) < 0);
-    assert_always(cra_compare_ptr(&b, &a) > 0);
-    assert_always(cra_compare_ptr_p(&(void *){&a}, &(void *){&a}) == 0);
-    assert_always(cra_compare_ptr_p(&(void *){&a}, &(void *){&b}) < 0);
-    assert_always(cra_compare_ptr_p(&(void *){&b}, &(void *){&a}) > 0);
+    int arr[] = {0, 1, 2, 3};
+    int *pa = arr, *pb = arr + 2;
+    assert_always(cra_compare_ptr(pa, arr) == 0);
+    assert_always(cra_compare_ptr(pa, pb) < 0);
+    assert_always(cra_compare_ptr(pb, pa) > 0);
+    assert_always(cra_compare_ptr_p((const void **)&pa, (const void **)&pa) == 0);
+    assert_always(cra_compare_ptr_p((const void **)&pa, (const void **)&pb) < 0);
+    assert_always(cra_compare_ptr_p((const void **)&pb, (const void **)&pa) > 0);
 
 #undef ITEM
 }
@@ -63,42 +64,45 @@ void test_compare(void)
 void test_hash(void)
 {
     cra_hash_t hash1, hash2, hash3;
-    int val_int;
+
     srand((unsigned int)time(NULL));
 
-#define ITEM(suffix, type)                                                 \
-    for (int i = 0; i < 1000; i++)                                         \
-    {                                                                      \
-        val_int = (int)(type)rand();                                       \
-        hash1 = cra_hash_##suffix((type)val_int);                          \
-        hash2 = cra_hash_##suffix((type)val_int);                          \
-        hash3 = cra_hash_##suffix((type)(val_int + (type)2.5));            \
-        assert_always(hash1 == hash2);                                     \
-        assert_always(hash1 != hash3 || (hash1 == -2 && hash3 == -2));     \
-        hash1 = cra_hash_##suffix##_p(&(type){(type)val_int});             \
-        hash2 = cra_hash_##suffix##_p(&(type){(type)val_int});             \
-        hash3 = cra_hash_##suffix##_p(&(type){(type)val_int + (type)2.5}); \
-        assert_always(hash1 == hash2);                                     \
-        assert_always(hash1 != hash3 || (hash1 == -2 && hash3 == -2));     \
+#define ITEM(suffix, type)                                             \
+    for (int i = 0; i < 1000; i++)                                     \
+    {                                                                  \
+        type _tmp, _val = (type)rand();                                \
+        hash1 = cra_hash_##suffix(_val);                               \
+        hash2 = cra_hash_##suffix(_val);                               \
+        _tmp = _val + (type)2.5;                                       \
+        if (cra_compare_##suffix(_tmp, _val) == 0)                     \
+            _tmp = _val * (type)2.5;                                   \
+        hash3 = cra_hash_##suffix(_tmp);                               \
+        assert_always(hash1 == hash2);                                 \
+        assert_always(hash1 != hash3 || (hash1 == -2 && hash3 == -2)); \
+        hash1 = cra_hash_##suffix##_p(&(type){_val});                  \
+        hash2 = cra_hash_##suffix##_p(&(type){_val});                  \
+        hash3 = cra_hash_##suffix##_p(&(type){_tmp});                  \
+        assert_always(hash1 == hash2);                                 \
+        assert_always(hash1 != hash3 || (hash1 == -2 && hash3 == -2)); \
     }
 
-    ITEM(int, int);
-    ITEM(uint, unsigned int);
-    ITEM(ssize_t, ssize_t);
-    ITEM(size_t, size_t);
+    ITEM(int, int)
+    ITEM(uint, unsigned int)
+    ITEM(ssize_t, ssize_t)
+    ITEM(size_t, size_t)
 
-    ITEM(int8_t, int8_t);
-    ITEM(int16_t, int16_t);
-    ITEM(int32_t, int32_t);
-    ITEM(int64_t, int64_t);
+    ITEM(int8_t, int8_t)
+    ITEM(int16_t, int16_t)
+    ITEM(int32_t, int32_t)
+    ITEM(int64_t, int64_t)
 
-    ITEM(uint8_t, uint8_t);
-    ITEM(uint16_t, uint16_t);
-    ITEM(uint32_t, uint32_t);
-    ITEM(uint64_t, uint64_t);
+    ITEM(uint8_t, uint8_t)
+    ITEM(uint16_t, uint16_t)
+    ITEM(uint32_t, uint32_t)
+    ITEM(uint64_t, uint64_t)
 
-    ITEM(float, float);
-    ITEM(double, double);
+    ITEM(float, float)
+    ITEM(double, double)
 
     int a = 100, b = 1000;
     hash1 = cra_hash_ptr(&a);
@@ -106,9 +110,9 @@ void test_hash(void)
     hash3 = cra_hash_ptr(&b);
     assert_always(hash1 == hash2);
     assert_always(hash1 != hash3 || (hash1 == -2 && hash3 == -2));
-    hash1 = cra_hash_ptr_p(&(void *){&a});
-    hash2 = cra_hash_ptr_p(&(void *){&a});
-    hash3 = cra_hash_ptr_p(&(void *){&b});
+    hash1 = cra_hash_ptr_p((const void **)&(void *){&a});
+    hash2 = cra_hash_ptr_p((const void **)&(void *){&a});
+    hash3 = cra_hash_ptr_p((const void **)&(void *){&b});
     assert_always(hash1 == hash2);
     assert_always(hash1 != hash3 || (hash1 == -2 && hash3 == -2));
 
@@ -118,9 +122,9 @@ void test_hash(void)
     hash3 = cra_hash_string1(s2);
     assert_always(hash1 == hash2);
     assert_always(hash1 != hash3 || (hash1 == -2 && hash3 == -2));
-    hash1 = cra_hash_string1_p(&(char *){s1});
-    hash2 = cra_hash_string1_p(&(char *){s1});
-    hash3 = cra_hash_string1_p(&(char *){s2});
+    hash1 = cra_hash_string1_p((const char **)&(char *){s1});
+    hash2 = cra_hash_string1_p((const char **)&(char *){s1});
+    hash3 = cra_hash_string1_p((const char **)&(char *){s2});
     assert_always(hash1 == hash2);
     assert_always(hash1 != hash3 || (hash1 == -2 && hash3 == -2));
 
@@ -129,9 +133,9 @@ void test_hash(void)
     hash3 = cra_hash_string2(s2);
     assert_always(hash1 == hash2);
     assert_always(hash1 != hash3 || (hash1 == -2 && hash3 == -2));
-    hash1 = cra_hash_string2_p(&(char *){s1});
-    hash2 = cra_hash_string2_p(&(char *){s1});
-    hash3 = cra_hash_string2_p(&(char *){s2});
+    hash1 = cra_hash_string2_p((const char **)&(char *){s1});
+    hash2 = cra_hash_string2_p((const char **)&(char *){s1});
+    hash3 = cra_hash_string2_p((const char **)&(char *){s2});
     assert_always(hash1 == hash2);
     assert_always(hash1 != hash3 || (hash1 == -2 && hash3 == -2));
 

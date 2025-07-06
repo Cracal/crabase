@@ -37,6 +37,7 @@ static inline FILE *cra_fopen(const char *name, const char *mode)
 }
 
 #else
+#include <sys/stat.h>
 
 #define exist(_name) access(_name, F_OK)
 #ifdef CRA_COMPILER_MINGW

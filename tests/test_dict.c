@@ -81,7 +81,7 @@ void test_remove(void)
     for (int i = 80; i < 100; i++)
     {
         assert_always(cra_dict_get(dict, &i, &val));
-        assert_always(cra_compare_float_p(&val, &(float){i + .5f}) == 0);
+        assert_always(cra_compare_float(val, i + .5f) == 0);
     }
 
     printf("\n");
@@ -108,7 +108,7 @@ void test_get(void)
     for (int i = -5; i <= 5; i++)
     {
         assert_always(cra_dict_get(dict, &i, &val));
-        assert_always(cra_compare_float_p(&val, &(float){i + .5f}) == 0);
+        assert_always(cra_compare_float(val, i + .5f) == 0);
         assert_always(cra_dict_get_ptr(dict, &i, (void **)&valptr));
         assert_always(cra_compare_float_p(valptr, &(float){i + .5f}) == 0);
     }

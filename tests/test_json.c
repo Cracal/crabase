@@ -49,11 +49,11 @@ void test_base(void)
         uint64_t u64n;
 
         float fM;
-        float fMp;
+        float fMn;
         float fm;
         float fn;
         double dM;
-        double dMp;
+        double dMn;
         double dm;
         double dn;
     };
@@ -84,11 +84,11 @@ void test_base(void)
     CRA_TYPE_META_UINT64_MEMBER(struct A, u64n)
 
     CRA_TYPE_META_FLOAT_MEMBER(struct A, fM)
-    CRA_TYPE_META_FLOAT_MEMBER(struct A, fMp)
+    CRA_TYPE_META_FLOAT_MEMBER(struct A, fMn)
     CRA_TYPE_META_FLOAT_MEMBER(struct A, fm)
     CRA_TYPE_META_FLOAT_MEMBER(struct A, fn)
     CRA_TYPE_META_DOUBLE_MEMBER(struct A, dM)
-    CRA_TYPE_META_DOUBLE_MEMBER(struct A, dMp)
+    CRA_TYPE_META_DOUBLE_MEMBER(struct A, dMn)
     CRA_TYPE_META_DOUBLE_MEMBER(struct A, dm)
     CRA_TYPE_META_DOUBLE_MEMBER(struct A, dn)
     CRA_TYPE_META_END();
@@ -124,11 +124,11 @@ void test_base(void)
         .u64n = 100000,
 
         .fM = FLT_MAX,
-        .fMp = -FLT_MAX,
+        .fMn = -FLT_MAX,
         .fm = FLT_MIN,
         .fn = -1.5f,
         .dM = DBL_MAX,
-        .dMp = -DBL_MAX,
+        .dMn = -DBL_MAX,
         .dm = DBL_MIN,
         .dn = 6.5,
     };
@@ -164,14 +164,14 @@ void test_base(void)
     assert_always(a.u32n == aa->u32n);
     assert_always(a.u64M == aa->u64M);
     assert_always(a.u64n == aa->u64n);
-    assert_always(cra_compare_float_p(&a.fM, &aa->fM) == 0);
-    assert_always(cra_compare_float_p(&a.fMp, &aa->fMp) == 0);
-    assert_always(cra_compare_float_p(&a.fm, &aa->fm) == 0);
-    assert_always(cra_compare_float_p(&a.fn, &aa->fn) == 0);
-    assert_always(cra_compare_double_p(&a.dM, &aa->dM) == 0);
-    assert_always(cra_compare_double_p(&a.dMp, &aa->dMp) == 0);
-    assert_always(cra_compare_double_p(&a.dm, &aa->dm) == 0);
-    assert_always(cra_compare_double_p(&a.dn, &aa->dn) == 0);
+    assert_always(cra_compare_float(a.fM, aa->fM) == 0);
+    assert_always(cra_compare_float(a.fMn, aa->fMn) == 0);
+    assert_always(cra_compare_float(a.fm, aa->fm) == 0);
+    assert_always(cra_compare_float(a.fn, aa->fn) == 0);
+    assert_always(cra_compare_double(a.dM, aa->dM) == 0);
+    assert_always(cra_compare_double(a.dMn, aa->dMn) == 0);
+    assert_always(cra_compare_double(a.dm, aa->dm) == 0);
+    assert_always(cra_compare_double(a.dn, aa->dn) == 0);
 
     cra_free(aa);
 
@@ -225,11 +225,11 @@ void test_base(void)
     assert_always(a.u64M == aa->u64M);
     assert_always(a.u64n == aa->u64n);
     assert_always(0 == aa->fM);
-    assert_always(cra_compare_float_p(&a.fm, &aa->fm) == 0);
-    assert_always(cra_compare_float_p(&a.fn, &aa->fn) == 0);
+    assert_always(cra_compare_float(a.fm, aa->fm) == 0);
+    assert_always(cra_compare_float(a.fn, aa->fn) == 0);
     assert_always(0 == aa->dM);
     assert_always(0 == aa->dm);
-    assert_always(cra_compare_double_p(&a.dn, &aa->dn) == 0);
+    assert_always(cra_compare_double(a.dn, aa->dn) == 0);
 
     cra_free(aa);
 
@@ -293,11 +293,11 @@ void test_d2i(void)
     d.M = DBL_MAX;
     d.N = -DBL_MAX;
     d.m = DBL_MIN;
-    d.zp = -0.0;
-    d.zn = +0.0;
+    d.zp = +0.0;
+    d.zn = -0.0;
     d.z = 0.0;
-    d.p = -100.5;
-    d.n = 60.8;
+    d.p = 100.5;
+    d.n = -60.8;
 
     buffsize = sizeof(buff);
     cra_json_stringify_struct0(buff, &buffsize, &d, meta_D, FORMAT, &error);
@@ -328,11 +328,11 @@ void test_i2d(void)
     i.M = INT64_MAX;
     i.N = -INT64_MAX;
     i.m = INT64_MIN;
-    i.zp = -0;
-    i.zn = +0;
+    i.zp = +0;
+    i.zn = -0;
     i.z = 0;
-    i.p = -100;
-    i.n = 60;
+    i.p = 100;
+    i.n = -60;
 
     buffsize = sizeof(buff);
     cra_json_stringify_struct0(buff, &buffsize, &i, meta_I, FORMAT, &error);
@@ -342,9 +342,9 @@ void test_i2d(void)
 
     cra_json_parse_struct0(buff, buffsize, &d, sizeof(d), false, meta_D, NULL, NULL, &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
-    assert_always(cra_compare_double_p(&d.M, &(double){(double)INT64_MAX}) == 0);
-    assert_always(cra_compare_double_p(&d.N, &(double){(double)-INT64_MAX}) == 0);
-    assert_always(cra_compare_double_p(&d.m, &(double){(double)INT64_MIN}) == 0);
+    assert_always(cra_compare_double(d.M, (double)INT64_MAX) == 0);
+    assert_always(cra_compare_double(d.N, (double)-INT64_MAX) == 0);
+    assert_always(cra_compare_double(d.m, (double)INT64_MIN) == 0);
     assert_always(d.zp == 0.0);
     assert_always(d.zn == 0.0);
     assert_always(d.z == 0.0);
@@ -855,6 +855,7 @@ void test_list_element_is_pointer(void)
     for (int i = 0; i < 10; i++)
     {
         str = cra_malloc(10);
+        assert_always(str != NULL);
 #ifdef CRA_COMPILER_MSVC
         sprintf_s(str, 10, "hello %d", i);
 #else
@@ -985,6 +986,7 @@ void test_array_in_struct(void)
     for (uint32_t i = 0; i < a.narray; i++)
     {
         char *str = cra_malloc(10);
+        assert_always(str != NULL);
 #ifdef CRA_COMPILER_MSVC
         sprintf_s(str, 10, "hello %d", i);
 #else
@@ -1221,7 +1223,7 @@ void test_old2new(void)
     assert_always(error == CRA_SER_ERROR_SUCCESS);
     assert_always(o.i == n.i);
     assert_always(strcmp(o.str, n.str) == 0);
-    assert_always(cra_compare_float_p(&n.f, &(float){2.8f}) == 0);
+    assert_always(cra_compare_float(n.f, 2.8f) == 0);
 
     cra_free(n.str);
 }
