@@ -350,35 +350,35 @@ CraLList *cra_llist_clone(CraLList *list, cra_deep_copy_val_fn deep_copy_val)
     return ret;
 }
 
-static inline void cra_llist_swap_node_val(CraLList *list, CraLListNode *a, CraLListNode *b)
-{
-    CraLListNode *temp = __cra_llist_get_free_node(list);
-    memcpy(temp->val, a->val, list->ele_size);
-    memcpy(a->val, b->val, list->ele_size);
-    memcpy(b->val, temp->val, list->ele_size);
-    __cra_llist_put_free_node(list, temp, true);
-}
-
 static CraLListNode *cra_llist_partition(CraLList *list,
                                          cra_compare_fn compare,
                                          CraLListNode *begin, CraLListNode *end)
 {
-    CraLListNode *left, *middle, *right;
+    CraLListNode *left, *right, *temp;
     left = begin;
-    middle = end;
     right = end;
+    // temp.val = list[left].val
+    temp = cra_llist_get_free_node(list);
+    memcpy(temp->val, right->val, list->ele_size);
+
     while (left != right)
     {
-        while (left != right && compare(left->val, middle->val) <= 0)
+        //                      list[left].val <= temp.val;
+        while (left != right && compare(left->val, temp->val) <= 0)
             left = left->next;
-        while (left != right && compare(right->val, middle->val) > 0)
-            right = right->prev;
+        // list[right].val = list[left].val
+        memcpy(right->val, left->val, list->ele_size);
 
-        if (left != right)
-            cra_llist_swap_node_val(list, left, right);
+        //                      list[right].val >= temp.val;
+        while (left != right && compare(right->val, temp->val) >= 0)
+            right = right->prev;
+        // list[left].val = list[right].val
+        memcpy(left->val, right->val, list->ele_size);
     }
-    if (compare(left->val, middle->val) > 0)
-        cra_llist_swap_node_val(list, left, middle);
+    // list[left].val = temp.val
+    memcpy(left->val, temp->val, list->ele_size);
+
+    cra_llist_put_free_node(list, temp);
     return left;
 }
 
@@ -396,7 +396,7 @@ static void cra_llist_quick_sort(CraLList *list,
 void cra_llist_sort(CraLList *list, cra_compare_fn compare)
 {
     assert(compare != NULL);
-    if (list->count > 1)
+    if (list->count > 1) // count(list) >= 2
         cra_llist_quick_sort(list, compare, list->head, list->head->prev);
 }
 

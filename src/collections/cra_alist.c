@@ -244,8 +244,7 @@ CraAList *cra_alist_clone(CraAList *list, cra_deep_copy_val_fn deep_copy_val)
 
 static size_t cra_alist_partition(CraAList *list, cra_compare_fn compare, size_t begin, size_t end)
 {
-    size_t left, middle, right;
-    void *val1, *val2;
+    size_t left, right;
 
 #ifdef CRA_COMPILER_MSVC
     unsigned char *temp = cra_malloc(list->ele_size);
@@ -254,57 +253,49 @@ static size_t cra_alist_partition(CraAList *list, cra_compare_fn compare, size_t
 #endif
 
     left = begin;
-    middle = end - 1;
-    right = end - 2;
-
-#define _CRA_ALIST_SWAP_VAL(_i, _j)        \
-    val1 = _CRA_ALIST_VALUE_PTR(list, _i); \
-    val2 = _CRA_ALIST_VALUE_PTR(list, _j); \
-    memcpy(temp, val1, list->ele_size);    \
-    memcpy(val1, val2, list->ele_size);    \
-    memcpy(val2, temp, list->ele_size)
+    right = end;
+    // temp = array[right]
+    memcpy(temp, _CRA_ALIST_VALUE_PTR(list, right), list->ele_size);
 
     while (left < right)
     {
-        while (left < right && compare(_CRA_ALIST_VALUE_PTR(list, left), _CRA_ALIST_VALUE_PTR(list, middle)) <= 0)
+        //                     array[left] <= temp
+        while (left < right && compare(_CRA_ALIST_VALUE_PTR(list, left), temp) <= 0)
             left++;
-        while (left < right && compare(_CRA_ALIST_VALUE_PTR(list, right), _CRA_ALIST_VALUE_PTR(list, middle)) >= 0)
+        // array[right] = array[left];
+        memcpy(_CRA_ALIST_VALUE_PTR(list, right), _CRA_ALIST_VALUE_PTR(list, left), list->ele_size);
+
+        //                     array[right] >= temp
+        while (left < right && compare(_CRA_ALIST_VALUE_PTR(list, right), temp) >= 0)
             right--;
-        if (left != right)
-        {
-            _CRA_ALIST_SWAP_VAL(left, right);
-        }
+        // array[left] = array[right];
+        memcpy(_CRA_ALIST_VALUE_PTR(list, left), _CRA_ALIST_VALUE_PTR(list, right), list->ele_size);
     }
-
-    if (compare(_CRA_ALIST_VALUE_PTR(list, left), _CRA_ALIST_VALUE_PTR(list, middle)) > 0)
-    {
-        _CRA_ALIST_SWAP_VAL(left, middle);
-    }
-
-#undef _CRA_ALIST_SWAP_VAL
+    assert(left == right);
+    // array[left] = temp;
+    memcpy(_CRA_ALIST_VALUE_PTR(list, left), temp, list->ele_size);
 
 #ifdef CRA_COMPILER_MSVC
     cra_free(temp);
 #endif
 
-    return left + 1;
+    return left;
 }
 
 static void cra_alist_quick_sort(CraAList *list, cra_compare_fn compare, size_t begin, size_t end)
 {
-    if (begin >= end - 1)
-        return;
-
     size_t middle = cra_alist_partition(list, compare, begin, end);
-    cra_alist_quick_sort(list, compare, begin, middle);
-    cra_alist_quick_sort(list, compare, middle, end);
+    if (middle > 0 && middle - 1 > begin)
+        cra_alist_quick_sort(list, compare, begin, middle - 1);
+    if (middle < end && middle + 1 < end)
+        cra_alist_quick_sort(list, compare, middle + 1, end);
 }
 
 void cra_alist_sort(CraAList *list, cra_compare_fn compare)
 {
     assert(compare != NULL);
-    if (list->count > 1)
-        cra_alist_quick_sort(list, compare, 0, list->count);
+    if (list->count > 1) // count(array) >= 2
+        cra_alist_quick_sort(list, compare, 0, list->count - 1);
 }
 
 static size_t cra_alist_binary_seach(CraAList *list, cra_compare_fn compare, void *val)
