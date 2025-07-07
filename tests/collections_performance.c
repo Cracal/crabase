@@ -374,5 +374,7 @@ int main(void)
     test_deque_performance(sizes);
     sizes[3] = 1000000;
     test_dict_performance(sizes);
+
+    cra_memory_leak_report(stdout);
     return 0;
 }
