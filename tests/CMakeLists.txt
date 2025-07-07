@@ -35,6 +35,9 @@ target_link_libraries(test_timewheel ${PROJECT_NAME} mem_detect_config)
 add_executable(test_malloc test_malloc.c)
 target_link_libraries(test_malloc ${PROJECT_NAME} mem_detect_config)
 
+add_executable(collections_performance collections_performance.c)
+target_link_libraries(collections_performance ${PROJECT_NAME} mem_detect_config)
+
 add_test(test_atomic test_atomic)
 add_test(test_collects test_collects)
 add_test(test_alist test_alist)
