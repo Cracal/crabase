@@ -13,12 +13,7 @@
 #include "cra_collects.h"
 #include "serialize/cra_serialize.h"
 
-typedef struct _CraDictEntry
-{
-    cra_hash_t hashcode;
-    ssize_t next;
-    char kv[];
-} CraDictEntry;
+typedef struct _CraDictEntry CraDictEntry;
 
 typedef struct _CraDict
 {

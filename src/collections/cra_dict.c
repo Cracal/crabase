@@ -12,11 +12,26 @@
 #include "cra_malloc.h"
 #include "collections/cra_dict.h"
 
+struct _CraDictEntry
+{
+    // `hashcode == -1`表示该位置的entry是未使用的entry
+    // 虽然hashcode会用来判断是否使用了该entry，
+    // 但因为有dict.next，所以不用特别对hashcode
+    // 初始化为-1。只要在移除entry时对hashcode设为-1就行
+    cra_hash_t hashcode;
+    ssize_t next;
+    char kv[];
+};
+
 #define CRA_DICT_COLLISION_MAX 64
 #define CRA_DICT_DEFAULT_CAPACITY 7
 #define CRA_DICT_USABLE_FRACTION(n) (((n) << 1) / 3) // n * (2 / 3)
+#define _CRA_DICT_ENTRY(_entries, _entry_size, _index) \
+    ((CraDictEntry *)((char *)(_entries) + (_index) * (_entry_size)))
 #define CRA_DICT_ENTRY(_dict, _index) \
-    ((CraDictEntry *)((char *)(_dict)->entries + (_index) * (_dict)->entry_size))
+    _CRA_DICT_ENTRY((_dict)->entries, (_dict)->entry_size, _index)
+#define CRA_DICT_BUCKET(_hashcode, _capacity) \
+    ((_hashcode) & CRA_HASH_MAX) % (_capacity)
 
 static bool __cra_is_prime(ssize_t n)
 {
@@ -93,9 +108,9 @@ void cra_dict_init(CraDict *dict, size_t key_size, size_t val_size, bool zero_me
     dict->buckets = cra_malloc(dict->capacity * sizeof(ssize_t));
     dict->entries = cra_malloc(CRA_DICT_USABLE_FRACTION(dict->capacity) * dict->entry_size);
 
-    // set to [-1, -1, -1, ...]
+    // set to [-1, -1, ...]
     memset(dict->buckets, 0xff, dict->capacity * sizeof(ssize_t));
-    // zero entries
+    // zero key-val pair.
     if (zero_memory)
         bzero(dict->entries, CRA_DICT_USABLE_FRACTION(dict->capacity) * dict->entry_size);
 }
@@ -125,9 +140,11 @@ void cra_dict_clear(CraDict *dict)
         }
     }
     // set to [-1, -1, ...]
-    memset(dict->buckets, 0xff, dict->next * sizeof(ssize_t));
+    memset(dict->buckets, 0xff, dict->capacity * sizeof(ssize_t));
+    // zero key-val pair
     if (dict->zero_memory)
         bzero(dict->entries, dict->next * dict->entry_size);
+    dict->freelist = -1;
     dict->count = 0;
     dict->next = 0;
 }
@@ -135,8 +152,8 @@ void cra_dict_clear(CraDict *dict)
 static void __cra_dict_resize(CraDict *dict, ssize_t newcapacity)
 {
     ssize_t *newbuckets, bucket;
-    CraDictEntry *newentries, *entry;
     ssize_t new_entries_capacity;
+    CraDictEntry *newentries, *entry;
 
     newcapacity = __cra_next_prime(newcapacity);
     new_entries_capacity = CRA_DICT_USABLE_FRACTION(newcapacity);
@@ -146,6 +163,7 @@ static void __cra_dict_resize(CraDict *dict, ssize_t newcapacity)
 
     // set to [-1, -1, ...]
     memset(newbuckets, 0xff, newcapacity * sizeof(ssize_t));
+    // zero key-val pair
     if (dict->zero_memory)
     {
         ssize_t old_entries_capacity = CRA_DICT_USABLE_FRACTION(dict->capacity);
@@ -154,10 +172,10 @@ static void __cra_dict_resize(CraDict *dict, ssize_t newcapacity)
 
     for (ssize_t i = 0; i < dict->next; i++)
     {
-        entry = (CraDictEntry *)((char *)newentries + i * dict->entry_size);
+        entry = _CRA_DICT_ENTRY(newentries, dict->entry_size, i);
         if (entry->hashcode != -1)
         {
-            bucket = (entry->hashcode & CRA_HASH_MAX) % newcapacity;
+            bucket = CRA_DICT_BUCKET(entry->hashcode, newcapacity);
             entry->next = newbuckets[bucket];
             newbuckets[bucket] = i;
         }
@@ -171,9 +189,9 @@ static void __cra_dict_resize(CraDict *dict, ssize_t newcapacity)
 static inline bool __cra_dict_put(CraDict *dict, void *key, void *val, bool add)
 {
     CraDictEntry *entry;
-    cra_hash_t hashcode = dict->hash_key(key);
-    ssize_t index, bucket = (hashcode & CRA_HASH_MAX) % dict->capacity;
     unsigned int collision_count = 0;
+    cra_hash_t hashcode = dict->hash_key(key);
+    ssize_t index, bucket = CRA_DICT_BUCKET(hashcode, dict->capacity);
 
     for (ssize_t i = dict->buckets[bucket]; i >= 0;)
     {
@@ -196,6 +214,11 @@ static inline bool __cra_dict_put(CraDict *dict, void *key, void *val, bool add)
         collision_count++;
     }
 
+    if (collision_count >= CRA_DICT_COLLISION_MAX)
+    {
+        __cra_dict_resize(dict, dict->capacity << 1);
+    }
+
     if (dict->freelist != -1)
     {
         index = dict->freelist;
@@ -207,7 +230,7 @@ static inline bool __cra_dict_put(CraDict *dict, void *key, void *val, bool add)
         if (dict->next >= CRA_DICT_USABLE_FRACTION(dict->capacity))
         {
             __cra_dict_resize(dict, dict->capacity << 1);
-            bucket = (hashcode & CRA_HASH_MAX) % dict->capacity;
+            bucket = CRA_DICT_BUCKET(hashcode, dict->capacity);
         }
         index = dict->next++;
         entry = CRA_DICT_ENTRY(dict, index);
@@ -215,17 +238,11 @@ static inline bool __cra_dict_put(CraDict *dict, void *key, void *val, bool add)
 
     entry->hashcode = hashcode;
     entry->next = dict->buckets[bucket];
+    dict->buckets[bucket] = index;
     memcpy(entry->kv, key, dict->key_size);
     memcpy(entry->kv + dict->key_size, val, dict->val_size);
 
-    dict->buckets[bucket] = index;
-
     dict->count++;
-
-    if (collision_count >= CRA_DICT_COLLISION_MAX)
-    {
-        __cra_dict_resize(dict, dict->capacity << 1);
-    }
     return true;
 }
 
@@ -243,7 +260,7 @@ static inline bool __cra_dict_pop(CraDict *dict, void *key, void *retval)
 {
     CraDictEntry *entry;
     cra_hash_t hashcode = dict->hash_key(key);
-    ssize_t bucket = (hashcode & CRA_HASH_MAX) % dict->capacity;
+    ssize_t bucket = CRA_DICT_BUCKET(hashcode, dict->capacity);
 
     for (ssize_t last = -1, i = dict->buckets[bucket]; i >= 0;)
     {
@@ -263,7 +280,7 @@ static inline bool __cra_dict_pop(CraDict *dict, void *key, void *retval)
                 CRA_DICT_ENTRY(dict, last)->next = entry->next;
 
             if (dict->zero_memory)
-                bzero(entry, dict->entry_size);
+                bzero(entry->kv, dict->entry_size - sizeof(CraDictEntry)); // zero key-val pair
             entry->hashcode = -1;
             entry->next = dict->freelist;
             dict->freelist = i;
@@ -291,7 +308,7 @@ static inline bool __cra_dict_get_ptr(CraDict *dict, void *key, void **retvalptr
 {
     CraDictEntry *entry;
     cra_hash_t hashcode = dict->hash_key(key);
-    ssize_t bucket = (hashcode & CRA_HASH_MAX) % dict->capacity;
+    ssize_t bucket = CRA_DICT_BUCKET(hashcode, dict->capacity);
 
     for (ssize_t i = dict->buckets[bucket]; i >= 0;)
     {

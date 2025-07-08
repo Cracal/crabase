@@ -336,7 +336,7 @@ void test_dict_performance(int sizes[])
         // insert
         start_ms = cra_tick_ms();
         for (int j = 0; j < sizes[i]; j++)
-            cra_dict_put(&dict, &(int){rand()}, &j);
+            cra_dict_put(&dict, &(int){rand()}, &(size_t){j});
         end_ms = cra_tick_ms();
         printf("\tput:           %lums.\n", end_ms - start_ms);
 
