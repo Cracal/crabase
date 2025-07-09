@@ -163,7 +163,7 @@ void test_push(void)
     cra_deque_clear(deque);
 
     for (i = 0; i < 20; i++)
-        assert_always(cra_deque_insert(deque, CRA_MIN(deque->count, i), &i));
+        assert_always(cra_deque_insert(deque, CRA_MIN(deque->count, (size_t)i), &i));
     assert_always(deque->count == 6);
 
     printf("\n");
