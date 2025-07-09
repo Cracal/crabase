@@ -37,22 +37,22 @@ void test_add(void)
     CraDict *dict = cra_alloc(CraDict);
     cra_dict_init0(int, float, dict, true, (cra_hash_fn)cra_hash_int_p, (cra_compare_fn)cra_compare_int_p, NULL, NULL);
 
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 1000; i++)
         assert_always(cra_dict_add(dict, &i, &(float){i + .5f}));
 
     int i = 0;
     for (CraDictIter it = cra_dict_iter_init(dict); cra_dict_iter_next(&it, (void **)&keyptr, (void **)&valptr); i++)
         assert_always(i == *keyptr && (i + .5f) == *valptr);
 
-    assert_always(!cra_dict_add(dict, &(int){3}, &(float){30.5f}));
-    assert_always(cra_dict_put(dict, &(int){3}, &(float){300.5f}));
-    assert_always(cra_dict_get_ptr(dict, &(int){3}, (void **)&valptr) && cra_compare_float_p(valptr, &(float){300.5f}) == 0);
+    assert_always(!cra_dict_add(dict, &(int){3}, &(float){3000.5f}));
+    assert_always(cra_dict_put(dict, &(int){3}, &(float){30000.5f}));
+    assert_always(cra_dict_get_ptr(dict, &(int){3}, (void **)&valptr) && cra_compare_float(*valptr, 30000.5f) == 0);
     assert_always(cra_dict_put(dict, &(int){3}, &(float){3.5f}));
 
     for (CraDictIter it = cra_dict_iter_init(dict); cra_dict_iter_next(&it, (void **)&keyptr, (void **)&valptr);)
     {
-        printf("{k: %d, v: %f}\n", *keyptr, *valptr);
-        assert_always(cra_compare_float_p(valptr, &(float){*keyptr + .5f}) == 0);
+        // printf("{k: %d, v: %f}\n", *keyptr, *valptr);
+        assert_always(cra_compare_float(*valptr, *keyptr + .5f) == 0);
     }
 
     cra_dict_uninit(dict);
@@ -66,7 +66,9 @@ void test_remove(void)
     cra_dict_init0(int, float, dict, true, (cra_hash_fn)cra_hash_int_p,
                    (cra_compare_fn)cra_compare_int_p, _print_int, _print_float);
 
-    for (int i = 0; i < 100; i++)
+    assert_always(!cra_dict_remove(dict, &(int){0}));
+
+    for (int i = 0; i < 1000; i++)
         cra_dict_add(dict, &i, &(float){i + .5f});
 
     assert_always(cra_dict_pop(dict, &(int){30}, &val) && val == 30.5f);
@@ -77,8 +79,8 @@ void test_remove(void)
             continue;
         assert_always(cra_dict_remove(dict, &i));
     }
-    assert_always(dict->count == 20);
-    for (int i = 80; i < 100; i++)
+    assert_always(dict->count == 920);
+    for (int i = 80; i < 1000; i++)
     {
         assert_always(cra_dict_get(dict, &i, &val));
         assert_always(cra_compare_float(val, i + .5f) == 0);
@@ -93,19 +95,21 @@ void test_remove(void)
 void test_get(void)
 {
     CraDict *dict = cra_alloc(CraDict);
-    cra_dict_init0(int, float, dict, true, (cra_hash_fn)cra_hash_int_p,
-                   (cra_compare_fn)cra_compare_int_p, _print_int, _print_float);
+    cra_dict_init0(int, float, dict, true, (cra_hash_fn)cra_hash_int_p, (cra_compare_fn)cra_compare_int_p, NULL, NULL);
 
-    for (int i = -5; i <= 5; i++)
+    for (int i = -5000; i <= 5000; i++)
         cra_dict_add(dict, &i, &(float){i + .5f});
 
     int *keyptr;
     float *valptr;
     for (CraDictIter it = cra_dict_iter_init(dict); cra_dict_iter_next(&it, (void **)&keyptr, (void **)&valptr);)
-        printf("{k: %d, v: %f}\n", *keyptr, *valptr);
+    {
+        // printf("{k: %d, v: %f}\n", *keyptr, *valptr);
+        assert_always(cra_compare_float(*valptr, *keyptr + .5f) == 0);
+    }
 
     float val;
-    for (int i = -5; i <= 5; i++)
+    for (int i = -5000; i <= 5000; i++)
     {
         assert_always(cra_dict_get(dict, &i, &val));
         assert_always(cra_compare_float(val, i + .5f) == 0);
