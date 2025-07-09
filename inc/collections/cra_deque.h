@@ -56,6 +56,12 @@ CRA_API bool cra_deque_pop_at(CraDeque *deque, size_t index, void *retval);
 CRA_API bool cra_deque_pop(CraDeque *deque, void *retval);
 CRA_API bool cra_deque_pop_left(CraDeque *deque, void *retval);
 
+CRA_API bool cra_deque_set(CraDeque *deque, size_t index, void *newval);
+CRA_API bool cra_deque_set_and_pop_old(CraDeque *deque, size_t index, void *newval, void *retoldval);
+
+CRA_API bool cra_deque_get(CraDeque *deque, size_t index, void *retval);
+CRA_API bool cra_deque_get_ptr(CraDeque *deque, size_t index, void **retvalptr);
+
 CRA_API bool cra_deque_peek(CraDeque *deque, void *retval);
 CRA_API bool cra_deque_peek_ptr(CraDeque *deque, void **retvalptr);
 CRA_API bool cra_deque_peek_left(CraDeque *deque, void *retval);

@@ -159,7 +159,7 @@ bool cra_deque_insert(CraDeque *deque, size_t index, void *val)
         move_count = CRA_DEQUE_ELE_COUNT - 1;
     }
     if (deque->count == deque->que_max)
-        ret = cra_deque_pop_left(deque, NULL);
+        ret = cra_deque_remove_at(deque, deque->count - 1);
     ++deque->count;
     return ret;
 }
@@ -183,7 +183,7 @@ bool cra_deque_push(CraDeque *deque, void *val)
     }
     memcpy(curr->val + deque->right_idx * deque->ele_size, val, deque->ele_size);
     if (deque->count == deque->que_max)
-        ret = cra_deque_pop_left(deque, NULL);
+        ret = cra_deque_remove_at(deque, 0);
     ++deque->count;
     return ret;
 }
@@ -206,7 +206,7 @@ bool cra_deque_push_left(CraDeque *deque, void *val)
     }
     memcpy(curr->val + deque->left_idx * deque->ele_size, val, deque->ele_size);
     if (deque->count == deque->que_max)
-        ret = cra_deque_pop(deque, NULL);
+        ret = cra_deque_remove_at(deque, deque->count - 1);
     ++deque->count;
     return ret;
 }
@@ -380,6 +380,76 @@ bool cra_deque_pop_left(CraDeque *deque, void *retval)
         return true;
     }
     return false;
+}
+
+static inline bool __cra_deque_set_and_pop_old(CraDeque *deque, size_t index, void *newval, void *retoldval)
+{
+    if (index >= deque->count)
+        return false;
+
+    CraLList *list = &deque->list;
+    // 计算目标链表结点下标
+    size_t node_idx = (index + deque->left_idx) / CRA_DEQUE_ELE_COUNT;
+    // 计算目标在结点中的下标
+    size_t real_idx = (index + deque->left_idx) % CRA_DEQUE_ELE_COUNT;
+
+    CraLListNode *curr = list->head;
+    // 找到目标结点
+    for (size_t i = 0; i < node_idx; ++i)
+        curr = curr->next;
+
+    if (retoldval)
+        memcpy(retoldval, curr->val + real_idx * deque->ele_size, deque->ele_size);
+    else if (deque->remove_val)
+        deque->remove_val(curr->val + real_idx * deque->ele_size);
+    memcpy(curr->val + real_idx * deque->ele_size, newval, deque->ele_size);
+    return true;
+}
+
+bool cra_deque_set(CraDeque *deque, size_t index, void *newval)
+{
+    return __cra_deque_set_and_pop_old(deque, index, newval, NULL);
+}
+
+bool cra_deque_set_and_pop_old(CraDeque *deque, size_t index, void *newval, void *retoldval)
+{
+    return __cra_deque_set_and_pop_old(deque, index, newval, retoldval);
+}
+
+static inline bool __cra_deque_get_ptr(CraDeque *deque, size_t index, void **retvalptr)
+{
+    if (index >= deque->count)
+        return false;
+
+    CraLList *list = &deque->list;
+    // 计算目标链表结点下标
+    size_t node_idx = (index + deque->left_idx) / CRA_DEQUE_ELE_COUNT;
+    // 计算目标在结点中的下标
+    size_t real_idx = (index + deque->left_idx) % CRA_DEQUE_ELE_COUNT;
+
+    CraLListNode *curr = list->head;
+    // 找到目标结点
+    for (size_t i = 0; i < node_idx; ++i)
+        curr = curr->next;
+
+    *retvalptr = curr->val + real_idx * deque->ele_size;
+    return true;
+}
+
+bool cra_deque_get(CraDeque *deque, size_t index, void *retval)
+{
+    void *valptr;
+    if (__cra_deque_get_ptr(deque, index, &valptr))
+    {
+        memcpy(retval, valptr, deque->ele_size);
+        return true;
+    }
+    return false;
+}
+
+bool cra_deque_get_ptr(CraDeque *deque, size_t index, void **retvalptr)
+{
+    return __cra_deque_get_ptr(deque, index, retvalptr);
 }
 
 static inline bool __cra_deque_peek_ptr(CraDeque *deque, void **retvalptr)

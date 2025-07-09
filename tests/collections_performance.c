@@ -217,7 +217,7 @@ void test_llist_performance(int sizes[])
 
 void test_deque_performance(int sizes[])
 {
-    int /*val,*/ *valptr;
+    int val, *valptr;
     unsigned long start_ms, end_ms;
     CraDeque deque;
     cra_deque_init0(int, &deque, CRA_DEQUE_INFINITE, false, NULL);
@@ -257,19 +257,19 @@ void test_deque_performance(int sizes[])
         end_ms = cra_tick_ms();
         printf("\tinsert:        %lums.\n", end_ms - start_ms);
 
-        // // get
-        // start_ms = cra_tick_ms();
-        // for (int j = 0; j < sizes[i]; j++)
-        //     cra_deque_get(&deque, rand() % deque.count, &val);
-        // end_ms = cra_tick_ms();
-        // printf("\tget:           %lums.\n", end_ms - start_ms);
+        // get
+        start_ms = cra_tick_ms();
+        for (int j = 0; j < sizes[i]; j++)
+            cra_deque_get(&deque, rand() % deque.count, &val);
+        end_ms = cra_tick_ms();
+        printf("\tget:           %lums.\n", end_ms - start_ms);
 
-        // // get miss
-        // start_ms = cra_tick_ms();
-        // for (int j = 0; j < sizes[i]; j++)
-        //     cra_deque_get(&deque, rand() + (deque.count + 1), &val);
-        // end_ms = cra_tick_ms();
-        // printf("\tget(miss):     %lums.\n", end_ms - start_ms);
+        // get miss
+        start_ms = cra_tick_ms();
+        for (int j = 0; j < sizes[i]; j++)
+            cra_deque_get(&deque, rand() + (deque.count + 1), &val);
+        end_ms = cra_tick_ms();
+        printf("\tget(miss):     %lums.\n", end_ms - start_ms);
 
         // iter
         start_ms = cra_tick_ms();

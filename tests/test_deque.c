@@ -134,6 +134,14 @@ void test_push(void)
 
     printf("\n");
 
+    cra_deque_clear(deque);
+
+    for (i = 0; i < 20; i++)
+        assert_always(cra_deque_insert(deque, CRA_MIN(deque->count, i), &i));
+    assert_always(deque->count == 6);
+
+    printf("\n");
+
     cra_deque_uninit(deque);
     cra_dealloc(deque);
 }
@@ -164,6 +172,66 @@ void test_pop(void)
 
     cra_deque_uninit(deque);
     cra_dealloc(deque);
+}
+
+void test_set(void)
+{
+    int val, i;
+    int *valptr;
+    CraDeque *deque = cra_alloc(CraDeque);
+    assert_always(deque != NULL);
+    cra_deque_init0(int, deque, CRA_DEQUE_INFINITE, true, NULL);
+
+    for (i = 0; i < 10000; i++)
+        assert_always(cra_deque_push(deque, &i));
+
+    assert_always(cra_deque_set(deque, 3, &(int){30000}));
+    assert_always(cra_deque_get(deque, 3, &val) && val == 30000);
+    assert_always(cra_deque_set_and_pop_old(deque, 6, &(int){60000}, &val) && val == 6);
+    assert_always(cra_deque_get(deque, 6, &val) && val == 60000);
+    assert_always(!cra_deque_set(deque, 100000, &(int){1000}));
+    assert_always(!cra_deque_set_and_pop_old(deque, 100000, &(int){1000}, &val));
+
+    i = 0;
+    for (CraDequeIter it = cra_deque_iter_init(deque); cra_deque_iter_next(&it, (void **)&valptr); i++)
+    {
+        // printf("%d  ", *valptr);
+        if (i == 3)
+            i = 30000;
+        else if (i == 30001)
+            i = 4;
+        else if (i == 6)
+            i = 60000;
+        else if (i == 60001)
+            i = 7;
+        assert_always(i == *valptr);
+    }
+    // printf("\n");
+
+    cra_deque_uninit(deque);
+    cra_dealloc(deque);
+}
+
+void test_get(void)
+{
+    CraDeque deque;
+    int val, *valptr1, *valptr2;
+
+    cra_deque_init0(int, &deque, 10000, false, NULL);
+    for (int i = 0; i < 10000; i++)
+        cra_deque_push_left(&deque, &i);
+
+    size_t i = 0;
+    for (CraDequeIter it = cra_deque_iter_init(&deque); cra_deque_iter_next(&it, (void **)&valptr1); i++)
+    {
+        assert_always(cra_deque_get(&deque, i, &val));
+        assert_always(cra_deque_get_ptr(&deque, i, (void **)&valptr2));
+        assert_always(val == *valptr1 && *valptr1 == *valptr2);
+        // printf("%d  ", val);
+    }
+    // printf("\n");
+
+    cra_deque_uninit(&deque);
 }
 
 void test_peek(void)
@@ -456,6 +524,8 @@ int main(void)
     test_insert_and_pop_at();
     test_push();
     test_pop();
+    test_set();
+    test_get();
     test_peek();
     test_reverse();
     test_clone();
