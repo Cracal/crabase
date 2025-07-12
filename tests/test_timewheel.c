@@ -8,7 +8,7 @@
 
 static void on_timeout1(CraTimer_base *timer)
 {
-    cra_log_info("timeout! [timer: 0x%x, tick: %ums, repeat: %u]\n", timer, timer->timeout_ms, timer->repeat);
+    cra_log_info("timeout! [timer: 0x%x, tick: %ums, repeat: %d]\n", timer, timer->timeout_ms, timer->repeat);
 }
 
 typedef struct
@@ -24,7 +24,7 @@ static void on_timeout2(CraTimer_base *timer)
     MyTimer *t = (MyTimer *)timer;
     cra_timer_base_cancel(t->t1);
 
-    cra_log_info("timeout! [timer: 0x%x, tick: %ums, repeat: %u] kill t1[0x%x]\n", timer, timer->timeout_ms, timer->repeat, t->t1);
+    cra_log_info("timeout! [timer: 0x%x, tick: %ums, repeat: %d] kill t1[0x%x]\n", timer, timer->timeout_ms, timer->repeat, t->t1);
 
     flag = false;
 }
@@ -37,7 +37,7 @@ void test_timewheel(void)
 
     cra_timewheel_init(&wheel, 50, 20);
 
-    cra_timer_base_init(&t1, UINT32_MAX, 1000, on_timeout1, NULL);
+    cra_timer_base_init(&t1, CRA_TIMER_INFINITE, 1000, on_timeout1, NULL);
     cra_timer_base_init((CraTimer_base *)&t2, 1, 5000, on_timeout2, NULL);
     t2.t1 = &t1;
 
@@ -58,7 +58,7 @@ void test_timewheel(void)
 
 typedef struct
 {
-    int start;
+    int begin;
     CraTimer_base base;
     char *end;
 } MyTimer2;
@@ -66,7 +66,7 @@ typedef struct
 static void on_free_mytimer2(CraRefcnt *timer)
 {
     CRA_REFCNT_DEF(MyTimer2) *t = (void *)timer;
-    cra_log_info("free MyTimer2{start: %d, end: \"%s\"}[0x%x]", CRA_REFCNT_OBJ(t)->start, CRA_REFCNT_OBJ(t)->end, t);
+    cra_log_info("free MyTimer2{begin: %d, end: \"%s\"}[0x%x]", CRA_REFCNT_OBJ(t)->begin, CRA_REFCNT_OBJ(t)->end, t);
     cra_dealloc(t);
 }
 
@@ -83,8 +83,8 @@ static void on_timeout3(CraTimer_base *timer)
 {
     MyTimer2 *t = container_of(timer, MyTimer2, base);
     CRA_REFCNT_DEF(MyTimer2) *trc = (void *)container_of(t, CRA_REFCNT_DEF(MyTimer2), o);
-    cra_log_info("timeout! [timer: 0x%x, tick: %ums, repeat: %u, refcnt: %u, start: %d, end: %s]",
-                 timer, timer->timeout_ms, timer->repeat, trc->rc.cnt, t->start, t->end);
+    cra_log_info("timeout! [timer: 0x%x, tick: %ums, repeat: %d, refcnt: %u, begin: %d, end: %s]",
+                 timer, timer->timeout_ms, timer->repeat, trc->rc.cnt, t->begin, t->end);
 }
 
 void test_timewheel2(void)
@@ -92,7 +92,7 @@ void test_timewheel2(void)
     CRA_REFCNT_DEF(MyTimer2) *t = cra_alloc(CRA_REFCNT_DEF(MyTimer2));
     cra_refcnt_init(CRA_REFCNT_RC(t), on_free_mytimer2);
     cra_timer_base_init(&CRA_REFCNT_OBJ(t)->base, 10, 500, on_timeout3, on_cancel);
-    CRA_REFCNT_OBJ(t)->start = 100;
+    CRA_REFCNT_OBJ(t)->begin = 100;
     CRA_REFCNT_OBJ(t)->end = "hello world";
 
     CraTimewheel *wheel = cra_alloc(CraTimewheel);
@@ -138,7 +138,7 @@ void test_timeout_less_than_tick(void)
 
 static void on_remove(CraTimer_base *timer)
 {
-    cra_log_info("remove timer[%u, %u].", timer->timeout_ms, timer->repeat);
+    cra_log_info("remove timer[%u, %d].", timer->timeout_ms, timer->repeat);
     cra_dealloc(timer);
 }
 
@@ -155,10 +155,10 @@ void test_timer_clear(void)
     t3 = cra_alloc(CraTimer_base);
     t4 = cra_alloc(CraTimer_base);
     stop = cra_alloc(CraTimer_base);
-    cra_timer_base_init(t1, UINT32_MAX, 500, on_timeout1, on_remove);
-    cra_timer_base_init(t2, UINT32_MAX, 1000, on_timeout1, on_remove);
-    cra_timer_base_init(t3, UINT32_MAX, 2000, on_timeout1, on_remove);
-    cra_timer_base_init(t4, UINT32_MAX, 3000, on_timeout1, on_remove);
+    cra_timer_base_init(t1, CRA_TIMER_INFINITE, 500, on_timeout1, on_remove);
+    cra_timer_base_init(t2, CRA_TIMER_INFINITE, 1000, on_timeout1, on_remove);
+    cra_timer_base_init(t3, CRA_TIMER_INFINITE, 2000, on_timeout1, on_remove);
+    cra_timer_base_init(t4, CRA_TIMER_INFINITE, 3000, on_timeout1, on_remove);
     cra_timer_base_init(stop, 1, 10000, stop_timewheel, on_remove);
 
     cra_timewheel_add(wheel, t1);

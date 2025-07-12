@@ -48,12 +48,12 @@ static inline void cra_freenodelist_put(CraLList *list, CraLListNode *node)
 
 #endif // end free node list
 
-void cra_timer_base_init(CraTimer_base *base, unsigned int repeat, unsigned int timeout_ms,
+void cra_timer_base_init(CraTimer_base *base, int repeat, uint32_t timeout_ms,
                          cra_timer_base_fn on_timeout, cra_timer_base_fn on_remove_timer)
 {
-    assert(repeat > 0);
     assert(timeout_ms > 0);
     assert(on_timeout != NULL);
+    assert((repeat >= CRA_TIMER_REPEAT_MIN && repeat <= CRA_TIMER_REPEAT_MAX) || repeat == CRA_TIMER_INFINITE);
 
     base->active = true;
     base->repeat = repeat;
@@ -64,20 +64,20 @@ void cra_timer_base_init(CraTimer_base *base, unsigned int repeat, unsigned int 
 
 #define CRA_TIMER_IN_NODE(_node) (*(CraTimer_base **)(_node)->val)
 
-static void __cra_timewheel_init(CraTimewheel *wheel, unsigned int tick_ms, unsigned int wheel_size, CraLList *freenodelist)
+static void __cra_timewheel_init(CraTimewheel *wheel, uint32_t tick_ms, uint32_t wheel_size, CraLList *freenodelist)
 {
     wheel->tick_ms = tick_ms;
-    wheel->wheel_size = wheel_size;
     wheel->current = 0;
+    wheel->wheel_size = wheel_size;
     wheel->wheel_buckets = cra_calloc(wheel->wheel_size, sizeof(CraLList *));
     wheel->freenodelist = freenodelist;
     wheel->upper_wheel = NULL;
 }
 
-static bool cra_timewheel_add_node_to(CraTimewheel *wheel, CraLListNode *timernode, unsigned int remain_timeout_ms)
+static bool cra_timewheel_add_node_to(CraTimewheel *wheel, CraLListNode *timernode, uint32_t remain_timeout_ms)
 {
     remain_timeout_ms = CRA_MAX(remain_timeout_ms, wheel->tick_ms);
-    unsigned int bucket = ((wheel->current + remain_timeout_ms / wheel->tick_ms) % wheel->wheel_size);
+    uint32_t bucket = ((wheel->current + remain_timeout_ms / wheel->tick_ms) % wheel->wheel_size);
     CraLList *list = wheel->wheel_buckets[bucket];
     if (!list)
     {
@@ -139,7 +139,7 @@ static void cra_timewheel_tick_inner(CraTimewheel *wheel, CraTimewheel *lower_wh
         {
             timer->on_timeout(timer);
 
-            if (--timer->repeat == 0)
+            if (timer->repeat != CRA_TIMER_INFINITE && --timer->repeat == 0)
                 goto release_timer;
 
             cra_timewheel_add_node(wheel, curr);
@@ -151,7 +151,7 @@ static void cra_timewheel_tick_inner(CraTimewheel *wheel, CraTimewheel *lower_wh
     }
 }
 
-void cra_timewheel_init(CraTimewheel *wheel, unsigned int tick_ms, unsigned int wheel_size)
+void cra_timewheel_init(CraTimewheel *wheel, uint32_t tick_ms, uint32_t wheel_size)
 {
     __cra_timewheel_init(wheel, tick_ms, wheel_size, cra_freenodelist_new());
 }
@@ -170,7 +170,7 @@ void cra_timewheel_uninit(CraTimewheel *wheel)
         cra_timewheel_uninit(wheel->upper_wheel);
         cra_dealloc(wheel->upper_wheel);
     }
-    for (unsigned int i = 0; i < wheel->wheel_size; ++i)
+    for (uint32_t i = 0; i < wheel->wheel_size; ++i)
     {
         if (wheel->wheel_buckets[i])
         {
