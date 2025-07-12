@@ -139,7 +139,7 @@ static void cra_timewheel_tick_inner(CraTimewheel *wheel, CraTimewheel *lower_wh
         {
             timer->on_timeout(timer);
 
-            if (timer->repeat != CRA_TIMER_INFINITE && --timer->repeat == 0)
+            if (timer->repeat != CRA_TIMER_INFINITE && --timer->repeat <= 0)
                 goto release_timer;
 
             cra_timewheel_add_node(wheel, curr);
