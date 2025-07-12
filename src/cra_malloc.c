@@ -137,13 +137,13 @@ void __cra_free_dbg(void *ptr)
         __cra_free(ptr);
 }
 
-void __cra_memory_leak_report(FILE *fp)
+void __cra_memory_leak_report(void)
 {
     int count = 0;
     CRA_MALLOC_LOCK();
     if (!__s_malloc_memblk_head)
     {
-        fprintf(fp, "no memory leak.\n");
+        fprintf(stderr, "no memory leak.\n");
     }
     else
     {
@@ -151,10 +151,10 @@ void __cra_memory_leak_report(FILE *fp)
         for (; curr != NULL; curr = curr->next)
         {
             ++count;
-            fprintf(fp, "memory leak (0x%zx, size: %zu) in %s:%d.\n",
+            fprintf(stderr, "memory leak (0x%zx, size: %zu) in %s:%d.\n",
                     (size_t)curr->block, curr->size, curr->file, curr->line);
         }
-        fprintf(fp, "leak memory count: %d.\n", count);
+        fprintf(stderr, "leak memory count: %d.\n", count);
     }
     CRA_MALLOC_UNLOCK();
 }

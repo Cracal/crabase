@@ -110,6 +110,6 @@ int main(void)
     test_mempool();
     test_multi_threads();
 
-    cra_memory_leak_report(stdout);
+    cra_memory_leak_report();
     return 0;
 }

@@ -189,6 +189,6 @@ int main(void)
     test_retrieve();
     test_append_retrieve_size();
 
-    cra_memory_leak_report(stdout);
+    cra_memory_leak_report();
     return 0;
 }

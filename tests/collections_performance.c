@@ -375,6 +375,6 @@ int main(void)
     sizes[3] = 1000000;
     test_dict_performance(sizes);
 
-    cra_memory_leak_report(stdout);
+    cra_memory_leak_report();
     return 0;
 }

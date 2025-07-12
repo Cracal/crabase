@@ -151,6 +151,6 @@ int main(void)
     test_thread_pool3();
     printf("## end   test thpool3...\n\n");
 
-    cra_memory_leak_report(stdout);
+    cra_memory_leak_report();
     return 0;
 }

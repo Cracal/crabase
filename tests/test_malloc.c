@@ -38,7 +38,7 @@ void test_normal(void)
     p = __cra_realloc_dbg(p, 10, __FILE__, __LINE__);
     __cra_free_dbg(p);
 
-    __cra_memory_leak_report(stdout);
+    __cra_memory_leak_report();
 }
 
 void test_malloc_free_dbg1(bool report)
@@ -60,7 +60,7 @@ void test_malloc_free_dbg1(bool report)
     __cra_free_dbg(p3);
 
     if (report)
-        __cra_memory_leak_report(stdout);
+        __cra_memory_leak_report();
 }
 
 void test_malloc_free_dbg2(void)
@@ -71,7 +71,7 @@ void test_malloc_free_dbg2(void)
 
     __cra_free_dbg(n);
 
-    __cra_memory_leak_report(stdout);
+    __cra_memory_leak_report();
 }
 
 /**
@@ -95,7 +95,7 @@ void test_malloc_dbg_free(void)
     __cra_free(p2);
     __cra_free(p3);
 
-    __cra_memory_leak_report(stdout);
+    __cra_memory_leak_report();
 }
 
 int main(void)

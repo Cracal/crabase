@@ -245,6 +245,6 @@ int main(void)
     test_log_to_file_async();
     test_log_time();
 
-    cra_memory_leak_report(stdout);
+    cra_memory_leak_report();
     return 0;
 }

@@ -1279,6 +1279,6 @@ int main(void)
     test_new2old();
     test_old2new();
 
-    cra_memory_leak_report(stdout);
+    cra_memory_leak_report();
     return 0;
 }

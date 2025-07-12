@@ -45,7 +45,7 @@ CRA_API void *__cra_calloc_dbg(size_t num, size_t size, char *file, int line);
 CRA_API void *__cra_realloc_dbg(void *ptr, size_t newsize, char *file, int line);
 CRA_API void __cra_free_dbg(void *ptr);
 
-CRA_API void __cra_memory_leak_report(FILE *fp);
+CRA_API void __cra_memory_leak_report(void);
 
 #ifndef CRA_MEMORY_LEAK_DETECTOR
 
@@ -54,7 +54,7 @@ CRA_API void __cra_memory_leak_report(FILE *fp);
 #define cra_realloc __cra_realloc
 #define cra_free __cra_free
 
-#define cra_memory_leak_report(_fp)
+#define cra_memory_leak_report()
 
 #else
 

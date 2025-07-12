@@ -224,6 +224,6 @@ int main(void)
 
     cra_log_cleanup();
 
-    cra_memory_leak_report(stdout);
+    cra_memory_leak_report();
     return 0;
 }

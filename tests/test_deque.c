@@ -582,6 +582,6 @@ int main(void)
     test_foreach();
     test_test();
 
-    cra_memory_leak_report(stdout);
+    cra_memory_leak_report();
     return 0;
 }
