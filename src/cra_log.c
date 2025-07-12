@@ -96,6 +96,7 @@ typedef struct
 
 #ifndef NDEBUG
 unsigned int s_create_buf_cnt = 0;
+static bool s_show_tip = false;
 #endif
 
 static inline CraLogBuffer *cra_create_buf(void)
@@ -418,6 +419,10 @@ void cra_log_cleanup(void)
     CRA_LOG_CHECK_CLOSE_FP;
     cra_cond_destroy(&s_logger.cond);
     cra_mutex_destroy(&s_logger.mutex);
+
+#ifndef NDEBUG
+    s_show_tip = false;
+#endif
 }
 
 void cra_log_set_level(CraLogLevel_e level)
@@ -482,10 +487,18 @@ void __cra_log_message(const char *logname, CraLogLevel_e level, const char *fmt
     CraDateTime *dt;
     char message[CRA_LOG_MSG_MAX];
 
-    assert_always(s_logger.initialized);
-
-    if (level < s_logger.level)
+    if (!s_logger.initialized ||
+        level < s_logger.level)
+    {
+#ifndef NDEBUG
+        if (!s_logger.initialized && !s_show_tip)
+        {
+            fprintf(stderr, "CraLog: Please call `cra_log_startup()` first.\n");
+            s_show_tip = true;
+        }
+#endif
         return;
+    }
 
     // time
     dt = &s_logger.currdt;

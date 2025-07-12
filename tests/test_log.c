@@ -24,6 +24,22 @@ void test_log(void)
     cra_log_error("hello error");
     cra_log_fatal("hello fatal");
     cra_log_cleanup();
+
+    cra_log_fatal("noooooooo!");
+    cra_log_debug("noooooooo!!");
+
+    cra_log_startup(CRA_LOG_LEVEL_INFO, false, false);
+    cra_log_trace("no trace");
+    cra_log_debug("no debug");
+    cra_log_info("output info");
+    cra_log_warn("output warn");
+    cra_log_error("output error");
+    cra_log_fatal("output fatal");
+    cra_log_cleanup();
+
+    cra_log_fatal("noooooooo!!!");
+    cra_log_debug("noooooooo!!!!");
+
 #undef CRA_LOG_NAME
 }
 
