@@ -1,5 +1,4 @@
 #include "cra_malloc.h"
-#include "cra_assert.h"
 #include "cra_timewheel.h"
 #include "collections/cra_llist.h"
 
@@ -51,13 +50,11 @@ static inline void cra_freenodelist_put(CraLList *list, CraLListNode *node)
 void cra_timer_base_init(CraTimer_base *base, int repeat, uint32_t timeout_ms,
                          cra_timer_base_fn on_timeout, cra_timer_base_fn on_remove_timer)
 {
-    assert(timeout_ms > 0);
     assert(on_timeout != NULL);
-    assert((repeat >= CRA_TIMER_REPEAT_MIN && repeat <= CRA_TIMER_REPEAT_MAX) || repeat == CRA_TIMER_INFINITE);
 
-    base->active = true;
-    base->repeat = repeat;
-    base->timeout_ms = timeout_ms;
+    cra_timer_base_set_active(base);
+    cra_timer_base_set_repeat(base, repeat);
+    cra_timer_base_set_timeout(base, timeout_ms);
     base->on_timeout = on_timeout;
     base->on_remove_timer = on_remove_timer;
 }

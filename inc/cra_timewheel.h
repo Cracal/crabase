@@ -11,6 +11,7 @@
 #ifndef __CRA_TIMEWHEEL_H__
 #define __CRA_TIMEWHEEL_H__
 #include "cra_defs.h"
+#include "cra_assert.h"
 
 typedef struct _CraTimewheel CraTimewheel;
 typedef struct _CraTimer_base CraTimer_base;
@@ -35,6 +36,23 @@ CRA_API void cra_timer_base_init(CraTimer_base *base, int repeat, uint32_t timeo
                                  cra_timer_base_fn on_timeout, cra_timer_base_fn on_remove_timer);
 
 static inline bool cra_timer_base_is_active(CraTimer_base *base) { return base->active; }
+static inline void cra_timer_base_set_active(CraTimer_base *base) { base->active = true; }
+static inline void cra_timer_base_set_deactive(CraTimer_base *base) { base->active = false; }
+
+static inline int32_t cra_timer_base_get_repeat(CraTimer_base *base) { return base->repeat; }
+static inline void cra_timer_base_set_repeat(CraTimer_base *base, int32_t repeat)
+{
+    assert((repeat >= CRA_TIMER_REPEAT_MIN && repeat <= CRA_TIMER_REPEAT_MAX) || repeat == CRA_TIMER_INFINITE);
+    base->repeat = repeat;
+}
+
+static inline uint32_t cra_timer_base_get_timeout(CraTimer_base *base) { return base->timeout_ms; }
+static inline void cra_timer_base_set_timeout(CraTimer_base *base, int32_t timeout_ms)
+{
+    assert(timeout_ms > 0);
+    base->timeout_ms = timeout_ms;
+}
+
 static inline void cra_timer_base_cancel(CraTimer_base *base) { base->active = false; }
 #define cra_timer_base_clear_active cra_timer_base_cancel
 
