@@ -116,8 +116,8 @@ static void cra_destroy_buf_for_llist(void *buf)
     cra_destroy_buf(*(CraLogBuffer **)buf);
 }
 
-#define CRA_LOG_TIME_FMT_UTC "%04d-%02d-%02dT%02d:%02d:%02d.%dZ "
-#define CRA_LOG_TIME_FMT_LOCAL "%04d-%02d-%02dT%02d:%02d:%02d.%d "
+#define CRA_LOG_TIME_FMT_UTC "%04d-%02d-%02dT%02d:%02d:%02d.%dZ%*s"
+#define CRA_LOG_TIME_FMT_LOCAL "%04d-%02d-%02dT%02d:%02d:%02d.%d%*s"
 
 #define CRA_LOG_LOG_FILE_TIME_UTC "%04d%02d%02dT%02d%02d%02d_%dZ.log"
 #define CRA_LOG_LOG_FILE_TIME_LOCAL "%04d%02d%02dT%02d%02d%02d_%d.log"
@@ -481,6 +481,7 @@ void __cra_log_message(const char *logname, CraLogLevel_e level, const char *fil
 void __cra_log_message(const char *logname, CraLogLevel_e level, const char *fmt, ...)
 #endif
 {
+    int spaces;
     size_t len;
     va_list ap;
     cra_tid_t tid;
@@ -503,9 +504,10 @@ void __cra_log_message(const char *logname, CraLogLevel_e level, const char *fmt
     // time
     dt = &s_logger.currdt;
     s_logger.time_fn(dt);
+    spaces = dt->ms >= 100 ? 1 : (dt->ms >= 10 ? 2 : 3);
     len = snprintf(message, sizeof(message), s_logger.time_msg_fmt,
                    dt->year, dt->mon, dt->day,
-                   dt->hour, dt->min, dt->sec, dt->ms);
+                   dt->hour, dt->min, dt->sec, dt->ms, spaces, "");
 
     // tid
     tid = cra_thrd_get_current_tid();
