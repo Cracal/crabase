@@ -37,11 +37,15 @@ typedef struct _CraLListIter
     CraLListNode *head;
 } CraLListIter;
 
+#define CRA_LLIST_FREE_NODE_MAX 32
+
 CRA_API CraLListIter cra_llist_iter_init(CraLList *list);
 CRA_API bool cra_llist_iter_next(CraLListIter *it, void **retvalptr);
 
-CRA_API void cra_llist_init(CraLList *list, size_t element_size,
-                            bool zero_memory, cra_remove_val_fn remove_val);
+CRA_API void cra_llist_init_size(CraLList *list, size_t element_size, size_t init_spare_node, bool zero_memory, cra_remove_val_fn remove_val);
+CRA_API void cra_llist_init(CraLList *list, size_t element_size, bool zero_memory, cra_remove_val_fn remove_val);
+#define cra_llist_init_size0(_TVal, _list, _init_spare_node, _zero_memory, _remove_val_fn) \
+    cra_llist_init_size(_list, sizeof(_TVal), _init_spare_node, _zero_memory, _remove_val_fn)
 #define cra_llist_init0(_TVal, _list, _zero_memory, _remove_val_fn) \
     cra_llist_init(_list, sizeof(_TVal), _zero_memory, _remove_val_fn)
 CRA_API void cra_llist_uninit(CraLList *list);

@@ -39,16 +39,22 @@ typedef struct _CraDictIter
     CraDict *dict;
 } CraDictIter;
 
+#define CRA_DICT_INIT_CAPACITY 7
+
 CRA_API CraDictIter cra_dict_iter_init(CraDict *dict);
 CRA_API bool cra_dict_iter_next(CraDictIter *it, void **retkeyptr, void **retvalptr);
 
+CRA_API void cra_dict_init_size(CraDict *dict, size_t key_size, size_t val_size,
+                                size_t init_capacity, bool zero_memory,
+                                cra_hash_fn hash_key, cra_compare_fn compare_key,
+                                cra_remove_val_fn remove_key, cra_remove_val_fn remove_val);
 CRA_API void cra_dict_init(CraDict *dict, size_t key_size, size_t val_size, bool zero_memory,
                            cra_hash_fn hash_key, cra_compare_fn compare_key,
                            cra_remove_val_fn remove_key, cra_remove_val_fn remove_val);
-#define cra_dict_init0(_TKey, _TVal, _dict, _zero_memory, _hash_key_fn, _compare_key_fn, \
-                       _remove_key_fn, _remove_val_fn)                                   \
-    cra_dict_init(_dict, sizeof(_TKey), sizeof(_TVal), _zero_memory, _hash_key_fn,       \
-                  _compare_key_fn, _remove_key_fn, _remove_val_fn)
+#define cra_dict_init_size0(_TKey, _TVal, _dict, _init_capacity, _zero_memory, _hash_key_fn, _compare_key_fn, _remove_key_fn, _remove_val_fn) \
+    cra_dict_init_size(_dict, sizeof(_TKey), sizeof(_TVal), _init_capacity, _zero_memory, _hash_key_fn, _compare_key_fn, _remove_key_fn, _remove_val_fn)
+#define cra_dict_init0(_TKey, _TVal, _dict, _zero_memory, _hash_key_fn, _compare_key_fn, _remove_key_fn, _remove_val_fn) \
+    cra_dict_init(_dict, sizeof(_TKey), sizeof(_TVal), _zero_memory, _hash_key_fn, _compare_key_fn, _remove_key_fn, _remove_val_fn)
 CRA_API void cra_dict_uninit(CraDict *dict);
 
 static inline size_t cra_dict_get_count(CraDict *dict) { return dict->count; }

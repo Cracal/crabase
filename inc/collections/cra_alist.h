@@ -29,13 +29,17 @@ typedef struct _CraAListIter
     CraAList *list;
 } CraAListIter;
 
+#define CRA_ALIST_INIT_CAPACITY 8
+
 CRA_API CraAListIter cra_alist_iter_init(CraAList *list);
 CRA_API bool cra_alist_iter_next(CraAListIter *it, void **retvalptr);
 
-CRA_API void cra_alist_init(CraAList *list, size_t element_size, size_t init_capacity,
-                            bool zero_memory, cra_remove_val_fn remove_val);
-#define cra_alist_init0(_TVal, _list, _init_capacity, _zero_memory, _remove_val_fn) \
-    cra_alist_init(_list, sizeof(_TVal), _init_capacity, _zero_memory, _remove_val_fn)
+CRA_API void cra_alist_init_size(CraAList *list, size_t element_size, size_t init_capacity, bool zero_memory, cra_remove_val_fn remove_val);
+CRA_API void cra_alist_init(CraAList *list, size_t element_size, bool zero_memory, cra_remove_val_fn remove_val);
+#define cra_alist_init_size0(_TVal, _list, _init_capacity, _zero_memory, _remove_val_fn) \
+    cra_alist_init_size(_list, sizeof(_TVal), _init_capacity, _zero_memory, _remove_val_fn)
+#define cra_alist_init0(_TVal, _list, _zero_memory, _remove_val_fn) \
+    cra_alist_init(_list, sizeof(_TVal), _zero_memory, _remove_val_fn)
 CRA_API void cra_alist_uninit(CraAList *list);
 
 static inline size_t cra_alist_get_count(CraAList *list) { return list->count; }

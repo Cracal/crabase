@@ -35,7 +35,7 @@ void test_add(void)
     int *keyptr;
     float *valptr;
     CraDict *dict = cra_alloc(CraDict);
-    cra_dict_init0(int, float, dict, true, (cra_hash_fn)cra_hash_int_p, (cra_compare_fn)cra_compare_int_p, NULL, NULL);
+    cra_dict_init_size0(int, float, dict, 1000, true, (cra_hash_fn)cra_hash_int_p, (cra_compare_fn)cra_compare_int_p, NULL, NULL);
 
     for (int i = 0; i < 1000; i++)
         assert_always(cra_dict_add(dict, &i, &(float){i + .5f}));

@@ -20,7 +20,7 @@ void test_alist_performance(int sizes[])
     int val, *valptr;
     unsigned long start_ms, end_ms;
     CraAList list;
-    cra_alist_init0(int, &list, sizes[0], false, NULL);
+    cra_alist_init_size0(int, &list, sizes[0], false, NULL);
     srand((unsigned int)time(NULL));
 
     printf("\n=========================================================\n\n");

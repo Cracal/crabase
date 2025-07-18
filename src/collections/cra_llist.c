@@ -12,8 +12,6 @@
 #include "cra_malloc.h"
 #include "collections/cra_llist.h"
 
-#define _CRA_LLIST_DEAFULT_FREE_COUNT 32
-
 static inline CraLListNode *__cra_llist_create_node(size_t element_size)
 {
     return cra_malloc(sizeof(CraLListNode) + element_size);
@@ -42,16 +40,20 @@ static inline CraLListNode *__cra_llist_get_free_node(CraLList *list)
     return node;
 }
 
+static inline void __cra_llist_add_free_node(CraLList *list, CraLListNode *node)
+{
+    if (list->zero_memory)
+        bzero(node->val, list->ele_size);
+    node->next = list->freelist;
+    list->freelist = node;
+    list->freelist_count++;
+}
+
 static inline void __cra_llist_put_free_node(CraLList *list, CraLListNode *node, bool move_to_free_list)
 {
-    if (move_to_free_list &&
-        list->freelist_count < _CRA_LLIST_DEAFULT_FREE_COUNT)
+    if (move_to_free_list && list->freelist_count < CRA_LLIST_FREE_NODE_MAX)
     {
-        if (list->zero_memory)
-            bzero(node->val, list->ele_size);
-        node->next = list->freelist;
-        list->freelist = node;
-        list->freelist_count++;
+        __cra_llist_add_free_node(list, node);
     }
     else
     {
@@ -139,6 +141,18 @@ static inline void __cra_llist_clear(CraLList *list, bool move_to_free_list)
     list->count = 0;
 }
 
+static inline void __cra_llist_init(CraLList *list, size_t element_size, bool zero_memory, cra_remove_val_fn remove_val)
+{
+    assert(!!list && element_size > 0);
+    list->zero_memory = zero_memory;
+    list->ele_size = element_size;
+    list->count = 0;
+    list->freelist_count = 0;
+    list->remove_val = remove_val;
+    list->head = NULL;
+    list->freelist = NULL;
+}
+
 #define _CRA_LLIST_REMOVE_NODE(_list, _node, _retval)     \
     if (_retval)                                          \
         memcpy(_retval, (_node)->val, (_list)->ele_size); \
@@ -178,17 +192,19 @@ bool cra_llist_iter_next(CraLListIter *it, void **retvalptr)
     return false;
 }
 
-void cra_llist_init(CraLList *list, size_t element_size,
-                    bool zero_memory, cra_remove_val_fn remove_val)
+void cra_llist_init_size(CraLList *list, size_t element_size, size_t init_spare_node, bool zero_memory, cra_remove_val_fn remove_val)
 {
-    assert(!!list && element_size > 0);
-    list->zero_memory = zero_memory;
-    list->ele_size = element_size;
-    list->count = 0;
-    list->freelist_count = 0;
-    list->remove_val = remove_val;
-    list->head = NULL;
-    list->freelist = NULL;
+    __cra_llist_init(list, element_size, zero_memory, remove_val);
+    for (size_t i = 0; i < init_spare_node; ++i)
+    {
+        CraLListNode *node = cra_llist_create_node(element_size);
+        __cra_llist_add_free_node(list, node);
+    }
+}
+
+void cra_llist_init(CraLList *list, size_t element_size, bool zero_memory, cra_remove_val_fn remove_val)
+{
+    __cra_llist_init(list, element_size, zero_memory, remove_val);
 }
 
 void cra_llist_uninit(CraLList *list)

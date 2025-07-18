@@ -12,8 +12,6 @@
 #include "cra_malloc.h"
 #include "collections/cra_alist.h"
 
-#define _CRA_ALIST_DEFAULT_CAPACITY 32
-
 #define _CRA_ALIST_VALUE_PTR(_list, _index) ((_list)->array + (_index) * (_list)->ele_size)
 
 static inline bool __cra_alist_pop__(CraAList *list, size_t index, void *retval)
@@ -34,13 +32,6 @@ static inline bool __cra_alist_pop__(CraAList *list, size_t index, void *retval)
     --list->count;
     if (list->zero_memory)
         bzero(list->array + list->count * list->ele_size, list->ele_size);
-
-    // 缩容检查
-    if (list->capacity > _CRA_ALIST_DEFAULT_CAPACITY && list->count <= (list->capacity >> 1))
-    {
-        if (!cra_alist_resize(list, CRA_MAX(list->capacity >> 1, _CRA_ALIST_DEFAULT_CAPACITY)))
-            return false;
-    }
     return true;
 }
 
@@ -54,6 +45,20 @@ static inline bool __cra_alist_set_and_pop_old__(CraAList *list, size_t index, v
         list->remove_val(_CRA_ALIST_VALUE_PTR(list, index));
     memcpy(_CRA_ALIST_VALUE_PTR(list, index), newval, list->ele_size);
     return true;
+}
+
+static inline void __cra_alist_init_size(CraAList *list, size_t element_size, size_t init_capacity,
+                                         bool zero_memory, cra_remove_val_fn remove_val)
+{
+    assert(!!list && element_size > 0);
+    list->remove_val = remove_val;
+    list->zero_memory = zero_memory;
+    list->count = 0;
+    list->ele_size = element_size;
+    list->capacity = init_capacity == 0 ? 8 : init_capacity;
+    list->array = cra_malloc(element_size * list->capacity);
+    if (zero_memory)
+        bzero(list->array, element_size * list->capacity);
 }
 
 CraAListIter cra_alist_iter_init(CraAList *list)
@@ -74,18 +79,14 @@ bool cra_alist_iter_next(CraAListIter *it, void **retvalptr)
     return false;
 }
 
-void cra_alist_init(CraAList *list, size_t element_size, size_t init_capacity,
-                    bool zero_memory, cra_remove_val_fn remove_val)
+void cra_alist_init_size(CraAList *list, size_t element_size, size_t init_capacity, bool zero_memory, cra_remove_val_fn remove_val)
 {
-    assert(!!list && element_size > 0);
-    list->remove_val = remove_val;
-    list->zero_memory = zero_memory;
-    list->count = 0;
-    list->ele_size = element_size;
-    list->capacity = init_capacity == 0 ? 8 : init_capacity;
-    list->array = cra_malloc(element_size * list->capacity);
-    if (zero_memory)
-        bzero(list->array, element_size * list->capacity);
+    __cra_alist_init_size(list, element_size, init_capacity, zero_memory, remove_val);
+}
+
+void cra_alist_init(CraAList *list, size_t element_size, bool zero_memory, cra_remove_val_fn remove_val)
+{
+    __cra_alist_init_size(list, element_size, CRA_ALIST_INIT_CAPACITY, zero_memory, remove_val);
 }
 
 void cra_alist_uninit(CraAList *list)
@@ -224,7 +225,7 @@ void cra_alist_reverse(CraAList *list)
 CraAList *cra_alist_clone(CraAList *list, cra_deep_copy_val_fn deep_copy_val)
 {
     CraAList *ret = cra_alloc(CraAList);
-    cra_alist_init(ret, list->ele_size, list->count, list->zero_memory, list->remove_val);
+    cra_alist_init_size(ret, list->ele_size, list->count, list->zero_memory, list->remove_val);
 
     ret->count = list->count;
     if (!!deep_copy_val)
@@ -363,7 +364,7 @@ static void cra_alist_ser_init(void *obj, void *args)
     CraAList *list = (CraAList *)obj;
     CraAListSerInitArgs *params = (CraAListSerInitArgs *)args;
 
-    cra_alist_init(list, params->element_size, 8, params->zero_memory, params->remove_val_fn);
+    cra_alist_init(list, params->element_size, params->zero_memory, params->remove_val_fn);
 }
 
 const CraTypeIter_i g_alist_ser_iter_i = {

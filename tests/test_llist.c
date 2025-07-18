@@ -101,7 +101,7 @@ void test_add(void)
 
     list = cra_alloc(CraLList);
     assert_always(list != NULL);
-    cra_llist_init0(int, list, true, _print_int);
+    cra_llist_init_size0(int, list, 1000, true, _print_int);
 
     assert_always(cra_llist_append(list, &(int){100}) && cra_llist_get(list, 0, &i) && i == 100);
     cra_llist_clear(list);

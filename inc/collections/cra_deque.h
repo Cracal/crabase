@@ -36,8 +36,7 @@ typedef struct _CraDequeIter
 CRA_API CraDequeIter cra_deque_iter_init(CraDeque *deque);
 CRA_API bool cra_deque_iter_next(CraDequeIter *it, void **retvalptr);
 
-CRA_API void cra_deque_init(CraDeque *deque, size_t element_size, size_t que_max,
-                            bool zero_memory, cra_remove_val_fn remove_val);
+CRA_API void cra_deque_init(CraDeque *deque, size_t element_size, size_t que_max, bool zero_memory, cra_remove_val_fn remove_val);
 #define cra_deque_init0(_TVal, _deque, _que_max, _zero_memory, _remove_val_fn) \
     cra_deque_init(_deque, sizeof(_TVal), _que_max, _zero_memory, _remove_val_fn)
 CRA_API void cra_deque_uninit(CraDeque *deque);

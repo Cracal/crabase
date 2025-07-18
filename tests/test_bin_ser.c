@@ -801,7 +801,7 @@ void test_list(void)
     CRA_DEQUE_SER_ARGS(args4deque, false, CRA_DEQUE_INFINITE, sizeof(int32_t), NULL);
 
     alist = cra_alloc(CraAList);
-    cra_alist_init0(int32_t, alist, 10, true, NULL);
+    cra_alist_init0(int32_t, alist, true, NULL);
     CRA_TYPE_META_BEGIN(meta_list_val)
     CRA_TYPE_META_INT32_ELEMENT()
     CRA_TYPE_META_END();
@@ -892,7 +892,7 @@ void free_str_p(char **strp)
 void test_list_element_is_pointer(void)
 {
     CraAList list;
-    cra_alist_init0(char *, &list, 10, true, (cra_remove_val_fn)free_str_p);
+    cra_alist_init0(char *, &list, true, (cra_remove_val_fn)free_str_p);
     CRA_ALIST_SER_ARGS0(args4list_str, &list);
     CRA_TYPE_META_BEGIN(meta_list_str)
     CRA_TYPE_META_STRING_ELEMENT(0, true)

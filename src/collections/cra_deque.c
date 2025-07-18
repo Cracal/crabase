@@ -50,8 +50,7 @@ bool cra_deque_iter_next(CraDequeIter *it, void **retvalptr)
     return false;
 }
 
-void cra_deque_init(CraDeque *deque, size_t element_size, size_t que_max,
-                    bool zero_memory, cra_remove_val_fn remove_val)
+void cra_deque_init(CraDeque *deque, size_t element_size, size_t que_max, bool zero_memory, cra_remove_val_fn remove_val)
 {
     assert(!!deque && element_size > 0);
 
