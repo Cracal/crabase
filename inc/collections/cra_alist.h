@@ -31,8 +31,8 @@ typedef struct _CraAListIter
 
 #define CRA_ALIST_INIT_CAPACITY 8
 
-CRA_API CraAListIter
-cra_alist_iter_init(CraAList *list);
+CRA_API void
+cra_alist_iter_init(CraAList *list, CraAListIter *it);
 
 CRA_API bool
 cra_alist_iter_next(CraAListIter *it, void **retvalptr);

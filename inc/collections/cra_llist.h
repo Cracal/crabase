@@ -39,8 +39,8 @@ typedef struct _CraLListIter
 
 #define CRA_LLIST_FREE_NODE_MAX 32
 
-CRA_API CraLListIter
-cra_llist_iter_init(CraLList *list);
+CRA_API void
+cra_llist_iter_init(CraLList *list, CraLListIter *it);
 
 CRA_API bool
 cra_llist_iter_next(CraLListIter *it, void **retvalptr);

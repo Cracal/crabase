@@ -18,9 +18,11 @@
 void
 test_alist_performance(int sizes[])
 {
+    CraAListIter  it;
+    CraAList      list;
     int           val, *valptr;
     unsigned long start_ms, end_ms;
-    CraAList      list;
+
     cra_alist_init_size0(int, &list, sizes[0], false, NULL);
     srand((unsigned int)time(NULL));
 
@@ -74,7 +76,7 @@ test_alist_performance(int sizes[])
 
         // iter
         start_ms = cra_tick_ms();
-        for (CraAListIter it = cra_alist_iter_init(&list); cra_alist_iter_next(&it, (void **)&valptr);)
+        for (cra_alist_iter_init(&list, &it); cra_alist_iter_next(&it, (void **)&valptr);)
             ;
         end_ms = cra_tick_ms();
         printf("\titer:          %lums.\n", end_ms - start_ms);
@@ -119,9 +121,11 @@ test_alist_performance(int sizes[])
 void
 test_llist_performance(int sizes[])
 {
+    CraLListIter  it;
+    CraLList      list;
     int           val, *valptr;
     unsigned long start_ms, end_ms;
-    CraLList      list;
+
     cra_llist_init0(int, &list, false, NULL);
     srand((unsigned int)time(NULL));
 
@@ -175,7 +179,7 @@ test_llist_performance(int sizes[])
 
         // iter
         start_ms = cra_tick_ms();
-        for (CraLListIter it = cra_llist_iter_init(&list); cra_llist_iter_next(&it, (void **)&valptr);)
+        for (cra_llist_iter_init(&list, &it); cra_llist_iter_next(&it, (void **)&valptr);)
             ;
         end_ms = cra_tick_ms();
         printf("\titer:          %lums.\n", end_ms - start_ms);
@@ -220,9 +224,11 @@ test_llist_performance(int sizes[])
 void
 test_deque_performance(int sizes[])
 {
+    CraDequeIter  it;
+    CraDeque      deque;
     int           val, *valptr;
     unsigned long start_ms, end_ms;
-    CraDeque      deque;
+
     cra_deque_init0(int, &deque, CRA_DEQUE_INFINITE, false, NULL);
     srand((unsigned int)time(NULL));
 
@@ -276,7 +282,7 @@ test_deque_performance(int sizes[])
 
         // iter
         start_ms = cra_tick_ms();
-        for (CraDequeIter it = cra_deque_iter_init(&deque); cra_deque_iter_next(&it, (void **)&valptr);)
+        for (cra_deque_iter_init(&deque, &it); cra_deque_iter_next(&it, (void **)&valptr);)
             ;
         end_ms = cra_tick_ms();
         printf("\titer:          %lums.\n", end_ms - start_ms);
@@ -321,10 +327,12 @@ test_deque_performance(int sizes[])
 void
 test_dict_performance(int sizes[])
 {
+    CraDictIter   it;
+    CraDict       dict;
     int          *keyptr;
     size_t        val, *valptr;
     unsigned long start_ms, end_ms;
-    CraDict       dict;
+
     cra_dict_init0(
       int, size_t, &dict, false, (cra_hash_fn)cra_hash_int_p, (cra_compare_fn)cra_compare_int_p, NULL, NULL);
     srand((unsigned int)time(NULL));
@@ -354,7 +362,7 @@ test_dict_performance(int sizes[])
 
         // iter
         start_ms = cra_tick_ms();
-        for (CraDictIter it = cra_dict_iter_init(&dict); cra_dict_iter_next(&it, (void **)&keyptr, (void **)&valptr);)
+        for (cra_dict_iter_init(&dict, &it); cra_dict_iter_next(&it, (void **)&keyptr, (void **)&valptr);)
             ;
         end_ms = cra_tick_ms();
         printf("\titer:          %lums.\n", end_ms - start_ms);

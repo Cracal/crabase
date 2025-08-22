@@ -804,11 +804,14 @@ test_struct_with_init_i(void)
 void
 test_list(void)
 {
-    int32_t   idx, val;
-    int32_t  *valptr;
-    CraAList *alist, *alist2;
-    CraLList  llist;
-    CraDeque  deque;
+    int32_t      idx, val;
+    int32_t     *valptr;
+    CraAList    *alist, *alist2;
+    CraLList     llist;
+    CraDeque     deque;
+    CraAListIter alist_it;
+    CraLListIter llist_it;
+    CraDequeIter deque_it;
 
     CRA_LLIST_SER_ARGS(args4llist, false, sizeof(int32_t), NULL);
     CRA_DEQUE_SER_ARGS(args4deque, false, CRA_DEQUE_INFINITE, sizeof(int32_t), NULL);
@@ -868,7 +871,7 @@ test_list(void)
                               &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
     idx = 0;
-    for (CraAListIter it = cra_alist_iter_init(alist2); cra_alist_iter_next(&it, (void **)&valptr); idx++)
+    for (cra_alist_iter_init(alist2, &alist_it); cra_alist_iter_next(&alist_it, (void **)&valptr); idx++)
     {
         cra_alist_get(alist, idx, &val);
         assert_always(val == *valptr);
@@ -887,7 +890,7 @@ test_list(void)
                               &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
     idx = 0;
-    for (CraLListIter it = cra_llist_iter_init(&llist); cra_llist_iter_next(&it, (void **)&valptr); idx++)
+    for (cra_llist_iter_init(&llist, &llist_it); cra_llist_iter_next(&llist_it, (void **)&valptr); idx++)
     {
         cra_alist_get(alist, idx, &val);
         assert_always(val == *valptr);
@@ -906,7 +909,7 @@ test_list(void)
                               &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
     idx = 0;
-    for (CraDequeIter it = cra_deque_iter_init(&deque); cra_deque_iter_next(&it, (void **)&valptr); idx++)
+    for (cra_deque_iter_init(&deque, &deque_it); cra_deque_iter_next(&deque_it, (void **)&valptr); idx++)
     {
         cra_alist_get(alist, idx, &val);
         assert_always(val == *valptr);
@@ -1297,9 +1300,12 @@ test_dict_in_struct(void)
     struct A aa;
     cra_bin_deserialize_struct0(buff, buffsize, &aa, sizeof(struct A), false, meta_a, NULL, NULL, &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
-    CraDictIter it = cra_dict_iter_init(a.pdict);
+
+    CraDictIter it;
     int32_t    *rkey;
     double     *rval, rval1, rval2;
+
+    cra_dict_iter_init(a.pdict, &it);
     while (cra_dict_iter_next(&it, (void **)&rkey, (void **)&rval))
     {
         cra_dict_get(aa.pdict, rkey, &rval1);

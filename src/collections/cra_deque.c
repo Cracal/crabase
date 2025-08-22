@@ -18,14 +18,12 @@
     deque->left_idx = CRA_DEQUE_CENTER + 1; \
     deque->right_idx = CRA_DEQUE_CENTER
 
-CraDequeIter
-cra_deque_iter_init(CraDeque *deque)
+void
+cra_deque_iter_init(CraDeque *deque, CraDequeIter *it)
 {
-    CraDequeIter it;
-    it.index = deque->left_idx;
-    it.curr = deque->count > 0 ? deque->list.head : NULL;
-    it.deque = deque;
-    return it;
+    it->index = deque->left_idx;
+    it->curr = deque->count > 0 ? deque->list.head : NULL;
+    it->deque = deque;
 }
 
 bool
@@ -81,8 +79,9 @@ cra_deque_clear(CraDeque *deque)
     {
         if (deque->remove_val)
         {
-            void *valptr;
-            for (CraDequeIter it = cra_deque_iter_init(deque); cra_deque_iter_next(&it, (void **)&valptr);)
+            CraDequeIter it;
+            void        *valptr;
+            for (cra_deque_iter_init(deque, &it); cra_deque_iter_next(&it, (void **)&valptr);)
                 deque->remove_val(valptr);
         }
         deque->count = 0;
@@ -582,13 +581,14 @@ cra_deque_reverse(CraDeque *deque)
 CraDeque *
 cra_deque_clone(CraDeque *deque, cra_deep_copy_val_fn deep_copy_val)
 {
-    CraDeque *ret;
-    void     *valptr, *val;
+    CraDeque    *ret;
+    CraDequeIter it;
+    void        *valptr, *val;
 
     ret = cra_alloc(CraDeque);
     cra_deque_init(ret, deque->ele_size, deque->que_max, deque->zero_memory, deque->remove_val);
 
-    for (CraDequeIter it = cra_deque_iter_init(deque); cra_deque_iter_next(&it, &valptr);)
+    for (cra_deque_iter_init(deque, &it); cra_deque_iter_next(&it, &valptr);)
     {
         if (deep_copy_val)
         {
@@ -607,9 +607,7 @@ cra_deque_ser_iter_init(void *obj, void *const it, size_t itbufsize)
 {
     CRA_UNUSED_VALUE(itbufsize);
     assert(sizeof(CraDequeIter) <= itbufsize);
-    CraDeque    *list = (CraDeque *)obj;
-    CraDequeIter _it = cra_deque_iter_init(list);
-    memcpy(it, &_it, sizeof(CraDequeIter));
+    cra_deque_iter_init((CraDeque *)obj, (CraDequeIter *)it);
 }
 
 static void

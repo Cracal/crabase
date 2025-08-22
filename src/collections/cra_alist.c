@@ -66,13 +66,11 @@ __cra_alist_init_size(CraAList         *list,
         bzero(list->array, element_size * list->capacity);
 }
 
-CraAListIter
-cra_alist_iter_init(CraAList *list)
+void
+cra_alist_iter_init(CraAList *list, CraAListIter *it)
 {
-    CraAListIter it;
-    it.index = 0;
-    it.list = list;
-    return it;
+    it->index = 0;
+    it->list = list;
 }
 
 bool
@@ -374,9 +372,7 @@ cra_alist_ser_iter_init(void *obj, void *const it, size_t itbufsize)
 {
     CRA_UNUSED_VALUE(itbufsize);
     assert(sizeof(CraAListIter) <= itbufsize);
-    CraAList    *list = (CraAList *)obj;
-    CraAListIter _it = cra_alist_iter_init(list);
-    memcpy(it, &_it, sizeof(CraAListIter));
+    cra_alist_iter_init((CraAList *)obj, (CraAListIter *)it);
 }
 
 static bool

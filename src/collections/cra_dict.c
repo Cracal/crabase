@@ -96,13 +96,11 @@ __cra_dict_init_size(CraDict          *dict,
         bzero(dict->entries, CRA_DICT_USABLE_FRACTION(dict->capacity) * dict->entry_size);
 }
 
-CraDictIter
-cra_dict_iter_init(CraDict *dict)
+void
+cra_dict_iter_init(CraDict *dict, CraDictIter *it)
 {
-    CraDictIter it;
-    it.index = 0;
-    it.dict = dict;
-    return it;
+    it->index = 0;
+    it->dict = dict;
 }
 
 bool
@@ -391,9 +389,10 @@ cra_dict_get_ptr(CraDict *dict, void *key, void **retvalptr)
 CraDict *
 cra_dict_clone(CraDict *dict, cra_deep_copy_val_fn deep_copy_key, cra_deep_copy_val_fn deep_copy_val)
 {
-    CraDict *ret;
-    void    *keyptr1, *keyptr2;
-    void    *valptr1, *valptr2;
+    CraDictIter it;
+    CraDict    *ret;
+    void       *keyptr1, *keyptr2;
+    void       *valptr1, *valptr2;
 
     ret = cra_alloc(CraDict);
     cra_dict_init_size(ret,
@@ -405,7 +404,7 @@ cra_dict_clone(CraDict *dict, cra_deep_copy_val_fn deep_copy_key, cra_deep_copy_
                        dict->compare_key,
                        dict->remove_key,
                        dict->remove_val);
-    for (CraDictIter it = cra_dict_iter_init(dict); cra_dict_iter_next(&it, &keyptr1, &valptr1);)
+    for (cra_dict_iter_init(dict, &it); cra_dict_iter_next(&it, &keyptr1, &valptr1);)
     {
         if (deep_copy_key)
         {
@@ -436,9 +435,7 @@ cra_dict_ser_iter_init(void *obj, void *const it, size_t itbufsize)
 {
     CRA_UNUSED_VALUE(itbufsize);
     assert(sizeof(CraDictIter) <= itbufsize);
-    CraDict    *dict = (CraDict *)obj;
-    CraDictIter _it = cra_dict_iter_init(dict);
-    memcpy(it, &_it, sizeof(CraDictIter));
+    cra_dict_iter_init((CraDict *)obj, (CraDictIter *)it);
 }
 
 static void

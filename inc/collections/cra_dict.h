@@ -41,8 +41,8 @@ typedef struct _CraDictIter
 
 #define CRA_DICT_INIT_CAPACITY 7
 
-CRA_API CraDictIter
-cra_dict_iter_init(CraDict *dict);
+CRA_API void
+cra_dict_iter_init(CraDict *dict, CraDictIter *it);
 
 CRA_API bool
 cra_dict_iter_next(CraDictIter *it, void **retkeyptr, void **retvalptr);

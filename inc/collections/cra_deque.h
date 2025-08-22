@@ -33,8 +33,8 @@ typedef struct _CraDequeIter
 
 #define CRA_DEQUE_INFINITE SIZE_MAX
 
-CRA_API CraDequeIter
-cra_deque_iter_init(CraDeque *deque);
+CRA_API void
+cra_deque_iter_init(CraDeque *deque, CraDequeIter *it);
 
 CRA_API bool
 cra_deque_iter_next(CraDequeIter *it, void **retvalptr);

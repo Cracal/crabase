@@ -182,13 +182,11 @@ __cra_llist_pop__(CraLList *list, size_t index, void *retval)
     return true;
 }
 
-CraLListIter
-cra_llist_iter_init(CraLList *list)
+void
+cra_llist_iter_init(CraLList *list, CraLListIter *it)
 {
-    CraLListIter it;
-    it.curr = list->head;
-    it.head = list->head;
-    return it;
+    it->curr = list->head;
+    it->head = list->head;
 }
 
 bool
@@ -526,9 +524,7 @@ cra_llist_ser_iter_init(void *obj, void *const it, size_t itbufsize)
 {
     CRA_UNUSED_VALUE(itbufsize);
     assert(sizeof(CraLListIter) <= itbufsize);
-    CraLList    *list = (CraLList *)obj;
-    CraLListIter _it = cra_llist_iter_init(list);
-    memcpy(it, &_it, sizeof(CraLListIter));
+    cra_llist_iter_init((CraLList *)obj, (CraLListIter *)it);
 }
 
 static bool
