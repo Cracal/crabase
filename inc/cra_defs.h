@@ -25,6 +25,7 @@
 #endif
 #include <Windows.h>
 #define CRA_OS_WIN
+#define CRA_OS_WINDOWS
 
 #elif defined(__linux__)
 

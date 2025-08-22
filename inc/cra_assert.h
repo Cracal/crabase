@@ -13,18 +13,19 @@
 #include "cra_defs.h"
 #include <assert.h>
 
-#define assert_always(_expr)                                                                                          \
-    ((void)(!!(_expr) || (fprintf(stderr, "assert `%s` failed. - %s:%d\n", #_expr, __FILE__, __LINE__), abort(), 0)))
+CRA_API void
+cra_assert_set_func(void (*func)(const char *condition, const char *fname, const char *file, int line));
 
-// #ifdef CRA_WITH_MY_ASSERT // my assert
+CRA_API void (*__cra_assert_func)(const char *condition, const char *fname, const char *file, int line);
 
-// #undef assert
-// #ifdef NDEBUG
-// #define assert(_expr) ((void)0)
-// #else
-// #define assert assert_always
-// #endif
+#define assert_always(_condition)                                                                          \
+    ((void)(!!(_condition) || (__cra_assert_func(#_condition, __func__, __FILE__, __LINE__), exit(1), 0)))
 
-// #endif // end my assert
+#undef assert
+#ifdef NDEBUG
+#define assert(_condition) ((void)0)
+#else
+#define assert assert_always
+#endif
 
 #endif
