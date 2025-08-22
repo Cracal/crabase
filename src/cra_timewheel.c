@@ -2,7 +2,7 @@
 #include "collections/cra_llist.h"
 #include "cra_malloc.h"
 
-#define CRA_TIMEWHEEL_FREE_TIMER_MAX 64
+#define CRA_TIMEWHEEL_FREE_TIMER_MAX 512
 
 #if 1 // free node list
 
@@ -53,7 +53,7 @@ cra_freenodelist_put(CraLList *list, CraLListNode *node)
 
 void
 cra_timer_base_init(CraTimer_base    *base,
-                    int               repeat,
+                    uint32_t          repeat,
                     uint32_t          timeout_ms,
                     cra_timer_base_fn on_timeout,
                     cra_timer_base_fn on_remove_timer)
@@ -149,10 +149,15 @@ cra_timewheel_tick_inner(CraTimewheel *wheel, CraTimewheel *lower_wheel)
         {
             timer->on_timeout(timer);
 
-            if (timer->repeat != CRA_TIMER_INFINITE && --timer->repeat <= 0)
+            if (timer->active &&
+                (timer->repeat == CRA_TIMER_INFINITE || (--timer->repeat > 0 && timer->repeat != CRA_TIMER_INFINITE)))
+            {
+                cra_timewheel_add_node(wheel, curr);
+            }
+            else
+            {
                 goto release_timer;
-
-            cra_timewheel_add_node(wheel, curr);
+            }
         }
         else
         {

@@ -15,18 +15,17 @@
 
 typedef struct _CraTimewheel  CraTimewheel;
 typedef struct _CraTimer_base CraTimer_base;
-typedef void                  (*cra_timer_base_fn)(CraTimer_base *);
+
+typedef void (*cra_timer_base_fn)(CraTimer_base *);
 
 #if 1 // timer
 
-#define CRA_TIMER_INFINITE   (-1)
-#define CRA_TIMER_REPEAT_MIN 1
-#define CRA_TIMER_REPEAT_MAX 1073741823
+#define CRA_TIMER_INFINITE ((1u << 31) - 1)
 
 struct _CraTimer_base
 {
-    uint8_t           active : 1;
-    int32_t           repeat : 31;
+    uint32_t          active : 1;
+    uint32_t          repeat : 31;
     uint32_t          timeout_ms;
     cra_timer_base_fn on_timeout;      // timeout && active == true
     cra_timer_base_fn on_remove_timer; // 当定时器被移出time wheel时调用
@@ -34,7 +33,7 @@ struct _CraTimer_base
 
 CRA_API void
 cra_timer_base_init(CraTimer_base    *base,
-                    int               repeat,
+                    uint32_t          repeat,
                     uint32_t          timeout_ms,
                     cra_timer_base_fn on_timeout,
                     cra_timer_base_fn on_remove_timer);
@@ -42,7 +41,7 @@ cra_timer_base_init(CraTimer_base    *base,
 static inline bool
 cra_timer_base_is_active(CraTimer_base *base)
 {
-    return base->active;
+    return (bool)base->active;
 }
 
 static inline void
@@ -57,16 +56,19 @@ cra_timer_base_set_deactive(CraTimer_base *base)
     base->active = false;
 }
 
-static inline int32_t
+#define cra_timer_base_cancel     cra_timer_base_set_deactive
+#define cra_timer_base_cls_active cra_timer_base_set_deactive
+
+static inline uint32_t
 cra_timer_base_get_repeat(CraTimer_base *base)
 {
     return base->repeat;
 }
 
 static inline void
-cra_timer_base_set_repeat(CraTimer_base *base, int32_t repeat)
+cra_timer_base_set_repeat(CraTimer_base *base, uint32_t repeat)
 {
-    assert((repeat >= CRA_TIMER_REPEAT_MIN && repeat <= CRA_TIMER_REPEAT_MAX) || repeat == CRA_TIMER_INFINITE);
+    assert(repeat > 0 && repeat <= CRA_TIMER_INFINITE);
     base->repeat = repeat;
 }
 
@@ -77,19 +79,11 @@ cra_timer_base_get_timeout(CraTimer_base *base)
 }
 
 static inline void
-cra_timer_base_set_timeout(CraTimer_base *base, int32_t timeout_ms)
+cra_timer_base_set_timeout(CraTimer_base *base, uint32_t timeout_ms)
 {
     assert(timeout_ms > 0);
     base->timeout_ms = timeout_ms;
 }
-
-static inline void
-cra_timer_base_cancel(CraTimer_base *base)
-{
-    base->active = false;
-}
-
-#define cra_timer_base_clear_active cra_timer_base_cancel
 
 #endif // end timer
 
