@@ -8,12 +8,12 @@
  * @copyright Copyright (c) 2024
  *
  */
-#include <math.h>
-#include "cra_endian.h"
-#include "cra_assert.h"
-#include "cra_malloc.h"
 #include "serialize/cra_bin_ser.h"
+#include "cra_assert.h"
+#include "cra_endian.h"
+#include "cra_malloc.h"
 #include "serialize/cra_ser_inner.h"
+#include <math.h>
 
 #if CRA_IS_BIG_ENDIAN
 #define CRA_SER_SWAP16 CRA_BSWAP_UINT16
@@ -27,7 +27,8 @@
 
 #if 1 // serialize
 
-void cra_bin_serialize_begin(CraSerializer *ser, unsigned char *buffer, size_t buffer_length)
+void
+cra_bin_serialize_begin(CraSerializer *ser, unsigned char *buffer, size_t buffer_length)
 {
     assert_always(ser != NULL);
     assert_always(buffer_length > 0);
@@ -49,7 +50,8 @@ void cra_bin_serialize_begin(CraSerializer *ser, unsigned char *buffer, size_t b
     bzero(&ser->release, sizeof(ser->release));
 }
 
-unsigned char *cra_bin_serialize_end(CraSerializer *ser, size_t *buffer_length, CraSerError_e *error)
+unsigned char *
+cra_bin_serialize_end(CraSerializer *ser, size_t *buffer_length, CraSerError_e *error)
 {
     assert_always(ser != NULL);
     assert_always(ser->buffer != NULL);
@@ -62,7 +64,8 @@ unsigned char *cra_bin_serialize_end(CraSerializer *ser, size_t *buffer_length, 
     return ser->error == CRA_SER_ERROR_SUCCESS ? ser->buffer : NULL;
 }
 
-bool cra_bin_serialize_bool(CraSerializer *ser, bool val)
+bool
+cra_bin_serialize_bool(CraSerializer *ser, bool val)
 {
     unsigned char *buf;
     CRA_SERIALIZER_BUF(ser, buf, sizeof(bool));
@@ -71,7 +74,8 @@ bool cra_bin_serialize_bool(CraSerializer *ser, bool val)
     return true;
 }
 
-bool cra_bin_serialize_int8(CraSerializer *ser, int8_t val)
+bool
+cra_bin_serialize_int8(CraSerializer *ser, int8_t val)
 {
     unsigned char *buf;
     CRA_SERIALIZER_BUF(ser, buf, 1 + sizeof(val));
@@ -89,25 +93,29 @@ bool cra_bin_serialize_int8(CraSerializer *ser, int8_t val)
     ser->index += 1 + sizeof(_val);                 \
     return true
 
-bool cra_bin_serialize_int16(CraSerializer *ser, int16_t val)
+bool
+cra_bin_serialize_int16(CraSerializer *ser, int16_t val)
 {
     val = (int16_t)CRA_SER_SWAP16((uint16_t)val);
     CRA_SERIALIZE_NUMBER(CRA_TYPE_INT16, val);
 }
 
-bool cra_bin_serialize_int32(CraSerializer *ser, int32_t val)
+bool
+cra_bin_serialize_int32(CraSerializer *ser, int32_t val)
 {
     val = (int32_t)CRA_SER_SWAP32((uint32_t)val);
     CRA_SERIALIZE_NUMBER(CRA_TYPE_INT32, val);
 }
 
-bool cra_bin_serialize_int64(CraSerializer *ser, int64_t val)
+bool
+cra_bin_serialize_int64(CraSerializer *ser, int64_t val)
 {
     val = (int64_t)CRA_SER_SWAP64((uint64_t)val);
     CRA_SERIALIZE_NUMBER(CRA_TYPE_INT64, val);
 }
 
-bool cra_bin_serialize_uint8(CraSerializer *ser, uint8_t val)
+bool
+cra_bin_serialize_uint8(CraSerializer *ser, uint8_t val)
 {
     unsigned char *buf;
     CRA_SERIALIZER_BUF(ser, buf, 1 + sizeof(val));
@@ -117,25 +125,29 @@ bool cra_bin_serialize_uint8(CraSerializer *ser, uint8_t val)
     return true;
 }
 
-bool cra_bin_serialize_uint16(CraSerializer *ser, uint16_t val)
+bool
+cra_bin_serialize_uint16(CraSerializer *ser, uint16_t val)
 {
     val = CRA_SER_SWAP16(val);
     CRA_SERIALIZE_NUMBER(CRA_TYPE_UINT16, val);
 }
 
-bool cra_bin_serialize_uint32(CraSerializer *ser, uint32_t val)
+bool
+cra_bin_serialize_uint32(CraSerializer *ser, uint32_t val)
 {
     val = CRA_SER_SWAP32(val);
     CRA_SERIALIZE_NUMBER(CRA_TYPE_UINT32, val);
 }
 
-bool cra_bin_serialize_uint64(CraSerializer *ser, uint64_t val)
+bool
+cra_bin_serialize_uint64(CraSerializer *ser, uint64_t val)
 {
     val = CRA_SER_SWAP64(val);
     CRA_SERIALIZE_NUMBER(CRA_TYPE_UINT64, val);
 }
 
-bool cra_bin_serialize_float(CraSerializer *ser, float val)
+bool
+cra_bin_serialize_float(CraSerializer *ser, float val)
 {
     if (isnan(val) || isinf(val))
     {
@@ -145,7 +157,8 @@ bool cra_bin_serialize_float(CraSerializer *ser, float val)
     CRA_SERIALIZE_NUMBER(CRA_TYPE_FLOAT, val);
 }
 
-bool cra_bin_serialize_double(CraSerializer *ser, double val)
+bool
+cra_bin_serialize_double(CraSerializer *ser, double val)
 {
     if (isnan(val) || isinf(val))
     {
@@ -164,7 +177,8 @@ bool cra_bin_serialize_double(CraSerializer *ser, double val)
         return true;                         \
     }
 
-bool cra_bin_serialize_string_nz(CraSerializer *ser, const char *val, cra_ser_count_t length)
+bool
+cra_bin_serialize_string_nz(CraSerializer *ser, const char *val, cra_ser_count_t length)
 {
     unsigned char *buf;
 
@@ -187,8 +201,10 @@ bool cra_bin_serialize_string_nz(CraSerializer *ser, const char *val, cra_ser_co
     return true;
 }
 
-static bool cra_bin_serialize_once(CraSerializer *ser, void *val, size_t offset, const CraTypeMeta *meta);
-static bool cra_bin_serialize_all(CraSerializer *ser, void *val, const CraTypeMeta *meta);
+static bool
+cra_bin_serialize_once(CraSerializer *ser, void *val, size_t offset, const CraTypeMeta *meta);
+static bool
+cra_bin_serialize_all(CraSerializer *ser, void *val, const CraTypeMeta *meta);
 
 #define CRA_SER_NESTING_BEGIN                   \
     if (ser->nested++ >= CRA_SER_MAX_NESTING)   \
@@ -198,7 +214,8 @@ static bool cra_bin_serialize_all(CraSerializer *ser, void *val, const CraTypeMe
     }
 #define CRA_SER_NESTING_END --ser->nested;
 
-bool cra_bin_serialize_struct(CraSerializer *ser, void *val, const CraTypeMeta *members_meta)
+bool
+cra_bin_serialize_struct(CraSerializer *ser, void *val, const CraTypeMeta *members_meta)
 {
     unsigned char *buf;
 
@@ -225,7 +242,12 @@ bool cra_bin_serialize_struct(CraSerializer *ser, void *val, const CraTypeMeta *
     return true;
 }
 
-static bool __cra_bin_serialize_list(CraSerializer *ser, void *val, const CraTypeMeta *element_meta, const CraTypeIter_i *iter_i, cra_ser_count_t count)
+static bool
+__cra_bin_serialize_list(CraSerializer       *ser,
+                         void                *val,
+                         const CraTypeMeta   *element_meta,
+                         const CraTypeIter_i *iter_i,
+                         cra_ser_count_t      count)
 {
     unsigned char *buf;
 
@@ -244,7 +266,7 @@ static bool __cra_bin_serialize_list(CraSerializer *ser, void *val, const CraTyp
     if (iter_i)
     {
         void *item = NULL;
-        char it[CRA_SERI_ITER_SIZE];
+        char  it[CRA_SERI_ITER_SIZE];
         assert_always(iter_i->list.init && iter_i->list.next);
         iter_i->list.init(val, &it, sizeof(it));
         for (count = 0; iter_i->list.next(&it, &item);)
@@ -282,17 +304,20 @@ static bool __cra_bin_serialize_list(CraSerializer *ser, void *val, const CraTyp
     return true;
 }
 
-bool cra_bin_serialize_list(CraSerializer *ser, void *val, const CraTypeMeta *element_meta, const CraTypeIter_i *iter_i)
+bool
+cra_bin_serialize_list(CraSerializer *ser, void *val, const CraTypeMeta *element_meta, const CraTypeIter_i *iter_i)
 {
     return __cra_bin_serialize_list(ser, val, element_meta, iter_i, 0);
 }
 
-bool cra_bin_serialize_array(CraSerializer *ser, void *val, cra_ser_count_t count, const CraTypeMeta *element_meta)
+bool
+cra_bin_serialize_array(CraSerializer *ser, void *val, cra_ser_count_t count, const CraTypeMeta *element_meta)
 {
     return __cra_bin_serialize_list(ser, val, element_meta, NULL, count);
 }
 
-bool cra_bin_serialize_dict(CraSerializer *ser, void *val, const CraTypeMeta *kv_meta, const CraTypeIter_i *iter_i)
+bool
+cra_bin_serialize_dict(CraSerializer *ser, void *val, const CraTypeMeta *kv_meta, const CraTypeIter_i *iter_i)
 {
     unsigned char *buf;
 
@@ -312,7 +337,7 @@ bool cra_bin_serialize_dict(CraSerializer *ser, void *val, const CraTypeMeta *kv
     // write elements
     void *k = NULL;
     void *v = NULL;
-    char it[CRA_SERI_ITER_SIZE];
+    char  it[CRA_SERI_ITER_SIZE];
     iter_i->dict.init(val, &it, sizeof(it));
     while (iter_i->dict.next(&it, &k, &v))
     {
@@ -341,99 +366,102 @@ bool cra_bin_serialize_dict(CraSerializer *ser, void *val, const CraTypeMeta *kv
     return true;
 }
 
-static bool cra_bin_serialize_once(CraSerializer *ser, void *val, size_t offset, const CraTypeMeta *meta)
+static bool
+cra_bin_serialize_once(CraSerializer *ser, void *val, size_t offset, const CraTypeMeta *meta)
 {
     void *value = (void *)((char *)val + offset);
     switch (meta->type)
     {
-    case CRA_TYPE_FALSE:
-    case CRA_TYPE_TRUE:
-        if (!cra_bin_serialize_bool(ser, *(bool *)value))
-            return false;
-        break;
-    case CRA_TYPE_INT8:
-        if (!cra_bin_serialize_int8(ser, *(int8_t *)value))
-            return false;
-        break;
-    case CRA_TYPE_INT16:
-        if (!cra_bin_serialize_int16(ser, *(int16_t *)value))
-            return false;
-        break;
-    case CRA_TYPE_INT32:
-        if (!cra_bin_serialize_int32(ser, *(int32_t *)value))
-            return false;
-        break;
-    case CRA_TYPE_INT64:
-        if (!cra_bin_serialize_int64(ser, *(int64_t *)value))
-            return false;
-        break;
-    case CRA_TYPE_UINT8:
-        if (!cra_bin_serialize_uint8(ser, *(uint8_t *)value))
-            return false;
-        break;
-    case CRA_TYPE_UINT16:
-        if (!cra_bin_serialize_uint16(ser, *(uint16_t *)value))
-            return false;
-        break;
-    case CRA_TYPE_UINT32:
-        if (!cra_bin_serialize_uint32(ser, *(uint32_t *)value))
-            return false;
-        break;
-    case CRA_TYPE_UINT64:
-        if (!cra_bin_serialize_uint64(ser, *(uint64_t *)value))
-            return false;
-        break;
-    case CRA_TYPE_FLOAT:
-        if (!cra_bin_serialize_float(ser, *(float *)value))
-            return false;
-        break;
-    case CRA_TYPE_DOUBLE:
-        if (!cra_bin_serialize_double(ser, *(double *)value))
-            return false;
-        break;
-    case CRA_TYPE_STRING:
-        if (meta->is_ptr)
-            value = *(void **)value;
-        if (meta->nsize > 0)
-        {
-            assert_always(meta->nsize == sizeof(cra_ser_count_t));
-            cra_ser_count_t len = *(cra_ser_count_t *)((char *)val + meta->noffset);
-            if (!cra_bin_serialize_string_nz(ser, (char *)value, len))
+        case CRA_TYPE_FALSE:
+        case CRA_TYPE_TRUE:
+            if (!cra_bin_serialize_bool(ser, *(bool *)value))
                 return false;
-        }
-        else
-        {
-            if (!cra_bin_serialize_string(ser, (char *)value))
+            break;
+        case CRA_TYPE_INT8:
+            if (!cra_bin_serialize_int8(ser, *(int8_t *)value))
                 return false;
-        }
-        break;
-    case CRA_TYPE_STRUCT:
-        if (meta->is_ptr)
-            value = *(void **)value;
-        if (!cra_bin_serialize_struct(ser, value, meta->meta))
-            return false;
-        break;
-    case CRA_TYPE_LIST:
-        if (meta->is_ptr)
-            value = *(void **)value;
-        if (!__cra_bin_serialize_list(ser, value, meta->meta, meta->iter_i, *(cra_ser_count_t *)((char *)val + meta->noffset)))
-            return false;
-        break;
-    case CRA_TYPE_DICT:
-        if (meta->is_ptr)
-            value = *(void **)value;
-        if (!cra_bin_serialize_dict(ser, value, meta->meta, meta->iter_i))
-            return false;
-        break;
+            break;
+        case CRA_TYPE_INT16:
+            if (!cra_bin_serialize_int16(ser, *(int16_t *)value))
+                return false;
+            break;
+        case CRA_TYPE_INT32:
+            if (!cra_bin_serialize_int32(ser, *(int32_t *)value))
+                return false;
+            break;
+        case CRA_TYPE_INT64:
+            if (!cra_bin_serialize_int64(ser, *(int64_t *)value))
+                return false;
+            break;
+        case CRA_TYPE_UINT8:
+            if (!cra_bin_serialize_uint8(ser, *(uint8_t *)value))
+                return false;
+            break;
+        case CRA_TYPE_UINT16:
+            if (!cra_bin_serialize_uint16(ser, *(uint16_t *)value))
+                return false;
+            break;
+        case CRA_TYPE_UINT32:
+            if (!cra_bin_serialize_uint32(ser, *(uint32_t *)value))
+                return false;
+            break;
+        case CRA_TYPE_UINT64:
+            if (!cra_bin_serialize_uint64(ser, *(uint64_t *)value))
+                return false;
+            break;
+        case CRA_TYPE_FLOAT:
+            if (!cra_bin_serialize_float(ser, *(float *)value))
+                return false;
+            break;
+        case CRA_TYPE_DOUBLE:
+            if (!cra_bin_serialize_double(ser, *(double *)value))
+                return false;
+            break;
+        case CRA_TYPE_STRING:
+            if (meta->is_ptr)
+                value = *(void **)value;
+            if (meta->nsize > 0)
+            {
+                assert_always(meta->nsize == sizeof(cra_ser_count_t));
+                cra_ser_count_t len = *(cra_ser_count_t *)((char *)val + meta->noffset);
+                if (!cra_bin_serialize_string_nz(ser, (char *)value, len))
+                    return false;
+            }
+            else
+            {
+                if (!cra_bin_serialize_string(ser, (char *)value))
+                    return false;
+            }
+            break;
+        case CRA_TYPE_STRUCT:
+            if (meta->is_ptr)
+                value = *(void **)value;
+            if (!cra_bin_serialize_struct(ser, value, meta->meta))
+                return false;
+            break;
+        case CRA_TYPE_LIST:
+            if (meta->is_ptr)
+                value = *(void **)value;
+            if (!__cra_bin_serialize_list(
+                  ser, value, meta->meta, meta->iter_i, *(cra_ser_count_t *)((char *)val + meta->noffset)))
+                return false;
+            break;
+        case CRA_TYPE_DICT:
+            if (meta->is_ptr)
+                value = *(void **)value;
+            if (!cra_bin_serialize_dict(ser, value, meta->meta, meta->iter_i))
+                return false;
+            break;
 
-    default:
-        ser->error = CRA_SER_ERROR_NOT_SUPPORT;
-        return false;
+        default:
+            ser->error = CRA_SER_ERROR_NOT_SUPPORT;
+            return false;
     }
     return true;
 }
 
-static bool cra_bin_serialize_all(CraSerializer *ser, void *val, const CraTypeMeta *meta)
+static bool
+cra_bin_serialize_all(CraSerializer *ser, void *val, const CraTypeMeta *meta)
 {
     CraTypeMeta *m = (CraTypeMeta *)meta;
     while (m->type != __CRA_TYPE_END_OF_META)
@@ -449,7 +477,8 @@ static bool cra_bin_serialize_all(CraSerializer *ser, void *val, const CraTypeMe
 
 #if 1 // deserialize
 
-void cra_bin_deserialize_begin(CraSerializer *ser, unsigned char *buffer, size_t buffer_length)
+void
+cra_bin_deserialize_begin(CraSerializer *ser, unsigned char *buffer, size_t buffer_length)
 {
     assert_always(ser != NULL);
     assert_always(buffer != NULL);
@@ -464,7 +493,8 @@ void cra_bin_deserialize_begin(CraSerializer *ser, unsigned char *buffer, size_t
     cra_ser_release_init(&ser->release);
 }
 
-void cra_bin_deserialize_end(CraSerializer *ser, CraSerError_e *error)
+void
+cra_bin_deserialize_end(CraSerializer *ser, CraSerError_e *error)
 {
     assert_always(ser != NULL);
     assert_always(ser->buffer != NULL);
@@ -475,7 +505,8 @@ void cra_bin_deserialize_end(CraSerializer *ser, CraSerError_e *error)
     cra_ser_release_uninit(&ser->release, ser->error != CRA_SER_ERROR_SUCCESS);
 }
 
-bool cra_bin_deserialize_bool(CraSerializer *ser, bool *retval)
+bool
+cra_bin_deserialize_bool(CraSerializer *ser, bool *retval)
 {
     unsigned char *buf;
     CRA_SERIALIZER_BUF(ser, buf, sizeof(bool));
@@ -496,7 +527,8 @@ bool cra_bin_deserialize_bool(CraSerializer *ser, bool *retval)
         return false;                                 \
     }
 
-bool cra_bin_deserialize_int8(CraSerializer *ser, int8_t *retval)
+bool
+cra_bin_deserialize_int8(CraSerializer *ser, int8_t *retval)
 {
     unsigned char *buf;
     CRA_SERIALIZER_BUF(ser, buf, 1 + sizeof(*retval));
@@ -513,28 +545,32 @@ bool cra_bin_deserialize_int8(CraSerializer *ser, int8_t *retval)
     memcpy(_retval, buf + 1, sizeof(*(_retval)));         \
     ser->index += 1 + sizeof(*(_retval))
 
-bool cra_bin_deserialize_int16(CraSerializer *ser, int16_t *retval)
+bool
+cra_bin_deserialize_int16(CraSerializer *ser, int16_t *retval)
 {
     CRA_DESERIALIZE_NUMBER(CRA_TYPE_INT16, retval);
     *retval = (int16_t)CRA_SER_SWAP16((uint16_t)*retval);
     return true;
 }
 
-bool cra_bin_deserialize_int32(CraSerializer *ser, int32_t *retval)
+bool
+cra_bin_deserialize_int32(CraSerializer *ser, int32_t *retval)
 {
     CRA_DESERIALIZE_NUMBER(CRA_TYPE_INT32, retval);
     *retval = (int32_t)CRA_SER_SWAP32((uint32_t)*retval);
     return true;
 }
 
-bool cra_bin_deserialize_int64(CraSerializer *ser, int64_t *retval)
+bool
+cra_bin_deserialize_int64(CraSerializer *ser, int64_t *retval)
 {
     CRA_DESERIALIZE_NUMBER(CRA_TYPE_INT64, retval);
     *retval = (int64_t)CRA_SER_SWAP64((uint64_t)*retval);
     return true;
 }
 
-bool cra_bin_deserialize_uint8(CraSerializer *ser, uint8_t *retval)
+bool
+cra_bin_deserialize_uint8(CraSerializer *ser, uint8_t *retval)
 {
     unsigned char *buf;
     CRA_SERIALIZER_BUF(ser, buf, 1 + sizeof(*retval));
@@ -544,28 +580,32 @@ bool cra_bin_deserialize_uint8(CraSerializer *ser, uint8_t *retval)
     return true;
 }
 
-bool cra_bin_deserialize_uint16(CraSerializer *ser, uint16_t *retval)
+bool
+cra_bin_deserialize_uint16(CraSerializer *ser, uint16_t *retval)
 {
     CRA_DESERIALIZE_NUMBER(CRA_TYPE_UINT16, retval);
     *retval = CRA_SER_SWAP16(*retval);
     return true;
 }
 
-bool cra_bin_deserialize_uint32(CraSerializer *ser, uint32_t *retval)
+bool
+cra_bin_deserialize_uint32(CraSerializer *ser, uint32_t *retval)
 {
     CRA_DESERIALIZE_NUMBER(CRA_TYPE_UINT32, retval);
     *retval = CRA_SER_SWAP32(*retval);
     return true;
 }
 
-bool cra_bin_deserialize_uint64(CraSerializer *ser, uint64_t *retval)
+bool
+cra_bin_deserialize_uint64(CraSerializer *ser, uint64_t *retval)
 {
     CRA_DESERIALIZE_NUMBER(CRA_TYPE_UINT64, retval);
     *retval = CRA_SER_SWAP64(*retval);
     return true;
 }
 
-bool cra_bin_deserialize_float(CraSerializer *ser, float *retval)
+bool
+cra_bin_deserialize_float(CraSerializer *ser, float *retval)
 {
     CRA_DESERIALIZE_NUMBER(CRA_TYPE_FLOAT, retval);
     if (isnan(*retval) || isinf(*retval))
@@ -576,7 +616,8 @@ bool cra_bin_deserialize_float(CraSerializer *ser, float *retval)
     return true;
 }
 
-bool cra_bin_deserialize_double(CraSerializer *ser, double *retval)
+bool
+cra_bin_deserialize_double(CraSerializer *ser, double *retval)
 {
     CRA_DESERIALIZE_NUMBER(CRA_TYPE_DOUBLE, retval);
     if (isnan(*retval) || isinf(*retval))
@@ -602,11 +643,16 @@ bool cra_bin_deserialize_double(CraSerializer *ser, double *retval)
     }
 
 // `retlength`: for string_nz
-static bool __cra_bin_deserialize_string_nz(CraSerializer *ser, char *retval, cra_ser_count_t max_length,
-                                            bool is_char_ptr, bool auto_free_if_fail, cra_ser_count_t *retlength)
+static bool
+__cra_bin_deserialize_string_nz(CraSerializer   *ser,
+                                char            *retval,
+                                cra_ser_count_t  max_length,
+                                bool             is_char_ptr,
+                                bool             auto_free_if_fail,
+                                cra_ser_count_t *retlength)
 {
     cra_ser_count_t len;
-    unsigned char *buf;
+    unsigned char  *buf;
 
     if (retlength)
         *retlength = 0;
@@ -654,21 +700,39 @@ static bool __cra_bin_deserialize_string_nz(CraSerializer *ser, char *retval, cr
     return true;
 }
 
-bool cra_bin_deserialize_string(CraSerializer *ser, char *retval, cra_ser_count_t max_length, bool is_char_ptr, bool auto_free_if_fail)
+bool
+cra_bin_deserialize_string(CraSerializer  *ser,
+                           char           *retval,
+                           cra_ser_count_t max_length,
+                           bool            is_char_ptr,
+                           bool            auto_free_if_fail)
 {
     return __cra_bin_deserialize_string_nz(ser, retval, max_length, is_char_ptr, auto_free_if_fail, NULL);
 }
 
-bool cra_bin_deserialize_string_nz(CraSerializer *ser, char *retval, cra_ser_count_t *length, bool is_char_ptr, bool auto_free_if_fail)
+bool
+cra_bin_deserialize_string_nz(CraSerializer   *ser,
+                              char            *retval,
+                              cra_ser_count_t *length,
+                              bool             is_char_ptr,
+                              bool             auto_free_if_fail)
 {
     return __cra_bin_deserialize_string_nz(ser, retval, *length, is_char_ptr, auto_free_if_fail, length);
 }
 
-static bool cra_bin_deserialize_once(CraSerializer *ser, void *val, size_t offset, const CraTypeMeta *meta, bool auto_free_if_fail);
-static bool cra_bin_deserialize_all(CraSerializer *ser, void *retval, const CraTypeMeta *meta, bool auto_free_if_fail);
+static bool
+cra_bin_deserialize_once(CraSerializer *ser, void *val, size_t offset, const CraTypeMeta *meta, bool auto_free_if_fail);
+static bool
+cra_bin_deserialize_all(CraSerializer *ser, void *retval, const CraTypeMeta *meta, bool auto_free_if_fail);
 
-static inline void *cra_json_alloc_init(CraSerializer *ser, void *retval, size_t valsize, bool is_ptr,
-                                        bool *auto_free_if_fail, const CraTypeInit_i *init_i, void *args4init)
+static inline void *
+cra_json_alloc_init(CraSerializer       *ser,
+                    void                *retval,
+                    size_t               valsize,
+                    bool                 is_ptr,
+                    bool                *auto_free_if_fail,
+                    const CraTypeInit_i *init_i,
+                    void                *args4init)
 {
     void (*uninit_fn)(void *) = NULL;
     void (*dealloc_fn)(void *) = NULL;
@@ -700,18 +764,26 @@ static inline void *cra_json_alloc_init(CraSerializer *ser, void *retval, size_t
     return retval;
 }
 
-#define CRA_BUF_HAS_CHAR(_ser) ((_ser)->index + 1 < (_ser)->length)
+#define CRA_BUF_HAS_CHAR(_ser)   ((_ser)->index + 1 < (_ser)->length)
 #define CRA_BUF_IS_OBJ_END(_ser) ((CraType_e)(*((_ser)->buffer + (_ser)->index)) == __CRA_TYPE_END)
 
-static inline bool cra_bin_skip_values_and_check_flag(CraSerializer *ser)
+static inline bool
+cra_bin_skip_values_and_check_flag(CraSerializer *ser)
 {
     while (CRA_BUF_HAS_CHAR(ser) && !CRA_BUF_IS_OBJ_END(ser))
         ++ser->index;
     return CRA_BUF_IS_OBJ_END(ser);
 }
 
-bool cra_bin_deserialize_struct(CraSerializer *ser, void *retval, size_t valsize, bool is_ptr, bool auto_free_if_fail,
-                                const CraTypeMeta *members_meta, const CraTypeInit_i *init_i, void *args4init)
+bool
+cra_bin_deserialize_struct(CraSerializer       *ser,
+                           void                *retval,
+                           size_t               valsize,
+                           bool                 is_ptr,
+                           bool                 auto_free_if_fail,
+                           const CraTypeMeta   *members_meta,
+                           const CraTypeInit_i *init_i,
+                           void                *args4init)
 {
     unsigned char *buf;
 
@@ -750,12 +822,19 @@ bool cra_bin_deserialize_struct(CraSerializer *ser, void *retval, size_t valsize
     return true;
 }
 
-bool cra_bin_deserialize_list(CraSerializer *ser, void *retval, size_t valsize,
-                              bool is_ptr, bool auto_free_if_fail, const CraTypeMeta *element_meta,
-                              const CraTypeIter_i *iter_i, const CraTypeInit_i *init_i, void *args4init)
+bool
+cra_bin_deserialize_list(CraSerializer       *ser,
+                         void                *retval,
+                         size_t               valsize,
+                         bool                 is_ptr,
+                         bool                 auto_free_if_fail,
+                         const CraTypeMeta   *element_meta,
+                         const CraTypeIter_i *iter_i,
+                         const CraTypeInit_i *init_i,
+                         void                *args4init)
 {
     cra_ser_count_t count;
-    unsigned char *buf;
+    unsigned char  *buf;
 
     assert_always((element_meta + 1)->type == __CRA_TYPE_END_OF_META);
     assert_always(iter_i != NULL && iter_i->list.append != NULL);
@@ -812,11 +891,16 @@ error_return:
     return false;
 }
 
-bool cra_bin_deserialize_array(CraSerializer *ser, void *retval, size_t valsize,
-                               bool is_ptr, cra_ser_count_t *countptr, const CraTypeMeta *element_meta)
+bool
+cra_bin_deserialize_array(CraSerializer     *ser,
+                          void              *retval,
+                          size_t             valsize,
+                          bool               is_ptr,
+                          cra_ser_count_t   *countptr,
+                          const CraTypeMeta *element_meta)
 {
     cra_ser_count_t count;
-    unsigned char *buf;
+    unsigned char  *buf;
 
     assert_always((element_meta + 1)->type == __CRA_TYPE_END_OF_META);
     assert_always(countptr != NULL);
@@ -876,12 +960,19 @@ error_return:
     return false;
 }
 
-bool cra_bin_deserialize_dict(CraSerializer *ser, void *retval, size_t valsize,
-                              bool is_ptr, bool auto_free_if_fail, const CraTypeMeta *kv_meta,
-                              const CraTypeIter_i *iter_i, const CraTypeInit_i *init_i, void *args4init)
+bool
+cra_bin_deserialize_dict(CraSerializer       *ser,
+                         void                *retval,
+                         size_t               valsize,
+                         bool                 is_ptr,
+                         bool                 auto_free_if_fail,
+                         const CraTypeMeta   *kv_meta,
+                         const CraTypeIter_i *iter_i,
+                         const CraTypeInit_i *init_i,
+                         void                *args4init)
 {
     cra_ser_count_t count;
-    unsigned char *buf;
+    unsigned char  *buf;
 
     assert_always((kv_meta + 2)->type == __CRA_TYPE_END_OF_META);
     assert_always(iter_i != NULL && iter_i->dict.append != NULL);
@@ -942,104 +1033,129 @@ error_return:
     return false;
 }
 
-static bool cra_bin_deserialize_once(CraSerializer *ser, void *val, size_t offset, const CraTypeMeta *meta, bool auto_free_if_fail)
+static bool
+cra_bin_deserialize_once(CraSerializer *ser, void *val, size_t offset, const CraTypeMeta *meta, bool auto_free_if_fail)
 {
     void *value = (void *)((char *)val + offset);
     assert_always(value != NULL);
     switch (meta->type)
     {
-    case CRA_TYPE_FALSE:
-    case CRA_TYPE_TRUE:
-        if (!cra_bin_deserialize_bool(ser, (bool *)value))
-            return false;
-        break;
-    case CRA_TYPE_INT8:
-        if (!cra_bin_deserialize_int8(ser, (int8_t *)value))
-            return false;
-        break;
-    case CRA_TYPE_INT16:
-        if (!cra_bin_deserialize_int16(ser, (int16_t *)value))
-            return false;
-        break;
-    case CRA_TYPE_INT32:
-        if (!cra_bin_deserialize_int32(ser, (int32_t *)value))
-            return false;
-        break;
-    case CRA_TYPE_INT64:
-        if (!cra_bin_deserialize_int64(ser, (int64_t *)value))
-            return false;
-        break;
-    case CRA_TYPE_UINT8:
-        if (!cra_bin_deserialize_uint8(ser, (uint8_t *)value))
-            return false;
-        break;
-    case CRA_TYPE_UINT16:
-        if (!cra_bin_deserialize_uint16(ser, (uint16_t *)value))
-            return false;
-        break;
-    case CRA_TYPE_UINT32:
-        if (!cra_bin_deserialize_uint32(ser, (uint32_t *)value))
-            return false;
-        break;
-    case CRA_TYPE_UINT64:
-        if (!cra_bin_deserialize_uint64(ser, (uint64_t *)value))
-            return false;
-        break;
-    case CRA_TYPE_FLOAT:
-        if (!cra_bin_deserialize_float(ser, (float *)value))
-            return false;
-        break;
-    case CRA_TYPE_DOUBLE:
-        if (!cra_bin_deserialize_double(ser, (double *)value))
-            return false;
-        break;
-    case CRA_TYPE_STRING:
-        if (meta->nsize == 0)
-        {
-            if (!cra_bin_deserialize_string(ser, (char *)value, (cra_ser_count_t)meta->size, meta->is_ptr, auto_free_if_fail))
+        case CRA_TYPE_FALSE:
+        case CRA_TYPE_TRUE:
+            if (!cra_bin_deserialize_bool(ser, (bool *)value))
                 return false;
-        }
-        else
-        {
-            assert_always(meta->nsize == sizeof(cra_ser_count_t));
-            cra_ser_count_t *nsize = (cra_ser_count_t *)((char *)val + meta->noffset);
-            *nsize = (cra_ser_count_t)meta->size;
-            if (!cra_bin_deserialize_string_nz(ser, (char *)value, nsize, meta->is_ptr, auto_free_if_fail))
+            break;
+        case CRA_TYPE_INT8:
+            if (!cra_bin_deserialize_int8(ser, (int8_t *)value))
                 return false;
-        }
-        break;
-    case CRA_TYPE_STRUCT:
-        if (!cra_bin_deserialize_struct(ser, value, meta->size, meta->is_ptr, auto_free_if_fail, meta->meta, meta->init_i, meta->args4init))
-            return false;
-        break;
-    case CRA_TYPE_LIST:
-        if (meta->nsize == 0)
-        {
-            // list
-            if (!cra_bin_deserialize_list(ser, value, meta->size, meta->is_ptr, auto_free_if_fail, meta->meta, meta->iter_i, meta->init_i, meta->args4init))
+            break;
+        case CRA_TYPE_INT16:
+            if (!cra_bin_deserialize_int16(ser, (int16_t *)value))
                 return false;
-        }
-        else
-        {
-            // c array
-            assert_always(meta->nsize == sizeof(cra_ser_count_t));
-            if (!cra_bin_deserialize_array(ser, value, meta->size, meta->is_ptr, (cra_ser_count_t *)((char *)val + meta->noffset), meta->meta))
+            break;
+        case CRA_TYPE_INT32:
+            if (!cra_bin_deserialize_int32(ser, (int32_t *)value))
                 return false;
-        }
-        break;
-    case CRA_TYPE_DICT:
-        if (!cra_bin_deserialize_dict(ser, value, meta->size, meta->is_ptr, auto_free_if_fail, meta->meta, meta->iter_i, meta->init_i, meta->args4init))
-            return false;
-        break;
+            break;
+        case CRA_TYPE_INT64:
+            if (!cra_bin_deserialize_int64(ser, (int64_t *)value))
+                return false;
+            break;
+        case CRA_TYPE_UINT8:
+            if (!cra_bin_deserialize_uint8(ser, (uint8_t *)value))
+                return false;
+            break;
+        case CRA_TYPE_UINT16:
+            if (!cra_bin_deserialize_uint16(ser, (uint16_t *)value))
+                return false;
+            break;
+        case CRA_TYPE_UINT32:
+            if (!cra_bin_deserialize_uint32(ser, (uint32_t *)value))
+                return false;
+            break;
+        case CRA_TYPE_UINT64:
+            if (!cra_bin_deserialize_uint64(ser, (uint64_t *)value))
+                return false;
+            break;
+        case CRA_TYPE_FLOAT:
+            if (!cra_bin_deserialize_float(ser, (float *)value))
+                return false;
+            break;
+        case CRA_TYPE_DOUBLE:
+            if (!cra_bin_deserialize_double(ser, (double *)value))
+                return false;
+            break;
+        case CRA_TYPE_STRING:
+            if (meta->nsize == 0)
+            {
+                if (!cra_bin_deserialize_string(
+                      ser, (char *)value, (cra_ser_count_t)meta->size, meta->is_ptr, auto_free_if_fail))
+                    return false;
+            }
+            else
+            {
+                assert_always(meta->nsize == sizeof(cra_ser_count_t));
+                cra_ser_count_t *nsize = (cra_ser_count_t *)((char *)val + meta->noffset);
+                *nsize = (cra_ser_count_t)meta->size;
+                if (!cra_bin_deserialize_string_nz(ser, (char *)value, nsize, meta->is_ptr, auto_free_if_fail))
+                    return false;
+            }
+            break;
+        case CRA_TYPE_STRUCT:
+            if (!cra_bin_deserialize_struct(
+                  ser, value, meta->size, meta->is_ptr, auto_free_if_fail, meta->meta, meta->init_i, meta->args4init))
+                return false;
+            break;
+        case CRA_TYPE_LIST:
+            if (meta->nsize == 0)
+            {
+                // list
+                if (!cra_bin_deserialize_list(ser,
+                                              value,
+                                              meta->size,
+                                              meta->is_ptr,
+                                              auto_free_if_fail,
+                                              meta->meta,
+                                              meta->iter_i,
+                                              meta->init_i,
+                                              meta->args4init))
+                    return false;
+            }
+            else
+            {
+                // c array
+                assert_always(meta->nsize == sizeof(cra_ser_count_t));
+                if (!cra_bin_deserialize_array(ser,
+                                               value,
+                                               meta->size,
+                                               meta->is_ptr,
+                                               (cra_ser_count_t *)((char *)val + meta->noffset),
+                                               meta->meta))
+                    return false;
+            }
+            break;
+        case CRA_TYPE_DICT:
+            if (!cra_bin_deserialize_dict(ser,
+                                          value,
+                                          meta->size,
+                                          meta->is_ptr,
+                                          auto_free_if_fail,
+                                          meta->meta,
+                                          meta->iter_i,
+                                          meta->init_i,
+                                          meta->args4init))
+                return false;
+            break;
 
-    default:
-        ser->error = CRA_SER_ERROR_INVALID_VALUE;
-        return false;
+        default:
+            ser->error = CRA_SER_ERROR_INVALID_VALUE;
+            return false;
     }
     return true;
 }
 
-static bool cra_bin_deserialize_all(CraSerializer *ser, void *val, const CraTypeMeta *meta, bool auto_free_if_fail)
+static bool
+cra_bin_deserialize_all(CraSerializer *ser, void *val, const CraTypeMeta *meta, bool auto_free_if_fail)
 {
     CraTypeMeta *m = (CraTypeMeta *)meta;
     while (m->type != __CRA_TYPE_END_OF_META && (CRA_BUF_HAS_CHAR(ser) && !CRA_BUF_IS_OBJ_END(ser)))
@@ -1053,8 +1169,12 @@ static bool cra_bin_deserialize_all(CraSerializer *ser, void *val, const CraType
 
 #endif // end deserialize
 
-unsigned char *cra_bin_serialize_struct0(unsigned char *buffer, size_t *buffer_length, void *val,
-                                         const CraTypeMeta *members_meta, CraSerError_e *error)
+unsigned char *
+cra_bin_serialize_struct0(unsigned char     *buffer,
+                          size_t            *buffer_length,
+                          void              *val,
+                          const CraTypeMeta *members_meta,
+                          CraSerError_e     *error)
 {
     CraSerializer ser;
     cra_bin_serialize_begin(&ser, buffer, *buffer_length);
@@ -1062,9 +1182,16 @@ unsigned char *cra_bin_serialize_struct0(unsigned char *buffer, size_t *buffer_l
     return cra_bin_serialize_end(&ser, buffer_length, error);
 }
 
-void cra_bin_deserialize_struct0(unsigned char *buffer, size_t buffer_length, void *retval,
-                                 size_t valsize, bool is_ptr, const CraTypeMeta *members_meta,
-                                 const CraTypeInit_i *init_i, void *args4init, CraSerError_e *error)
+void
+cra_bin_deserialize_struct0(unsigned char       *buffer,
+                            size_t               buffer_length,
+                            void                *retval,
+                            size_t               valsize,
+                            bool                 is_ptr,
+                            const CraTypeMeta   *members_meta,
+                            const CraTypeInit_i *init_i,
+                            void                *args4init,
+                            CraSerError_e       *error)
 {
     CraSerializer ser;
     cra_bin_deserialize_begin(&ser, buffer, buffer_length);
@@ -1072,8 +1199,13 @@ void cra_bin_deserialize_struct0(unsigned char *buffer, size_t buffer_length, vo
     cra_bin_deserialize_end(&ser, error);
 }
 
-unsigned char *cra_bin_serialize_list0(unsigned char *buffer, size_t *buffer_length, void *val,
-                                       const CraTypeMeta *element_meta, const CraTypeIter_i *iter_i, CraSerError_e *error)
+unsigned char *
+cra_bin_serialize_list0(unsigned char       *buffer,
+                        size_t              *buffer_length,
+                        void                *val,
+                        const CraTypeMeta   *element_meta,
+                        const CraTypeIter_i *iter_i,
+                        CraSerError_e       *error)
 {
     CraSerializer ser;
     cra_bin_serialize_begin(&ser, buffer, *buffer_length);
@@ -1081,10 +1213,17 @@ unsigned char *cra_bin_serialize_list0(unsigned char *buffer, size_t *buffer_len
     return cra_bin_serialize_end(&ser, buffer_length, error);
 }
 
-void cra_bin_deserialize_list0(unsigned char *buffer, size_t buffer_length, void *retval,
-                               size_t valsize, bool is_ptr, const CraTypeMeta *element_meta,
-                               const CraTypeIter_i *iter_i, const CraTypeInit_i *init_i,
-                               void *args4init, CraSerError_e *error)
+void
+cra_bin_deserialize_list0(unsigned char       *buffer,
+                          size_t               buffer_length,
+                          void                *retval,
+                          size_t               valsize,
+                          bool                 is_ptr,
+                          const CraTypeMeta   *element_meta,
+                          const CraTypeIter_i *iter_i,
+                          const CraTypeInit_i *init_i,
+                          void                *args4init,
+                          CraSerError_e       *error)
 {
     CraSerializer ser;
     cra_bin_deserialize_begin(&ser, buffer, buffer_length);
@@ -1092,8 +1231,13 @@ void cra_bin_deserialize_list0(unsigned char *buffer, size_t buffer_length, void
     cra_bin_deserialize_end(&ser, error);
 }
 
-unsigned char *cra_bin_serialize_array0(unsigned char *buffer, size_t *buffer_length, void *val,
-                                        cra_ser_count_t count, const CraTypeMeta *element_meta, CraSerError_e *error)
+unsigned char *
+cra_bin_serialize_array0(unsigned char     *buffer,
+                         size_t            *buffer_length,
+                         void              *val,
+                         cra_ser_count_t    count,
+                         const CraTypeMeta *element_meta,
+                         CraSerError_e     *error)
 {
     CraSerializer ser;
     cra_bin_serialize_begin(&ser, buffer, *buffer_length);
@@ -1101,8 +1245,15 @@ unsigned char *cra_bin_serialize_array0(unsigned char *buffer, size_t *buffer_le
     return cra_bin_serialize_end(&ser, buffer_length, error);
 }
 
-void cra_bin_deserialize_array0(unsigned char *buffer, size_t buffer_length, void *retval, size_t valsize,
-                                bool is_ptr, cra_ser_count_t *countptr, const CraTypeMeta *element_meta, CraSerError_e *error)
+void
+cra_bin_deserialize_array0(unsigned char     *buffer,
+                           size_t             buffer_length,
+                           void              *retval,
+                           size_t             valsize,
+                           bool               is_ptr,
+                           cra_ser_count_t   *countptr,
+                           const CraTypeMeta *element_meta,
+                           CraSerError_e     *error)
 {
     CraSerializer ser;
     cra_bin_deserialize_begin(&ser, buffer, buffer_length);
@@ -1110,8 +1261,13 @@ void cra_bin_deserialize_array0(unsigned char *buffer, size_t buffer_length, voi
     cra_bin_deserialize_end(&ser, error);
 }
 
-unsigned char *cra_bin_serialize_dict0(unsigned char *buffer, size_t *buffer_length, void *val,
-                                       const CraTypeMeta *kv_meta, const CraTypeIter_i *iter_i, CraSerError_e *error)
+unsigned char *
+cra_bin_serialize_dict0(unsigned char       *buffer,
+                        size_t              *buffer_length,
+                        void                *val,
+                        const CraTypeMeta   *kv_meta,
+                        const CraTypeIter_i *iter_i,
+                        CraSerError_e       *error)
 {
     CraSerializer ser;
     cra_bin_serialize_begin(&ser, buffer, *buffer_length);
@@ -1119,9 +1275,17 @@ unsigned char *cra_bin_serialize_dict0(unsigned char *buffer, size_t *buffer_len
     return cra_bin_serialize_end(&ser, buffer_length, error);
 }
 
-void cra_bin_deserialize_dict0(unsigned char *buffer, size_t buffer_length, void *retval, size_t valsize,
-                               bool is_ptr, const CraTypeMeta *kv_meta, const CraTypeIter_i *iter_i,
-                               const CraTypeInit_i *init_i, void *args4init, CraSerError_e *error)
+void
+cra_bin_deserialize_dict0(unsigned char       *buffer,
+                          size_t               buffer_length,
+                          void                *retval,
+                          size_t               valsize,
+                          bool                 is_ptr,
+                          const CraTypeMeta   *kv_meta,
+                          const CraTypeIter_i *iter_i,
+                          const CraTypeInit_i *init_i,
+                          void                *args4init,
+                          CraSerError_e       *error)
 {
     CraSerializer ser;
     cra_bin_deserialize_begin(&ser, buffer, buffer_length);
@@ -1129,9 +1293,10 @@ void cra_bin_deserialize_dict0(unsigned char *buffer, size_t buffer_length, void
     cra_bin_deserialize_end(&ser, error);
 }
 
-void cra_bin_serialize_print(const unsigned char *buffer, size_t buffer_length)
+void
+cra_bin_serialize_print(const unsigned char *buffer, size_t buffer_length)
 {
-    int nesting = 0;
+    int            nesting = 0;
     unsigned char *current = (unsigned char *)buffer;
     unsigned char *end = (unsigned char *)buffer + buffer_length;
 
@@ -1144,117 +1309,117 @@ void cra_bin_serialize_print(const unsigned char *buffer, size_t buffer_length)
 
         switch (*current++)
         {
-        case CRA_TYPE_FALSE:
-        case CRA_TYPE_TRUE:
-            printf("[T&V] -------- bool(1): %s\n", *(current - 1) ? "true" : "false");
-            break;
-        case CRA_TYPE_INT8:
-            printf("[T][V] ------- int[8](1 + 1): %d\n", *(int8_t *)current);
-            current++;
-            break;
-        case CRA_TYPE_INT16:
-        {
-            int16_t i = (int16_t)CRA_SER_SWAP16(*(uint16_t *)current);
-            printf("[T][V] ------- int[16](1 + 2): %d\n", i);
-            current += sizeof(int16_t);
-            break;
-        }
-        case CRA_TYPE_INT32:
-        {
-            int32_t i = (int32_t)CRA_SER_SWAP32(*(uint32_t *)current);
-            printf("[T][V] ------- int[32](1 + 4): %d\n", i);
-            current += sizeof(int32_t);
-            break;
-        }
-        case CRA_TYPE_INT64:
-        {
-            int64_t i = (int64_t)CRA_SER_SWAP64(*(uint64_t *)current);
-            printf("[T][V] ------- int[64](1 + 8): %zd\n", i);
-            current += sizeof(int64_t);
-            break;
-        }
-        case CRA_TYPE_UINT8:
-            printf("[T][V] ------- uint[8](1 + 1): %u\n", *(uint8_t *)current);
-            current++;
-            break;
-        case CRA_TYPE_UINT16:
-        {
-            uint16_t i = CRA_SER_SWAP16(*(uint16_t *)current);
-            printf("[T][V] ------- uint[16](1 + 2): %u\n", i);
-            current += sizeof(uint16_t);
-            break;
-        }
-        case CRA_TYPE_UINT32:
-        {
-            uint32_t i = CRA_SER_SWAP32(*(uint32_t *)current);
-            printf("[T][V] ------- uint[32](1 + 4): %u\n", i);
-            current += sizeof(uint32_t);
-            break;
-        }
-        case CRA_TYPE_UINT64:
-        {
-            uint64_t i = CRA_SER_SWAP64(*(uint64_t *)current);
-            printf("[T][V] ------- uint[64](1 + 8): %zu\n", i);
-            current += sizeof(uint64_t);
-            break;
-        }
-        case CRA_TYPE_FLOAT:
-        {
-            float f = *(float *)current;
-            printf("[T][V] ------- float(1 + 4): %g\n", f);
-            current += sizeof(float);
-            break;
-        }
-        case CRA_TYPE_DOUBLE:
-        {
-            double d = *(double *)current;
-            printf("[T][V] ------- double(1 + 8): %g\n", d);
-            current += sizeof(double);
-            break;
-        }
-        case CRA_TYPE_STRING:
-        {
-            cra_ser_count_t len = CRA_SER_SWAP_COUNT(*(cra_ser_count_t *)current);
-            current += sizeof(len);
-            printf("[T][L][V] ---- string(1 + 4 + %u): \"", len);
-            for (cra_ser_count_t i = 0; i < len; i++)
-                putc(*current++, stdout);
-            printf("\"\n");
-            break;
-        }
-        case CRA_TYPE_STRUCT:
-        {
-            nesting++;
-            printf("[T][V][F] ---- struct(1 + N + 1):\n");
-            break;
-        }
-        case CRA_TYPE_LIST:
-        {
-            nesting++;
-            cra_ser_count_t count = CRA_SER_SWAP_COUNT(*(cra_ser_count_t *)current);
-            current += sizeof(count);
-            printf("[T][C][V][F] - list(1 + 4 + N * %u + 1):\n", count);
-            break;
-        }
-        case CRA_TYPE_DICT:
-        {
-            nesting++;
-            cra_ser_count_t count = CRA_SER_SWAP_COUNT(*(cra_ser_count_t *)current);
-            current += sizeof(count);
-            printf("[T][C][KV][F]  dict(1 + 4 + N * %u + 1):\n", count);
-            break;
-        }
-        case __CRA_TYPE_END:
-            nesting--;
-            printf("\r");
-            break;
+            case CRA_TYPE_FALSE:
+            case CRA_TYPE_TRUE:
+                printf("[T&V] -------- bool(1): %s\n", *(current - 1) ? "true" : "false");
+                break;
+            case CRA_TYPE_INT8:
+                printf("[T][V] ------- int[8](1 + 1): %d\n", *(int8_t *)current);
+                current++;
+                break;
+            case CRA_TYPE_INT16:
+            {
+                int16_t i = (int16_t)CRA_SER_SWAP16(*(uint16_t *)current);
+                printf("[T][V] ------- int[16](1 + 2): %d\n", i);
+                current += sizeof(int16_t);
+                break;
+            }
+            case CRA_TYPE_INT32:
+            {
+                int32_t i = (int32_t)CRA_SER_SWAP32(*(uint32_t *)current);
+                printf("[T][V] ------- int[32](1 + 4): %d\n", i);
+                current += sizeof(int32_t);
+                break;
+            }
+            case CRA_TYPE_INT64:
+            {
+                int64_t i = (int64_t)CRA_SER_SWAP64(*(uint64_t *)current);
+                printf("[T][V] ------- int[64](1 + 8): %zd\n", i);
+                current += sizeof(int64_t);
+                break;
+            }
+            case CRA_TYPE_UINT8:
+                printf("[T][V] ------- uint[8](1 + 1): %u\n", *(uint8_t *)current);
+                current++;
+                break;
+            case CRA_TYPE_UINT16:
+            {
+                uint16_t i = CRA_SER_SWAP16(*(uint16_t *)current);
+                printf("[T][V] ------- uint[16](1 + 2): %u\n", i);
+                current += sizeof(uint16_t);
+                break;
+            }
+            case CRA_TYPE_UINT32:
+            {
+                uint32_t i = CRA_SER_SWAP32(*(uint32_t *)current);
+                printf("[T][V] ------- uint[32](1 + 4): %u\n", i);
+                current += sizeof(uint32_t);
+                break;
+            }
+            case CRA_TYPE_UINT64:
+            {
+                uint64_t i = CRA_SER_SWAP64(*(uint64_t *)current);
+                printf("[T][V] ------- uint[64](1 + 8): %zu\n", i);
+                current += sizeof(uint64_t);
+                break;
+            }
+            case CRA_TYPE_FLOAT:
+            {
+                float f = *(float *)current;
+                printf("[T][V] ------- float(1 + 4): %g\n", f);
+                current += sizeof(float);
+                break;
+            }
+            case CRA_TYPE_DOUBLE:
+            {
+                double d = *(double *)current;
+                printf("[T][V] ------- double(1 + 8): %g\n", d);
+                current += sizeof(double);
+                break;
+            }
+            case CRA_TYPE_STRING:
+            {
+                cra_ser_count_t len = CRA_SER_SWAP_COUNT(*(cra_ser_count_t *)current);
+                current += sizeof(len);
+                printf("[T][L][V] ---- string(1 + 4 + %u): \"", len);
+                for (cra_ser_count_t i = 0; i < len; i++)
+                    putc(*current++, stdout);
+                printf("\"\n");
+                break;
+            }
+            case CRA_TYPE_STRUCT:
+            {
+                nesting++;
+                printf("[T][V][F] ---- struct(1 + N + 1):\n");
+                break;
+            }
+            case CRA_TYPE_LIST:
+            {
+                nesting++;
+                cra_ser_count_t count = CRA_SER_SWAP_COUNT(*(cra_ser_count_t *)current);
+                current += sizeof(count);
+                printf("[T][C][V][F] - list(1 + 4 + N * %u + 1):\n", count);
+                break;
+            }
+            case CRA_TYPE_DICT:
+            {
+                nesting++;
+                cra_ser_count_t count = CRA_SER_SWAP_COUNT(*(cra_ser_count_t *)current);
+                current += sizeof(count);
+                printf("[T][C][KV][F]  dict(1 + 4 + N * %u + 1):\n", count);
+                break;
+            }
+            case __CRA_TYPE_END:
+                nesting--;
+                printf("\r");
+                break;
 
-        case CRA_TYPE_NULL:
-            printf("[T&V] -------- pointer(1): null\n");
-            break;
+            case CRA_TYPE_NULL:
+                printf("[T&V] -------- pointer(1): null\n");
+                break;
 
-        default:
-            printf("invalid type: %d\n", *current);
+            default:
+                printf("invalid type: %d\n", *current);
         }
     }
     printf("\n");

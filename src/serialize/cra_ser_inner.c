@@ -8,10 +8,11 @@
  * @copyright Copyright (c) 2024
  *
  */
-#include "cra_malloc.h"
 #include "serialize/cra_ser_inner.h"
+#include "cra_malloc.h"
 
-unsigned char *cra_serializer_buf(CraSerializer *ser, size_t needed)
+unsigned char *
+cra_serializer_buf(CraSerializer *ser, size_t needed)
 {
     if (ser->index + needed > ser->length)
     {
@@ -31,7 +32,8 @@ unsigned char *cra_serializer_buf(CraSerializer *ser, size_t needed)
 
 #define CRA_SER_RELEASE_NODES1_MAX (sizeof(release->nodes1) / sizeof(release->nodes1[0]))
 
-void cra_ser_release_init(CraSerRelease *release)
+void
+cra_ser_release_init(CraSerRelease *release)
 {
     release->current = 0;
     release->n_nodes = CRA_SER_RELEASE_NODES1_MAX;
@@ -39,7 +41,8 @@ void cra_ser_release_init(CraSerRelease *release)
     release->nodes2 = NULL;
 }
 
-void cra_ser_release_uninit(CraSerRelease *release, bool free_ptr)
+void
+cra_ser_release_uninit(CraSerRelease *release, bool free_ptr)
 {
     if (release->current > 0)
     {
@@ -74,7 +77,12 @@ void cra_ser_release_uninit(CraSerRelease *release, bool free_ptr)
     }
 }
 
-void cra_ser_release_add(CraSerRelease *release, bool _free, void *ptr, void (*uninit_fn)(void *), void (*dealloc_fn)(void *))
+void
+cra_ser_release_add(CraSerRelease *release,
+                    bool           _free,
+                    void          *ptr,
+                    void           (*uninit_fn)(void *),
+                    void           (*dealloc_fn)(void *))
 {
     CraSerReleaseNode *node;
     if (release->current == release->n_nodes)
@@ -83,7 +91,8 @@ void cra_ser_release_add(CraSerRelease *release, bool _free, void *ptr, void (*u
         if (release->nodes2 == NULL)
             release->nodes2 = cra_malloc(sizeof(CraSerReleaseNode) * (release->n_nodes - CRA_SER_RELEASE_NODES1_MAX));
         else
-            release->nodes2 = cra_realloc(release->nodes2, sizeof(CraSerReleaseNode) * (release->n_nodes - CRA_SER_RELEASE_NODES1_MAX));
+            release->nodes2 =
+              cra_realloc(release->nodes2, sizeof(CraSerReleaseNode) * (release->n_nodes - CRA_SER_RELEASE_NODES1_MAX));
     }
     if (release->n_nodes <= CRA_SER_RELEASE_NODES1_MAX)
         node = &release->nodes1[release->current++];

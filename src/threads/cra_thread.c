@@ -14,7 +14,8 @@
 #include <sys/syscall.h>
 #endif
 
-cra_tid_t cra_thrd_get_current_tid(void)
+cra_tid_t
+cra_thrd_get_current_tid(void)
 {
     static cra_thrd_local cra_tid_t s_tid = 0;
     if (s_tid == 0)

@@ -10,9 +10,9 @@
  */
 #ifndef __CRA_COLLECTS_H__
 #define __CRA_COLLECTS_H__
-#include <math.h>
-#include <float.h>
 #include "cra_defs.h"
+#include <float.h>
+#include <math.h>
 
 typedef void (*cra_remove_val_fn)(void *val);
 typedef bool (*cra_match_fn)(void *val, void *arg);
@@ -46,28 +46,33 @@ __CRA_COMPARE_FUNC(uint16_t, uint16_t)
 __CRA_COMPARE_FUNC(uint32_t, uint32_t)
 __CRA_COMPARE_FUNC(uint64_t, uint64_t)
 
-static inline int cra_compare_float(float a, float b)
+static inline int
+cra_compare_float(float a, float b)
 {
     return fabsf(a - b) < FLT_EPSILON ? 0 : (a > b ? 1 : -1);
 }
 
-static inline int cra_compare_float_p(float *a, float *b)
+static inline int
+cra_compare_float_p(float *a, float *b)
 {
     return cra_compare_float(*a, *b);
 }
 
-static inline int cra_compare_double(double a, double b)
+static inline int
+cra_compare_double(double a, double b)
 {
     return fabs(a - b) < DBL_EPSILON ? 0 : (a > b ? 1 : -1);
 }
 
-static inline int cra_compare_double_p(double *a, double *b)
+static inline int
+cra_compare_double_p(double *a, double *b)
 {
     return cra_compare_double(*a, *b);
 }
 
 #define cra_compare_string strcmp
-static inline int cra_compare_string_p(const char **a, const char **b)
+static inline int
+cra_compare_string_p(const char **a, const char **b)
 {
     return cra_compare_string(*a, *b);
 }
@@ -118,14 +123,15 @@ __CRA_HASH_FUNC1(uint16_t, uint16_t)
 __CRA_HASH_FUNC1(uint32_t, uint32_t)
 __CRA_HASH_FUNC1(uint64_t, uint64_t)
 
-static inline cra_hash_t cra_hash_float(float val)
+static inline cra_hash_t
+cra_hash_float(float val)
 {
     if (!isnan(val))
     {
         union
         {
             int32_t i;
-            float f;
+            float   f;
         } u;
         u.f = val;
         return u.i == -1 ? -2 : u.i;
@@ -133,16 +139,21 @@ static inline cra_hash_t cra_hash_float(float val)
     return 0x7fc00000;
 }
 
-static inline cra_hash_t cra_hash_float_p(float *val) { return cra_hash_float(*val); }
+static inline cra_hash_t
+cra_hash_float_p(float *val)
+{
+    return cra_hash_float(*val);
+}
 
-static inline cra_hash_t cra_hash_double(double val)
+static inline cra_hash_t
+cra_hash_double(double val)
 {
     if (!isnan(val))
     {
         union
         {
             cra_hash_t i;
-            double d;
+            double     d;
         } u;
         u.d = val;
         return u.i == -1 ? -2 : u.i;
@@ -150,12 +161,29 @@ static inline cra_hash_t cra_hash_double(double val)
     return 0x7ff8000000000000L;
 }
 
-static inline cra_hash_t cra_hash_double_p(double *val) { return cra_hash_double(*val); }
+static inline cra_hash_t
+cra_hash_double_p(double *val)
+{
+    return cra_hash_double(*val);
+}
 
-CRA_API cra_hash_t cra_hash_string1(const char *val);
-CRA_API cra_hash_t cra_hash_string2(const char *val);
-static inline cra_hash_t cra_hash_string1_p(const char **val) { return cra_hash_string1(*val); }
-static inline cra_hash_t cra_hash_string2_p(const char **val) { return cra_hash_string2(*val); }
+CRA_API cra_hash_t
+cra_hash_string1(const char *val);
+
+CRA_API cra_hash_t
+cra_hash_string2(const char *val);
+
+static inline cra_hash_t
+cra_hash_string1_p(const char **val)
+{
+    return cra_hash_string1(*val);
+}
+
+static inline cra_hash_t
+cra_hash_string2_p(const char **val)
+{
+    return cra_hash_string2(*val);
+}
 
 __CRA_HASH_FUNC1(ptr, const void *)
 

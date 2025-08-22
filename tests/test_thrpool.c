@@ -8,16 +8,17 @@
  * @copyright Copyright (c) 2024
  *
  */
-#include "cra_malloc.h"
 #include "cra_assert.h"
+#include "cra_malloc.h"
 #include "threads/cra_thrdpool.h"
 
 #define PLUS 1000
 
-static void worker(const CraThrdPoolArgs1 *args)
+static void
+worker(const CraThrdPoolArgs1 *args)
 {
     int *val = (int *)args->arg1;
-    int old = *val;
+    int  old = *val;
 
     *val += PLUS;
     printf("Worker: tid=%lu, old=%d, val=%d\n", args->tid, old, *val);
@@ -26,13 +27,14 @@ static void worker(const CraThrdPoolArgs1 *args)
     //     cra_msleep(100);
 }
 
-static void test_thread_pool(void)
+static void
+test_thread_pool(void)
 {
     CraThrdPool *tp;
-    int *vals;
-    int i;
-    int num_threads = 10;
-    int num_items = 10000;
+    int         *vals;
+    int          i;
+    int          num_threads = 10;
+    int          num_items = 10000;
 
     tp = cra_alloc(CraThrdPool);
     assert_always(!!tp);
@@ -61,13 +63,14 @@ static void test_thread_pool(void)
     cra_free(vals);
 }
 
-static void test_thread_pool2(void)
+static void
+test_thread_pool2(void)
 {
     CraThrdPool *tp;
-    int *vals;
-    int i;
-    int num_threads = 10;
-    int num_items = 100;
+    int         *vals;
+    int          i;
+    int          num_threads = 10;
+    int          num_items = 100;
 
     tp = cra_alloc(CraThrdPool);
     cra_thrdpool_init(tp, num_threads, 10);
@@ -101,13 +104,14 @@ static void test_thread_pool2(void)
     cra_free(vals);
 }
 
-static void test_thread_pool3(void)
+static void
+test_thread_pool3(void)
 {
     CraThrdPool *tp;
-    int *vals;
-    int i;
-    int num_threads = 10;
-    int num_items = 1000;
+    int         *vals;
+    int          i;
+    int          num_threads = 10;
+    int          num_items = 1000;
 
     tp = cra_alloc(CraThrdPool);
     cra_thrdpool_init(tp, num_threads, num_items);
@@ -139,7 +143,8 @@ static void test_thread_pool3(void)
     cra_free(vals);
 }
 
-int main(void)
+int
+main(void)
 {
     printf("## start test thpool...\n");
     test_thread_pool();

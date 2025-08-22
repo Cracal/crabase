@@ -1,28 +1,30 @@
-#include "threads/cra_thread.h"
-#include "cra_refcnt.h"
-#include "cra_malloc.h"
 #include "cra_assert.h"
 #include "cra_log.h"
+#include "cra_malloc.h"
+#include "cra_refcnt.h"
+#include "threads/cra_thread.h"
 
 #undef CRA_LOG_NAME
 #define CRA_LOG_NAME "TestRefcnt"
 
 typedef struct
 {
-    int i;
+    int   i;
     float f;
 } Stru;
 typedef CRA_REFCNT_DEF(Stru) Stru_rc;
 typedef CRA_REFCNT_PTR_DEF(Stru) Stru_rc_p;
 
-static void test_int100(void *rc)
+static void
+test_int100(void *rc)
 {
     CRA_REFCNT_DEF(int) *ref = rc;
     assert_always(*CRA_REFCNT_OBJ(ref) == 100);
     cra_log_info("test int: %d", *CRA_REFCNT_OBJ(ref));
 }
 
-static void test_and_delete_int100_p(void *rc)
+static void
+test_and_delete_int100_p(void *rc)
 {
     CRA_REFCNT_PTR_DEF(int) *ref = rc;
     assert_always(*CRA_REFCNT_PTR(ref) == 100);
@@ -30,25 +32,29 @@ static void test_and_delete_int100_p(void *rc)
     cra_dealloc(CRA_REFCNT_PTR(ref));
 }
 
-static void delete_stru(Stru_rc *s)
+static void
+delete_stru(Stru_rc *s)
 {
     cra_log_info("delete Stru{i: %d, f: %f}", CRA_REFCNT_OBJ(s)->i, CRA_REFCNT_OBJ(s)->f);
     cra_dealloc(s);
 }
 
-static void delete_stru_p(Stru_rc_p *s)
+static void
+delete_stru_p(Stru_rc_p *s)
 {
     cra_log_info("delete Stru{i: %d, f: %f}", CRA_REFCNT_PTR(s)->i, CRA_REFCNT_PTR(s)->f);
     cra_dealloc(CRA_REFCNT_PTR(s));
 }
 
-static void delete_stru_p2(Stru_rc_p *s)
+static void
+delete_stru_p2(Stru_rc_p *s)
 {
     delete_stru_p(s);
     cra_dealloc(s);
 }
 
-void test_refcnt(void)
+void
+test_refcnt(void)
 {
     CRA_REFCNT_DEF(int)
     ri;
@@ -85,7 +91,8 @@ void test_refcnt(void)
     assert_always(rs == NULL);
 }
 
-void test_refcnt_ptr(void)
+void
+test_refcnt_ptr(void)
 {
     CRA_REFCNT_PTR_DEF(int)(ri);
     int *pi = cra_alloc(int);
@@ -105,7 +112,7 @@ void test_refcnt_ptr(void)
     assert_always(CRA_REFCNT_RC(&ri)->cnt == 0);
 
     Stru_rc_p rs;
-    Stru *ps = cra_alloc(Stru);
+    Stru     *ps = cra_alloc(Stru);
     ps->i = 200;
     ps->f = 3.5f;
     cra_refcnt_init(CRA_REFCNT_RC(&rs), (cra_refcnt_uninit_fn)delete_stru_p);
@@ -142,10 +149,11 @@ static CRA_THRD_FUNC(thread_func)
     Stru_rc *rs = (Stru_rc *)arg;
     cra_log_info("thread: Stru{i: %d, f: %f}", CRA_REFCNT_OBJ(rs)->i, CRA_REFCNT_OBJ(rs)->f);
     cra_refcnt_unref0(CRA_REFCNT_RC(rs));
-    return (cra_thrd_ret_t){0};
+    return (cra_thrd_ret_t){ 0 };
 }
 
-void test_multithread(void)
+void
+test_multithread(void)
 {
     Stru_rc *rs = cra_alloc(Stru_rc);
     CRA_REFCNT_OBJ(rs)->i = 1000;
@@ -164,25 +172,28 @@ void test_multithread(void)
 
 struct StruIn
 {
-    int i;
+    int       i;
     CraRefcnt ref;
-    float f;
+    float     f;
 };
 
-static void cra_struin_print(CraRefcnt *ref)
+static void
+cra_struin_print(CraRefcnt *ref)
 {
     struct StruIn *si = container_of(ref, struct StruIn, ref);
     cra_log_info("StruIn{i: %d, f: %f}\n", si->i, si->f);
 }
 
-static void cra_struin_delete(CraRefcnt *ref)
+static void
+cra_struin_delete(CraRefcnt *ref)
 {
     cra_struin_print(ref);
     struct StruIn *si = container_of(ref, struct StruIn, ref);
     cra_dealloc(si);
 }
 
-void test_ref_inner(void)
+void
+test_ref_inner(void)
 {
     struct StruIn si;
     cra_refcnt_init(&si.ref, cra_struin_print);
@@ -213,7 +224,8 @@ void test_ref_inner(void)
     psi = NULL;
 }
 
-int main(void)
+int
+main(void)
 {
     cra_log_startup(CRA_LOG_LEVEL_TRACE, false, true);
 

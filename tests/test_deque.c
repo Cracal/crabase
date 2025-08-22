@@ -8,14 +8,19 @@
  * @copyright Copyright (c) 2024
  *
  */
-#include <time.h>
-#include "cra_malloc.h"
-#include "cra_assert.h"
 #include "collections/cra_deque.h"
+#include "cra_assert.h"
+#include "cra_malloc.h"
+#include <time.h>
 
-static void _print_int(void *pi) { printf("val: %d\n", *(int *)pi); }
+static void
+_print_int(void *pi)
+{
+    printf("val: %d\n", *(int *)pi);
+}
 
-void test_new_delete(void)
+void
+test_new_delete(void)
 {
     CraDeque deque, *deque2;
 
@@ -28,15 +33,16 @@ void test_new_delete(void)
     cra_dealloc(deque2);
 }
 
-void test_insert_and_pop_at(void)
+void
+test_insert_and_pop_at(void)
 {
-    int *valptr, i;
+    int      *valptr, i;
     CraDeque *deque = cra_alloc(CraDeque);
     cra_deque_init0(int, deque, CRA_DEQUE_INFINITE, true, NULL);
 
-    assert_always(cra_deque_insert(deque, 0, &(int){0}));
-    assert_always(cra_deque_insert(deque, 1, &(int){2}));
-    assert_always(cra_deque_insert(deque, 1, &(int){1}));
+    assert_always(cra_deque_insert(deque, 0, &(int){ 0 }));
+    assert_always(cra_deque_insert(deque, 1, &(int){ 2 }));
+    assert_always(cra_deque_insert(deque, 1, &(int){ 1 }));
 
     i = 0;
     for (CraDequeIter it = cra_deque_iter_init(deque); cra_deque_iter_next(&it, (void **)(void **)&valptr); i++)
@@ -44,9 +50,9 @@ void test_insert_and_pop_at(void)
     printf("\n");
 
     for (i = 0; i < 100; i++)
-        assert_always(cra_deque_insert(deque, 1, &(int){i + 10}));
-    cra_deque_push(deque, &(int){100});
-    cra_deque_push_left(deque, &(int){-100});
+        assert_always(cra_deque_insert(deque, 1, &(int){ i + 10 }));
+    cra_deque_push(deque, &(int){ 100 });
+    cra_deque_push_left(deque, &(int){ -100 });
 
     int val;
     assert_always(cra_deque_pop_at(deque, 0, &val) && val == -100);
@@ -80,30 +86,31 @@ void test_insert_and_pop_at(void)
     cra_dealloc(deque);
 }
 
-void test_push(void)
+void
+test_push(void)
 {
-    int *valptr, i;
+    int      *valptr, i;
     CraDeque *deque = cra_alloc(CraDeque);
     cra_deque_init0(int, deque, CRA_DEQUE_INFINITE, true, _print_int);
 
-    assert_always(cra_deque_push(deque, &(int){100}) && cra_deque_peek(deque, &i) && i == 100);
+    assert_always(cra_deque_push(deque, &(int){ 100 }) && cra_deque_peek(deque, &i) && i == 100);
     cra_deque_clear(deque);
-    assert_always(cra_deque_push_left(deque, &(int){200}) && cra_deque_peek(deque, &i) && i == 200);
+    assert_always(cra_deque_push_left(deque, &(int){ 200 }) && cra_deque_peek(deque, &i) && i == 200);
     cra_deque_clear(deque);
-    assert_always(cra_deque_insert(deque, 0, &(int){300}) && cra_deque_peek(deque, &i) && i == 300);
+    assert_always(cra_deque_insert(deque, 0, &(int){ 300 }) && cra_deque_peek(deque, &i) && i == 300);
     cra_deque_clear(deque);
 
     for (i = 0; i < 1000; i++)
         assert_always(cra_deque_push(deque, &i));
 
-    assert_always(cra_deque_push_left(deque, &(int){-1}));
-    assert_always(cra_deque_push_left(deque, &(int){-2}));
-    assert_always(cra_deque_insert(deque, 4, &(int){4000}));
-    assert_always(cra_deque_insert(deque, 4, &(int){40000}));
-    assert_always(cra_deque_push(deque, &(int){11}));
-    assert_always(cra_deque_push(deque, &(int){12}));
+    assert_always(cra_deque_push_left(deque, &(int){ -1 }));
+    assert_always(cra_deque_push_left(deque, &(int){ -2 }));
+    assert_always(cra_deque_insert(deque, 4, &(int){ 4000 }));
+    assert_always(cra_deque_insert(deque, 4, &(int){ 40000 }));
+    assert_always(cra_deque_push(deque, &(int){ 11 }));
+    assert_always(cra_deque_push(deque, &(int){ 12 }));
 
-    assert_always(!cra_deque_insert(deque, 10000, &(int){1}));
+    assert_always(!cra_deque_insert(deque, 10000, &(int){ 1 }));
 
     i = -2;
     for (CraDequeIter it = cra_deque_iter_init(deque); cra_deque_iter_next(&it, (void **)&valptr); i++)
@@ -172,9 +179,10 @@ void test_push(void)
     cra_dealloc(deque);
 }
 
-void test_pop(void)
+void
+test_pop(void)
 {
-    int val, i;
+    int       val, i;
     CraDeque *deque = cra_alloc(CraDeque);
     cra_deque_init0(int, deque, CRA_DEQUE_INFINITE, true, NULL);
 
@@ -190,8 +198,8 @@ void test_pop(void)
     assert_always(cra_deque_pop(deque, &val) && val == 10000);
     assert_always(cra_deque_pop_left(deque, &val) && val == 1);
 
-    cra_deque_push(deque, &(int){200000});
-    cra_deque_push_left(deque, &(int){-100});
+    cra_deque_push(deque, &(int){ 200000 });
+    cra_deque_push_left(deque, &(int){ -100 });
 
     assert_always(cra_deque_pop(deque, &val) && val == 200000);
     assert_always(cra_deque_pop_left(deque, &val) && val == -100);
@@ -220,10 +228,11 @@ void test_pop(void)
     cra_dealloc(deque);
 }
 
-void test_set(void)
+void
+test_set(void)
 {
-    int val, i;
-    int *valptr;
+    int       val, i;
+    int      *valptr;
     CraDeque *deque = cra_alloc(CraDeque);
     assert_always(deque != NULL);
     cra_deque_init0(int, deque, CRA_DEQUE_INFINITE, true, NULL);
@@ -231,12 +240,12 @@ void test_set(void)
     for (i = 0; i < 10000; i++)
         assert_always(cra_deque_push(deque, &i));
 
-    assert_always(cra_deque_set(deque, 3, &(int){30000}));
+    assert_always(cra_deque_set(deque, 3, &(int){ 30000 }));
     assert_always(cra_deque_get(deque, 3, &val) && val == 30000);
-    assert_always(cra_deque_set_and_pop_old(deque, 6, &(int){60000}, &val) && val == 6);
+    assert_always(cra_deque_set_and_pop_old(deque, 6, &(int){ 60000 }, &val) && val == 6);
     assert_always(cra_deque_get(deque, 6, &val) && val == 60000);
-    assert_always(!cra_deque_set(deque, 100000, &(int){1000}));
-    assert_always(!cra_deque_set_and_pop_old(deque, 100000, &(int){1000}, &val));
+    assert_always(!cra_deque_set(deque, 100000, &(int){ 1000 }));
+    assert_always(!cra_deque_set_and_pop_old(deque, 100000, &(int){ 1000 }, &val));
 
     i = 0;
     for (CraDequeIter it = cra_deque_iter_init(deque); cra_deque_iter_next(&it, (void **)&valptr); i++)
@@ -258,10 +267,11 @@ void test_set(void)
     cra_dealloc(deque);
 }
 
-void test_get(void)
+void
+test_get(void)
 {
     CraDeque deque;
-    int val, *valptr1, *valptr2;
+    int      val, *valptr1, *valptr2;
 
     cra_deque_init0(int, &deque, 10000, false, NULL);
     for (int i = 0; i < 10000; i++)
@@ -280,9 +290,10 @@ void test_get(void)
     cra_deque_uninit(&deque);
 }
 
-void test_peek(void)
+void
+test_peek(void)
 {
-    int val, *valptr;
+    int       val, *valptr;
     CraDeque *deque = cra_alloc(CraDeque);
     cra_deque_init0(int, deque, 200, false, NULL);
 
@@ -308,9 +319,10 @@ void test_peek(void)
     cra_dealloc(deque);
 }
 
-void test_reverse(void)
+void
+test_reverse(void)
 {
-    int *valptr, i;
+    int      *valptr, i;
     CraDeque *deque = cra_alloc(CraDeque);
     cra_deque_init0(int, deque, CRA_DEQUE_INFINITE, true, NULL);
 
@@ -343,11 +355,12 @@ void test_reverse(void)
 
 typedef struct
 {
-    int i;
+    int   i;
     float f;
 } A_s;
 
-static void copy_as(const void *from, void *to)
+static void
+copy_as(const void *from, void *to)
 {
     A_s *v = *(A_s **)from;
     A_s *ret = cra_malloc(sizeof(A_s));
@@ -356,14 +369,16 @@ static void copy_as(const void *from, void *to)
     *(void **)to = ret;
 }
 
-static void free_as(void *val)
+static void
+free_as(void *val)
 {
     // A_s *as = *(A_s **)val;
     // printf("free as {i: %d, f: %f}\n", as->i, as->f);
     cra_free(*(void **)val);
 }
 
-void test_clone(void)
+void
+test_clone(void)
 {
     CraDeque *que;
     CraDeque *deque;
@@ -438,12 +453,13 @@ void test_clone(void)
     cra_dealloc(deque);
 }
 
-void test_foreach(void)
+void
+test_foreach(void)
 {
     CraDeque *deque = cra_alloc(CraDeque);
     cra_deque_init0(int, deque, 100, false, NULL);
 
-    int *valptr;
+    int         *valptr;
     CraDequeIter it;
 
     printf("无元素时遍历: ");
@@ -478,7 +494,8 @@ void test_foreach(void)
     cra_dealloc(deque);
 }
 
-void test_test(void)
+void
+test_test(void)
 {
     CraDeque *deque = cra_alloc(CraDeque);
     cra_deque_init0(int, deque, CRA_DEQUE_INFINITE, true, NULL);
@@ -522,8 +539,8 @@ void test_test(void)
     assert_always(deque->count == 0);
 
     int *pv;
-    int idx, last_idx;
-    int check[10000];
+    int  idx, last_idx;
+    int  check[10000];
     bzero(check, sizeof(check));
     for (i = 0; i < 100; i++)
     {
@@ -568,7 +585,8 @@ void test_test(void)
     cra_dealloc(deque);
 }
 
-int main(void)
+int
+main(void)
 {
     test_new_delete();
     test_insert_and_pop_at();

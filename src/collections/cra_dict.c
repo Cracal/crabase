@@ -8,9 +8,9 @@
  * @copyright Copyright (c) 2021
  *
  */
+#include "collections/cra_dict.h"
 #include "cra_assert.h"
 #include "cra_malloc.h"
-#include "collections/cra_dict.h"
 
 struct _CraDictEntry
 {
@@ -19,20 +19,18 @@ struct _CraDictEntry
     // 但因为有dict.next，所以不用特别对hashcode
     // 初始化为-1。只要在移除entry时对hashcode设为-1就行
     cra_hash_t hashcode;
-    ssize_t next;
-    char kv[];
+    ssize_t    next;
+    char       kv[];
 };
 
-#define CRA_DICT_COLLISION_MAX 64
-#define CRA_DICT_USABLE_FRACTION(n) (((n) << 1) / 3) // n * (2 / 3)
-#define _CRA_DICT_ENTRY(_entries, _entry_size, _index) \
-    ((CraDictEntry *)((char *)(_entries) + (_index) * (_entry_size)))
-#define CRA_DICT_ENTRY(_dict, _index) \
-    _CRA_DICT_ENTRY((_dict)->entries, (_dict)->entry_size, _index)
-#define CRA_DICT_BUCKET(_hashcode, _capacity) \
-    ((_hashcode) & CRA_HASH_MAX) % (_capacity)
+#define CRA_DICT_COLLISION_MAX                         64
+#define CRA_DICT_USABLE_FRACTION(n)                    (((n) << 1) / 3) // n * (2 / 3)
+#define _CRA_DICT_ENTRY(_entries, _entry_size, _index) ((CraDictEntry *)((char *)(_entries) + (_index) * (_entry_size)))
+#define CRA_DICT_ENTRY(_dict, _index)                  _CRA_DICT_ENTRY((_dict)->entries, (_dict)->entry_size, _index)
+#define CRA_DICT_BUCKET(_hashcode, _capacity)          ((_hashcode) & CRA_HASH_MAX) % (_capacity)
 
-static bool __cra_is_prime(ssize_t n)
+static bool
+__cra_is_prime(ssize_t n)
 {
     if (n <= 1)
         return false;
@@ -49,7 +47,8 @@ static bool __cra_is_prime(ssize_t n)
     return true;
 }
 
-static ssize_t __cra_next_prime(ssize_t n)
+static ssize_t
+__cra_next_prime(ssize_t n)
 {
     if (n <= 1)
         return 2;
@@ -61,10 +60,16 @@ static ssize_t __cra_next_prime(ssize_t n)
     }
 }
 
-static inline void __cra_dict_init_size(CraDict *dict, size_t key_size, size_t val_size,
-                                        size_t init_capacity, bool zero_memory,
-                                        cra_hash_fn hash_key, cra_compare_fn compare_key,
-                                        cra_remove_val_fn remove_key, cra_remove_val_fn remove_val)
+static inline void
+__cra_dict_init_size(CraDict          *dict,
+                     size_t            key_size,
+                     size_t            val_size,
+                     size_t            init_capacity,
+                     bool              zero_memory,
+                     cra_hash_fn       hash_key,
+                     cra_compare_fn    compare_key,
+                     cra_remove_val_fn remove_key,
+                     cra_remove_val_fn remove_val)
 {
     assert(!!dict && key_size > 0 && val_size > 0 && !!hash_key && !!compare_key);
 
@@ -91,7 +96,8 @@ static inline void __cra_dict_init_size(CraDict *dict, size_t key_size, size_t v
         bzero(dict->entries, CRA_DICT_USABLE_FRACTION(dict->capacity) * dict->entry_size);
 }
 
-CraDictIter cra_dict_iter_init(CraDict *dict)
+CraDictIter
+cra_dict_iter_init(CraDict *dict)
 {
     CraDictIter it;
     it.index = 0;
@@ -99,7 +105,8 @@ CraDictIter cra_dict_iter_init(CraDict *dict)
     return it;
 }
 
-bool cra_dict_iter_next(CraDictIter *it, void **retkeyptr, void **retvalptr)
+bool
+cra_dict_iter_next(CraDictIter *it, void **retkeyptr, void **retvalptr)
 {
     CraDictEntry *entry;
     while (it->index < it->dict->next)
@@ -115,29 +122,45 @@ bool cra_dict_iter_next(CraDictIter *it, void **retkeyptr, void **retvalptr)
     return false;
 }
 
-void cra_dict_init_size(CraDict *dict, size_t key_size, size_t val_size,
-                        size_t init_capacity, bool zero_memory,
-                        cra_hash_fn hash_key, cra_compare_fn compare_key,
-                        cra_remove_val_fn remove_key, cra_remove_val_fn remove_val)
+void
+cra_dict_init_size(CraDict          *dict,
+                   size_t            key_size,
+                   size_t            val_size,
+                   size_t            init_capacity,
+                   bool              zero_memory,
+                   cra_hash_fn       hash_key,
+                   cra_compare_fn    compare_key,
+                   cra_remove_val_fn remove_key,
+                   cra_remove_val_fn remove_val)
 {
-    __cra_dict_init_size(dict, key_size, val_size, init_capacity, zero_memory, hash_key, compare_key, remove_key, remove_val);
+    __cra_dict_init_size(
+      dict, key_size, val_size, init_capacity, zero_memory, hash_key, compare_key, remove_key, remove_val);
 }
 
-void cra_dict_init(CraDict *dict, size_t key_size, size_t val_size, bool zero_memory,
-                   cra_hash_fn hash_key, cra_compare_fn compare_key,
-                   cra_remove_val_fn remove_key, cra_remove_val_fn remove_val)
+void
+cra_dict_init(CraDict          *dict,
+              size_t            key_size,
+              size_t            val_size,
+              bool              zero_memory,
+              cra_hash_fn       hash_key,
+              cra_compare_fn    compare_key,
+              cra_remove_val_fn remove_key,
+              cra_remove_val_fn remove_val)
 {
-    __cra_dict_init_size(dict, key_size, val_size, CRA_DICT_INIT_CAPACITY, zero_memory, hash_key, compare_key, remove_key, remove_val);
+    __cra_dict_init_size(
+      dict, key_size, val_size, CRA_DICT_INIT_CAPACITY, zero_memory, hash_key, compare_key, remove_key, remove_val);
 }
 
-void cra_dict_uninit(CraDict *dict)
+void
+cra_dict_uninit(CraDict *dict)
 {
     cra_dict_clear(dict);
     cra_free(dict->buckets);
     cra_free(dict->entries);
 }
 
-void cra_dict_clear(CraDict *dict)
+void
+cra_dict_clear(CraDict *dict)
 {
     if (dict->remove_key || dict->remove_val)
     {
@@ -164,10 +187,11 @@ void cra_dict_clear(CraDict *dict)
     dict->next = 0;
 }
 
-static void __cra_dict_resize(CraDict *dict, ssize_t newcapacity)
+static void
+__cra_dict_resize(CraDict *dict, ssize_t newcapacity)
 {
-    ssize_t *newbuckets, bucket;
-    ssize_t new_entries_capacity;
+    ssize_t      *newbuckets, bucket;
+    ssize_t       new_entries_capacity;
     CraDictEntry *newentries, *entry;
 
     newcapacity = __cra_next_prime(newcapacity);
@@ -182,7 +206,8 @@ static void __cra_dict_resize(CraDict *dict, ssize_t newcapacity)
     if (dict->zero_memory)
     {
         ssize_t old_entries_capacity = CRA_DICT_USABLE_FRACTION(dict->capacity);
-        bzero((char *)newentries + old_entries_capacity * dict->entry_size, (new_entries_capacity - old_entries_capacity) * dict->entry_size);
+        bzero((char *)newentries + old_entries_capacity * dict->entry_size,
+              (new_entries_capacity - old_entries_capacity) * dict->entry_size);
     }
 
     for (ssize_t i = 0; i < dict->next; i++)
@@ -201,12 +226,13 @@ static void __cra_dict_resize(CraDict *dict, ssize_t newcapacity)
     dict->capacity = newcapacity;
 }
 
-static inline bool __cra_dict_put(CraDict *dict, void *key, void *val, bool add)
+static inline bool
+__cra_dict_put(CraDict *dict, void *key, void *val, bool add)
 {
     CraDictEntry *entry;
-    unsigned int collision_count = 0;
-    cra_hash_t hashcode = dict->hash_key(key);
-    ssize_t index, bucket = CRA_DICT_BUCKET(hashcode, dict->capacity);
+    unsigned int  collision_count = 0;
+    cra_hash_t    hashcode = dict->hash_key(key);
+    ssize_t       index, bucket = CRA_DICT_BUCKET(hashcode, dict->capacity);
 
     for (ssize_t i = dict->buckets[bucket]; i >= 0;)
     {
@@ -261,21 +287,24 @@ static inline bool __cra_dict_put(CraDict *dict, void *key, void *val, bool add)
     return true;
 }
 
-bool cra_dict_put(CraDict *dict, void *key, void *val)
+bool
+cra_dict_put(CraDict *dict, void *key, void *val)
 {
     return __cra_dict_put(dict, key, val, false);
 }
 
-bool cra_dict_add(CraDict *dict, void *key, void *val)
+bool
+cra_dict_add(CraDict *dict, void *key, void *val)
 {
     return __cra_dict_put(dict, key, val, true);
 }
 
-static inline bool __cra_dict_pop(CraDict *dict, void *key, void *retval)
+static inline bool
+__cra_dict_pop(CraDict *dict, void *key, void *retval)
 {
     CraDictEntry *entry;
-    cra_hash_t hashcode = dict->hash_key(key);
-    ssize_t bucket = CRA_DICT_BUCKET(hashcode, dict->capacity);
+    cra_hash_t    hashcode = dict->hash_key(key);
+    ssize_t       bucket = CRA_DICT_BUCKET(hashcode, dict->capacity);
 
     for (ssize_t last = -1, i = dict->buckets[bucket]; i >= 0;)
     {
@@ -309,21 +338,24 @@ static inline bool __cra_dict_pop(CraDict *dict, void *key, void *retval)
     return false;
 }
 
-bool cra_dict_pop(CraDict *dict, void *key, void *retval)
+bool
+cra_dict_pop(CraDict *dict, void *key, void *retval)
 {
     return __cra_dict_pop(dict, key, retval);
 }
 
-bool cra_dict_remove(CraDict *dict, void *key)
+bool
+cra_dict_remove(CraDict *dict, void *key)
 {
     return __cra_dict_pop(dict, key, NULL);
 }
 
-static inline bool __cra_dict_get_ptr(CraDict *dict, void *key, void **retvalptr)
+static inline bool
+__cra_dict_get_ptr(CraDict *dict, void *key, void **retvalptr)
 {
     CraDictEntry *entry;
-    cra_hash_t hashcode = dict->hash_key(key);
-    ssize_t bucket = CRA_DICT_BUCKET(hashcode, dict->capacity);
+    cra_hash_t    hashcode = dict->hash_key(key);
+    ssize_t       bucket = CRA_DICT_BUCKET(hashcode, dict->capacity);
 
     for (ssize_t i = dict->buckets[bucket]; i >= 0;)
     {
@@ -338,7 +370,8 @@ static inline bool __cra_dict_get_ptr(CraDict *dict, void *key, void **retvalptr
     return false;
 }
 
-bool cra_dict_get(CraDict *dict, void *key, void *retval)
+bool
+cra_dict_get(CraDict *dict, void *key, void *retval)
 {
     void *valptr;
     if (__cra_dict_get_ptr(dict, key, &valptr))
@@ -349,20 +382,29 @@ bool cra_dict_get(CraDict *dict, void *key, void *retval)
     return false;
 }
 
-bool cra_dict_get_ptr(CraDict *dict, void *key, void **retvalptr)
+bool
+cra_dict_get_ptr(CraDict *dict, void *key, void **retvalptr)
 {
     return __cra_dict_get_ptr(dict, key, retvalptr);
 }
 
-CraDict *cra_dict_clone(CraDict *dict, cra_deep_copy_val_fn deep_copy_key, cra_deep_copy_val_fn deep_copy_val)
+CraDict *
+cra_dict_clone(CraDict *dict, cra_deep_copy_val_fn deep_copy_key, cra_deep_copy_val_fn deep_copy_val)
 {
     CraDict *ret;
-    void *keyptr1, *keyptr2;
-    void *valptr1, *valptr2;
+    void    *keyptr1, *keyptr2;
+    void    *valptr1, *valptr2;
 
     ret = cra_alloc(CraDict);
-    cra_dict_init_size(ret, dict->key_size, dict->val_size, dict->capacity, dict->zero_memory,
-                       dict->hash_key, dict->compare_key, dict->remove_key, dict->remove_val);
+    cra_dict_init_size(ret,
+                       dict->key_size,
+                       dict->val_size,
+                       dict->capacity,
+                       dict->zero_memory,
+                       dict->hash_key,
+                       dict->compare_key,
+                       dict->remove_key,
+                       dict->remove_val);
     for (CraDictIter it = cra_dict_iter_init(dict); cra_dict_iter_next(&it, &keyptr1, &valptr1);)
     {
         if (deep_copy_key)
@@ -389,24 +431,32 @@ fail:
 
 // =============
 
-static void cra_dict_ser_iter_init(void *obj, void *const it, size_t itbufsize)
+static void
+cra_dict_ser_iter_init(void *obj, void *const it, size_t itbufsize)
 {
     CRA_UNUSED_VALUE(itbufsize);
     assert(sizeof(CraDictIter) <= itbufsize);
-    CraDict *dict = (CraDict *)obj;
+    CraDict    *dict = (CraDict *)obj;
     CraDictIter _it = cra_dict_iter_init(dict);
     memcpy(it, &_it, sizeof(CraDictIter));
 }
 
-static void cra_dict_ser_init(void *obj, void *args)
+static void
+cra_dict_ser_init(void *obj, void *args)
 {
     assert_always(args != NULL);
 
-    CraDict *dict = (CraDict *)obj;
+    CraDict            *dict = (CraDict *)obj;
     CraDictSerInitArgs *params = (CraDictSerInitArgs *)args;
 
-    cra_dict_init(dict, params->key_size, params->val_size, params->zero_memory,
-                  params->hash_key_fn, params->compare_key_fn, params->remove_key_fn, params->remove_val_fn);
+    cra_dict_init(dict,
+                  params->key_size,
+                  params->val_size,
+                  params->zero_memory,
+                  params->hash_key_fn,
+                  params->compare_key_fn,
+                  params->remove_key_fn,
+                  params->remove_val_fn);
 }
 
 const CraTypeIter_i g_dict_ser_iter_i = {

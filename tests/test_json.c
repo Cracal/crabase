@@ -8,27 +8,28 @@
  * @copyright Copyright (c) 2024
  *
  */
-#include <float.h>
-#include "cra_malloc.h"
-#include "cra_assert.h"
-#include "serialize/cra_json.h"
 #include "collections/cra_alist.h"
-#include "collections/cra_llist.h"
 #include "collections/cra_deque.h"
 #include "collections/cra_dict.h"
+#include "collections/cra_llist.h"
+#include "cra_assert.h"
+#include "cra_malloc.h"
+#include "serialize/cra_json.h"
+#include <float.h>
 
 #define FORMAT true
 
-void test_base(void)
+void
+test_base(void)
 {
     struct A
     {
         bool bf;
         bool bt;
 
-        int8_t i8M;
-        int8_t i8m;
-        int8_t i8n;
+        int8_t  i8M;
+        int8_t  i8m;
+        int8_t  i8n;
         int16_t i16M;
         int16_t i16m;
         int16_t i16n;
@@ -39,8 +40,8 @@ void test_base(void)
         int64_t i64m;
         int64_t i64n;
 
-        uint8_t u8M;
-        uint8_t u8n;
+        uint8_t  u8M;
+        uint8_t  u8n;
         uint16_t u16M;
         uint16_t u16n;
         uint32_t u32M;
@@ -48,10 +49,10 @@ void test_base(void)
         uint64_t u64M;
         uint64_t u64n;
 
-        float fM;
-        float fMn;
-        float fm;
-        float fn;
+        float  fM;
+        float  fMn;
+        float  fm;
+        float  fn;
         double dM;
         double dMn;
         double dm;
@@ -94,8 +95,8 @@ void test_base(void)
     CRA_TYPE_META_END();
 
     unsigned char *buff;
-    CraSerError_e error;
-    size_t buffsize;
+    CraSerError_e  error;
+    size_t         buffsize;
 
     struct A a = {
         .bf = false,
@@ -282,12 +283,13 @@ CRA_TYPE_META_INT64_MEMBER(struct I, p)
 CRA_TYPE_META_INT64_MEMBER(struct I, n)
 CRA_TYPE_META_END();
 
-void test_d2i(void)
+void
+test_d2i(void)
 {
-    struct D d;
-    struct I i;
+    struct D      d;
+    struct I      i;
     unsigned char buff[1024];
-    size_t buffsize;
+    size_t        buffsize;
     CraSerError_e error;
 
     d.M = DBL_MAX;
@@ -317,12 +319,13 @@ void test_d2i(void)
     assert_always(i.n == (int64_t)d.n);
 }
 
-void test_i2d(void)
+void
+test_i2d(void)
 {
-    struct D d;
-    struct I i;
+    struct D      d;
+    struct I      i;
     unsigned char buff[1024];
-    size_t buffsize;
+    size_t        buffsize;
     CraSerError_e error;
 
     i.M = INT64_MAX;
@@ -354,12 +357,13 @@ void test_i2d(void)
 
 #endif // end number
 
-void test_string(void)
+void
+test_string(void)
 {
     struct A
     {
         char *strpempty;
-        char straempty[1];
+        char  straempty[1];
     };
     CRA_TYPE_META_BEGIN(meta_a)
     CRA_TYPE_META_STRING_MEMBER(struct A, strpempty, true)
@@ -368,11 +372,11 @@ void test_string(void)
 
     unsigned char buff[1024];
     CraSerError_e error;
-    size_t buffsize;
+    size_t        buffsize;
 
     // test empty string
 
-    struct A a = {"", ""};
+    struct A a = { "", "" };
 
     buffsize = sizeof(buff);
     cra_json_stringify_struct0(buff, &buffsize, &a, meta_a, FORMAT, &error);
@@ -393,11 +397,11 @@ void test_string(void)
     struct B
     {
         char *strp;
-        char stra[20];
+        char  stra[20];
         char *strnull;
         char *chinese;
         char *emoji;
-        char escape[12];
+        char  escape[12];
     };
     CRA_TYPE_META_BEGIN(meta_b)
     CRA_TYPE_META_STRING_MEMBER(struct B, strp, true)
@@ -414,7 +418,7 @@ void test_string(void)
         NULL, // string null (pointer)
         "中文",
         "😀",
-        {1, 2, 3, 4, '\b', '\t', '\n', '\f', '\r', '\"', '\\', '\0'},
+        { 1, 2, 3, 4, '\b', '\t', '\n', '\f', '\r', '\"', '\\', '\0' },
     };
 
     buffsize = sizeof(buff);
@@ -424,7 +428,7 @@ void test_string(void)
     printf("%s\n\n", (char *)buff);
 
     // 1 normal
-    struct B bb = {"hello", "a", NULL, NULL, NULL, ""};
+    struct B bb = { "hello", "a", NULL, NULL, NULL, "" };
     cra_json_parse_struct0(buff, buffsize, &bb, sizeof(struct B), false, meta_b, NULL, NULL, &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
     assert_always(strcmp(b.strp, bb.strp) == 0);
@@ -440,7 +444,7 @@ void test_string(void)
     // 2 char * <-> char[N]
     struct C
     {
-        char strp[22];
+        char  strp[22];
         char *stra;
     };
     CRA_TYPE_META_BEGIN(meta_c)
@@ -483,7 +487,8 @@ void test_string(void)
     assert_always(error == CRA_SER_ERROR_STRING_BUF_TOO_SMALL);
 }
 
-void test_string_unicode(void)
+void
+test_string_unicode(void)
 {
     struct A
     {
@@ -495,12 +500,12 @@ void test_string_unicode(void)
     CRA_TYPE_META_STRING_MEMBER(struct A, chinese, true)
     CRA_TYPE_META_END();
 
-    char json[] = "{"
-                  "\"emoji\":\"\\uD83D\\uDE00\\/\","
-                  "\"chinese\": \"\\u4f60\\u597d，\\u4e16\\u754c\""
-                  "}";
+    char          json[] = "{"
+                           "\"emoji\":\"\\uD83D\\uDE00\\/\","
+                           "\"chinese\": \"\\u4f60\\u597d，\\u4e16\\u754c\""
+                           "}";
     CraSerError_e error;
-    struct A *a;
+    struct A     *a;
 
     cra_json_parse_struct0((unsigned char *)json, sizeof(json), &a, sizeof(struct A), true, meta_a, NULL, NULL, &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
@@ -533,11 +538,12 @@ void test_string_unicode(void)
     cra_free(b);
 }
 
-void test_struct_base(void)
+void
+test_struct_base(void)
 {
     struct A
     {
-        int i;
+        int    i;
         double d;
     };
     CRA_TYPE_META_BEGIN(meta_a)
@@ -547,9 +553,9 @@ void test_struct_base(void)
 
     CraSerError_e error;
     unsigned char buff[1024];
-    size_t buffsize;
+    size_t        buffsize;
 
-    struct A a = {100, 3.4};
+    struct A a = { 100, 3.4 };
 
     buffsize = sizeof(buff);
     cra_json_stringify_struct0(buff, &buffsize, &a, meta_a, FORMAT, &error);
@@ -599,7 +605,8 @@ void test_struct_base(void)
     assert_always(error != CRA_SER_ERROR_SUCCESS);
 }
 
-void test_struct_struct(void)
+void
+test_struct_struct(void)
 {
     struct A
     {
@@ -612,7 +619,7 @@ void test_struct_struct(void)
     {
         struct A *anull;
         struct A *ap;
-        struct A as;
+        struct A  as;
     };
     CRA_TYPE_META_BEGIN(meta_b)
     CRA_TYPE_META_STRUCT_MEMBER(struct B, anull, true, meta_a, NULL, NULL)
@@ -622,13 +629,13 @@ void test_struct_struct(void)
 
     CraSerError_e error;
     unsigned char buff[1024];
-    size_t buffsize;
+    size_t        buffsize;
 
-    struct A a = {100};
+    struct A a = { 100 };
     struct B b = {
         NULL,
         &a,
-        {200},
+        { 200 },
     };
 
     buffsize = sizeof(buff);
@@ -658,10 +665,10 @@ void test_struct_struct(void)
 #if 1 // test struct with init_i
 struct InitX
 {
-    int i;
-    float f;
+    int    i;
+    float  f;
     double d;
-    char *str;
+    char  *str;
 };
 CRA_TYPE_META_BEGIN(meta_initx)
 CRA_TYPE_META_INT32_MEMBER(struct InitX, i)
@@ -671,9 +678,18 @@ CRA_TYPE_META_END();
 
 int calledcnt = 0;
 
-void *alloc_inix(void) { return ((void)++calledcnt, cra_alloc(struct InitX)); }
-void dealloc_inix(void *obj) { ((void)++calledcnt, cra_dealloc(obj)); }
-void init_initx(void *obj, void *args)
+void *
+alloc_inix(void)
+{
+    return ((void)++calledcnt, cra_alloc(struct InitX));
+}
+void
+dealloc_inix(void *obj)
+{
+    ((void)++calledcnt, cra_dealloc(obj));
+}
+void
+init_initx(void *obj, void *args)
 {
     CRA_UNUSED_VALUE(args);
 
@@ -684,7 +700,8 @@ void init_initx(void *obj, void *args)
     o->str = NULL;
     (void)++calledcnt;
 }
-void uninit_initx(void *obj)
+void
+uninit_initx(void *obj)
 {
     struct InitX *o = (struct InitX *)obj;
     if (o->str)
@@ -700,7 +717,8 @@ const CraTypeInit_i initx_i = {
     .uinit = uninit_initx,
 };
 
-void test_struct_with_init_i(void)
+void
+test_struct_with_init_i(void)
 {
     struct InitX *x = cra_alloc(struct InitX);
     x->i = 200;
@@ -709,7 +727,7 @@ void test_struct_with_init_i(void)
     x->str = "hello world";
 
     unsigned char buff[1024];
-    size_t buffsize;
+    size_t        buffsize;
     CraSerError_e error;
 
     buffsize = sizeof(buff);
@@ -738,13 +756,14 @@ void test_struct_with_init_i(void)
 }
 #endif
 
-void test_list(void)
+void
+test_list(void)
 {
-    int32_t idx, val;
-    int32_t *valptr;
+    int32_t   idx, val;
+    int32_t  *valptr;
     CraAList *alist, *alist2;
-    CraLList llist;
-    CraDeque deque;
+    CraLList  llist;
+    CraDeque  deque;
 
     CRA_LLIST_SER_ARGS(args4llist, false, sizeof(int32_t), NULL);
     CRA_DEQUE_SER_ARGS(args4deque, false, CRA_DEQUE_INFINITE, sizeof(int32_t), NULL);
@@ -757,7 +776,7 @@ void test_list(void)
     CRA_ALIST_SER_ARGS0(args4alist, alist);
 
     unsigned char buff[1024];
-    size_t buffsize;
+    size_t        buffsize;
     CraSerError_e error;
 
     // test empty
@@ -768,7 +787,16 @@ void test_list(void)
     assert_always(error == CRA_SER_ERROR_SUCCESS);
     printf("%s\n\n", buff);
 
-    cra_json_parse_list0(buff, buffsize, &alist2, sizeof(CraAList), true, meta_list_val, &g_alist_ser_iter_i, &g_alist_ser_init_i, &args4alist, &error);
+    cra_json_parse_list0(buff,
+                         buffsize,
+                         &alist2,
+                         sizeof(CraAList),
+                         true,
+                         meta_list_val,
+                         &g_alist_ser_iter_i,
+                         &g_alist_ser_init_i,
+                         &args4alist,
+                         &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
     assert_always(alist2->count == 0);
     cra_alist_uninit(alist2);
@@ -787,7 +815,16 @@ void test_list(void)
     printf("%s\n\n", buff);
 
     // alist -> alist
-    cra_json_parse_list0(buff, buffsize, &alist2, sizeof(CraAList), true, meta_list_val, &g_alist_ser_iter_i, &g_alist_ser_init_i, &args4alist, &error);
+    cra_json_parse_list0(buff,
+                         buffsize,
+                         &alist2,
+                         sizeof(CraAList),
+                         true,
+                         meta_list_val,
+                         &g_alist_ser_iter_i,
+                         &g_alist_ser_init_i,
+                         &args4alist,
+                         &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
     idx = 0;
     for (CraAListIter it = cra_alist_iter_init(alist2); cra_alist_iter_next(&it, (void **)&valptr); idx++)
@@ -797,7 +834,16 @@ void test_list(void)
     }
 
     // alist -> llist
-    cra_json_parse_list0(buff, buffsize, &llist, sizeof(CraLList), false, meta_list_val, &g_llist_ser_iter_i, &g_llist_ser_init_i, &args4llist, &error);
+    cra_json_parse_list0(buff,
+                         buffsize,
+                         &llist,
+                         sizeof(CraLList),
+                         false,
+                         meta_list_val,
+                         &g_llist_ser_iter_i,
+                         &g_llist_ser_init_i,
+                         &args4llist,
+                         &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
     idx = 0;
     for (CraLListIter it = cra_llist_iter_init(&llist); cra_llist_iter_next(&it, (void **)&valptr); idx++)
@@ -807,7 +853,16 @@ void test_list(void)
     }
 
     // alist -> deque
-    cra_json_parse_list0(buff, buffsize, &deque, sizeof(CraDeque), false, meta_list_val, &g_deque_ser_iter_i, &g_deque_ser_init_i, &args4deque, &error);
+    cra_json_parse_list0(buff,
+                         buffsize,
+                         &deque,
+                         sizeof(CraDeque),
+                         false,
+                         meta_list_val,
+                         &g_deque_ser_iter_i,
+                         &g_deque_ser_init_i,
+                         &args4deque,
+                         &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
     idx = 0;
     for (CraDequeIter it = cra_deque_iter_init(&deque); cra_deque_iter_next(&it, (void **)&valptr); idx++)
@@ -817,7 +872,7 @@ void test_list(void)
     }
 
     // alist -> c array
-    int32_t *array;
+    int32_t        *array;
     cra_ser_count_t narray;
     cra_json_parse_array0(buff, buffsize, &array, sizeof(array), true, &narray, meta_list_val, &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
@@ -837,12 +892,14 @@ void test_list(void)
     cra_dealloc(alist);
 }
 
-void free_str_p(char **strp)
+void
+free_str_p(char **strp)
 {
     cra_free(*strp);
 }
 
-void test_list_element_is_pointer(void)
+void
+test_list_element_is_pointer(void)
 {
     CraAList list;
     cra_alist_init0(char *, &list, true, (cra_remove_val_fn)free_str_p);
@@ -865,7 +922,7 @@ void test_list_element_is_pointer(void)
     }
 
     unsigned char buff[1024];
-    size_t buffsize;
+    size_t        buffsize;
     CraSerError_e error;
 
     buffsize = sizeof(buff);
@@ -874,7 +931,16 @@ void test_list_element_is_pointer(void)
     printf("%s\n\n", buff);
 
     CraAList list2;
-    cra_json_parse_list0(buff, buffsize, &list2, sizeof(CraAList), false, meta_list_str, &g_alist_ser_iter_i, &g_alist_ser_init_i, &args4list_str, &error);
+    cra_json_parse_list0(buff,
+                         buffsize,
+                         &list2,
+                         sizeof(CraAList),
+                         false,
+                         meta_list_str,
+                         &g_alist_ser_iter_i,
+                         &g_alist_ser_init_i,
+                         &args4list_str,
+                         &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
     for (int i = 0; i < 10; i++)
     {
@@ -887,23 +953,33 @@ void test_list_element_is_pointer(void)
 
     // test failed to call uninit func
     buff[buffsize - 2] = '\0';
-    cra_json_parse_list0(buff, buffsize, &list2, sizeof(CraAList), false, meta_list_str, &g_alist_ser_iter_i, &g_alist_ser_init_i, &args4list_str, &error);
+    cra_json_parse_list0(buff,
+                         buffsize,
+                         &list2,
+                         sizeof(CraAList),
+                         false,
+                         meta_list_str,
+                         &g_alist_ser_iter_i,
+                         &g_alist_ser_init_i,
+                         &args4list_str,
+                         &error);
     assert_always(error != CRA_SER_ERROR_SUCCESS);
 
     cra_alist_uninit(&list);
 }
 
-void test_array(void)
+void
+test_array(void)
 {
     cra_ser_count_t narray;
-    int32_t array[] = {1, 2, 3, 4};
+    int32_t         array[] = { 1, 2, 3, 4 };
     CRA_TYPE_META_BEGIN(meta_int32)
     CRA_TYPE_META_INT32_ELEMENT()
     CRA_TYPE_META_END();
 
     CraSerError_e error;
     unsigned char buff[1024];
-    size_t buffsize;
+    size_t        buffsize;
 
     // test empty
 
@@ -915,7 +991,7 @@ void test_array(void)
     printf("%s\n\n", buff);
 
     cra_ser_count_t narr;
-    int32_t arr[10];
+    int32_t         arr[10];
     cra_json_parse_array0(buff, buffsize, arr, sizeof(arr), false, &narr, meta_int32, &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
     assert_always(narr == 0);
@@ -928,7 +1004,7 @@ void test_array(void)
     assert_always(error == CRA_SER_ERROR_SUCCESS);
     printf("%s\n\n", buff);
 
-    int32_t *array2;
+    int32_t        *array2;
     cra_ser_count_t narray2;
     cra_json_parse_array0(buff, buffsize, &array2, 0, true, &narray2, meta_int32, &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
@@ -939,7 +1015,7 @@ void test_array(void)
     }
     cra_free(array2);
 
-    int32_t array3[10];
+    int32_t         array3[10];
     cra_ser_count_t narray3;
     cra_json_parse_array0(buff, buffsize, array3, sizeof(array3), false, &narray3, meta_int32, &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
@@ -950,10 +1026,19 @@ void test_array(void)
     }
 
     // c array -> list
-    int32_t val;
+    int32_t   val;
     CraAList *list;
     CRA_ALIST_SER_ARGS(args_list_i, true, sizeof(int32_t), NULL);
-    cra_json_parse_list0(buff, buffsize, &list, sizeof(*list), true, meta_int32, &g_alist_ser_iter_i, &g_alist_ser_init_i, &args_list_i, &error);
+    cra_json_parse_list0(buff,
+                         buffsize,
+                         &list,
+                         sizeof(*list),
+                         true,
+                         meta_int32,
+                         &g_alist_ser_iter_i,
+                         &g_alist_ser_init_i,
+                         &args_list_i,
+                         &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
     assert_always(narray == list->count);
     for (cra_ser_count_t i = 0; i < narray; i++)
@@ -965,12 +1050,13 @@ void test_array(void)
     cra_dealloc(list);
 }
 
-void test_array_in_struct(void)
+void
+test_array_in_struct(void)
 {
     struct A
     {
         uint32_t narray;
-        char **array;
+        char   **array;
     };
     CRA_TYPE_META_BEGIN(meta_str)
     CRA_TYPE_META_STRING_ELEMENT(0, true)
@@ -997,7 +1083,7 @@ void test_array_in_struct(void)
 
     CraSerError_e error;
     unsigned char buff[1024];
-    size_t buffsize;
+    size_t        buffsize;
 
     buffsize = sizeof(buff);
     cra_json_stringify_struct0(buff, &buffsize, &a, meta_a, FORMAT, &error);
@@ -1019,22 +1105,37 @@ void test_array_in_struct(void)
     cra_free(aa);
 }
 
-void test_dict(void)
+void
+test_dict(void)
 {
-    CraDict dict;
-    CraDict *dict2;
+    CraDict       dict;
+    CraDict      *dict2;
     unsigned char buff[1024];
-    size_t buffsize;
+    size_t        buffsize;
     CraSerError_e error;
 
-    CRA_DICT_SER_ARGS(args4dict, false, sizeof(int32_t), sizeof(char[100]), (cra_hash_fn)cra_hash_int32_t_p, (cra_compare_fn)cra_compare_int_p, NULL, NULL);
+    CRA_DICT_SER_ARGS(args4dict,
+                      false,
+                      sizeof(int32_t),
+                      sizeof(char[100]),
+                      (cra_hash_fn)cra_hash_int32_t_p,
+                      (cra_compare_fn)cra_compare_int_p,
+                      NULL,
+                      NULL);
     CRA_TYPE_META_BEGIN(meta_dict_kv)
     CRA_TYPE_META_INT32_ELEMENT()                          // key
     CRA_TYPE_META_STRING_ELEMENT(sizeof(char[100]), false) // val
     CRA_TYPE_META_END();
 
     // serialize dict
-    cra_dict_init0(int32_t, char[100], &dict, true, (cra_hash_fn)cra_hash_int32_t_p, (cra_compare_fn)cra_compare_int32_t_p, NULL, NULL);
+    cra_dict_init0(int32_t,
+                   char[100],
+                   &dict,
+                   true,
+                   (cra_hash_fn)cra_hash_int32_t_p,
+                   (cra_compare_fn)cra_compare_int32_t_p,
+                   NULL,
+                   NULL);
 
     // test empty
 
@@ -1044,7 +1145,16 @@ void test_dict(void)
     assert_always(error == CRA_SER_ERROR_SUCCESS);
     printf("%s\n\n", buff);
 
-    cra_json_parse_dict0(buff, buffsize, &dict2, sizeof(CraDict), true, meta_dict_kv, &g_dict_ser_iter_i, &g_dict_ser_init_i, &args4dict, &error);
+    cra_json_parse_dict0(buff,
+                         buffsize,
+                         &dict2,
+                         sizeof(CraDict),
+                         true,
+                         meta_dict_kv,
+                         &g_dict_ser_iter_i,
+                         &g_dict_ser_init_i,
+                         &args4dict,
+                         &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
     assert_always(dict2->count == 0);
     cra_dict_uninit(dict2);
@@ -1063,7 +1173,16 @@ void test_dict(void)
     printf("%s\n\n", buff);
 
     // dict -> dict
-    cra_json_parse_dict0(buff, buffsize, &dict2, sizeof(CraDict), true, meta_dict_kv, &g_dict_ser_iter_i, &g_dict_ser_init_i, &args4dict, &error);
+    cra_json_parse_dict0(buff,
+                         buffsize,
+                         &dict2,
+                         sizeof(CraDict),
+                         true,
+                         meta_dict_kv,
+                         &g_dict_ser_iter_i,
+                         &g_dict_ser_init_i,
+                         &args4dict,
+                         &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
 
     char strv1[100];
@@ -1080,9 +1199,17 @@ void test_dict(void)
     cra_dealloc(dict2);
 }
 
-void test_dict_in_struct(void)
+void
+test_dict_in_struct(void)
 {
-    CRA_DICT_SER_ARGS(args4dict_i_d, false, sizeof(int32_t), sizeof(double), (cra_hash_fn)cra_hash_int32_t_p, (cra_compare_fn)cra_compare_int32_t_p, NULL, NULL);
+    CRA_DICT_SER_ARGS(args4dict_i_d,
+                      false,
+                      sizeof(int32_t),
+                      sizeof(double),
+                      (cra_hash_fn)cra_hash_int32_t_p,
+                      (cra_compare_fn)cra_compare_int32_t_p,
+                      NULL,
+                      NULL);
     CRA_UNUSED_VALUE(args4dict_i_d);
     CRA_TYPE_META_BEGIN(meta_dict_i_d)
     CRA_TYPE_META_INT32_ELEMENT()  // key
@@ -1093,25 +1220,42 @@ void test_dict_in_struct(void)
     {
         CraDict *dictnull;
         CraDict *pdict;
-        CraDict sdict;
+        CraDict  sdict;
     };
     CRA_TYPE_META_BEGIN(meta_a)
-    CRA_TYPE_META_DICT_MEMBER(struct A, dictnull, true, meta_dict_i_d, &g_dict_ser_iter_i, &g_dict_ser_init_i, &args4dict_i_d)
-    CRA_TYPE_META_DICT_MEMBER(struct A, pdict, true, meta_dict_i_d, &g_dict_ser_iter_i, &g_dict_ser_init_i, &args4dict_i_d)
-    CRA_TYPE_META_DICT_MEMBER(struct A, sdict, false, meta_dict_i_d, &g_dict_ser_iter_i, &g_dict_ser_init_i, &args4dict_i_d)
+    CRA_TYPE_META_DICT_MEMBER(
+      struct A, dictnull, true, meta_dict_i_d, &g_dict_ser_iter_i, &g_dict_ser_init_i, &args4dict_i_d)
+    CRA_TYPE_META_DICT_MEMBER(
+      struct A, pdict, true, meta_dict_i_d, &g_dict_ser_iter_i, &g_dict_ser_init_i, &args4dict_i_d)
+    CRA_TYPE_META_DICT_MEMBER(
+      struct A, sdict, false, meta_dict_i_d, &g_dict_ser_iter_i, &g_dict_ser_init_i, &args4dict_i_d)
     CRA_TYPE_META_END();
 
     unsigned char buff[1024];
-    size_t buffsize;
+    size_t        buffsize;
     CraSerError_e error;
 
-    int32_t key;
-    double val;
+    int32_t  key;
+    double   val;
     struct A a;
     a.dictnull = NULL;
     a.pdict = cra_alloc(CraDict);
-    cra_dict_init0(int32_t, double, a.pdict, args4dict_i_d.zero_memory, args4dict_i_d.hash_key_fn, args4dict_i_d.compare_key_fn, args4dict_i_d.remove_key_fn, args4dict_i_d.remove_val_fn);
-    cra_dict_init0(int32_t, double, &a.sdict, args4dict_i_d.zero_memory, args4dict_i_d.hash_key_fn, args4dict_i_d.compare_key_fn, args4dict_i_d.remove_key_fn, args4dict_i_d.remove_val_fn);
+    cra_dict_init0(int32_t,
+                   double,
+                   a.pdict,
+                   args4dict_i_d.zero_memory,
+                   args4dict_i_d.hash_key_fn,
+                   args4dict_i_d.compare_key_fn,
+                   args4dict_i_d.remove_key_fn,
+                   args4dict_i_d.remove_val_fn);
+    cra_dict_init0(int32_t,
+                   double,
+                   &a.sdict,
+                   args4dict_i_d.zero_memory,
+                   args4dict_i_d.hash_key_fn,
+                   args4dict_i_d.compare_key_fn,
+                   args4dict_i_d.remove_key_fn,
+                   args4dict_i_d.remove_val_fn);
     for (int i = 0; i < 10; i++)
     {
         key = rand();
@@ -1130,8 +1274,8 @@ void test_dict_in_struct(void)
     cra_json_parse_struct0(buff, buffsize, &aa, sizeof(struct A), false, meta_a, NULL, NULL, &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
     CraDictIter it = cra_dict_iter_init(a.pdict);
-    int32_t *rkey;
-    double *rval, rval1, rval2;
+    int32_t    *rkey;
+    double     *rval, rval1, rval2;
     while (cra_dict_iter_next(&it, (void **)&rkey, (void **)&rval))
     {
         cra_dict_get(aa.pdict, rkey, &rval1);
@@ -1155,7 +1299,7 @@ void test_dict_in_struct(void)
 struct Old
 {
     int32_t i;
-    char *str;
+    char   *str;
 };
 CRA_TYPE_META_BEGIN(meta_old)
 CRA_TYPE_META_INT32_MEMBER(struct Old, i)
@@ -1163,9 +1307,9 @@ CRA_TYPE_META_STRING_MEMBER(struct Old, str, true)
 CRA_TYPE_META_END();
 struct New
 {
-    float f; // 新字段在结构中位置随意
+    float   f; // 新字段在结构中位置随意
     int32_t i;
-    char *str;
+    char   *str;
 };
 CRA_TYPE_META_BEGIN(meta_new)
 CRA_TYPE_META_FLOAT_MEMBER(struct New, f) // 因为JSON有Key定位字段，所以meta的位置也可随意
@@ -1173,13 +1317,14 @@ CRA_TYPE_META_INT32_MEMBER(struct New, i)
 CRA_TYPE_META_STRING_MEMBER(struct New, str, true)
 CRA_TYPE_META_END();
 
-void test_new2old(void)
+void
+test_new2old(void)
 {
     unsigned char buff[1024];
-    size_t buffsize;
+    size_t        buffsize;
     CraSerError_e error;
 
-    struct New n = {1.5f, 100, "hello world"};
+    struct New n = { 1.5f, 100, "hello world" };
     buffsize = sizeof(buff);
     cra_json_stringify_struct0(buff, &buffsize, &n, meta_new, FORMAT, &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
@@ -1196,7 +1341,8 @@ void test_new2old(void)
 }
 
 // 设置缺省值
-static void init_new(struct New *n, void *ignore)
+static void
+init_new(struct New *n, void *ignore)
 {
     CRA_UNUSED_VALUE(ignore);
     n->f = 2.8f;
@@ -1204,21 +1350,22 @@ static void init_new(struct New *n, void *ignore)
     n->str = NULL;
 }
 
-void test_old2new(void)
+void
+test_old2new(void)
 {
     unsigned char buff[1024];
-    size_t buffsize;
+    size_t        buffsize;
     CraSerError_e error;
 
-    struct Old o = {100, "hello world"};
+    struct Old o = { 100, "hello world" };
     buffsize = sizeof(buff);
     cra_json_stringify_struct0(buff, &buffsize, &o, meta_old, FORMAT, &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
 
     printf("%s\n\n", buff);
 
-    struct New n;
-    const CraTypeInit_i init_i = {0, 0, (void (*)(void *, void *))init_new, 0};
+    struct New          n;
+    const CraTypeInit_i init_i = { 0, 0, (void (*)(void *, void *))init_new, 0 };
     cra_json_parse_struct0(buff, buffsize, &n, sizeof(n), false, meta_new, &init_i, NULL, &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
     assert_always(o.i == n.i);
@@ -1230,7 +1377,8 @@ void test_old2new(void)
 
 #endif
 
-int main(void)
+int
+main(void)
 {
     test_base();
     test_d2i();

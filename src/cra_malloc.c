@@ -9,10 +9,11 @@
  *
  */
 #include "cra_malloc.h"
-#include "cra_atomic.h"
 #include "cra_assert.h"
+#include "cra_atomic.h"
 
-void *__cra_malloc(size_t size)
+void *
+__cra_malloc(size_t size)
 {
     assert(size > 0);
     void *ptr = malloc(size);
@@ -20,7 +21,8 @@ void *__cra_malloc(size_t size)
     return ptr;
 }
 
-void *__cra_calloc(size_t num, size_t size)
+void *
+__cra_calloc(size_t num, size_t size)
 {
     assert(num > 0 && size > 0);
     void *ptr = calloc(num, size);
@@ -28,7 +30,8 @@ void *__cra_calloc(size_t num, size_t size)
     return ptr;
 }
 
-void *__cra_realloc(void *oldptr, size_t newsize)
+void *
+__cra_realloc(void *oldptr, size_t newsize)
 {
     assert(oldptr != NULL && newsize > 0);
     void *newptr = realloc(oldptr, newsize);
@@ -36,7 +39,8 @@ void *__cra_realloc(void *oldptr, size_t newsize)
     return newptr;
 }
 
-void __cra_free(void *ptr)
+void
+__cra_free(void *ptr)
 {
     assert(ptr != NULL);
     free(ptr);
@@ -44,21 +48,20 @@ void __cra_free(void *ptr)
 
 typedef struct _CraMallocBlkNode
 {
-    int line;
-    char *file;
-    size_t size;
-    void *block;
+    int                       line;
+    char                     *file;
+    size_t                    size;
+    void                     *block;
     struct _CraMallocBlkNode *next;
 } CraMallocBlkNode;
 
 static CraMallocBlkNode *__s_malloc_memblk_head = NULL;
-static cra_atomic_flag __s_malloc_memblk_lock = CRA_ATOMIC_FLAG_INIT;
-#define CRA_MALLOC_LOCK() \
-    while (cra_atomic_flag_test_and_set(&__s_malloc_memblk_lock))
-#define CRA_MALLOC_UNLOCK() \
-    cra_atomic_flag_clear(&__s_malloc_memblk_lock)
+static cra_atomic_flag   __s_malloc_memblk_lock = CRA_ATOMIC_FLAG_INIT;
+#define CRA_MALLOC_LOCK()   while (cra_atomic_flag_test_and_set(&__s_malloc_memblk_lock))
+#define CRA_MALLOC_UNLOCK() cra_atomic_flag_clear(&__s_malloc_memblk_lock)
 
-static inline void __cra_malloc_set_block(void *ptr, size_t size, char *file, int line)
+static inline void
+__cra_malloc_set_block(void *ptr, size_t size, char *file, int line)
 {
     CraMallocBlkNode *node = (CraMallocBlkNode *)__cra_malloc(sizeof(CraMallocBlkNode));
     node->line = line;
@@ -72,21 +75,24 @@ static inline void __cra_malloc_set_block(void *ptr, size_t size, char *file, in
     CRA_MALLOC_UNLOCK();
 }
 
-void *__cra_malloc_dbg(size_t size, char *file, int line)
+void *
+__cra_malloc_dbg(size_t size, char *file, int line)
 {
     void *ptr = __cra_malloc(size);
     __cra_malloc_set_block(ptr, size, file, line);
     return ptr;
 }
 
-void *__cra_calloc_dbg(size_t num, size_t size, char *file, int line)
+void *
+__cra_calloc_dbg(size_t num, size_t size, char *file, int line)
 {
     void *ptr = __cra_calloc(num, size);
     __cra_malloc_set_block(ptr, num * size, file, line);
     return ptr;
 }
 
-void *__cra_realloc_dbg(void *ptr, size_t newsize, char *file, int line)
+void *
+__cra_realloc_dbg(void *ptr, size_t newsize, char *file, int line)
 {
     void *newptr = __cra_realloc(ptr, newsize);
 
@@ -107,7 +113,8 @@ void *__cra_realloc_dbg(void *ptr, size_t newsize, char *file, int line)
     return newptr;
 }
 
-void __cra_free_dbg(void *ptr)
+void
+__cra_free_dbg(void *ptr)
 {
     CraMallocBlkNode *last, *curr;
 
@@ -137,7 +144,8 @@ void __cra_free_dbg(void *ptr)
         __cra_free(ptr);
 }
 
-void __cra_memory_leak_report(void)
+void
+__cra_memory_leak_report(void)
 {
     int count = 0;
     CRA_MALLOC_LOCK();
@@ -151,8 +159,12 @@ void __cra_memory_leak_report(void)
         for (; curr != NULL; curr = curr->next)
         {
             ++count;
-            fprintf(stderr, "memory leak (0x%zx, size: %zu) in %s:%d.\n",
-                    (size_t)curr->block, curr->size, curr->file, curr->line);
+            fprintf(stderr,
+                    "memory leak (0x%zx, size: %zu) in %s:%d.\n",
+                    (size_t)curr->block,
+                    curr->size,
+                    curr->file,
+                    curr->line);
         }
         fprintf(stderr, "leak memory count: %d.\n", count);
     }

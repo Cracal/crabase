@@ -11,16 +11,17 @@
 #include "collections/cra_collects.h"
 
 #ifdef CRA_RANDOM_STR_INIT_HASHCODE
-#include <time.h>
 #include "cra_atomic.h"
+#include <time.h>
 
-static cra_atomic_flag s_hash_locker = {0};
+static cra_atomic_flag s_hash_locker = { 0 };
 #undef LOCK
 #undef UNLOCK
-#define LOCK() while (cra_atomic_flag_test_and_set(&s_hash_locker))
+#define LOCK()   while (cra_atomic_flag_test_and_set(&s_hash_locker))
 #define UNLOCK() cra_atomic_flag_clear(&s_hash_locker)
 
-static cra_hash_t cra_get_init_hash(void)
+static cra_hash_t
+cra_get_init_hash(void)
 {
     static volatile cra_hash_t hash = -1;
     if (hash == -1)
@@ -40,7 +41,8 @@ static cra_hash_t cra_get_init_hash(void)
 #endif
 
 // BKDR hash function
-cra_hash_t cra_hash_string1(const char *val)
+cra_hash_t
+cra_hash_string1(const char *val)
 {
     cra_hash_t hash = cra_get_init_hash();
     cra_hash_t seed = 131;
@@ -50,7 +52,8 @@ cra_hash_t cra_hash_string1(const char *val)
 }
 
 // AP hash function
-cra_hash_t cra_hash_string2(const char *val)
+cra_hash_t
+cra_hash_string2(const char *val)
 {
     cra_hash_t hash = cra_get_init_hash();
     for (size_t i = 0; *val; ++i)

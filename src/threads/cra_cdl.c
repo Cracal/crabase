@@ -10,14 +10,16 @@
  */
 #include "threads/cra_cdl.h"
 
-void cra_cdl_init(CraCDL *cdl, int count)
+void
+cra_cdl_init(CraCDL *cdl, int count)
 {
     cdl->count = count;
     cra_cond_init(&cdl->cond);
     cra_mutex_init(&cdl->mutex);
 }
 
-void cra_cdl_uninit(CraCDL *cdl)
+void
+cra_cdl_uninit(CraCDL *cdl)
 {
     cra_cond_destroy(&cdl->cond);
     cra_mutex_destroy(&cdl->mutex);

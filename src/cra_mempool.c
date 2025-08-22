@@ -1,11 +1,12 @@
-#include "cra_malloc.h"
-#include "cra_assert.h"
 #include "cra_mempool.h"
+#include "cra_assert.h"
+#include "cra_malloc.h"
 
-#define CRA_MEMPOOL_LOCK while (cra_atomic_flag_test_and_set(&pool->locker))
+#define CRA_MEMPOOL_LOCK   while (cra_atomic_flag_test_and_set(&pool->locker))
 #define CRA_MEMPOOL_UNLOCK cra_atomic_flag_clear(&pool->locker)
 
-void cra_mempool_init(CraMemPool *pool, size_t itemsize, unsigned int count)
+void
+cra_mempool_init(CraMemPool *pool, size_t itemsize, unsigned int count)
 {
     void *ptr;
 
@@ -25,14 +26,16 @@ void cra_mempool_init(CraMemPool *pool, size_t itemsize, unsigned int count)
     }
 }
 
-void cra_mempool_uninit(CraMemPool *pool)
+void
+cra_mempool_uninit(CraMemPool *pool)
 {
     CRA_MEMPOOL_LOCK;
     cra_free(pool->memory);
     cra_deque_uninit(&pool->stack);
 }
 
-void *cra_mempool_alloc(CraMemPool *pool)
+void *
+cra_mempool_alloc(CraMemPool *pool)
 {
     void *ret;
     CRA_MEMPOOL_LOCK;
@@ -42,7 +45,8 @@ void *cra_mempool_alloc(CraMemPool *pool)
     return ret;
 }
 
-void cra_mempool_dealloc(CraMemPool *pool, void *ptr)
+void
+cra_mempool_dealloc(CraMemPool *pool, void *ptr)
 {
     if (ptr >= (void *)pool->memory && ptr < (void *)(pool->memory + pool->itemsize * pool->count))
     {

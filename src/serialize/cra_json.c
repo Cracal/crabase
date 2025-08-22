@@ -8,14 +8,14 @@
  * @copyright Copyright (c) 2024
  *
  */
-#include <math.h>
-#include <float.h>
+#include "serialize/cra_json.h"
 #include "cra_assert.h"
 #include "cra_malloc.h"
-#include "serialize/cra_json.h"
 #include "serialize/cra_ser_inner.h"
+#include <float.h>
+#include <math.h>
 
-#define CRA_JSON_READ_GET_BUF(_ser) ((_ser)->buffer + (_ser)->index)
+#define CRA_JSON_READ_GET_BUF(_ser)         ((_ser)->buffer + (_ser)->index)
 #define CRA_JSON_READ_ENSURE(_ser, _needed) ((_ser)->index + (_needed) < (_ser)->length)
 #define CRA_JSON_READ_BUF(_ser, _buf, _needed) \
     if (!CRA_JSON_READ_ENSURE(_ser, _needed))  \
@@ -27,15 +27,17 @@
 
 #if 1 // serialize
 
-static inline void cra_json_write_whitespaces(unsigned char *buf, uint16_t nested)
+static inline void
+cra_json_write_whitespaces(unsigned char *buf, uint16_t nested)
 {
     for (uint16_t i = 0; i < nested; ++i)
         *buf++ = '\t';
 }
 
-static inline bool cra_json_write_comma(CraSerializer *ser)
+static inline bool
+cra_json_write_comma(CraSerializer *ser)
 {
-    size_t len;
+    size_t         len;
     unsigned char *buf;
     len = ser->format ? (3) : 2;
     CRA_SERIALIZER_BUF(ser, buf, len);
@@ -47,7 +49,8 @@ static inline bool cra_json_write_comma(CraSerializer *ser)
     return true;
 }
 
-static inline bool cra_json_write_left_brace(CraSerializer *ser)
+static inline bool
+cra_json_write_left_brace(CraSerializer *ser)
 {
     unsigned char *buf;
     CRA_SERIALIZER_BUF(ser, buf, sizeof("{"));
@@ -57,9 +60,10 @@ static inline bool cra_json_write_left_brace(CraSerializer *ser)
     return true;
 }
 
-static inline bool cra_json_write_right_brace(CraSerializer *ser)
+static inline bool
+cra_json_write_right_brace(CraSerializer *ser)
 {
-    size_t len;
+    size_t         len;
     unsigned char *buf;
     len = ser->format ? (ser->nested + sizeof("\n}")) : sizeof("}");
     CRA_SERIALIZER_BUF(ser, buf, len);
@@ -75,7 +79,8 @@ static inline bool cra_json_write_right_brace(CraSerializer *ser)
     return true;
 }
 
-static inline bool cra_json_write_left_bracket(CraSerializer *ser)
+static inline bool
+cra_json_write_left_bracket(CraSerializer *ser)
 {
     unsigned char *buf;
     CRA_SERIALIZER_BUF(ser, buf, sizeof("["));
@@ -85,7 +90,8 @@ static inline bool cra_json_write_left_bracket(CraSerializer *ser)
     return true;
 }
 
-static inline bool cra_json_write_right_bracket(CraSerializer *ser)
+static inline bool
+cra_json_write_right_bracket(CraSerializer *ser)
 {
     unsigned char *buf;
     CRA_SERIALIZER_BUF(ser, buf, sizeof("]"));
@@ -95,21 +101,23 @@ static inline bool cra_json_write_right_bracket(CraSerializer *ser)
     return true;
 }
 
-static bool cra_json_write_bool(CraSerializer *ser, bool val)
+static bool
+cra_json_write_bool(CraSerializer *ser, bool val)
 {
     unsigned char *buf;
-    size_t needed = val ? sizeof("true") : sizeof("false");
+    size_t         needed = val ? sizeof("true") : sizeof("false");
     CRA_SERIALIZER_BUF(ser, buf, needed);
     memcpy(buf, val ? "true" : "false", needed);
     ser->index += needed - 1;
     return true;
 }
 
-static bool cra_json_write_int(CraSerializer *ser, int64_t val)
+static bool
+cra_json_write_int(CraSerializer *ser, int64_t val)
 {
-    int len;
+    int            len;
     unsigned char *buf;
-    char intstr[32] = {0};
+    char           intstr[32] = { 0 };
 
 #ifdef CRA_COMPILER_MSVC
     len = sprintf_s(intstr, sizeof(intstr), "%zd", val);
@@ -131,12 +139,13 @@ static bool cra_json_write_int(CraSerializer *ser, int64_t val)
     return true;
 }
 
-static bool cra_json_write_double(CraSerializer *ser, double val)
+static bool
+cra_json_write_double(CraSerializer *ser, double val)
 {
-    int len;
+    int            len;
     // double dbl;
     unsigned char *buf;
-    char dblstr[32] = {0};
+    char           dblstr[32] = { 0 };
 
     if (isnan(val) || isinf(val))
     {
@@ -178,10 +187,11 @@ static bool cra_json_write_double(CraSerializer *ser, double val)
         return true;                                  \
     }
 
-static bool cra_json_write_string(CraSerializer *ser, const char *val)
+static bool
+cra_json_write_string(CraSerializer *ser, const char *val)
 {
-    unsigned char *buf;
-    unsigned char *strbuf;
+    unsigned char       *buf;
+    unsigned char       *strbuf;
     const unsigned char *str;
 
     CRA_CHECK_WRITE_NULL
@@ -203,22 +213,22 @@ static bool cra_json_write_string(CraSerializer *ser, const char *val)
         ++strlength;
         switch (*str)
         {
-        case '\b':
-        case '\t':
-        case '\n':
-        case '\f':
-        case '\r':
-        case '\"':
-        case '\\':
-            needed += 2;
-            break;
+            case '\b':
+            case '\t':
+            case '\n':
+            case '\f':
+            case '\r':
+            case '\"':
+            case '\\':
+                needed += 2;
+                break;
 
-        default:
-            if (*str < 0x20)
-                needed += 6; // 控制字符 -> utf-16 \uXXXX
-            else
-                ++needed;
-            break;
+            default:
+                if (*str < 0x20)
+                    needed += 6; // 控制字符 -> utf-16 \uXXXX
+                else
+                    ++needed;
+                break;
         }
     }
 
@@ -240,50 +250,50 @@ static bool cra_json_write_string(CraSerializer *ser, const char *val)
         {
             switch (*str)
             {
-            case '\b':
-                *strbuf++ = '\\';
-                *strbuf = 'b';
-                break;
-            case '\t':
-                *strbuf++ = '\\';
-                *strbuf = 't';
-                break;
-            case '\n':
-                *strbuf++ = '\\';
-                *strbuf = 'n';
-                break;
-            case '\f':
-                *strbuf++ = '\\';
-                *strbuf = 'f';
-                break;
-            case '\r':
-                *strbuf++ = '\\';
-                *strbuf = 'r';
-                break;
-            case '\"':
-                *strbuf++ = '\\';
-                *strbuf = '\"';
-                break;
-            case '\\':
-                *strbuf++ = '\\';
-                *strbuf = '\\';
-                break;
+                case '\b':
+                    *strbuf++ = '\\';
+                    *strbuf = 'b';
+                    break;
+                case '\t':
+                    *strbuf++ = '\\';
+                    *strbuf = 't';
+                    break;
+                case '\n':
+                    *strbuf++ = '\\';
+                    *strbuf = 'n';
+                    break;
+                case '\f':
+                    *strbuf++ = '\\';
+                    *strbuf = 'f';
+                    break;
+                case '\r':
+                    *strbuf++ = '\\';
+                    *strbuf = 'r';
+                    break;
+                case '\"':
+                    *strbuf++ = '\\';
+                    *strbuf = '\"';
+                    break;
+                case '\\':
+                    *strbuf++ = '\\';
+                    *strbuf = '\\';
+                    break;
 
-            default:
-                if (*str < 0x20)
-                {
+                default:
+                    if (*str < 0x20)
+                    {
 #ifdef CRA_COMPILER_MSVC
-                    sprintf_s((char *)strbuf, 10, "\\u%04x", *str);
+                        sprintf_s((char *)strbuf, 10, "\\u%04x", *str);
 #else
-                    sprintf((char *)strbuf, "\\u%04x", *str);
+                        sprintf((char *)strbuf, "\\u%04x", *str);
 #endif
-                    strbuf += 5;
-                }
-                else
-                {
-                    *strbuf = *str;
-                }
-                break;
+                        strbuf += 5;
+                    }
+                    else
+                    {
+                        *strbuf = *str;
+                    }
+                    break;
             }
         }
     }
@@ -294,7 +304,8 @@ static bool cra_json_write_string(CraSerializer *ser, const char *val)
     return true;
 }
 
-static inline bool cra_json_write_key_front_whitespace(CraSerializer *ser)
+static inline bool
+cra_json_write_key_front_whitespace(CraSerializer *ser)
 {
     unsigned char *buf;
     if (ser->format)
@@ -307,10 +318,11 @@ static inline bool cra_json_write_key_front_whitespace(CraSerializer *ser)
     return true;
 }
 
-static inline bool cra_json_write_key_back_colon(CraSerializer *ser)
+static inline bool
+cra_json_write_key_back_colon(CraSerializer *ser)
 {
     unsigned char *buf;
-    size_t needed = ser->format ? 3 : 2;
+    size_t         needed = ser->format ? 3 : 2;
     CRA_SERIALIZER_BUF(ser, buf, needed);
     ser->index += needed - 1;
     *buf++ = ':';
@@ -321,7 +333,8 @@ static inline bool cra_json_write_key_back_colon(CraSerializer *ser)
 }
 
 // [\n[\t*N]]"key":[ ]
-static bool cra_json_write_key_and_colon(CraSerializer *ser, const char *key)
+static bool
+cra_json_write_key_and_colon(CraSerializer *ser, const char *key)
 {
     if (key == NULL)
     {
@@ -338,8 +351,10 @@ static bool cra_json_write_key_and_colon(CraSerializer *ser, const char *key)
     return cra_json_write_key_back_colon(ser);
 }
 
-static bool cra_json_write_once(CraSerializer *ser, void *val, size_t offset, const CraTypeMeta *meta);
-static bool cra_json_stringify_all(CraSerializer *ser, void *val, const CraTypeMeta *meta);
+static bool
+cra_json_write_once(CraSerializer *ser, void *val, size_t offset, const CraTypeMeta *meta);
+static bool
+cra_json_stringify_all(CraSerializer *ser, void *val, const CraTypeMeta *meta);
 
 #define CRA_SER_NESTING_BEGIN                   \
     if (ser->nested++ >= CRA_SER_MAX_NESTING)   \
@@ -349,7 +364,8 @@ static bool cra_json_stringify_all(CraSerializer *ser, void *val, const CraTypeM
     }
 #define CRA_SER_NESTING_END --ser->nested;
 
-static bool cra_json_write_struct(CraSerializer *ser, void *val, const CraTypeMeta *members_meta)
+static bool
+cra_json_write_struct(CraSerializer *ser, void *val, const CraTypeMeta *members_meta)
 {
     unsigned char *buf;
 
@@ -374,7 +390,12 @@ static bool cra_json_write_struct(CraSerializer *ser, void *val, const CraTypeMe
     return true;
 }
 
-static bool __cra_json_write_list(CraSerializer *ser, void *val, const CraTypeMeta *element_meta, const CraTypeIter_i *iter_i, cra_ser_count_t count)
+static bool
+__cra_json_write_list(CraSerializer       *ser,
+                      void                *val,
+                      const CraTypeMeta   *element_meta,
+                      const CraTypeIter_i *iter_i,
+                      cra_ser_count_t      count)
 {
     unsigned char *buf;
 
@@ -392,7 +413,7 @@ static bool __cra_json_write_list(CraSerializer *ser, void *val, const CraTypeMe
     if (iter_i)
     {
         void *item = NULL;
-        char it[CRA_SERI_ITER_SIZE];
+        char  it[CRA_SERI_ITER_SIZE];
         assert_always(iter_i->list.init && iter_i->list.next);
         iter_i->list.init(val, &it, sizeof(it));
         for (count = 0; iter_i->list.next(&it, &item);)
@@ -444,17 +465,20 @@ static bool __cra_json_write_list(CraSerializer *ser, void *val, const CraTypeMe
     return true;
 }
 
-static bool cra_json_write_list(CraSerializer *ser, void *val, const CraTypeMeta *element_meta, const CraTypeIter_i *iter_i)
+static bool
+cra_json_write_list(CraSerializer *ser, void *val, const CraTypeMeta *element_meta, const CraTypeIter_i *iter_i)
 {
     return __cra_json_write_list(ser, val, element_meta, iter_i, 0);
 }
 
-static bool cra_json_write_array(CraSerializer *ser, void *val, cra_ser_count_t count, const CraTypeMeta *element_meta)
+static bool
+cra_json_write_array(CraSerializer *ser, void *val, cra_ser_count_t count, const CraTypeMeta *element_meta)
 {
     return __cra_json_write_list(ser, val, element_meta, NULL, count);
 }
 
-static bool cra_json_write_dict(CraSerializer *ser, void *val, const CraTypeMeta *kv_meta, const CraTypeIter_i *iter_i)
+static bool
+cra_json_write_dict(CraSerializer *ser, void *val, const CraTypeMeta *kv_meta, const CraTypeIter_i *iter_i)
 {
     unsigned char *buf;
 
@@ -477,10 +501,10 @@ static bool cra_json_write_dict(CraSerializer *ser, void *val, const CraTypeMeta
         return false;
 
     // write elements
-    void *k = NULL;
-    void *v = NULL;
+    void           *k = NULL;
+    void           *v = NULL;
     cra_ser_count_t count = 0;
-    char it[CRA_SERI_ITER_SIZE];
+    char            it[CRA_SERI_ITER_SIZE];
     iter_i->dict.init(val, &it, sizeof(it));
     while (iter_i->dict.next(&it, &k, &v))
     {
@@ -528,89 +552,92 @@ static bool cra_json_write_dict(CraSerializer *ser, void *val, const CraTypeMeta
     return true;
 }
 
-static bool cra_json_write_once(CraSerializer *ser, void *val, size_t offset, const CraTypeMeta *meta)
+static bool
+cra_json_write_once(CraSerializer *ser, void *val, size_t offset, const CraTypeMeta *meta)
 {
-    double dbl;
+    double  dbl;
     int64_t i64;
-    void *value = (void *)((char *)val + offset);
+    void   *value = (void *)((char *)val + offset);
     switch (meta->type)
     {
-    case CRA_TYPE_FALSE:
-    case CRA_TYPE_TRUE:
-        if (!cra_json_write_bool(ser, *(bool *)value))
-            return false;
-        break;
-    case CRA_TYPE_INT8:
-        i64 = (int64_t)(*(int8_t *)value);
-        goto write_i64;
-    case CRA_TYPE_INT16:
-        i64 = (int64_t)(*(int16_t *)value);
-        goto write_i64;
-    case CRA_TYPE_INT32:
-        i64 = (int64_t)(*(int32_t *)value);
-        goto write_i64;
-    case CRA_TYPE_INT64:
-        i64 = (int64_t)(*(int64_t *)value);
-        goto write_i64;
-    case CRA_TYPE_UINT8:
-        i64 = (int64_t)(*(uint8_t *)value);
-        goto write_i64;
-    case CRA_TYPE_UINT16:
-        i64 = (int64_t)(*(uint16_t *)value);
-        goto write_i64;
-    case CRA_TYPE_UINT32:
-        i64 = (int64_t)(*(uint32_t *)value);
-        goto write_i64;
-    case CRA_TYPE_UINT64:
-        i64 = (int64_t)(*(uint64_t *)value);
-    write_i64:
-        if (!cra_json_write_int(ser, i64))
-            return false;
-        break;
-    case CRA_TYPE_FLOAT:
-        dbl = (double)(*(float *)value);
-        goto write_dbl;
-    case CRA_TYPE_DOUBLE:
-        dbl = *(double *)value;
-    write_dbl:
-        if (!cra_json_write_double(ser, dbl))
-            return false;
-        break;
-    case CRA_TYPE_STRING:
-        if (meta->is_ptr)
-            value = *(void **)value;
-        if (!cra_json_write_string(ser, (char *)value))
-            return false;
-        break;
-    case CRA_TYPE_STRUCT:
-        if (meta->is_ptr)
-            value = *(void **)value;
-        if (!cra_json_write_struct(ser, value, meta->meta))
-            return false;
-        break;
-    case CRA_TYPE_LIST:
-        if (meta->is_ptr)
-            value = *(void **)value;
-        if (!__cra_json_write_list(ser, value, meta->meta, meta->iter_i, *(cra_ser_count_t *)((char *)val + meta->noffset)))
-            return false;
-        break;
-    case CRA_TYPE_DICT:
-        if (meta->is_ptr)
-            value = *(void **)value;
-        if (!cra_json_write_dict(ser, value, meta->meta, meta->iter_i))
-            return false;
-        break;
+        case CRA_TYPE_FALSE:
+        case CRA_TYPE_TRUE:
+            if (!cra_json_write_bool(ser, *(bool *)value))
+                return false;
+            break;
+        case CRA_TYPE_INT8:
+            i64 = (int64_t)(*(int8_t *)value);
+            goto write_i64;
+        case CRA_TYPE_INT16:
+            i64 = (int64_t)(*(int16_t *)value);
+            goto write_i64;
+        case CRA_TYPE_INT32:
+            i64 = (int64_t)(*(int32_t *)value);
+            goto write_i64;
+        case CRA_TYPE_INT64:
+            i64 = (int64_t)(*(int64_t *)value);
+            goto write_i64;
+        case CRA_TYPE_UINT8:
+            i64 = (int64_t)(*(uint8_t *)value);
+            goto write_i64;
+        case CRA_TYPE_UINT16:
+            i64 = (int64_t)(*(uint16_t *)value);
+            goto write_i64;
+        case CRA_TYPE_UINT32:
+            i64 = (int64_t)(*(uint32_t *)value);
+            goto write_i64;
+        case CRA_TYPE_UINT64:
+            i64 = (int64_t)(*(uint64_t *)value);
+        write_i64:
+            if (!cra_json_write_int(ser, i64))
+                return false;
+            break;
+        case CRA_TYPE_FLOAT:
+            dbl = (double)(*(float *)value);
+            goto write_dbl;
+        case CRA_TYPE_DOUBLE:
+            dbl = *(double *)value;
+        write_dbl:
+            if (!cra_json_write_double(ser, dbl))
+                return false;
+            break;
+        case CRA_TYPE_STRING:
+            if (meta->is_ptr)
+                value = *(void **)value;
+            if (!cra_json_write_string(ser, (char *)value))
+                return false;
+            break;
+        case CRA_TYPE_STRUCT:
+            if (meta->is_ptr)
+                value = *(void **)value;
+            if (!cra_json_write_struct(ser, value, meta->meta))
+                return false;
+            break;
+        case CRA_TYPE_LIST:
+            if (meta->is_ptr)
+                value = *(void **)value;
+            if (!__cra_json_write_list(
+                  ser, value, meta->meta, meta->iter_i, *(cra_ser_count_t *)((char *)val + meta->noffset)))
+                return false;
+            break;
+        case CRA_TYPE_DICT:
+            if (meta->is_ptr)
+                value = *(void **)value;
+            if (!cra_json_write_dict(ser, value, meta->meta, meta->iter_i))
+                return false;
+            break;
 
-    default:
-        ser->error = CRA_SER_ERROR_INVALID_VALUE;
-        return false;
+        default:
+            ser->error = CRA_SER_ERROR_INVALID_VALUE;
+            return false;
     }
     return true;
 }
 
 // =======================
 
-static void cra_json_stringify_begin(CraSerializer *ser, unsigned char *buffer, size_t buffer_length, bool format)
+static void
+cra_json_stringify_begin(CraSerializer *ser, unsigned char *buffer, size_t buffer_length, bool format)
 {
     assert_always(ser != NULL);
     assert_always(buffer_length >= 2);
@@ -633,7 +660,8 @@ static void cra_json_stringify_begin(CraSerializer *ser, unsigned char *buffer, 
     bzero(&ser->release, sizeof(ser->release));
 }
 
-static unsigned char *cra_json_stringify_end(CraSerializer *ser, size_t *buffer_length, CraSerError_e *error)
+static unsigned char *
+cra_json_stringify_end(CraSerializer *ser, size_t *buffer_length, CraSerError_e *error)
 {
     assert_always(ser != NULL);
     assert_always(ser->buffer != NULL);
@@ -646,7 +674,8 @@ static unsigned char *cra_json_stringify_end(CraSerializer *ser, size_t *buffer_
     return ser->error == CRA_SER_ERROR_SUCCESS ? ser->buffer : NULL;
 }
 
-static bool cra_json_stringify_all(CraSerializer *ser, void *val, const CraTypeMeta *meta)
+static bool
+cra_json_stringify_all(CraSerializer *ser, void *val, const CraTypeMeta *meta)
 {
     CraTypeMeta *m = (CraTypeMeta *)meta;
     if (m->type == __CRA_TYPE_END_OF_META)
@@ -682,7 +711,8 @@ static bool cra_json_stringify_all(CraSerializer *ser, void *val, const CraTypeM
 #if 1 // deserialize
 
 // 跳过控制字符和空格
-static inline unsigned char *cra_json_skip_whitespaces(CraSerializer *ser)
+static inline unsigned char *
+cra_json_skip_whitespaces(CraSerializer *ser)
 {
     unsigned char *buf;
     buf = ser->buffer + ser->index;
@@ -693,7 +723,8 @@ static inline unsigned char *cra_json_skip_whitespaces(CraSerializer *ser)
     return ser->buffer + ser->index;
 }
 
-static inline bool cra_json_is_ch(CraSerializer *ser, unsigned char ch)
+static inline bool
+cra_json_is_ch(CraSerializer *ser, unsigned char ch)
 {
     unsigned char *buf = cra_json_skip_whitespaces(ser);
     if (CRA_JSON_READ_ENSURE(ser, 1) && *buf == ch)
@@ -701,7 +732,8 @@ static inline bool cra_json_is_ch(CraSerializer *ser, unsigned char ch)
     return false;
 }
 
-static inline bool cra_json_check_symbol(CraSerializer *ser, unsigned char ch)
+static inline bool
+cra_json_check_symbol(CraSerializer *ser, unsigned char ch)
 {
     if (cra_json_is_ch(ser, ch))
     {
@@ -712,7 +744,8 @@ static inline bool cra_json_check_symbol(CraSerializer *ser, unsigned char ch)
     return false;
 }
 
-static inline bool cra_json_skip_comma_and_check_quit_loop(CraSerializer *ser, unsigned char quitch, bool *loopflag)
+static inline bool
+cra_json_skip_comma_and_check_quit_loop(CraSerializer *ser, unsigned char quitch, bool *loopflag)
 {
     if (cra_json_is_ch(ser, ','))
         ++ser->index;
@@ -721,10 +754,11 @@ static inline bool cra_json_skip_comma_and_check_quit_loop(CraSerializer *ser, u
     return true;
 }
 
-static inline void cra_json_skip_value(CraSerializer *ser)
+static inline void
+cra_json_skip_value(CraSerializer *ser)
 {
-    size_t leftcount = 0;
-    size_t skipcount = 0;
+    size_t         leftcount = 0;
+    size_t         skipcount = 0;
     unsigned char *buf = CRA_JSON_READ_GET_BUF(ser);
     while (CRA_JSON_READ_ENSURE(ser, 1) && (leftcount > 0 || *buf != ','))
     {
@@ -743,9 +777,10 @@ static inline void cra_json_skip_value(CraSerializer *ser)
     ser->index += skipcount;
 }
 
-bool cra_json_read_bool(CraSerializer *ser, bool *retval)
+bool
+cra_json_read_bool(CraSerializer *ser, bool *retval)
 {
-    size_t len = sizeof("true") - 1;
+    size_t         len = sizeof("true") - 1;
     unsigned char *buf = CRA_JSON_READ_GET_BUF(ser);
     if (CRA_JSON_READ_ENSURE(ser, len) && strncmp((char *)buf, "true", len) == 0)
     {
@@ -764,7 +799,8 @@ bool cra_json_read_bool(CraSerializer *ser, bool *retval)
     return false;
 }
 
-bool cra_json_read_int(CraSerializer *ser, int64_t *retval)
+bool
+cra_json_read_int(CraSerializer *ser, int64_t *retval)
 {
     unsigned char *end = NULL;
     unsigned char *buf = CRA_JSON_READ_GET_BUF(ser);
@@ -791,7 +827,8 @@ bool cra_json_read_int(CraSerializer *ser, int64_t *retval)
     return true;
 }
 
-bool cra_json_read_double(CraSerializer *ser, double *retval)
+bool
+cra_json_read_double(CraSerializer *ser, double *retval)
 {
     unsigned char *end = NULL;
     unsigned char *buf = CRA_JSON_READ_GET_BUF(ser);
@@ -808,7 +845,8 @@ bool cra_json_read_double(CraSerializer *ser, double *retval)
     return false;
 }
 
-static inline int cra_hex2int(unsigned char c)
+static inline int
+cra_hex2int(unsigned char c)
 {
     if (c >= '0' && c <= '9')
         return c - '0';
@@ -820,7 +858,8 @@ static inline int cra_hex2int(unsigned char c)
 }
 
 // 解析"\uXXXX"序列，返回unicode代码点
-static uint32_t cra_parse_unicodee_escape(const unsigned char *buf)
+static uint32_t
+cra_parse_unicodee_escape(const unsigned char *buf)
 {
     uint32_t code_point = 0;
     for (int i = 0; i < 4; ++i)
@@ -834,22 +873,26 @@ static uint32_t cra_parse_unicodee_escape(const unsigned char *buf)
     return code_point;
 }
 
-static inline bool cra_is_high_surrogate(uint32_t code_point)
+static inline bool
+cra_is_high_surrogate(uint32_t code_point)
 {
     return code_point >= 0xd800 && code_point <= 0xdbff;
 }
 
-static inline bool cra_is_low_surrogate(uint32_t code_point)
+static inline bool
+cra_is_low_surrogate(uint32_t code_point)
 {
     return code_point >= 0xdc00 && code_point <= 0xdfff;
 }
 
-static inline uint32_t cra_combine_surrogates(uint32_t high, uint32_t low)
+static inline uint32_t
+cra_combine_surrogates(uint32_t high, uint32_t low)
 {
     return 0x10000 + ((high - 0xd800) << 10) + (low - 0xdc00);
 }
 
-static int cra_code_point2utf8(CraSerializer *ser, uint32_t code_point, unsigned char *str, size_t remain)
+static int
+cra_code_point2utf8(CraSerializer *ser, uint32_t code_point, unsigned char *str, size_t remain)
 {
 #define CHECK(_needed)                                   \
     if (remain < _needed)                                \
@@ -894,10 +937,14 @@ static int cra_code_point2utf8(CraSerializer *ser, uint32_t code_point, unsigned
 #undef CHECK
 }
 
-static bool cra_json_read_string(CraSerializer *ser, char *retval, cra_ser_count_t max_length,
-                                 bool is_char_ptr, bool auto_free_if_fail)
+static bool
+cra_json_read_string(CraSerializer  *ser,
+                     char           *retval,
+                     cra_ser_count_t max_length,
+                     bool            is_char_ptr,
+                     bool            auto_free_if_fail)
 {
-    size_t len, length;
+    size_t         len, length;
     unsigned char *buf, *str;
 
     CRA_JSON_READ_BUF(ser, buf, sizeof("\"\""));
@@ -974,69 +1021,69 @@ static bool cra_json_read_string(CraSerializer *ser, char *retval, cra_ser_count
         {
             switch (buf[++length])
             {
-            case 'b':
-                *str++ = '\b';
-                break;
-            case 't':
-                *str++ = '\t';
-                break;
-            case 'n':
-                *str++ = '\n';
-                break;
-            case 'f':
-                *str++ = '\f';
-                break;
-            case 'r':
-                *str++ = '\r';
-                break;
-            case '\"':
-                *str++ = '\"';
-                break;
-            case '/':
-                *str++ = '/';
-                break;
-            case '\\':
-                *str++ = '\\';
-                break;
-            case 'u':
-            {
-                (void)++length; // 跳过'u'
-                uint32_t code_pint = cra_parse_unicodee_escape(buf + length);
-                if (code_pint == UINT32_MAX)
-                    goto error_return;
-                length += sizeof("XXXX") - 1;
-
-                // 处理代理对
-                if (!cra_is_high_surrogate(code_pint))
+                case 'b':
+                    *str++ = '\b';
+                    break;
+                case 't':
+                    *str++ = '\t';
+                    break;
+                case 'n':
+                    *str++ = '\n';
+                    break;
+                case 'f':
+                    *str++ = '\f';
+                    break;
+                case 'r':
+                    *str++ = '\r';
+                    break;
+                case '\"':
+                    *str++ = '\"';
+                    break;
+                case '/':
+                    *str++ = '/';
+                    break;
+                case '\\':
+                    *str++ = '\\';
+                    break;
+                case 'u':
                 {
-                    if (cra_is_low_surrogate(code_pint))
-                        goto error_return; // 只有单独的低位代理
-                    // ascii
-                    goto to_utf8;
-                }
-                if (buf[0] != '\\' || buf[1] != 'u')
-                    goto error_return; // 代理对不完整
-                length += sizeof("\\u") - 1;
-                uint32_t low_surrogate = cra_parse_unicodee_escape(buf + length);
-                if (!cra_is_low_surrogate(low_surrogate))
-                    goto error_return;
-                length += sizeof("XXXX") - 1;
-                code_pint = cra_combine_surrogates(code_pint, low_surrogate);
-
-            to_utf8:
-                // to utf-8
-                {
-                    int retlen = cra_code_point2utf8(ser, code_pint, str, remaining);
-                    if (retlen == -1)
+                    (void)++length; // 跳过'u'
+                    uint32_t code_pint = cra_parse_unicodee_escape(buf + length);
+                    if (code_pint == UINT32_MAX)
                         goto error_return;
-                    remaining -= retlen;
-                    str += retlen;
+                    length += sizeof("XXXX") - 1;
+
+                    // 处理代理对
+                    if (!cra_is_high_surrogate(code_pint))
+                    {
+                        if (cra_is_low_surrogate(code_pint))
+                            goto error_return; // 只有单独的低位代理
+                        // ascii
+                        goto to_utf8;
+                    }
+                    if (buf[0] != '\\' || buf[1] != 'u')
+                        goto error_return; // 代理对不完整
+                    length += sizeof("\\u") - 1;
+                    uint32_t low_surrogate = cra_parse_unicodee_escape(buf + length);
+                    if (!cra_is_low_surrogate(low_surrogate))
+                        goto error_return;
+                    length += sizeof("XXXX") - 1;
+                    code_pint = cra_combine_surrogates(code_pint, low_surrogate);
+
+                to_utf8:
+                    // to utf-8
+                    {
+                        int retlen = cra_code_point2utf8(ser, code_pint, str, remaining);
+                        if (retlen == -1)
+                            goto error_return;
+                        remaining -= retlen;
+                        str += retlen;
+                    }
+                    continue; // 跳过下面的"++length"
                 }
-                continue; // 跳过下面的"++length"
-            }
-            break;
-            default:
-                goto error_return;
+                break;
+                default:
+                    goto error_return;
             }
         }
 
@@ -1054,7 +1101,8 @@ error_return:
     return false;
 }
 
-static inline bool cra_json_check_key_back_colon(CraSerializer *ser)
+static inline bool
+cra_json_check_key_back_colon(CraSerializer *ser)
 {
     if (!cra_json_check_symbol(ser, ':'))
         return false;
@@ -1063,7 +1111,8 @@ static inline bool cra_json_check_key_back_colon(CraSerializer *ser)
 }
 
 // key & :
-static bool cra_json_read_key_and_colon(CraSerializer *ser, char **key)
+static bool
+cra_json_read_key_and_colon(CraSerializer *ser, char **key)
 {
     // read key
     if (!cra_json_read_string(ser, (char *)key, 0, true, false))
@@ -1075,11 +1124,19 @@ static bool cra_json_read_key_and_colon(CraSerializer *ser, char **key)
     return cra_json_check_key_back_colon(ser);
 }
 
-static bool cra_json_read_once(CraSerializer *ser, void *val, size_t offset, const CraTypeMeta *meta, bool auto_free_if_fail);
-static bool cra_json_parse_all(CraSerializer *ser, void *retval, const CraTypeMeta *meta, bool auto_free_if_fail);
+static bool
+cra_json_read_once(CraSerializer *ser, void *val, size_t offset, const CraTypeMeta *meta, bool auto_free_if_fail);
+static bool
+cra_json_parse_all(CraSerializer *ser, void *retval, const CraTypeMeta *meta, bool auto_free_if_fail);
 
-static inline void *cra_json_alloc_init(CraSerializer *ser, void *retval, size_t valsize, bool is_ptr,
-                                        bool *auto_free_if_fail, const CraTypeInit_i *init_i, void *args4init)
+static inline void *
+cra_json_alloc_init(CraSerializer       *ser,
+                    void                *retval,
+                    size_t               valsize,
+                    bool                 is_ptr,
+                    bool                *auto_free_if_fail,
+                    const CraTypeInit_i *init_i,
+                    void                *args4init)
 {
     void (*uninit_fn)(void *) = NULL;
     void (*dealloc_fn)(void *) = NULL;
@@ -1111,8 +1168,15 @@ static inline void *cra_json_alloc_init(CraSerializer *ser, void *retval, size_t
     return retval;
 }
 
-bool cra_json_read_struct(CraSerializer *ser, void *retval, size_t valsize, bool is_ptr, bool auto_free_if_fail,
-                          const CraTypeMeta *members_meta, const CraTypeInit_i *init_i, void *args4init)
+bool
+cra_json_read_struct(CraSerializer       *ser,
+                     void                *retval,
+                     size_t               valsize,
+                     bool                 is_ptr,
+                     bool                 auto_free_if_fail,
+                     const CraTypeMeta   *members_meta,
+                     const CraTypeInit_i *init_i,
+                     void                *args4init)
 {
     assert_always(members_meta->type != __CRA_TYPE_END_OF_META);
 
@@ -1136,9 +1200,16 @@ bool cra_json_read_struct(CraSerializer *ser, void *retval, size_t valsize, bool
     return true;
 }
 
-bool cra_json_read_list(CraSerializer *ser, void *retval, size_t valsize,
-                        bool is_ptr, bool auto_free_if_fail, const CraTypeMeta *element_meta,
-                        const CraTypeIter_i *iter_i, const CraTypeInit_i *init_i, void *args4init)
+bool
+cra_json_read_list(CraSerializer       *ser,
+                   void                *retval,
+                   size_t               valsize,
+                   bool                 is_ptr,
+                   bool                 auto_free_if_fail,
+                   const CraTypeMeta   *element_meta,
+                   const CraTypeIter_i *iter_i,
+                   const CraTypeInit_i *init_i,
+                   void                *args4init)
 {
     bool loop = true;
 
@@ -1188,8 +1259,13 @@ error_return:
     return false;
 }
 
-bool cra_json_read_array(CraSerializer *ser, void *retval, size_t valsize,
-                         bool is_ptr, cra_ser_count_t *countptr, const CraTypeMeta *element_meta)
+bool
+cra_json_read_array(CraSerializer     *ser,
+                    void              *retval,
+                    size_t             valsize,
+                    bool               is_ptr,
+                    cra_ser_count_t   *countptr,
+                    const CraTypeMeta *element_meta)
 {
     bool loop = true;
 
@@ -1210,7 +1286,7 @@ bool cra_json_read_array(CraSerializer *ser, void *retval, size_t valsize,
 
     size_t maxcnt, count;
     size_t slot_size;
-    void *array;
+    void  *array;
 
     slot_size = element_meta->is_ptr ? sizeof(void *) : element_meta->size;
     if (is_ptr)
@@ -1272,9 +1348,16 @@ error_return:
     return false;
 }
 
-bool cra_json_read_dict(CraSerializer *ser, void *retval, size_t valsize,
-                        bool is_ptr, bool auto_free_if_fail, const CraTypeMeta *kv_meta,
-                        const CraTypeIter_i *iter_i, const CraTypeInit_i *init_i, void *args4init)
+bool
+cra_json_read_dict(CraSerializer       *ser,
+                   void                *retval,
+                   size_t               valsize,
+                   bool                 is_ptr,
+                   bool                 auto_free_if_fail,
+                   const CraTypeMeta   *kv_meta,
+                   const CraTypeIter_i *iter_i,
+                   const CraTypeInit_i *init_i,
+                   void                *args4init)
 {
     bool loop = true;
 
@@ -1348,7 +1431,8 @@ error_return:
     return false;
 }
 
-static bool cra_json_read_once(CraSerializer *ser, void *val, size_t offset, const CraTypeMeta *meta, bool auto_free_if_fail)
+static bool
+cra_json_read_once(CraSerializer *ser, void *val, size_t offset, const CraTypeMeta *meta, bool auto_free_if_fail)
 {
     void *value = (void *)((char *)val + offset);
     assert_always(value != NULL);
@@ -1368,101 +1452,124 @@ static bool cra_json_read_once(CraSerializer *ser, void *val, size_t offset, con
         return true;
     }
 
-    double dbl;
+    double  dbl;
     int64_t i64;
     switch (meta->type)
     {
-    case CRA_TYPE_FALSE:
-    case CRA_TYPE_TRUE:
-        if (!cra_json_read_bool(ser, (bool *)value))
-            return false;
-        break;
-    case CRA_TYPE_INT8:
-        if (!cra_json_read_int(ser, &i64))
-            return false;
-        *(int8_t *)value = (int8_t)i64;
-        break;
-    case CRA_TYPE_INT16:
-        if (!cra_json_read_int(ser, &i64))
-            return false;
-        *(int16_t *)value = (int16_t)i64;
-        break;
-    case CRA_TYPE_INT32:
-        if (!cra_json_read_int(ser, &i64))
-            return false;
-        *(int32_t *)value = (int32_t)i64;
-        break;
-    case CRA_TYPE_INT64:
-        if (!cra_json_read_int(ser, (int64_t *)value))
-            return false;
-        break;
-    case CRA_TYPE_UINT8:
-        if (!cra_json_read_int(ser, &i64))
-            return false;
-        *(uint8_t *)value = (uint8_t)i64;
-        break;
-    case CRA_TYPE_UINT16:
-        if (!cra_json_read_int(ser, &i64))
-            return false;
-        *(uint16_t *)value = (uint16_t)i64;
-        break;
-    case CRA_TYPE_UINT32:
-        if (!cra_json_read_int(ser, &i64))
-            return false;
-        *(uint32_t *)value = (uint32_t)i64;
-        break;
-    case CRA_TYPE_UINT64:
-        if (!cra_json_read_int(ser, &i64))
-            return false;
-        *(uint64_t *)value = (uint64_t)i64;
-        break;
-    case CRA_TYPE_FLOAT:
-        if (!cra_json_read_double(ser, &dbl))
-            return false;
-        *(float *)value = (float)dbl;
-        break;
-    case CRA_TYPE_DOUBLE:
-        if (!cra_json_read_double(ser, (double *)value))
-            return false;
-        break;
-    case CRA_TYPE_STRING:
-        if (!cra_json_read_string(ser, (char *)value, (cra_ser_count_t)meta->size, meta->is_ptr, auto_free_if_fail))
-            return false;
-        break;
-    case CRA_TYPE_STRUCT:
-        if (!cra_json_read_struct(ser, value, meta->size, meta->is_ptr, auto_free_if_fail, meta->meta, meta->init_i, meta->args4init))
-            return false;
-        break;
-    case CRA_TYPE_LIST:
-        if (meta->nsize == 0)
-        {
-            // list
-            if (!cra_json_read_list(ser, value, meta->size, meta->is_ptr, auto_free_if_fail, meta->meta, meta->iter_i, meta->init_i, meta->args4init))
+        case CRA_TYPE_FALSE:
+        case CRA_TYPE_TRUE:
+            if (!cra_json_read_bool(ser, (bool *)value))
                 return false;
-        }
-        else
-        {
-            // c array
-            assert_always(meta->nsize == sizeof(cra_ser_count_t));
-            if (!cra_json_read_array(ser, value, meta->size, meta->is_ptr, (cra_ser_count_t *)((char *)val + meta->noffset), meta->meta))
+            break;
+        case CRA_TYPE_INT8:
+            if (!cra_json_read_int(ser, &i64))
                 return false;
-        }
-        break;
-    case CRA_TYPE_DICT:
-        if (!cra_json_read_dict(ser, value, meta->size, meta->is_ptr, auto_free_if_fail, meta->meta, meta->iter_i, meta->init_i, meta->args4init))
-            return false;
-        break;
+            *(int8_t *)value = (int8_t)i64;
+            break;
+        case CRA_TYPE_INT16:
+            if (!cra_json_read_int(ser, &i64))
+                return false;
+            *(int16_t *)value = (int16_t)i64;
+            break;
+        case CRA_TYPE_INT32:
+            if (!cra_json_read_int(ser, &i64))
+                return false;
+            *(int32_t *)value = (int32_t)i64;
+            break;
+        case CRA_TYPE_INT64:
+            if (!cra_json_read_int(ser, (int64_t *)value))
+                return false;
+            break;
+        case CRA_TYPE_UINT8:
+            if (!cra_json_read_int(ser, &i64))
+                return false;
+            *(uint8_t *)value = (uint8_t)i64;
+            break;
+        case CRA_TYPE_UINT16:
+            if (!cra_json_read_int(ser, &i64))
+                return false;
+            *(uint16_t *)value = (uint16_t)i64;
+            break;
+        case CRA_TYPE_UINT32:
+            if (!cra_json_read_int(ser, &i64))
+                return false;
+            *(uint32_t *)value = (uint32_t)i64;
+            break;
+        case CRA_TYPE_UINT64:
+            if (!cra_json_read_int(ser, &i64))
+                return false;
+            *(uint64_t *)value = (uint64_t)i64;
+            break;
+        case CRA_TYPE_FLOAT:
+            if (!cra_json_read_double(ser, &dbl))
+                return false;
+            *(float *)value = (float)dbl;
+            break;
+        case CRA_TYPE_DOUBLE:
+            if (!cra_json_read_double(ser, (double *)value))
+                return false;
+            break;
+        case CRA_TYPE_STRING:
+            if (!cra_json_read_string(ser, (char *)value, (cra_ser_count_t)meta->size, meta->is_ptr, auto_free_if_fail))
+                return false;
+            break;
+        case CRA_TYPE_STRUCT:
+            if (!cra_json_read_struct(
+                  ser, value, meta->size, meta->is_ptr, auto_free_if_fail, meta->meta, meta->init_i, meta->args4init))
+                return false;
+            break;
+        case CRA_TYPE_LIST:
+            if (meta->nsize == 0)
+            {
+                // list
+                if (!cra_json_read_list(ser,
+                                        value,
+                                        meta->size,
+                                        meta->is_ptr,
+                                        auto_free_if_fail,
+                                        meta->meta,
+                                        meta->iter_i,
+                                        meta->init_i,
+                                        meta->args4init))
+                    return false;
+            }
+            else
+            {
+                // c array
+                assert_always(meta->nsize == sizeof(cra_ser_count_t));
+                if (!cra_json_read_array(ser,
+                                         value,
+                                         meta->size,
+                                         meta->is_ptr,
+                                         (cra_ser_count_t *)((char *)val + meta->noffset),
+                                         meta->meta))
+                    return false;
+            }
+            break;
+        case CRA_TYPE_DICT:
+            if (!cra_json_read_dict(ser,
+                                    value,
+                                    meta->size,
+                                    meta->is_ptr,
+                                    auto_free_if_fail,
+                                    meta->meta,
+                                    meta->iter_i,
+                                    meta->init_i,
+                                    meta->args4init))
+                return false;
+            break;
 
-    default:
-        ser->error = CRA_SER_ERROR_INVALID_VALUE;
-        return false;
+        default:
+            ser->error = CRA_SER_ERROR_INVALID_VALUE;
+            return false;
     }
     return true;
 }
 
 // =====================
 
-static void cra_json_parse_begin(CraSerializer *ser, unsigned char *buffer, size_t buffer_length)
+static void
+cra_json_parse_begin(CraSerializer *ser, unsigned char *buffer, size_t buffer_length)
 {
     assert_always(ser != NULL);
     assert_always(buffer != NULL);
@@ -1477,7 +1584,8 @@ static void cra_json_parse_begin(CraSerializer *ser, unsigned char *buffer, size
     cra_ser_release_init(&ser->release);
 }
 
-static void cra_json_parse_end(CraSerializer *ser, CraSerError_e *error)
+static void
+cra_json_parse_end(CraSerializer *ser, CraSerError_e *error)
 {
     assert_always(ser != NULL);
     assert_always(ser->buffer != NULL);
@@ -1488,10 +1596,11 @@ static void cra_json_parse_end(CraSerializer *ser, CraSerError_e *error)
     cra_ser_release_uninit(&ser->release, ser->error != CRA_SER_ERROR_SUCCESS);
 }
 
-static bool cra_json_parse_all(CraSerializer *ser, void *val, const CraTypeMeta *meta, bool auto_free_if_fail)
+static bool
+cra_json_parse_all(CraSerializer *ser, void *val, const CraTypeMeta *meta, bool auto_free_if_fail)
 {
-    bool loop;
-    char *key;
+    bool         loop;
+    char        *key;
     CraTypeMeta *last, *m = (CraTypeMeta *)meta;
 
     cra_json_skip_whitespaces(ser);
@@ -1542,9 +1651,13 @@ error_return:
 
 #endif // end deserialize
 
-unsigned char *cra_json_stringify_struct0(unsigned char *buffer, size_t *buffer_length, void *val,
-                                          const CraTypeMeta *members_meta, bool format,
-                                          CraSerError_e *error)
+unsigned char *
+cra_json_stringify_struct0(unsigned char     *buffer,
+                           size_t            *buffer_length,
+                           void              *val,
+                           const CraTypeMeta *members_meta,
+                           bool               format,
+                           CraSerError_e     *error)
 {
     CraSerializer ser;
     assert_always(buffer_length != NULL);
@@ -1553,9 +1666,16 @@ unsigned char *cra_json_stringify_struct0(unsigned char *buffer, size_t *buffer_
     return cra_json_stringify_end(&ser, buffer_length, error);
 }
 
-void cra_json_parse_struct0(unsigned char *buffer, size_t buffer_length, void *retval,
-                            size_t valsize, bool is_ptr, const CraTypeMeta *members_meta,
-                            const CraTypeInit_i *init_i, void *args4init, CraSerError_e *error)
+void
+cra_json_parse_struct0(unsigned char       *buffer,
+                       size_t               buffer_length,
+                       void                *retval,
+                       size_t               valsize,
+                       bool                 is_ptr,
+                       const CraTypeMeta   *members_meta,
+                       const CraTypeInit_i *init_i,
+                       void                *args4init,
+                       CraSerError_e       *error)
 {
     CraSerializer ser;
     cra_json_parse_begin(&ser, buffer, buffer_length);
@@ -1563,9 +1683,14 @@ void cra_json_parse_struct0(unsigned char *buffer, size_t buffer_length, void *r
     cra_json_parse_end(&ser, error);
 }
 
-unsigned char *cra_json_stringify_list0(unsigned char *buffer, size_t *buffer_length, void *val,
-                                        const CraTypeMeta *element_meta, const CraTypeIter_i *iter_i,
-                                        bool format, CraSerError_e *error)
+unsigned char *
+cra_json_stringify_list0(unsigned char       *buffer,
+                         size_t              *buffer_length,
+                         void                *val,
+                         const CraTypeMeta   *element_meta,
+                         const CraTypeIter_i *iter_i,
+                         bool                 format,
+                         CraSerError_e       *error)
 {
     CraSerializer ser;
     assert_always(buffer_length != NULL);
@@ -1574,10 +1699,17 @@ unsigned char *cra_json_stringify_list0(unsigned char *buffer, size_t *buffer_le
     return cra_json_stringify_end(&ser, buffer_length, error);
 }
 
-void cra_json_parse_list0(unsigned char *buffer, size_t buffer_length, void *retval,
-                          size_t valsize, bool is_ptr, const CraTypeMeta *element_meta,
-                          const CraTypeIter_i *iter_i, const CraTypeInit_i *init_i,
-                          void *args4init, CraSerError_e *error)
+void
+cra_json_parse_list0(unsigned char       *buffer,
+                     size_t               buffer_length,
+                     void                *retval,
+                     size_t               valsize,
+                     bool                 is_ptr,
+                     const CraTypeMeta   *element_meta,
+                     const CraTypeIter_i *iter_i,
+                     const CraTypeInit_i *init_i,
+                     void                *args4init,
+                     CraSerError_e       *error)
 {
     CraSerializer ser;
     cra_json_parse_begin(&ser, buffer, buffer_length);
@@ -1585,9 +1717,14 @@ void cra_json_parse_list0(unsigned char *buffer, size_t buffer_length, void *ret
     cra_json_parse_end(&ser, error);
 }
 
-unsigned char *cra_json_stringify_array0(unsigned char *buffer, size_t *buffer_length, void *val,
-                                         cra_ser_count_t count, const CraTypeMeta *element_meta,
-                                         bool format, CraSerError_e *error)
+unsigned char *
+cra_json_stringify_array0(unsigned char     *buffer,
+                          size_t            *buffer_length,
+                          void              *val,
+                          cra_ser_count_t    count,
+                          const CraTypeMeta *element_meta,
+                          bool               format,
+                          CraSerError_e     *error)
 {
     CraSerializer ser;
     assert_always(buffer_length != NULL);
@@ -1596,9 +1733,15 @@ unsigned char *cra_json_stringify_array0(unsigned char *buffer, size_t *buffer_l
     return cra_json_stringify_end(&ser, buffer_length, error);
 }
 
-void cra_json_parse_array0(unsigned char *buffer, size_t buffer_length, void *retval, size_t valsize,
-                           bool is_ptr, cra_ser_count_t *countptr, const CraTypeMeta *element_meta,
-                           CraSerError_e *error)
+void
+cra_json_parse_array0(unsigned char     *buffer,
+                      size_t             buffer_length,
+                      void              *retval,
+                      size_t             valsize,
+                      bool               is_ptr,
+                      cra_ser_count_t   *countptr,
+                      const CraTypeMeta *element_meta,
+                      CraSerError_e     *error)
 {
     CraSerializer ser;
     cra_json_parse_begin(&ser, buffer, buffer_length);
@@ -1606,9 +1749,14 @@ void cra_json_parse_array0(unsigned char *buffer, size_t buffer_length, void *re
     cra_json_parse_end(&ser, error);
 }
 
-unsigned char *cra_json_stringify_dict0(unsigned char *buffer, size_t *buffer_length, void *val,
-                                        const CraTypeMeta *kv_meta, const CraTypeIter_i *iter_i,
-                                        bool format, CraSerError_e *error)
+unsigned char *
+cra_json_stringify_dict0(unsigned char       *buffer,
+                         size_t              *buffer_length,
+                         void                *val,
+                         const CraTypeMeta   *kv_meta,
+                         const CraTypeIter_i *iter_i,
+                         bool                 format,
+                         CraSerError_e       *error)
 {
     CraSerializer ser;
     assert_always(buffer_length != NULL);
@@ -1617,9 +1765,17 @@ unsigned char *cra_json_stringify_dict0(unsigned char *buffer, size_t *buffer_le
     return cra_json_stringify_end(&ser, buffer_length, error);
 }
 
-void cra_json_parse_dict0(unsigned char *buffer, size_t buffer_length, void *retval, size_t valsize,
-                          bool is_ptr, const CraTypeMeta *kv_meta, const CraTypeIter_i *iter_i,
-                          const CraTypeInit_i *init_i, void *args4init, CraSerError_e *error)
+void
+cra_json_parse_dict0(unsigned char       *buffer,
+                     size_t               buffer_length,
+                     void                *retval,
+                     size_t               valsize,
+                     bool                 is_ptr,
+                     const CraTypeMeta   *kv_meta,
+                     const CraTypeIter_i *iter_i,
+                     const CraTypeInit_i *init_i,
+                     void                *args4init,
+                     CraSerError_e       *error)
 {
     CraSerializer ser;
     cra_json_parse_begin(&ser, buffer, buffer_length);

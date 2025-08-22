@@ -15,21 +15,26 @@
 typedef struct _CraCDL
 {
     volatile int count;
-    cra_cond_t cond;
-    cra_mutex_t mutex;
+    cra_cond_t   cond;
+    cra_mutex_t  mutex;
 } CraCDL;
 
-CRA_API void cra_cdl_init(CraCDL *cdl, int count);
-CRA_API void cra_cdl_uninit(CraCDL *cdl);
+CRA_API void
+cra_cdl_init(CraCDL *cdl, int count);
 
-static inline void cra_cdl_reset(CraCDL *cdl, int count)
+CRA_API void
+cra_cdl_uninit(CraCDL *cdl);
+
+static inline void
+cra_cdl_reset(CraCDL *cdl, int count)
 {
     cra_mutex_lock(&cdl->mutex);
     cdl->count = count;
     cra_mutex_unlock(&cdl->mutex);
 }
 
-static inline int cra_cdl_get_count(CraCDL *cdl)
+static inline int
+cra_cdl_get_count(CraCDL *cdl)
 {
     int count;
     cra_mutex_lock(&cdl->mutex);
@@ -38,7 +43,8 @@ static inline int cra_cdl_get_count(CraCDL *cdl)
     return count;
 }
 
-static inline void cra_cdl_count_down(CraCDL *cdl)
+static inline void
+cra_cdl_count_down(CraCDL *cdl)
 {
     cra_mutex_lock(&cdl->mutex);
     if (--cdl->count <= 0)
@@ -46,7 +52,8 @@ static inline void cra_cdl_count_down(CraCDL *cdl)
     cra_mutex_unlock(&cdl->mutex);
 }
 
-static inline void cra_cdl_wait(CraCDL *cdl)
+static inline void
+cra_cdl_wait(CraCDL *cdl)
 {
     cra_mutex_lock(&cdl->mutex);
     while (cdl->count > 0)
@@ -54,7 +61,8 @@ static inline void cra_cdl_wait(CraCDL *cdl)
     cra_mutex_unlock(&cdl->mutex);
 }
 
-static inline bool cra_cdl_wait_timeout(CraCDL *cdl, int timeout_ms)
+static inline bool
+cra_cdl_wait_timeout(CraCDL *cdl, int timeout_ms)
 {
     bool ret;
     cra_mutex_lock(&cdl->mutex);

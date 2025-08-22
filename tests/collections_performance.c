@@ -8,18 +8,19 @@
  * @copyright Copyright (c) 2025
  *
  */
-#include "cra_time.h"
-#include "cra_malloc.h"
 #include "collections/cra_alist.h"
-#include "collections/cra_llist.h"
 #include "collections/cra_deque.h"
 #include "collections/cra_dict.h"
+#include "collections/cra_llist.h"
+#include "cra_malloc.h"
+#include "cra_time.h"
 
-void test_alist_performance(int sizes[])
+void
+test_alist_performance(int sizes[])
 {
-    int val, *valptr;
+    int           val, *valptr;
     unsigned long start_ms, end_ms;
-    CraAList list;
+    CraAList      list;
     cra_alist_init_size0(int, &list, sizes[0], false, NULL);
     srand((unsigned int)time(NULL));
 
@@ -115,11 +116,12 @@ void test_alist_performance(int sizes[])
     cra_alist_uninit(&list);
 }
 
-void test_llist_performance(int sizes[])
+void
+test_llist_performance(int sizes[])
 {
-    int val, *valptr;
+    int           val, *valptr;
     unsigned long start_ms, end_ms;
-    CraLList list;
+    CraLList      list;
     cra_llist_init0(int, &list, false, NULL);
     srand((unsigned int)time(NULL));
 
@@ -215,11 +217,12 @@ void test_llist_performance(int sizes[])
     cra_llist_uninit(&list);
 }
 
-void test_deque_performance(int sizes[])
+void
+test_deque_performance(int sizes[])
 {
-    int val, *valptr;
+    int           val, *valptr;
     unsigned long start_ms, end_ms;
-    CraDeque deque;
+    CraDeque      deque;
     cra_deque_init0(int, &deque, CRA_DEQUE_INFINITE, false, NULL);
     srand((unsigned int)time(NULL));
 
@@ -315,13 +318,15 @@ void test_deque_performance(int sizes[])
     cra_deque_uninit(&deque);
 }
 
-void test_dict_performance(int sizes[])
+void
+test_dict_performance(int sizes[])
 {
-    int *keyptr;
-    size_t val, *valptr;
+    int          *keyptr;
+    size_t        val, *valptr;
     unsigned long start_ms, end_ms;
-    CraDict dict;
-    cra_dict_init0(int, size_t, &dict, false, (cra_hash_fn)cra_hash_int_p, (cra_compare_fn)cra_compare_int_p, NULL, NULL);
+    CraDict       dict;
+    cra_dict_init0(
+      int, size_t, &dict, false, (cra_hash_fn)cra_hash_int_p, (cra_compare_fn)cra_compare_int_p, NULL, NULL);
     srand((unsigned int)time(NULL));
 
     printf("\n=========================================================\n\n");
@@ -336,14 +341,14 @@ void test_dict_performance(int sizes[])
         // insert
         start_ms = cra_tick_ms();
         for (int j = 0; j < sizes[i]; j++)
-            cra_dict_put(&dict, &(int){rand()}, &(size_t){j});
+            cra_dict_put(&dict, &(int){ rand() }, &(size_t){ j });
         end_ms = cra_tick_ms();
         printf("\tput:           %lums.\n", end_ms - start_ms);
 
         // get
         start_ms = cra_tick_ms();
         for (int j = 0; j < sizes[i]; j++)
-            cra_dict_get(&dict, &(int){rand()}, &val);
+            cra_dict_get(&dict, &(int){ rand() }, &val);
         end_ms = cra_tick_ms();
         printf("\tget:           %lums.\n", end_ms - start_ms);
 
@@ -357,7 +362,7 @@ void test_dict_performance(int sizes[])
         // remove random
         start_ms = cra_tick_ms();
         for (int j = 0; j < sizes[i]; j++)
-            cra_dict_remove(&dict, &(int){rand()});
+            cra_dict_remove(&dict, &(int){ rand() });
         end_ms = cra_tick_ms();
         printf("\tremove:        %lums.\n", end_ms - start_ms);
     }
@@ -365,10 +370,11 @@ void test_dict_performance(int sizes[])
     cra_dict_uninit(&dict);
 }
 
-int main(void)
+int
+main(void)
 {
     //              千     万     十万  百万  千万
-    int sizes[] = {1000, 10000, 100000, 0, 10000000, 0};
+    int sizes[] = { 1000, 10000, 100000, 0, 10000000, 0 };
     test_alist_performance(sizes);
     test_llist_performance(sizes);
     test_deque_performance(sizes);

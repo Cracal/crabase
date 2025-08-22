@@ -1,12 +1,13 @@
-#include "time.h"
-#include "cra_malloc.h"
 #include "cra_assert.h"
+#include "cra_malloc.h"
 #include "cra_mempool.h"
 #include "threads/cra_thread.h"
+#include "time.h"
 
-void test_mempool(void)
+void
+test_mempool(void)
 {
-    int *pi1, *pi2, *pi3, *pi4, *pi5, *pi6, *pi7;
+    int       *pi1, *pi2, *pi3, *pi4, *pi5, *pi6, *pi7;
     CraMemPool pool;
 
     // cra_mempool_init(NULL, 1, 1);
@@ -70,8 +71,8 @@ void test_mempool(void)
 
 CRA_THRD_FUNC(sub_thread)
 {
-    int *pi;
-    int val;
+    int        *pi;
+    int         val;
     CraMemPool *pool;
 
     pool = (CraMemPool *)arg;
@@ -87,10 +88,11 @@ CRA_THRD_FUNC(sub_thread)
         cra_mempool_dealloc(pool, pi);
         val = rand();
     }
-    return (cra_thrd_ret_t){0};
+    return (cra_thrd_ret_t){ 0 };
 }
 
-void test_multi_threads(void)
+void
+test_multi_threads(void)
 {
     cra_thrd_t th1, th2;
     CraMemPool pool;
@@ -105,7 +107,8 @@ void test_multi_threads(void)
     cra_mempool_uninit(&pool);
 }
 
-int main(void)
+int
+main(void)
 {
     test_mempool();
     test_multi_threads();

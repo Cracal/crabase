@@ -21,10 +21,11 @@ static CRA_THRD_FUNC(thrd_func)
         printf("Thread %lu is runing...\n", cra_thrd_get_current_tid());
         cra_sleep(1);
     }
-    return (cra_thrd_ret_t){0};
+    return (cra_thrd_ret_t){ 0 };
 }
 
-void test_thread(void)
+void
+test_thread(void)
 {
     cra_thrd_t th1, th2;
     cra_thrd_create(&th1, thrd_func, NULL);
@@ -38,9 +39,9 @@ void test_thread(void)
 
 #if 1 // test locker
 
-static cra_cond_t s_cond;
+static cra_cond_t  s_cond;
 static cra_mutex_t s_mutex;
-static int s_val = 0;
+static int         s_val = 0;
 
 static CRA_THRD_FUNC(thrd_locker_func)
 {
@@ -56,10 +57,11 @@ static CRA_THRD_FUNC(thrd_locker_func)
     printf("test-locker-thread: set s_val: %d\n", s_val);
     cra_cond_signal(&s_cond);
 
-    return (cra_thrd_ret_t){0};
+    return (cra_thrd_ret_t){ 0 };
 }
 
-static void test_locker(void)
+static void
+test_locker(void)
 {
     cra_mutex_init(&s_mutex);
     cra_cond_init(&s_cond);
@@ -89,7 +91,7 @@ static void test_locker(void)
 static CRA_THRD_FUNC(thrd_mutex_func)
 {
     cra_mutex_t *mutex = (cra_mutex_t *)arg;
-    bool b = cra_mutex_trylock(mutex);
+    bool         b = cra_mutex_trylock(mutex);
     if (b)
     {
         printf("test-mutex-routine: 子线程第一次尝试获得锁成功……\n");
@@ -105,12 +107,13 @@ static CRA_THRD_FUNC(thrd_mutex_func)
     printf("test-mutex-routine: 子线程第二次获得锁……\n");
     cra_mutex_unlock(mutex);
 
-    return (cra_thrd_ret_t){0};
+    return (cra_thrd_ret_t){ 0 };
 }
 
-static void test_mutex(void)
+static void
+test_mutex(void)
 {
-    cra_thrd_t t;
+    cra_thrd_t  t;
     cra_mutex_t mutex;
 
     cra_mutex_init(&mutex);
@@ -155,12 +158,13 @@ static CRA_THRD_FUNC(thrd_condvar)
         cra_msleep(100);
     }
 
-    return (cra_thrd_ret_t){0};
+    return (cra_thrd_ret_t){ 0 };
 }
 
-static void test_condvar(void)
+static void
+test_condvar(void)
 {
-    bool b;
+    bool       b;
     cra_thrd_t t;
 
     cra_mutex_init(&s_mutex);
@@ -195,7 +199,8 @@ static void test_condvar(void)
 
 #endif // end test condvar
 
-int main(void)
+int
+main(void)
 {
     test_thread();
     test_locker();

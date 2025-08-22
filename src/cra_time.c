@@ -13,7 +13,8 @@
 #include <sys/time.h>
 #endif
 
-static inline double cra_monotonic(void)
+static inline unsigned long long
+cra_monotonic(void)
 {
 #ifdef CRA_OS_WIN
     static LONGLONG s_freq = 0;
@@ -27,32 +28,39 @@ static inline double cra_monotonic(void)
     {
         LARGE_INTEGER count;
         QueryPerformanceCounter(&count);
-        return (count.QuadPart / (double)s_freq);
+        return count.QuadPart * 1000000 / s_freq;
     }
     return 0;
 #else
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return tv.tv_sec + (double)tv.tv_usec / 1000000;
+    // struct timeval tv;
+    // gettimeofday(&tv, NULL);
+    // return tv.tv_sec * 1000000 + tv.tv_usec;
+    struct timespec tp;
+    clock_gettime(CLOCK_MONOTONIC, &tp);
+    return tp.tv_sec * 1000000 + tp.tv_nsec / 1000;
 #endif
 }
 
-double cra_monotonic_sec(void)
+double
+cra_monotonic_sec(void)
+{
+    return (double)(cra_monotonic() / 1000000);
+}
+
+unsigned long
+cra_tick_ms(void)
+{
+    return (unsigned long)(cra_monotonic() / 1000);
+}
+
+unsigned long long
+cra_tick_us(void)
 {
     return cra_monotonic();
 }
 
-unsigned long cra_tick_ms(void)
-{
-    return (unsigned long)(cra_monotonic() * 1000);
-}
-
-unsigned long long cra_tick_us(void)
-{
-    return (unsigned long long)(cra_monotonic() * 1000000);
-}
-
-void cra_print_tm(const struct tm *const _tm)
+void
+cra_print_tm(const struct tm *const _tm)
 {
     printf("struct tm {\n");
     printf("  tm_year  = %d,\n", _tm->tm_year + 1900);
@@ -67,7 +75,8 @@ void cra_print_tm(const struct tm *const _tm)
     printf("}\n");
 }
 
-void cra_datetime_now_utc(CraDateTime *dt)
+void
+cra_datetime_now_utc(CraDateTime *dt)
 {
 #ifdef CRA_OS_WIN
     SYSTEMTIME st;
@@ -80,7 +89,7 @@ void cra_datetime_now_utc(CraDateTime *dt)
     dt->sec = st.wSecond;
     dt->ms = st.wMilliseconds;
 #else
-    struct tm _tm;
+    struct tm       _tm;
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
     cra_gmtime(ts.tv_sec, &_tm);
@@ -94,7 +103,8 @@ void cra_datetime_now_utc(CraDateTime *dt)
 #endif
 }
 
-void cra_datetime_now_localtime(CraDateTime *dt)
+void
+cra_datetime_now_localtime(CraDateTime *dt)
 {
 #ifdef CRA_OS_WIN
     SYSTEMTIME st;
@@ -107,7 +117,7 @@ void cra_datetime_now_localtime(CraDateTime *dt)
     dt->sec = st.wSecond;
     dt->ms = st.wMilliseconds;
 #else
-    struct tm _tm;
+    struct tm      _tm;
     struct timeval tv;
     gettimeofday(&tv, NULL);
     cra_gmtime(tv.tv_sec, &_tm);
@@ -121,7 +131,8 @@ void cra_datetime_now_localtime(CraDateTime *dt)
 #endif
 }
 
-void cra_print_datetime(const CraDateTime *const dt)
+void
+cra_print_datetime(const CraDateTime *const dt)
 {
     printf("CraDateTime {\n");
     printf("  year  = %d,\n", dt->year);

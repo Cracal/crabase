@@ -8,11 +8,12 @@
  * @copyright Copyright (c) 2025
  *
  */
-#include "cra_malloc.h"
 #include "cra_assert.h"
 #include "cra_buffer.h"
+#include "cra_malloc.h"
 
-static void test_new_delete(void)
+static void
+test_new_delete(void)
 {
     CraBuffer *buf;
 
@@ -26,7 +27,8 @@ static void test_new_delete(void)
     cra_dealloc(buf);
 }
 
-static void test_append(void)
+static void
+test_append(void)
 {
     CraBuffer *buf = cra_alloc(CraBuffer);
     cra_buffer_init(buf, 10);
@@ -52,7 +54,8 @@ static void test_append(void)
     cra_dealloc(buf);
 }
 
-static void test_expand(void)
+static void
+test_expand(void)
 {
     CraBuffer *buffer = cra_alloc(CraBuffer);
     cra_buffer_init(buffer, 10);
@@ -117,10 +120,11 @@ static void test_expand(void)
     cra_dealloc(buffer);
 }
 
-static void test_retrieve(void)
+static void
+test_retrieve(void)
 {
     CraBuffer buf;
-    char buff[100];
+    char      buff[100];
 
     cra_buffer_init(&buf, 10);
 
@@ -143,7 +147,8 @@ static void test_retrieve(void)
     cra_buffer_uninit(&buf);
 }
 
-static void test_append_retrieve_size(void)
+static void
+test_append_retrieve_size(void)
 {
     CraBuffer *buf = cra_alloc(CraBuffer);
     cra_buffer_init(buf, 100);
@@ -181,7 +186,8 @@ static void test_append_retrieve_size(void)
     cra_dealloc(buf);
 }
 
-int main(void)
+int
+main(void)
 {
     test_new_delete();
     test_append();

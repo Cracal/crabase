@@ -2,7 +2,8 @@
 #include "cra_assert.h"
 #include "cra_malloc.h"
 
-void cra_buffer_init(CraBuffer *buffer, size_t init_size)
+void
+cra_buffer_init(CraBuffer *buffer, size_t init_size)
 {
     assert(buffer != NULL);
     assert_always(init_size > 0);
@@ -13,13 +14,15 @@ void cra_buffer_init(CraBuffer *buffer, size_t init_size)
     buffer->buffer = cra_malloc(init_size);
 }
 
-void cra_buffer_uninit(CraBuffer *buffer)
+void
+cra_buffer_uninit(CraBuffer *buffer)
 {
     cra_free(buffer->buffer);
     bzero(buffer, sizeof(*buffer));
 }
 
-size_t cra_buffer_resize(CraBuffer *buffer, size_t new_size)
+size_t
+cra_buffer_resize(CraBuffer *buffer, size_t new_size)
 {
     size_t readable = cra_buffer_readable(buffer);
     if (buffer->read_idx > 0)
@@ -37,7 +40,8 @@ size_t cra_buffer_resize(CraBuffer *buffer, size_t new_size)
     return buffer->size;
 }
 
-void cra_buffer_append(CraBuffer *buffer, const void *data, size_t len)
+void
+cra_buffer_append(CraBuffer *buffer, const void *data, size_t len)
 {
     if (cra_buffer_writable(buffer) < len)
         cra_buffer_resize(buffer, CRA_MAX(buffer->size + (buffer->size >> 1), buffer->size + len));
@@ -46,7 +50,8 @@ void cra_buffer_append(CraBuffer *buffer, const void *data, size_t len)
     buffer->write_idx += len;
 }
 
-size_t cra_buffer_retrieve(CraBuffer *buffer, void *data, size_t len)
+size_t
+cra_buffer_retrieve(CraBuffer *buffer, void *data, size_t len)
 {
     len = CRA_MIN(cra_buffer_readable(buffer), len);
     memcpy(data, cra_buffer_read_start(buffer), len);
@@ -56,14 +61,16 @@ size_t cra_buffer_retrieve(CraBuffer *buffer, void *data, size_t len)
     return len;
 }
 
-size_t cra_buffer_append_size(CraBuffer *buffer, size_t len)
+size_t
+cra_buffer_append_size(CraBuffer *buffer, size_t len)
 {
     len = CRA_MIN(len, cra_buffer_writable(buffer));
     buffer->write_idx += len;
     return len;
 }
 
-size_t cra_buffer_retrieve_size(CraBuffer *buffer, size_t len)
+size_t
+cra_buffer_retrieve_size(CraBuffer *buffer, size_t len)
 {
     len = CRA_MIN(len, cra_buffer_readable(buffer));
     buffer->read_idx += len;

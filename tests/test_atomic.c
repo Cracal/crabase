@@ -12,7 +12,8 @@
 #include "cra_atomic.h"
 #include "threads/cra_thread.h"
 
-void test_load_and_store(void)
+void
+test_load_and_store(void)
 {
     printf("test load and store.\n");
 
@@ -33,12 +34,13 @@ void test_load_and_store(void)
     printf("test load and store done.\n");
 }
 
-void test_add_and_sub(void)
+void
+test_add_and_sub(void)
 {
     printf("test add and sub.\n");
 
-    int32_t i32;
-    int64_t i64;
+    int32_t            i32;
+    int64_t            i64;
     cra_atomic_int32_t ia32;
     cra_atomic_int64_t ia64;
 
@@ -77,12 +79,13 @@ void test_add_and_sub(void)
     printf("test add and sub done.\n");
 }
 
-void test_inc_and_dec(void)
+void
+test_inc_and_dec(void)
 {
     printf("test inc and dec.\n");
 
-    int32_t i32;
-    int64_t i64;
+    int32_t            i32;
+    int64_t            i64;
     cra_atomic_int32_t ia32;
     cra_atomic_int64_t ia64;
 
@@ -113,13 +116,14 @@ void test_inc_and_dec(void)
     printf("test inc and dec done.\n");
 }
 
-void test_compare_and_set(void)
+void
+test_compare_and_set(void)
 {
     printf("test compare_and_set.\n");
 
-    bool b;
-    int32_t i32;
-    int64_t i64;
+    bool               b;
+    int32_t            i32;
+    int64_t            i64;
     cra_atomic_int32_t ia32;
     cra_atomic_int64_t ia64;
 
@@ -140,7 +144,8 @@ void test_compare_and_set(void)
     printf("test compare_and_set done.\n");
 }
 
-void test_flag(void)
+void
+test_flag(void)
 {
     bool b;
 
@@ -162,7 +167,7 @@ void test_flag(void)
 }
 
 #define NUM 100
-cra_thrd_t th[NUM];
+cra_thrd_t         th[NUM];
 cra_atomic_int32_t ia32;
 cra_atomic_int64_t ia64;
 
@@ -171,7 +176,7 @@ CRA_THRD_FUNC(test_add_thr_fn)
     CRA_UNUSED_VALUE(arg);
     cra_atomic_add32(&ia32, 10);
     cra_atomic_add64(&ia64, 100);
-    return (cra_thrd_ret_t){0};
+    return (cra_thrd_ret_t){ 0 };
 }
 
 CRA_THRD_FUNC(test_sub_thr_fn)
@@ -179,10 +184,11 @@ CRA_THRD_FUNC(test_sub_thr_fn)
     CRA_UNUSED_VALUE(arg);
     cra_atomic_sub32(&ia32, 10);
     cra_atomic_sub64(&ia64, 100);
-    return (cra_thrd_ret_t){0};
+    return (cra_thrd_ret_t){ 0 };
 }
 
-void test_add_and_sub_thr(void)
+void
+test_add_and_sub_thr(void)
 {
     ia32 = 0;
     ia64 = 0;
@@ -211,7 +217,7 @@ CRA_THRD_FUNC(test_inc_thr_fn)
     CRA_UNUSED_VALUE(arg);
     cra_atomic_inc32(&ia32);
     cra_atomic_inc64(&ia64);
-    return (cra_thrd_ret_t){0};
+    return (cra_thrd_ret_t){ 0 };
 }
 
 CRA_THRD_FUNC(test_dec_thr_fn)
@@ -219,10 +225,11 @@ CRA_THRD_FUNC(test_dec_thr_fn)
     CRA_UNUSED_VALUE(arg);
     cra_atomic_dec32(&ia32);
     cra_atomic_dec64(&ia64);
-    return (cra_thrd_ret_t){0};
+    return (cra_thrd_ret_t){ 0 };
 }
 
-void test_inc_and_dec_thr(void)
+void
+test_inc_and_dec_thr(void)
 {
     ia32 = 10;
     ia64 = 10000;
@@ -246,7 +253,8 @@ void test_inc_and_dec_thr(void)
     assert_always(ia64 == 10000);
 }
 
-int main(void)
+int
+main(void)
 {
     test_load_and_store();
     test_add_and_sub();

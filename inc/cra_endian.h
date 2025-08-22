@@ -13,27 +13,27 @@
 #include "cra_defs.h"
 
 #if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-#define CRA_IS_BIG_ENDIAN 1
+#define CRA_IS_BIG_ENDIAN    1
 #define CRA_IS_LITTLE_ENDIAN 0
 #elif defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#define CRA_IS_BIG_ENDIAN 0
+#define CRA_IS_BIG_ENDIAN    0
 #define CRA_IS_LITTLE_ENDIAN 1
 #elif defined(CRA_OS_WIN)
 #include <windows.h>
 #if REG_DWORD == REG_DWORD_BIG_ENDIAN
-#define CRA_IS_BIG_ENDIAN 1
+#define CRA_IS_BIG_ENDIAN    1
 #define CRA_IS_LITTLE_ENDIAN 0
 #else
-#define CRA_IS_BIG_ENDIAN 0
+#define CRA_IS_BIG_ENDIAN    0
 #define CRA_IS_LITTLE_ENDIAN 1
 #endif
 #elif defined(CRA_OS_LINUX)
 #include <endian.h>
 #if __BYTE_ORDER == __BIG_ENDIAN
-#define CRA_IS_BIG_ENDIAN 1
+#define CRA_IS_BIG_ENDIAN    1
 #define CRA_IS_LITTLE_ENDIAN 0
 #elif __BYTE_ORDER == __LITTLE_ENDIAN
-#define CRA_IS_BIG_ENDIAN 0
+#define CRA_IS_BIG_ENDIAN    0
 #define CRA_IS_LITTLE_ENDIAN 1
 #else
 #error "Cannot determine endianness"

@@ -10,11 +10,11 @@
  */
 #ifndef __CRA_DEFS_H__
 #define __CRA_DEFS_H__
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdint.h>
-#include <stdbool.h>
 
 #if 1 // OS
 
@@ -28,8 +28,8 @@
 
 #elif defined(__linux__)
 
-#include <unistd.h>
 #include <limits.h>
+#include <unistd.h>
 
 #define CRA_OS_LINUX
 
@@ -64,8 +64,9 @@
 #define CRA_COMPILER_GNUC
 
 #ifdef __MINGW64__
-#include <unistd.h>
 #include <limits.h>
+#include <unistd.h>
+
 #define CRA_COMPILER_MINGW
 #endif
 
@@ -112,8 +113,17 @@
 #define cra_set_last_error SetLastError
 #else
 #include <errno.h>
-static inline int cra_get_last_error() { return errno; }
-static inline void cra_set_last_error(int err) { errno = err; }
+static inline int
+cra_get_last_error()
+{
+    return errno;
+}
+
+static inline void
+cra_set_last_error(int err)
+{
+    errno = err;
+}
 #endif
 
 #endif // end cra_[get|set]_last_error()
@@ -122,12 +132,12 @@ static inline void cra_set_last_error(int err) { errno = err; }
 
 #define CRA_UNUSED_VALUE(p) (void)(p)
 
-#define CRA_MAX(a, b) ((a) > (b) ? (a) : (b))
-#define CRA_MIN(a, b) ((a) < (b) ? (a) : (b))
+#define CRA_MAX(a, b)          ((a) > (b) ? (a) : (b))
+#define CRA_MIN(a, b)          ((a) < (b) ? (a) : (b))
 #define CRA_CLAMP(v, max, min) ((v) > (max) ? (max) : ((v) < (min) ? (min) : (v)))
 
 #define _CRA_CAT(a, b) a##b
-#define CRA_CAT(a, b) _CRA_CAT(a, b)
+#define CRA_CAT(a, b)  _CRA_CAT(a, b)
 #define CRA_UCAT(a, b) CRA_CAT(a, CRA_CAT(_, b))
 
 #ifndef offsetof
@@ -135,8 +145,7 @@ static inline void cra_set_last_error(int err) { errno = err; }
 #endif
 
 #ifndef container_of
-#define container_of(ptr, type, member) \
-    ((type *)((char *)(ptr) - offsetof(type, member)))
+#define container_of(ptr, type, member) ((type *)((char *)(ptr) - offsetof(type, member)))
 #endif
 
 #ifdef CRA_COMPILER_MSVC
@@ -158,17 +167,18 @@ typedef intptr_t ssize_t;
 
 #define bzero ZeroMemory
 
-#define cra_sleep(_sec) Sleep((_sec) * 1000)
+#define cra_sleep(_sec)   Sleep((_sec) * 1000)
 #define cra_msleep(_msec) Sleep(_msec)
 
 #else
 
-#define cra_sleep sleep
+#define cra_sleep         sleep
 #define cra_msleep(_msec) usleep((_msec) * 1000)
 
 #endif
 
-static inline void cra_swap_ptr(void **ptr1, void **ptr2)
+static inline void
+cra_swap_ptr(void **ptr1, void **ptr2)
 {
     void *temp = *ptr1;
     *ptr1 = *ptr2;

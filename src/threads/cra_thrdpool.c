@@ -8,31 +8,31 @@
  * @copyright Copyright (c) 2021
  *
  */
+#include "threads/cra_thrdpool.h"
 #include "cra_assert.h"
 #include "cra_malloc.h"
 #include "threads/cra_cdl.h"
-#include "threads/cra_thrdpool.h"
 
 typedef struct
 {
-    CraThrdPoolArgs2 args;
+    CraThrdPoolArgs2      args;
     cra_thrdpool_task_fn2 func;
 } CraThrdPoolTask;
 
 struct _CraThrdPoolWorker
 {
-    CraCDL *cdl;
+    CraCDL      *cdl;
     CraThrdPool *pool;
-    cra_thrd_t thrd;
+    cra_thrd_t   thrd;
 };
 
 static CRA_THRD_FUNC(__cra_thrdpool_worker)
 {
-    CraThrdPoolTask task;
+    CraThrdPoolTask    task;
     CraThrdPoolWorker *worker = (CraThrdPoolWorker *)arg;
-    CraBlkDeque *taskque = &worker->pool->task_que;
-    CraThrdPool *pool = worker->pool;
-    cra_tid_t tid = cra_thrd_get_current_tid();
+    CraBlkDeque       *taskque = &worker->pool->task_que;
+    CraThrdPool       *pool = worker->pool;
+    cra_tid_t          tid = cra_thrd_get_current_tid();
 
     cra_cdl_count_down(worker->cdl);
 
@@ -44,10 +44,11 @@ static CRA_THRD_FUNC(__cra_thrdpool_worker)
         cra_atomic_inc32(&pool->idle_threads);
     }
 
-    return (cra_thrd_ret_t){0};
+    return (cra_thrd_ret_t){ 0 };
 }
 
-void cra_thrdpool_init(CraThrdPool *pool, int threads, size_t task_max)
+void
+cra_thrdpool_init(CraThrdPool *pool, int threads, size_t task_max)
 {
     assert(threads > 0 && task_max > 0);
     pool->can_in = true;
@@ -83,7 +84,8 @@ error_ret:
     assert_always(false); // !!!
 }
 
-void cra_thrdpool_uninit(CraThrdPool *pool)
+void
+cra_thrdpool_uninit(CraThrdPool *pool)
 {
     pool->handle_exist_task = false;
     if (pool->is_running)
@@ -92,7 +94,8 @@ void cra_thrdpool_uninit(CraThrdPool *pool)
     cra_free(pool->threads);
 }
 
-void cra_thrdpool_wait(CraThrdPool *pool)
+void
+cra_thrdpool_wait(CraThrdPool *pool)
 {
     pool->can_in = false;
     pool->is_running = false;
@@ -107,29 +110,31 @@ void cra_thrdpool_wait(CraThrdPool *pool)
     }
 }
 
-static inline bool cra_thrdpool_discard_task(CraThrdPool *pool)
+static inline bool
+cra_thrdpool_discard_task(CraThrdPool *pool)
 {
     if (cra_blkdeque_get_count(&pool->task_que) < pool->task_max)
         return true;
 
     switch (pool->discard_policy)
     {
-    case CRA_TPTASK_DISCARD_FIRST:
-        cra_blkdeque_pop_left(&pool->task_que, NULL);
-        return true;
-    case CRA_TPTASK_DISCARD_LAST:
-        cra_blkdeque_pop(&pool->task_que, NULL);
-        return true;
-    case CRA_TPTASK_DISCARD_SELF:
-        break; // do nothing
-    default:
-        fprintf(stderr, "thread pool %p 不支持的策略.\n", (void *)pool);
-        break;
+        case CRA_TPTASK_DISCARD_FIRST:
+            cra_blkdeque_pop_left(&pool->task_que, NULL);
+            return true;
+        case CRA_TPTASK_DISCARD_LAST:
+            cra_blkdeque_pop(&pool->task_que, NULL);
+            return true;
+        case CRA_TPTASK_DISCARD_SELF:
+            break; // do nothing
+        default:
+            fprintf(stderr, "thread pool %p 不支持的策略.\n", (void *)pool);
+            break;
     }
     return false;
 }
 
-bool cra_thrdpool_add_task2(CraThrdPool *pool, cra_thrdpool_task_fn2 func, void *arg1, void *arg2)
+bool
+cra_thrdpool_add_task2(CraThrdPool *pool, cra_thrdpool_task_fn2 func, void *arg1, void *arg2)
 {
     CraThrdPoolTask task;
 

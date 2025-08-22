@@ -10,22 +10,28 @@
  */
 #ifndef __CRA_MEMPOOL_H__
 #define __CRA_MEMPOOL_H__
-#include "cra_atomic.h"
 #include "collections/cra_deque.h"
+#include "cra_atomic.h"
 
 typedef struct _CraMemPool
 {
     cra_atomic_flag locker;
-    unsigned int count;
-    size_t itemsize;
-    unsigned char *memory;
-    CraDeque stack; // CraDeque<void *>
+    unsigned int    count;
+    size_t          itemsize;
+    unsigned char  *memory;
+    CraDeque        stack; // CraDeque<void *>
 } CraMemPool;
 
-CRA_API void cra_mempool_init(CraMemPool *pool, size_t itemsize, unsigned int count);
-CRA_API void cra_mempool_uninit(CraMemPool *pool);
+CRA_API void
+cra_mempool_init(CraMemPool *pool, size_t itemsize, unsigned int count);
 
-CRA_API void *cra_mempool_alloc(CraMemPool *pool);
-CRA_API void cra_mempool_dealloc(CraMemPool *pool, void *ptr);
+CRA_API void
+cra_mempool_uninit(CraMemPool *pool);
+
+CRA_API void *
+cra_mempool_alloc(CraMemPool *pool);
+
+CRA_API void
+cra_mempool_dealloc(CraMemPool *pool, void *ptr);
 
 #endif

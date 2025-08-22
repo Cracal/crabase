@@ -1,17 +1,18 @@
 #include "collections/cra_collects.h"
-#include "threads/cra_thrdpool.h"
 #include "cra_assert.h"
+#include "threads/cra_thrdpool.h"
 #include <time.h>
 
-void test_compare(void)
+void
+test_compare(void)
 {
-#define ITEM(suffix, type)                                                \
-    assert_always(cra_compare_##suffix(1, 1) == 0);                       \
-    assert_always(cra_compare_##suffix(0, 1) < 0);                        \
-    assert_always(cra_compare_##suffix(1, 0) > 0);                        \
-    assert_always(cra_compare_##suffix##_p(&(type){1}, &(type){1}) == 0); \
-    assert_always(cra_compare_##suffix##_p(&(type){0}, &(type){1}) < 0);  \
-    assert_always(cra_compare_##suffix##_p(&(type){1}, &(type){0}) > 0)
+#define ITEM(suffix, type)                                                    \
+    assert_always(cra_compare_##suffix(1, 1) == 0);                           \
+    assert_always(cra_compare_##suffix(0, 1) < 0);                            \
+    assert_always(cra_compare_##suffix(1, 0) > 0);                            \
+    assert_always(cra_compare_##suffix##_p(&(type){ 1 }, &(type){ 1 }) == 0); \
+    assert_always(cra_compare_##suffix##_p(&(type){ 0 }, &(type){ 1 }) < 0);  \
+    assert_always(cra_compare_##suffix##_p(&(type){ 1 }, &(type){ 0 }) > 0)
 
     ITEM(int, int);
     ITEM(uint, unsigned int);
@@ -31,25 +32,25 @@ void test_compare(void)
     assert_always(cra_compare_float(1.33f, 1.33f) == 0);
     assert_always(cra_compare_float(1.28f, 1.33f) < 0);
     assert_always(cra_compare_float(1.33f, 1.28f) > 0);
-    assert_always(cra_compare_float_p(&(float){1.33f}, &(float){1.33f}) == 0);
-    assert_always(cra_compare_float_p(&(float){1.32f}, &(float){1.33f}) < 0);
-    assert_always(cra_compare_float_p(&(float){1.33f}, &(float){1.28f}) > 0);
+    assert_always(cra_compare_float_p(&(float){ 1.33f }, &(float){ 1.33f }) == 0);
+    assert_always(cra_compare_float_p(&(float){ 1.32f }, &(float){ 1.33f }) < 0);
+    assert_always(cra_compare_float_p(&(float){ 1.33f }, &(float){ 1.28f }) > 0);
 
     assert_always(cra_compare_double(1.33, 1.33) == 0);
     assert_always(cra_compare_double(1.28, 1.33) < 0);
     assert_always(cra_compare_double(1.33, 1.28) > 0);
-    assert_always(cra_compare_double_p(&(double){1.33}, &(double){1.33}) == 0);
-    assert_always(cra_compare_double_p(&(double){1.32}, &(double){1.33}) < 0);
-    assert_always(cra_compare_double_p(&(double){1.33}, &(double){1.28}) > 0);
+    assert_always(cra_compare_double_p(&(double){ 1.33 }, &(double){ 1.33 }) == 0);
+    assert_always(cra_compare_double_p(&(double){ 1.32 }, &(double){ 1.33 }) < 0);
+    assert_always(cra_compare_double_p(&(double){ 1.33 }, &(double){ 1.28 }) > 0);
 
     assert_always(cra_compare_string("BC", "BC") == 0);
     assert_always(cra_compare_string("ABC", "BC") < 0);
     assert_always(cra_compare_string("BC", "ABC") > 0);
-    assert_always(cra_compare_string_p((const char **)&(char *){"BC"}, (const char **)&(char *){"BC"}) == 0);
-    assert_always(cra_compare_string_p((const char **)&(char *){"ABC"}, (const char **)&(char *){"BC"}) < 0);
-    assert_always(cra_compare_string_p((const char **)&(char *){"BC"}, (const char **)&(char *){"ABC"}) > 0);
+    assert_always(cra_compare_string_p((const char **)&(char *){ "BC" }, (const char **)&(char *){ "BC" }) == 0);
+    assert_always(cra_compare_string_p((const char **)&(char *){ "ABC" }, (const char **)&(char *){ "BC" }) < 0);
+    assert_always(cra_compare_string_p((const char **)&(char *){ "BC" }, (const char **)&(char *){ "ABC" }) > 0);
 
-    int arr[] = {0, 1, 2, 3};
+    int  arr[] = { 0, 1, 2, 3 };
     int *pa = arr, *pb = arr + 2;
     assert_always(cra_compare_ptr(pa, arr) == 0);
     assert_always(cra_compare_ptr(pa, pb) < 0);
@@ -61,7 +62,8 @@ void test_compare(void)
 #undef ITEM
 }
 
-void test_hash(void)
+void
+test_hash(void)
 {
     cra_hash_t hash1, hash2, hash3;
 
@@ -79,9 +81,9 @@ void test_hash(void)
         hash3 = cra_hash_##suffix(_tmp);                               \
         assert_always(hash1 == hash2);                                 \
         assert_always(hash1 != hash3 || (hash1 == -2 && hash3 == -2)); \
-        hash1 = cra_hash_##suffix##_p(&(type){_val});                  \
-        hash2 = cra_hash_##suffix##_p(&(type){_val});                  \
-        hash3 = cra_hash_##suffix##_p(&(type){_tmp});                  \
+        hash1 = cra_hash_##suffix##_p(&(type){ _val });                \
+        hash2 = cra_hash_##suffix##_p(&(type){ _val });                \
+        hash3 = cra_hash_##suffix##_p(&(type){ _tmp });                \
         assert_always(hash1 == hash2);                                 \
         assert_always(hash1 != hash3 || (hash1 == -2 && hash3 == -2)); \
     }
@@ -110,9 +112,9 @@ void test_hash(void)
     hash3 = cra_hash_ptr(&b);
     assert_always(hash1 == hash2);
     assert_always(hash1 != hash3 || (hash1 == -2 && hash3 == -2));
-    hash1 = cra_hash_ptr_p((const void **)&(void *){&a});
-    hash2 = cra_hash_ptr_p((const void **)&(void *){&a});
-    hash3 = cra_hash_ptr_p((const void **)&(void *){&b});
+    hash1 = cra_hash_ptr_p((const void **)&(void *){ &a });
+    hash2 = cra_hash_ptr_p((const void **)&(void *){ &a });
+    hash3 = cra_hash_ptr_p((const void **)&(void *){ &b });
     assert_always(hash1 == hash2);
     assert_always(hash1 != hash3 || (hash1 == -2 && hash3 == -2));
 
@@ -122,9 +124,9 @@ void test_hash(void)
     hash3 = cra_hash_string1(s2);
     assert_always(hash1 == hash2);
     assert_always(hash1 != hash3 || (hash1 == -2 && hash3 == -2));
-    hash1 = cra_hash_string1_p((const char **)&(char *){s1});
-    hash2 = cra_hash_string1_p((const char **)&(char *){s1});
-    hash3 = cra_hash_string1_p((const char **)&(char *){s2});
+    hash1 = cra_hash_string1_p((const char **)&(char *){ s1 });
+    hash2 = cra_hash_string1_p((const char **)&(char *){ s1 });
+    hash3 = cra_hash_string1_p((const char **)&(char *){ s2 });
     assert_always(hash1 == hash2);
     assert_always(hash1 != hash3 || (hash1 == -2 && hash3 == -2));
 
@@ -133,19 +135,20 @@ void test_hash(void)
     hash3 = cra_hash_string2(s2);
     assert_always(hash1 == hash2);
     assert_always(hash1 != hash3 || (hash1 == -2 && hash3 == -2));
-    hash1 = cra_hash_string2_p((const char **)&(char *){s1});
-    hash2 = cra_hash_string2_p((const char **)&(char *){s1});
-    hash3 = cra_hash_string2_p((const char **)&(char *){s2});
+    hash1 = cra_hash_string2_p((const char **)&(char *){ s1 });
+    hash2 = cra_hash_string2_p((const char **)&(char *){ s1 });
+    hash3 = cra_hash_string2_p((const char **)&(char *){ s2 });
     assert_always(hash1 == hash2);
     assert_always(hash1 != hash3 || (hash1 == -2 && hash3 == -2));
 
 #undef ITEM
 }
 
-static void test_str_hashcode(const CraThrdPoolArgs0 *args)
+static void
+test_str_hashcode(const CraThrdPoolArgs0 *args)
 {
     cra_hash_t hash1, hash2;
-    char *str = "hello world fdslkfjsodfjsdlkjdoi";
+    char      *str = "hello world fdslkfjsodfjsdlkjdoi";
     for (int i = 0; i < 10000; i++)
     {
         hash1 = cra_hash_string1(str);
@@ -159,7 +162,8 @@ static void test_str_hashcode(const CraThrdPoolArgs0 *args)
     printf("test done. tid: %lu.\n", (unsigned long)args->tid);
 }
 
-void test_hash_str_dyn_init_hashcode(void)
+void
+test_hash_str_dyn_init_hashcode(void)
 {
     CraThrdPool pool;
     cra_thrdpool_init(&pool, 4, 4);
@@ -172,7 +176,8 @@ void test_hash_str_dyn_init_hashcode(void)
     cra_thrdpool_uninit(&pool);
 }
 
-int main(void)
+int
+main(void)
 {
     test_compare();
     test_hash();

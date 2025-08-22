@@ -1,7 +1,8 @@
-#include "cra_malloc.h"
 #include "cra_assert.h"
+#include "cra_malloc.h"
 
-void test_error(void)
+void
+test_error(void)
 {
     void *p;
     CRA_UNUSED_VALUE(p);
@@ -19,7 +20,8 @@ void test_error(void)
     // __cra_free(NULL);
 }
 
-void test_normal(void)
+void
+test_normal(void)
 {
     void *p;
 
@@ -41,7 +43,8 @@ void test_normal(void)
     __cra_memory_leak_report();
 }
 
-void test_malloc_free_dbg1(bool report)
+void
+test_malloc_free_dbg1(bool report)
 {
     void *p = __cra_malloc(10);
     __cra_free_dbg(p);
@@ -63,7 +66,8 @@ void test_malloc_free_dbg1(bool report)
         __cra_memory_leak_report();
 }
 
-void test_malloc_free_dbg2(void)
+void
+test_malloc_free_dbg2(void)
 {
     void *n = __cra_malloc_dbg(100, __FILE__, __LINE__);
 
@@ -77,7 +81,8 @@ void test_malloc_free_dbg2(void)
 /**
  * 严禁通过__cra_[malloc|calloc|realloc]_dbg()申请内存，让__cra_free()或free()释放。
  */
-void test_malloc_dbg_free(void)
+void
+test_malloc_dbg_free(void)
 {
     void *p = __cra_malloc_dbg(10, __FILE__, __LINE__);
     __cra_free(p);
@@ -98,7 +103,8 @@ void test_malloc_dbg_free(void)
     __cra_memory_leak_report();
 }
 
-int main(void)
+int
+main(void)
 {
     // test_error();
     test_normal();
