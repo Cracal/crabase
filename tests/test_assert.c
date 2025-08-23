@@ -6,8 +6,8 @@ new_assert(const char *condition, const char *fname, const char *file, int line)
     printf("new assert failed: (%s), function: %s, file: %s, line: %d\n", condition, fname, file, line);
 }
 
-void
-test(void)
+int
+main(void)
 {
     assert(true);
     // assert(false);
@@ -17,11 +17,6 @@ test(void)
 
     cra_assert_set_func(new_assert);
     assert_always(false);
-}
 
-int
-main(void)
-{
-    test();
     return 0;
 }
