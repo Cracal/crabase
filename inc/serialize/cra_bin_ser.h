@@ -130,16 +130,11 @@ cra_bin_deserialize_double(CraSerializer *ser, double *retval);
  *                          1. `retval` is char[N] -> `is_char_ptr`=true, `max_length`=sizeof(char[N])
  *                          2. `retval` is char *  -> `is_char_ptr`=false, ignore `max_length`
  * @param is_char_ptr retval is char -> `true`; retval is * char[N] -> `false`
- * @param auto_free_if_fail
  * @return true success
  * @return false failure
  */
 CRA_API bool
-cra_bin_deserialize_string(CraSerializer  *ser,
-                           char           *retval,
-                           cra_ser_count_t max_length,
-                           bool            is_char_ptr,
-                           bool            auto_free_if_fail);
+cra_bin_deserialize_string(CraSerializer *ser, char *retval, cra_ser_count_t max_length, bool is_char_ptr);
 
 /**
  * @brief deserialize string without zero ("x...x")
@@ -150,16 +145,11 @@ cra_bin_deserialize_string(CraSerializer  *ser,
  *                          2. char * : char *str;  -> func(x, (char *)&str, ...)
  * @param length in: max string length(only char[N]); out: real string length
  * @param is_char_ptr retval is char -> `true`; retval is * char[N] -> `false`
- * @param auto_free_if_fail
  * @return true success
  * @return false failure
  */
 CRA_API bool
-cra_bin_deserialize_string_nz(CraSerializer   *ser,
-                              char            *retval,
-                              cra_ser_count_t *length,
-                              bool             is_char_ptr,
-                              bool             auto_free_if_fail);
+cra_bin_deserialize_string_nz(CraSerializer *ser, char *retval, cra_ser_count_t *length, bool is_char_ptr);
 
 /**
  * @brief
@@ -168,7 +158,6 @@ cra_bin_deserialize_string_nz(CraSerializer   *ser,
  * @param retval out struct
  * @param valsize sizeof(struct X)
  * @param is_ptr retval is 'struct X *' -> true; retval is 'struct X' -> false
- * @param auto_free_if_fail
  * @param members_meta
  * @param init_i
  * @param args4init
@@ -179,7 +168,6 @@ cra_bin_deserialize_struct(CraSerializer       *ser,
                            void                *retval,
                            size_t               valsize,
                            bool                 is_ptr,
-                           bool                 auto_free_if_fail,
                            const CraTypeMeta   *members_meta,
                            const CraTypeInit_i *init_i,
                            void                *args4init);
@@ -189,7 +177,6 @@ cra_bin_deserialize_list(CraSerializer       *ser,
                          void                *retval,
                          size_t               valsize,
                          bool                 is_ptr,
-                         bool                 auto_free_if_fail,
                          const CraTypeMeta   *element_meta,
                          const CraTypeIter_i *iter_i,
                          const CraTypeInit_i *init_i,
@@ -208,7 +195,6 @@ cra_bin_deserialize_dict(CraSerializer       *ser,
                          void                *retval,
                          size_t               valsize,
                          bool                 is_ptr,
-                         bool                 auto_free_if_fail,
                          const CraTypeMeta   *kv_meta,
                          const CraTypeIter_i *iter_i,
                          const CraTypeInit_i *init_i,

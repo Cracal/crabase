@@ -545,8 +545,7 @@ const CraTypeIter_i __g_llist_ser_iter_i = {
 };
 
 const CraTypeInit_i __g_llist_ser_init_i = {
-    .alloc = NULL,
-    .dealloc = NULL,
+    .free_members_by_seri = true,
     .init = cra_llist_ser_init,
-    .uinit = (void (*)(void *))cra_llist_uninit,
+    .uninit = (void (*)(void *))cra_llist_uninit,
 };

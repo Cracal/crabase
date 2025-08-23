@@ -60,7 +60,6 @@ typedef enum _CraType_e
 
 typedef struct _CraSerReleaseNode
 {
-    bool  free;
     void *ptr;
     void  (*uninit)(void *);
     void  (*dealloc)(void *);
@@ -108,12 +107,12 @@ typedef union _CraTypeIter_i
 
 typedef struct _CraTypeInit_i
 {
-    // 可选
-    void *(*alloc)(void);
-    void  (*dealloc)(void *obj);
-    // 必须
-    void  (*init)(void *obj, void *args);
-    void  (*uinit)(void *obj);
+    // 指示序列化程序失败时由谁来释放记录在META中的成员字段。
+    // = true,  由序列化程序释放
+    // = false, 由结构的uninit函数释放
+    bool free_members_by_seri;
+    void (*init)(void *obj, void *args);
+    void (*uninit)(void *obj);
 } CraTypeInit_i;
 
 struct _CraTypeMeta

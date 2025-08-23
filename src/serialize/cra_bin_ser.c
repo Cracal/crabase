@@ -643,13 +643,13 @@ cra_bin_deserialize_double(CraSerializer *ser, double *retval)
     }
 
 // `retlength`: for string_nz
-static bool
-__cra_bin_deserialize_string_nz(CraSerializer   *ser,
-                                char            *retval,
-                                cra_ser_count_t  max_length,
-                                bool             is_char_ptr,
-                                bool             auto_free_if_fail,
-                                cra_ser_count_t *retlength)
+static inline bool
+__cra_bin_deserialize_string_nz__(CraSerializer   *ser,
+                                  char            *retval,
+                                  cra_ser_count_t  max_length,
+                                  bool             is_char_ptr,
+                                  cra_ser_count_t *retlength,
+                                  bool             add_to_release)
 {
     cra_ser_count_t len;
     unsigned char  *buf;
@@ -677,9 +677,9 @@ __cra_bin_deserialize_string_nz(CraSerializer   *ser,
     // read string
     if (is_char_ptr)
     {
-        retval = *(char **)retval = cra_malloc(len + ((!retlength || len == 0) ? 1 : 0));
-        if (auto_free_if_fail)
-            cra_ser_release_add(&ser->release, true, retval, NULL, NULL);
+        retval = *(char **)retval = cra_malloc(len + 1);
+        if (add_to_release)
+            cra_ser_release_add(&ser->release, retval, NULL, cra_free);
     }
     else
     {
@@ -700,67 +700,77 @@ __cra_bin_deserialize_string_nz(CraSerializer   *ser,
     return true;
 }
 
-bool
-cra_bin_deserialize_string(CraSerializer  *ser,
-                           char           *retval,
-                           cra_ser_count_t max_length,
-                           bool            is_char_ptr,
-                           bool            auto_free_if_fail)
+static bool
+__cra_bin_deserialize_string(CraSerializer  *ser,
+                             char           *retval,
+                             cra_ser_count_t max_length,
+                             bool            is_char_ptr,
+                             bool            add_to_release)
 {
-    return __cra_bin_deserialize_string_nz(ser, retval, max_length, is_char_ptr, auto_free_if_fail, NULL);
-}
-
-bool
-cra_bin_deserialize_string_nz(CraSerializer   *ser,
-                              char            *retval,
-                              cra_ser_count_t *length,
-                              bool             is_char_ptr,
-                              bool             auto_free_if_fail)
-{
-    return __cra_bin_deserialize_string_nz(ser, retval, *length, is_char_ptr, auto_free_if_fail, length);
+    return __cra_bin_deserialize_string_nz__(ser, retval, max_length, is_char_ptr, NULL, add_to_release);
 }
 
 static bool
-cra_bin_deserialize_once(CraSerializer *ser, void *val, size_t offset, const CraTypeMeta *meta, bool auto_free_if_fail);
+__cra_bin_deserialize_string_nz(CraSerializer   *ser,
+                                char            *retval,
+                                cra_ser_count_t *length,
+                                bool             is_char_ptr,
+                                bool             add_to_release)
+{
+    return __cra_bin_deserialize_string_nz__(ser, retval, *length, is_char_ptr, length, add_to_release);
+}
+
+bool
+cra_bin_deserialize_string(CraSerializer *ser, char *retval, cra_ser_count_t max_length, bool is_char_ptr)
+{
+    return __cra_bin_deserialize_string(ser, retval, max_length, is_char_ptr, true);
+}
+
+bool
+cra_bin_deserialize_string_nz(CraSerializer *ser, char *retval, cra_ser_count_t *length, bool is_char_ptr)
+{
+    return __cra_bin_deserialize_string_nz(ser, retval, length, is_char_ptr, true);
+}
+
 static bool
-cra_bin_deserialize_all(CraSerializer *ser, void *retval, const CraTypeMeta *meta, bool auto_free_if_fail);
+cra_bin_deserialize_once(CraSerializer *ser, void *val, size_t offset, const CraTypeMeta *meta, bool add_to_release);
+static bool
+cra_bin_deserialize_all(CraSerializer *ser, void *retval, const CraTypeMeta *meta, bool add_to_release);
 
 static inline void *
 cra_json_alloc_init(CraSerializer       *ser,
                     void                *retval,
                     size_t               valsize,
                     bool                 is_ptr,
-                    bool                *auto_free_if_fail,
                     const CraTypeInit_i *init_i,
-                    void                *args4init)
+                    void                *args4init,
+                    bool                 add_to_release)
 {
-    void (*uninit_fn)(void *) = NULL;
-    void (*dealloc_fn)(void *) = NULL;
+    void (*uninit_fn)(void *);
+    void (*dealloc_fn)(void *);
+
     if (is_ptr)
     {
-        if (init_i && init_i->alloc)
-        {
-            dealloc_fn = init_i->dealloc;
-            retval = *(void **)retval = init_i->alloc();
-        }
-        else
-        {
-            retval = *(void **)retval = cra_malloc(valsize);
-        }
+        retval = *(void **)retval = cra_malloc(valsize);
+        dealloc_fn = cra_free;
+    }
+    else
+    {
+        dealloc_fn = NULL;
     }
     if (init_i && init_i->init)
     {
-        uninit_fn = init_i->uinit;
+        uninit_fn = init_i->uninit;
         init_i->init(retval, args4init);
     }
     else
     {
+        uninit_fn = NULL;
         bzero(retval, valsize);
     }
-    if (*auto_free_if_fail && (is_ptr || uninit_fn))
-        cra_ser_release_add(&ser->release, is_ptr, retval, uninit_fn, dealloc_fn);
+    if (add_to_release && (dealloc_fn || uninit_fn))
+        cra_ser_release_add(&ser->release, retval, uninit_fn, dealloc_fn);
 
-    *auto_free_if_fail = !uninit_fn;
     return retval;
 }
 
@@ -775,15 +785,15 @@ cra_bin_skip_values_and_check_flag(CraSerializer *ser)
     return CRA_BUF_IS_OBJ_END(ser);
 }
 
-bool
-cra_bin_deserialize_struct(CraSerializer       *ser,
-                           void                *retval,
-                           size_t               valsize,
-                           bool                 is_ptr,
-                           bool                 auto_free_if_fail,
-                           const CraTypeMeta   *members_meta,
-                           const CraTypeInit_i *init_i,
-                           void                *args4init)
+static bool
+__cra_bin_deserialize_struct(CraSerializer       *ser,
+                             void                *retval,
+                             size_t               valsize,
+                             bool                 is_ptr,
+                             const CraTypeMeta   *members_meta,
+                             const CraTypeInit_i *init_i,
+                             void                *args4init,
+                             bool                 add_to_release)
 {
     unsigned char *buf;
 
@@ -798,10 +808,10 @@ cra_bin_deserialize_struct(CraSerializer       *ser,
     ++ser->index;
 
     // alloc & init
-    retval = cra_json_alloc_init(ser, retval, valsize, is_ptr, &auto_free_if_fail, init_i, args4init);
+    retval = cra_json_alloc_init(ser, retval, valsize, is_ptr, init_i, args4init, add_to_release);
 
     // read members
-    if (!cra_bin_deserialize_all(ser, retval, members_meta, auto_free_if_fail))
+    if (!cra_bin_deserialize_all(ser, retval, members_meta, init_i ? init_i->free_members_by_seri : true))
         return false;
 
     // read end flag
@@ -823,15 +833,27 @@ cra_bin_deserialize_struct(CraSerializer       *ser,
 }
 
 bool
-cra_bin_deserialize_list(CraSerializer       *ser,
-                         void                *retval,
-                         size_t               valsize,
-                         bool                 is_ptr,
-                         bool                 auto_free_if_fail,
-                         const CraTypeMeta   *element_meta,
-                         const CraTypeIter_i *iter_i,
-                         const CraTypeInit_i *init_i,
-                         void                *args4init)
+cra_bin_deserialize_struct(CraSerializer       *ser,
+                           void                *retval,
+                           size_t               valsize,
+                           bool                 is_ptr,
+                           const CraTypeMeta   *members_meta,
+                           const CraTypeInit_i *init_i,
+                           void                *args4init)
+{
+    return __cra_bin_deserialize_struct(ser, retval, valsize, is_ptr, members_meta, init_i, args4init, true);
+}
+
+static bool
+__cra_bin_deserialize_list(CraSerializer       *ser,
+                           void                *retval,
+                           size_t               valsize,
+                           bool                 is_ptr,
+                           const CraTypeMeta   *element_meta,
+                           const CraTypeIter_i *iter_i,
+                           const CraTypeInit_i *init_i,
+                           void                *args4init,
+                           bool                 add_to_release)
 {
     cra_ser_count_t count;
     unsigned char  *buf;
@@ -856,13 +878,14 @@ cra_bin_deserialize_list(CraSerializer       *ser,
     size_t slot_size = element_meta->is_ptr ? sizeof(void *) : element_meta->size;
 
     // alloc & init
-    retval = cra_json_alloc_init(ser, retval, valsize, is_ptr, &auto_free_if_fail, init_i, args4init);
+    retval = cra_json_alloc_init(ser, retval, valsize, is_ptr, init_i, args4init, add_to_release);
 
     // read elements
     void *item = cra_malloc(slot_size);
+    add_to_release = init_i ? init_i->free_members_by_seri : true;
     for (cra_ser_count_t i = 0; i < count; ++i)
     {
-        if (!cra_bin_deserialize_once(ser, item, 0, element_meta, auto_free_if_fail))
+        if (!cra_bin_deserialize_once(ser, item, 0, element_meta, add_to_release))
             goto error_return;
         if (!iter_i->list.append(retval, item))
         {
@@ -892,12 +915,26 @@ error_return:
 }
 
 bool
-cra_bin_deserialize_array(CraSerializer     *ser,
-                          void              *retval,
-                          size_t             valsize,
-                          bool               is_ptr,
-                          cra_ser_count_t   *countptr,
-                          const CraTypeMeta *element_meta)
+cra_bin_deserialize_list(CraSerializer       *ser,
+                         void                *retval,
+                         size_t               valsize,
+                         bool                 is_ptr,
+                         const CraTypeMeta   *element_meta,
+                         const CraTypeIter_i *iter_i,
+                         const CraTypeInit_i *init_i,
+                         void                *args4init)
+{
+    return __cra_bin_deserialize_list(ser, retval, valsize, is_ptr, element_meta, iter_i, init_i, args4init, true);
+}
+
+static bool
+__cra_bin_deserialize_array(CraSerializer     *ser,
+                            void              *retval,
+                            size_t             valsize,
+                            bool               is_ptr,
+                            cra_ser_count_t   *countptr,
+                            const CraTypeMeta *element_meta,
+                            bool               add_to_release)
 {
     cra_ser_count_t count;
     unsigned char  *buf;
@@ -926,16 +963,17 @@ cra_bin_deserialize_array(CraSerializer     *ser,
     if (is_ptr)
     {
         retval = *(void **)retval = cra_malloc(list_size);
-        cra_ser_release_add(&ser->release, is_ptr, retval, NULL, NULL);
+        if (add_to_release)
+            cra_ser_release_add(&ser->release, retval, NULL, cra_free);
     }
-    bzero(retval, list_size);
-
-    // enough?
-    if (!is_ptr && valsize / slot_size < count)
+    else if (valsize / slot_size < count)
     {
+        // not enough
         ser->error = CRA_SER_ERROR_ARRAY_TOO_SMALL;
         goto error_return;
     }
+    bzero(retval, list_size);
+
     // read elements
     for (cra_ser_count_t i = 0; i < count; ++i)
     {
@@ -961,15 +999,26 @@ error_return:
 }
 
 bool
-cra_bin_deserialize_dict(CraSerializer       *ser,
-                         void                *retval,
-                         size_t               valsize,
-                         bool                 is_ptr,
-                         bool                 auto_free_if_fail,
-                         const CraTypeMeta   *kv_meta,
-                         const CraTypeIter_i *iter_i,
-                         const CraTypeInit_i *init_i,
-                         void                *args4init)
+cra_bin_deserialize_array(CraSerializer     *ser,
+                          void              *retval,
+                          size_t             valsize,
+                          bool               is_ptr,
+                          cra_ser_count_t   *countptr,
+                          const CraTypeMeta *element_meta)
+{
+    return __cra_bin_deserialize_array(ser, retval, valsize, is_ptr, countptr, element_meta, true);
+}
+
+static bool
+__cra_bin_deserialize_dict(CraSerializer       *ser,
+                           void                *retval,
+                           size_t               valsize,
+                           bool                 is_ptr,
+                           const CraTypeMeta   *kv_meta,
+                           const CraTypeIter_i *iter_i,
+                           const CraTypeInit_i *init_i,
+                           void                *args4init,
+                           bool                 add_to_release)
 {
     cra_ser_count_t count;
     unsigned char  *buf;
@@ -995,16 +1044,17 @@ cra_bin_deserialize_dict(CraSerializer       *ser,
     size_t val_size = (kv_meta + 1)->is_ptr ? sizeof(void *) : (kv_meta + 1)->size;
 
     // alloc & init
-    retval = cra_json_alloc_init(ser, retval, valsize, is_ptr, &auto_free_if_fail, init_i, args4init);
+    retval = cra_json_alloc_init(ser, retval, valsize, is_ptr, init_i, args4init, add_to_release);
 
     // read elements
     void *k = cra_malloc(key_size + val_size);
     void *v = (char *)k + key_size;
+    add_to_release = init_i ? init_i->free_members_by_seri : true;
     for (cra_ser_count_t i = 0; i < count; ++i)
     {
-        if (!cra_bin_deserialize_once(ser, k, 0, kv_meta, auto_free_if_fail))
+        if (!cra_bin_deserialize_once(ser, k, 0, kv_meta, add_to_release))
             goto error_return;
-        if (!cra_bin_deserialize_once(ser, v, 0, kv_meta + 1, auto_free_if_fail))
+        if (!cra_bin_deserialize_once(ser, v, 0, kv_meta + 1, add_to_release))
             goto error_return;
         if (!iter_i->dict.append(retval, k, v))
         {
@@ -1033,8 +1083,21 @@ error_return:
     return false;
 }
 
+bool
+cra_bin_deserialize_dict(CraSerializer       *ser,
+                         void                *retval,
+                         size_t               valsize,
+                         bool                 is_ptr,
+                         const CraTypeMeta   *kv_meta,
+                         const CraTypeIter_i *iter_i,
+                         const CraTypeInit_i *init_i,
+                         void                *args4init)
+{
+    return __cra_bin_deserialize_dict(ser, retval, valsize, is_ptr, kv_meta, iter_i, init_i, args4init, true);
+}
+
 static bool
-cra_bin_deserialize_once(CraSerializer *ser, void *val, size_t offset, const CraTypeMeta *meta, bool auto_free_if_fail)
+cra_bin_deserialize_once(CraSerializer *ser, void *val, size_t offset, const CraTypeMeta *meta, bool add_to_release)
 {
     void *value = (void *)((char *)val + offset);
     assert_always(value != NULL);
@@ -1088,8 +1151,8 @@ cra_bin_deserialize_once(CraSerializer *ser, void *val, size_t offset, const Cra
         case CRA_TYPE_STRING:
             if (meta->nsize == 0)
             {
-                if (!cra_bin_deserialize_string(
-                      ser, (char *)value, (cra_ser_count_t)meta->size, meta->is_ptr, auto_free_if_fail))
+                if (!__cra_bin_deserialize_string(
+                      ser, (char *)value, (cra_ser_count_t)meta->size, meta->is_ptr, add_to_release))
                     return false;
             }
             else
@@ -1097,54 +1160,63 @@ cra_bin_deserialize_once(CraSerializer *ser, void *val, size_t offset, const Cra
                 assert_always(meta->nsize == sizeof(cra_ser_count_t));
                 cra_ser_count_t *nsize = (cra_ser_count_t *)((char *)val + meta->noffset);
                 *nsize = (cra_ser_count_t)meta->size;
-                if (!cra_bin_deserialize_string_nz(ser, (char *)value, nsize, meta->is_ptr, auto_free_if_fail))
+                if (!__cra_bin_deserialize_string_nz(ser, (char *)value, nsize, meta->is_ptr, add_to_release))
                     return false;
             }
             break;
         case CRA_TYPE_STRUCT:
-            if (!cra_bin_deserialize_struct(
-                  ser, value, meta->size, meta->is_ptr, auto_free_if_fail, meta->meta, meta->init_i, meta->args4init))
+            if (!__cra_bin_deserialize_struct(
+                  ser, value, meta->size, meta->is_ptr, meta->meta, meta->init_i, meta->args4init, add_to_release))
+            {
                 return false;
+            }
             break;
         case CRA_TYPE_LIST:
             if (meta->nsize == 0)
             {
                 // list
-                if (!cra_bin_deserialize_list(ser,
-                                              value,
-                                              meta->size,
-                                              meta->is_ptr,
-                                              auto_free_if_fail,
-                                              meta->meta,
-                                              meta->iter_i,
-                                              meta->init_i,
-                                              meta->args4init))
+                if (!__cra_bin_deserialize_list(ser,
+                                                value,
+                                                meta->size,
+                                                meta->is_ptr,
+                                                meta->meta,
+                                                meta->iter_i,
+                                                meta->init_i,
+                                                meta->args4init,
+                                                add_to_release))
+                {
                     return false;
+                }
             }
             else
             {
                 // c array
                 assert_always(meta->nsize == sizeof(cra_ser_count_t));
-                if (!cra_bin_deserialize_array(ser,
-                                               value,
-                                               meta->size,
-                                               meta->is_ptr,
-                                               (cra_ser_count_t *)((char *)val + meta->noffset),
-                                               meta->meta))
+                if (!__cra_bin_deserialize_array(ser,
+                                                 value,
+                                                 meta->size,
+                                                 meta->is_ptr,
+                                                 (cra_ser_count_t *)((char *)val + meta->noffset),
+                                                 meta->meta,
+                                                 add_to_release))
+                {
                     return false;
+                }
             }
             break;
         case CRA_TYPE_DICT:
-            if (!cra_bin_deserialize_dict(ser,
-                                          value,
-                                          meta->size,
-                                          meta->is_ptr,
-                                          auto_free_if_fail,
-                                          meta->meta,
-                                          meta->iter_i,
-                                          meta->init_i,
-                                          meta->args4init))
+            if (!__cra_bin_deserialize_dict(ser,
+                                            value,
+                                            meta->size,
+                                            meta->is_ptr,
+                                            meta->meta,
+                                            meta->iter_i,
+                                            meta->init_i,
+                                            meta->args4init,
+                                            add_to_release))
+            {
                 return false;
+            }
             break;
 
         default:
@@ -1155,12 +1227,12 @@ cra_bin_deserialize_once(CraSerializer *ser, void *val, size_t offset, const Cra
 }
 
 static bool
-cra_bin_deserialize_all(CraSerializer *ser, void *val, const CraTypeMeta *meta, bool auto_free_if_fail)
+cra_bin_deserialize_all(CraSerializer *ser, void *val, const CraTypeMeta *meta, bool add_to_release)
 {
     CraTypeMeta *m = (CraTypeMeta *)meta;
     while (m->type != __CRA_TYPE_END_OF_META && (CRA_BUF_HAS_CHAR(ser) && !CRA_BUF_IS_OBJ_END(ser)))
     {
-        if (!cra_bin_deserialize_once(ser, val, m->offset, m, auto_free_if_fail))
+        if (!cra_bin_deserialize_once(ser, val, m->offset, m, add_to_release))
             return false;
         m += 1;
     }
@@ -1195,7 +1267,7 @@ cra_bin_deserialize_struct0(unsigned char       *buffer,
 {
     CraSerializer ser;
     cra_bin_deserialize_begin(&ser, buffer, buffer_length);
-    cra_bin_deserialize_struct(&ser, retval, valsize, is_ptr, true, members_meta, init_i, args4init);
+    cra_bin_deserialize_struct(&ser, retval, valsize, is_ptr, members_meta, init_i, args4init);
     cra_bin_deserialize_end(&ser, error);
 }
 
@@ -1227,7 +1299,7 @@ cra_bin_deserialize_list0(unsigned char       *buffer,
 {
     CraSerializer ser;
     cra_bin_deserialize_begin(&ser, buffer, buffer_length);
-    cra_bin_deserialize_list(&ser, retval, valsize, is_ptr, true, element_meta, iter_i, init_i, args4init);
+    cra_bin_deserialize_list(&ser, retval, valsize, is_ptr, element_meta, iter_i, init_i, args4init);
     cra_bin_deserialize_end(&ser, error);
 }
 
@@ -1289,7 +1361,7 @@ cra_bin_deserialize_dict0(unsigned char       *buffer,
 {
     CraSerializer ser;
     cra_bin_deserialize_begin(&ser, buffer, buffer_length);
-    cra_bin_deserialize_dict(&ser, retval, valsize, is_ptr, true, kv_meta, iter_i, init_i, args4init);
+    cra_bin_deserialize_dict(&ser, retval, valsize, is_ptr, kv_meta, iter_i, init_i, args4init);
     cra_bin_deserialize_end(&ser, error);
 }
 

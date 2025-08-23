@@ -678,16 +678,6 @@ CRA_TYPE_META_END();
 
 int calledcnt = 0;
 
-void *
-alloc_inix(void)
-{
-    return ((void)++calledcnt, cra_alloc(struct InitX));
-}
-void
-dealloc_inix(void *obj)
-{
-    ((void)++calledcnt, cra_dealloc(obj));
-}
 void
 init_initx(void *obj, void *args)
 {
@@ -698,8 +688,9 @@ init_initx(void *obj, void *args)
     o->f = 1.5f;
     o->d = 2.5;
     o->str = NULL;
-    (void)++calledcnt;
+    ++calledcnt;
 }
+
 void
 uninit_initx(void *obj)
 {
@@ -707,14 +698,13 @@ uninit_initx(void *obj)
     if (o->str)
         cra_free(o->str);
     bzero(o, sizeof(struct InitX));
-    (void)++calledcnt;
+    ++calledcnt;
 }
 
 const CraTypeInit_i initx_i = {
-    .alloc = alloc_inix,
-    .dealloc = dealloc_inix,
+    .free_members_by_seri = false,
     .init = init_initx,
-    .uinit = uninit_initx,
+    .uninit = uninit_initx,
 };
 
 void
@@ -750,7 +740,7 @@ test_struct_with_init_i(void)
     buff[buffsize - 2] = '\0'; // '}' -> '\0', parse failed.
     cra_json_parse_struct0(buff, buffsize, &xx, sizeof(struct InitX), true, meta_initx, &initx_i, NULL, &error);
     assert_always(error != CRA_SER_ERROR_SUCCESS);
-    assert_always(calledcnt == 4);
+    assert_always(calledcnt == 2);
 
     cra_dealloc(x);
 }
@@ -1355,7 +1345,7 @@ test_old2new(void)
     printf("%s\n\n", buff);
 
     struct New          n;
-    const CraTypeInit_i init_i = { 0, 0, (void (*)(void *, void *))init_new, 0 };
+    const CraTypeInit_i init_i = { true, (void (*)(void *, void *))init_new, 0 };
     cra_json_parse_struct0(buff, buffsize, &n, sizeof(n), false, meta_new, &init_i, NULL, &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
     assert_always(o.i == n.i);

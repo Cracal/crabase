@@ -55,20 +55,11 @@ cra_ser_release_uninit(CraSerRelease *release, bool free_ptr)
                     node = &release->nodes1[i];
                 else
                     node = &release->nodes2[i];
+
                 if (node->uninit)
                     node->uninit(node->ptr);
-
-                if (node->free)
-                {
-                    if (node->dealloc)
-                    {
-                        node->dealloc(node->ptr);
-                    }
-                    else
-                    {
-                        cra_free(node->ptr);
-                    }
-                }
+                if (node->dealloc)
+                    node->dealloc(node->ptr);
             }
         }
         if (release->nodes2)
@@ -78,27 +69,26 @@ cra_ser_release_uninit(CraSerRelease *release, bool free_ptr)
 }
 
 void
-cra_ser_release_add(CraSerRelease *release,
-                    bool           _free,
-                    void          *ptr,
-                    void           (*uninit_fn)(void *),
-                    void           (*dealloc_fn)(void *))
+cra_ser_release_add(CraSerRelease *release, void *ptr, void (*uninit_fn)(void *), void (*dealloc_fn)(void *))
 {
     CraSerReleaseNode *node;
     if (release->current == release->n_nodes)
     {
         release->n_nodes <<= 1; // * 2
         if (release->nodes2 == NULL)
+        {
             release->nodes2 = cra_malloc(sizeof(CraSerReleaseNode) * (release->n_nodes - CRA_SER_RELEASE_NODES1_MAX));
+        }
         else
+        {
             release->nodes2 =
               cra_realloc(release->nodes2, sizeof(CraSerReleaseNode) * (release->n_nodes - CRA_SER_RELEASE_NODES1_MAX));
+        }
     }
     if (release->n_nodes <= CRA_SER_RELEASE_NODES1_MAX)
         node = &release->nodes1[release->current++];
     else
         node = &release->nodes2[release->current++ - CRA_SER_RELEASE_NODES1_MAX];
-    node->free = _free;
     node->ptr = ptr;
     node->uninit = uninit_fn;
     node->dealloc = dealloc_fn;

@@ -29,10 +29,6 @@ CRA_API void
 cra_ser_release_uninit(CraSerRelease *release, bool free_ptr);
 
 CRA_API void
-cra_ser_release_add(CraSerRelease *release,
-                    bool           _free,
-                    void          *ptr,
-                    void           (*uninit_fn)(void *),
-                    void           (*dealloc_fn)(void *));
+cra_ser_release_add(CraSerRelease *release, void *ptr, void (*uninit_fn)(void *), void (*dealloc_fn)(void *));
 
 #endif

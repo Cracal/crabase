@@ -375,10 +375,10 @@ test_string(void)
 
     char *resstrpempty;
     char  resstraempty[1];
-    res = cra_bin_deserialize_string(&ser, (char *)&resstrpempty, 0, true, true);
+    res = cra_bin_deserialize_string(&ser, (char *)&resstrpempty, 0, true);
     assert_always(res);
     assert_always(strcmp(strpempty, resstrpempty) == 0);
-    res = cra_bin_deserialize_string(&ser, resstraempty, sizeof(resstraempty), false, true);
+    res = cra_bin_deserialize_string(&ser, resstraempty, sizeof(resstraempty), false);
     assert_always(res);
     assert_always(strcmp(straempty, resstraempty) == 0);
 
@@ -412,13 +412,13 @@ test_string(void)
     char *resstrp;
     char  resstra[sizeof(stra) + 2];
     char *resstrnull;
-    res = cra_bin_deserialize_string(&ser, (char *)&resstrp, 0, true, true);
+    res = cra_bin_deserialize_string(&ser, (char *)&resstrp, 0, true);
     assert_always(res);
     assert_always(strcmp(strp, resstrp) == 0);
-    res = cra_bin_deserialize_string(&ser, resstra, sizeof(resstra), false, true);
+    res = cra_bin_deserialize_string(&ser, resstra, sizeof(resstra), false);
     assert_always(res);
     assert_always(strcmp(stra, resstra) == 0);
-    res = cra_bin_deserialize_string(&ser, (char *)&resstrnull, 0, true, true);
+    res = cra_bin_deserialize_string(&ser, (char *)&resstrnull, 0, true);
     assert_always(res);
     assert_always(strnull == resstrnull && resstrnull == NULL);
 
@@ -429,13 +429,13 @@ test_string(void)
     // 2 char * <-> char[N]
     cra_bin_deserialize_begin(&ser, buff, buffsize);
 
-    res = cra_bin_deserialize_string(&ser, resstra, sizeof(resstra), false, true);
+    res = cra_bin_deserialize_string(&ser, resstra, sizeof(resstra), false);
     assert_always(res);
     assert_always(strcmp(strp, resstra) == 0);
-    res = cra_bin_deserialize_string(&ser, (char *)&resstrp, 0, true, true);
+    res = cra_bin_deserialize_string(&ser, (char *)&resstrp, 0, true);
     assert_always(res);
     assert_always(strcmp(stra, resstrp) == 0);
-    res = cra_bin_deserialize_string(&ser, (char *)&resstrnull, 0, true, true);
+    res = cra_bin_deserialize_string(&ser, (char *)&resstrnull, 0, true);
     assert_always(res);
     assert_always(strnull == resstrnull && resstrnull == NULL);
 
@@ -446,25 +446,24 @@ test_string(void)
     // 3 null -> char[N] !! ERROR
     cra_bin_deserialize_begin(&ser, buff, buffsize);
 
-    res = cra_bin_deserialize_string(&ser, (char *)&resstrp, 0, true, false);
+    res = cra_bin_deserialize_string(&ser, (char *)&resstrp, 0, true);
     assert_always(res);
     assert_always(strcmp(strp, resstrp) == 0);
-    res = cra_bin_deserialize_string(&ser, resstra, sizeof(resstra), false, true);
+    res = cra_bin_deserialize_string(&ser, resstra, sizeof(resstra), false);
     assert_always(res);
     assert_always(strcmp(stra, resstra) == 0);
     char nullerr[100];
-    res = cra_bin_deserialize_string(&ser, nullerr, sizeof(nullerr), false, true);
+    res = cra_bin_deserialize_string(&ser, nullerr, sizeof(nullerr), false);
     assert_always(!res);
 
     cra_bin_deserialize_end(&ser, &error);
     assert_always(error == CRA_SER_ERROR_CANNOT_BE_NULL);
-    cra_free(resstrp);
 
     // 4 string array is too small
     cra_bin_deserialize_begin(&ser, buff, buffsize);
 
     char resarray[21];
-    res = cra_bin_deserialize_string(&ser, resarray, sizeof(resarray), false, true);
+    res = cra_bin_deserialize_string(&ser, resarray, sizeof(resarray), false);
     assert_always(!res);
 
     cra_bin_deserialize_end(&ser, &error);
@@ -499,10 +498,10 @@ test_string_nz(void)
     uint32_t len;
     char    *resstrpempty;
     char     resstraempty[1];
-    cra_bin_deserialize_string_nz(&ser, (char *)&resstrpempty, &len, true, true);
+    cra_bin_deserialize_string_nz(&ser, (char *)&resstrpempty, &len, true);
     assert_always(len == 0);
     len = sizeof(resstraempty);
-    cra_bin_deserialize_string_nz(&ser, resstraempty, &len, false, true);
+    cra_bin_deserialize_string_nz(&ser, resstraempty, &len, false);
     assert_always(len == 0);
 
     cra_bin_deserialize_end(&ser, &error);
@@ -526,7 +525,7 @@ test_string_nz(void)
     char    *strnz2;
     uint32_t nstrnz2;
     cra_bin_deserialize_begin(&ser, buff, buffsize);
-    cra_bin_deserialize_string_nz(&ser, (char *)&strnz2, &nstrnz2, true, true);
+    cra_bin_deserialize_string_nz(&ser, (char *)&strnz2, &nstrnz2, true);
     cra_bin_deserialize_end(&ser, &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
     assert_always(nstrnz2 == 4);
@@ -608,10 +607,10 @@ test_struct_base(void)
 
     struct A *anull2;
     struct A  as;
-    res = cra_bin_deserialize_struct(&ser, &anull2, sizeof(struct A), true, true, meta_a, NULL, NULL);
+    res = cra_bin_deserialize_struct(&ser, &anull2, sizeof(struct A), true, meta_a, NULL, NULL);
     assert_always(res);
     assert_always(anull2 == anull && anull2 == NULL);
-    res = cra_bin_deserialize_struct(&ser, &as, sizeof(struct A), false, true, meta_a, NULL, NULL);
+    res = cra_bin_deserialize_struct(&ser, &as, sizeof(struct A), false, meta_a, NULL, NULL);
     assert_always(res);
     assert_always(a.i == as.i);
     assert_always(a.d == as.d);
@@ -623,10 +622,10 @@ test_struct_base(void)
     cra_bin_deserialize_begin(&ser, buff, buffsize);
 
     struct A *ap;
-    res = cra_bin_deserialize_struct(&ser, &anull2, sizeof(struct A), true, true, meta_a, NULL, NULL);
+    res = cra_bin_deserialize_struct(&ser, &anull2, sizeof(struct A), true, meta_a, NULL, NULL);
     assert_always(res);
     assert_always(anull2 == anull && anull2 == NULL);
-    res = cra_bin_deserialize_struct(&ser, &ap, sizeof(struct A), true, true, meta_a, NULL, NULL);
+    res = cra_bin_deserialize_struct(&ser, &ap, sizeof(struct A), true, meta_a, NULL, NULL);
     assert_always(res);
     assert_always(a.i == ap->i);
     assert_always(a.d == ap->d);
@@ -639,7 +638,7 @@ test_struct_base(void)
     cra_bin_deserialize_begin(&ser, buff, buffsize);
 
     struct A asnull;
-    res = cra_bin_deserialize_struct(&ser, &asnull, sizeof(struct A), false, true, meta_a, NULL, NULL);
+    res = cra_bin_deserialize_struct(&ser, &asnull, sizeof(struct A), false, meta_a, NULL, NULL);
     assert_always(!res);
 
     cra_bin_deserialize_end(&ser, &error);
@@ -719,16 +718,6 @@ CRA_TYPE_META_END();
 
 int calledcnt = 0;
 
-void *
-alloc_inix(void)
-{
-    return ((void)++calledcnt, cra_alloc(struct InitX));
-}
-void
-dealloc_inix(void *obj)
-{
-    ((void)++calledcnt, cra_dealloc(obj));
-}
 void
 init_initx(void *obj, void *args)
 {
@@ -739,8 +728,9 @@ init_initx(void *obj, void *args)
     o->f = 1.5f;
     o->d = 2.5;
     o->str = NULL;
-    (void)++calledcnt;
+    ++calledcnt;
 }
+
 void
 uninit_initx(void *obj)
 {
@@ -748,14 +738,13 @@ uninit_initx(void *obj)
     if (o->str)
         cra_free(o->str);
     bzero(o, sizeof(struct InitX));
-    (void)++calledcnt;
+    ++calledcnt;
 }
 
 const CraTypeInit_i initx_i = {
-    .alloc = alloc_inix,
-    .dealloc = dealloc_inix,
+    .free_members_by_seri = false,
     .init = init_initx,
-    .uinit = uninit_initx,
+    .uninit = uninit_initx,
 };
 
 void
@@ -790,12 +779,12 @@ test_struct_with_init_i(void)
     CraSerializer ser;
     calledcnt = 0;
     cra_bin_deserialize_begin(&ser, buff, buffsize);
-    cra_bin_deserialize_struct(&ser, &xx, sizeof(struct InitX), true, true, meta_initx, &initx_i, NULL);
+    cra_bin_deserialize_struct(&ser, &xx, sizeof(struct InitX), true, meta_initx, &initx_i, NULL);
     assert_always(strcmp(x->str, xx->str) == 0);
     ser.error = CRA_SER_ERROR_TYPE_MISMATCH;
     cra_bin_deserialize_end(&ser, &error);
     assert_always(error == CRA_SER_ERROR_TYPE_MISMATCH);
-    assert_always(calledcnt == 4);
+    assert_always(calledcnt == 2);
 
     cra_dealloc(x);
 }
@@ -1002,15 +991,8 @@ test_list_element_is_pointer(void)
     // test failed to call uninit func
     CraSerializer ser;
     cra_bin_deserialize_begin(&ser, buff, buffsize);
-    cra_bin_deserialize_list(&ser,
-                             &list2,
-                             sizeof(CraAList),
-                             false,
-                             true,
-                             meta_list_str,
-                             CRA_ALIST_SER_ITER_I,
-                             CRA_ALIST_SER_INIT_I,
-                             &args4list_str);
+    cra_bin_deserialize_list(
+      &ser, &list2, sizeof(CraAList), false, meta_list_str, CRA_ALIST_SER_ITER_I, CRA_ALIST_SER_INIT_I, &args4list_str);
     assert_always(list2.count == list.count);
     ser.error = CRA_SER_ERROR_TYPE_MISMATCH;
     cra_bin_deserialize_end(&ser, &error); // list2 will be free
@@ -1379,7 +1361,7 @@ test_old2new(void)
     cra_bin_serialize_print(buff, buffsize);
 
     struct New          n;
-    const CraTypeInit_i init_i = { 0, 0, (void (*)(void *, void *))init_new, 0 };
+    const CraTypeInit_i init_i = { true, (void (*)(void *, void *))init_new, 0 };
     cra_bin_deserialize_struct0(buff, buffsize, &n, sizeof(n), false, meta_new, &init_i, NULL, &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
     assert_always(o.i == n.i);
