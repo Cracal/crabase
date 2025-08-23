@@ -11,9 +11,9 @@
 #include "threads/cra_blk_deque.h"
 
 void
-cra_blkdeque_init(CraBlkDeque *que, size_t element_size, size_t que_max, bool zero_memory, cra_remove_val_fn remove_val)
+cra_blkdeque_init(CraBlkDeque *que, size_t element_size, size_t que_max, bool zero_memory)
 {
-    cra_deque_init(&que->deque, element_size, CRA_DEQUE_INFINITE, zero_memory, remove_val);
+    cra_deque_init(&que->deque, element_size, CRA_DEQUE_INFINITE, zero_memory);
     que->state = CRA_BLKDEQUE_STATE_NORMAL;
     que->que_max = que_max;
     cra_cond_init(&que->not_full);

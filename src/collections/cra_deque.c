@@ -32,7 +32,8 @@ cra_deque_iter_next(CraDequeIter *it, void **retvalptr)
     size_t end;
     if (it->curr)
     {
-        *retvalptr = it->curr->val + it->index++ * it->deque->ele_size;
+        if (retvalptr)
+            *retvalptr = it->curr->val + it->index++ * it->deque->ele_size;
 
         end = it->curr->next == it->deque->list.head ? it->deque->right_idx + 1 : CRA_DEQUE_ELE_COUNT;
 
@@ -49,18 +50,17 @@ cra_deque_iter_next(CraDequeIter *it, void **retvalptr)
 }
 
 void
-cra_deque_init(CraDeque *deque, size_t element_size, size_t que_max, bool zero_memory, cra_remove_val_fn remove_val)
+cra_deque_init(CraDeque *deque, size_t element_size, size_t que_max, bool zero_memory)
 {
     assert(!!deque && element_size > 0);
 
-    cra_llist_init(&deque->list, element_size * CRA_DEQUE_ELE_COUNT, zero_memory, NULL);
+    cra_llist_init(&deque->list, element_size * CRA_DEQUE_ELE_COUNT, zero_memory);
     CraLListNode *node = cra_llist_get_free_node(&deque->list);
     cra_llist_insert_node(&deque->list, 0, node);
 
     deque->ele_size = element_size;
     deque->que_max = que_max;
     deque->zero_memory = zero_memory;
-    deque->remove_val = remove_val;
     deque->count = 0;
     CRA_DEQUE_EMPTY_INDEX;
 }
@@ -75,21 +75,13 @@ cra_deque_uninit(CraDeque *deque)
 void
 cra_deque_clear(CraDeque *deque)
 {
-    if (deque->count > 0)
-    {
-        if (deque->remove_val)
-        {
-            CraDequeIter it;
-            void        *valptr;
-            for (cra_deque_iter_init(deque, &it); cra_deque_iter_next(&it, (void **)&valptr);)
-                deque->remove_val(valptr);
-        }
-        deque->count = 0;
-    }
+    deque->count = 0;
+    CRA_DEQUE_EMPTY_INDEX;
+    if (deque->zero_memory)
+        bzero(deque->list.head->val, deque->list.ele_size);
 
     while (deque->list.count > 1)
         cra_llist_remove_back(&deque->list);
-    CRA_DEQUE_EMPTY_INDEX;
 }
 
 bool
@@ -245,9 +237,6 @@ __cra_deque_pop_at(CraDeque *deque, size_t index, void *retval)
     // copy value
     if (retval)
         memcpy(retval, curr->val + real_idx * deque->ele_size, deque->ele_size);
-    // on remove val
-    else if (deque->remove_val)
-        deque->remove_val(curr->val + real_idx * deque->ele_size);
 
     for (;;)
     {
@@ -283,6 +272,7 @@ __cra_deque_pop_at(CraDeque *deque, size_t index, void *retval)
         curr = curr->next;
         next = curr->next;
     }
+
     if (deque->right_idx == 0)
     {
         if (list->count > 1)
@@ -327,9 +317,6 @@ cra_deque_pop(CraDeque *deque, void *retval)
         // copy value
         if (retval)
             memcpy(retval, curr->val + deque->right_idx * deque->ele_size, deque->ele_size);
-        // on remove val
-        else if (deque->remove_val)
-            deque->remove_val(curr->val + deque->right_idx * deque->ele_size);
         if (deque->zero_memory)
             bzero(curr->val + deque->right_idx * deque->ele_size, deque->ele_size);
 
@@ -367,9 +354,6 @@ cra_deque_pop_left(CraDeque *deque, void *retval)
         // copy value
         if (retval)
             memcpy(retval, curr->val + deque->left_idx * deque->ele_size, deque->ele_size);
-        // on remove val
-        else if (deque->remove_val)
-            deque->remove_val(curr->val + deque->left_idx * deque->ele_size);
         if (deque->zero_memory)
             bzero(curr->val + deque->left_idx * deque->ele_size, deque->ele_size);
 
@@ -414,8 +398,6 @@ __cra_deque_set_and_pop_old(CraDeque *deque, size_t index, void *newval, void *r
 
     if (retoldval)
         memcpy(retoldval, curr->val + real_idx * deque->ele_size, deque->ele_size);
-    else if (deque->remove_val)
-        deque->remove_val(curr->val + real_idx * deque->ele_size);
     memcpy(curr->val + real_idx * deque->ele_size, newval, deque->ele_size);
     return true;
 }
@@ -586,7 +568,7 @@ cra_deque_clone(CraDeque *deque, cra_deep_copy_val_fn deep_copy_val)
     void        *valptr, *val;
 
     ret = cra_alloc(CraDeque);
-    cra_deque_init(ret, deque->ele_size, deque->que_max, deque->zero_memory, deque->remove_val);
+    cra_deque_init(ret, deque->ele_size, deque->que_max, deque->zero_memory);
 
     for (cra_deque_iter_init(deque, &it); cra_deque_iter_next(&it, &valptr);)
     {
@@ -618,16 +600,16 @@ cra_deque_ser_init(void *obj, void *args)
     CraDeque            *list = (CraDeque *)obj;
     CraDequeSerInitArgs *params = (CraDequeSerInitArgs *)args;
 
-    cra_deque_init(list, params->element_size, params->que_max, params->zero_memory, params->remove_val_fn);
+    cra_deque_init(list, params->element_size, params->que_max, params->zero_memory);
 }
 
-const CraTypeIter_i g_deque_ser_iter_i = {
+const CraTypeIter_i __g_deque_ser_iter_i = {
     .list.init = cra_deque_ser_iter_init,
     .list.next = (bool (*)(void *, void **))cra_deque_iter_next,
     .list.append = (bool (*)(void *, void *))cra_deque_push,
 };
 
-const CraTypeInit_i g_deque_ser_init_i = {
+const CraTypeInit_i __g_deque_ser_init_i = {
     .alloc = NULL,
     .dealloc = NULL,
     .init = cra_deque_ser_init,

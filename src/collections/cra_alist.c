@@ -22,13 +22,13 @@ __cra_alist_pop__(CraAList *list, size_t index, void *retval)
 
     if (retval)
         memcpy(retval, _CRA_ALIST_VALUE_PTR(list, index), list->ele_size);
-    else if (list->remove_val)
-        list->remove_val(_CRA_ALIST_VALUE_PTR(list, index));
 
     size_t move_count = list->count - index;
     if (move_count > 1)
+    {
         memmove(
           _CRA_ALIST_VALUE_PTR(list, index), _CRA_ALIST_VALUE_PTR(list, index + 1), --move_count * list->ele_size);
+    }
     --list->count;
     if (list->zero_memory)
         bzero(list->array + list->count * list->ele_size, list->ele_size);
@@ -42,21 +42,14 @@ __cra_alist_set_and_pop_old__(CraAList *list, size_t index, void *newval, void *
         return false;
     if (retoldval)
         memcpy(retoldval, _CRA_ALIST_VALUE_PTR(list, index), list->ele_size);
-    else if (list->remove_val)
-        list->remove_val(_CRA_ALIST_VALUE_PTR(list, index));
     memcpy(_CRA_ALIST_VALUE_PTR(list, index), newval, list->ele_size);
     return true;
 }
 
 static inline void
-__cra_alist_init_size(CraAList         *list,
-                      size_t            element_size,
-                      size_t            init_capacity,
-                      bool              zero_memory,
-                      cra_remove_val_fn remove_val)
+__cra_alist_init_size(CraAList *list, size_t element_size, size_t init_capacity, bool zero_memory)
 {
     assert(!!list && element_size > 0);
-    list->remove_val = remove_val;
     list->zero_memory = zero_memory;
     list->count = 0;
     list->ele_size = element_size;
@@ -78,26 +71,23 @@ cra_alist_iter_next(CraAListIter *it, void **retvalptr)
 {
     if (it->index < it->list->count)
     {
-        *retvalptr = _CRA_ALIST_VALUE_PTR(it->list, it->index++);
+        if (retvalptr)
+            *retvalptr = _CRA_ALIST_VALUE_PTR(it->list, it->index++);
         return true;
     }
     return false;
 }
 
 void
-cra_alist_init_size(CraAList         *list,
-                    size_t            element_size,
-                    size_t            init_capacity,
-                    bool              zero_memory,
-                    cra_remove_val_fn remove_val)
+cra_alist_init_size(CraAList *list, size_t element_size, size_t init_capacity, bool zero_memory)
 {
-    __cra_alist_init_size(list, element_size, init_capacity, zero_memory, remove_val);
+    __cra_alist_init_size(list, element_size, init_capacity, zero_memory);
 }
 
 void
-cra_alist_init(CraAList *list, size_t element_size, bool zero_memory, cra_remove_val_fn remove_val)
+cra_alist_init(CraAList *list, size_t element_size, bool zero_memory)
 {
-    __cra_alist_init_size(list, element_size, CRA_ALIST_INIT_CAPACITY, zero_memory, remove_val);
+    __cra_alist_init_size(list, element_size, CRA_ALIST_INIT_CAPACITY, zero_memory);
 }
 
 void
@@ -111,11 +101,6 @@ cra_alist_uninit(CraAList *list)
 void
 cra_alist_clear(CraAList *list)
 {
-    if (!!list->remove_val)
-    {
-        for (size_t i = 0; i < list->count; i++)
-            list->remove_val(_CRA_ALIST_VALUE_PTR(list, i));
-    }
     if (list->zero_memory)
         bzero(list->array, list->ele_size * list->count);
     list->count = 0;
@@ -161,7 +146,7 @@ cra_alist_remove_at(CraAList *list, size_t index)
 }
 
 bool
-cra_alist_pop(CraAList *list, size_t index, void *retval)
+cra_alist_pop_at(CraAList *list, size_t index, void *retval)
 {
     return __cra_alist_pop__(list, index, retval);
 }
@@ -247,7 +232,7 @@ CraAList *
 cra_alist_clone(CraAList *list, cra_deep_copy_val_fn deep_copy_val)
 {
     CraAList *ret = cra_alloc(CraAList);
-    cra_alist_init_size(ret, list->ele_size, list->count, list->zero_memory, list->remove_val);
+    cra_alist_init_size(ret, list->ele_size, list->count, list->zero_memory);
 
     ret->count = list->count;
     if (!!deep_copy_val)
@@ -329,6 +314,8 @@ cra_alist_binary_seach(CraAList *list, cra_compare_fn compare, void *val)
     int    res;
     size_t left, middle, right;
 
+    assert(list->count > 0);
+
     left = 0;
     middle = list->count;
     right = list->count - 1;
@@ -389,16 +376,16 @@ cra_alist_ser_init(void *obj, void *args)
     CraAList            *list = (CraAList *)obj;
     CraAListSerInitArgs *params = (CraAListSerInitArgs *)args;
 
-    cra_alist_init(list, params->element_size, params->zero_memory, params->remove_val_fn);
+    cra_alist_init(list, params->element_size, params->zero_memory);
 }
 
-const CraTypeIter_i g_alist_ser_iter_i = {
+const CraTypeIter_i __g_alist_ser_iter_i = {
     .list.init = cra_alist_ser_iter_init,
     .list.next = (bool (*)(void *, void **))cra_alist_iter_next,
     .list.append = cra_alist_ser_iter_append,
 };
 
-const CraTypeInit_i g_alist_ser_init_i = {
+const CraTypeInit_i __g_alist_ser_init_i = {
     .alloc = NULL,
     .dealloc = NULL,
     .init = cra_alist_ser_init,

@@ -13,20 +13,14 @@
 #include "cra_malloc.h"
 #include <time.h>
 
-static void
-_print_int(void *pi)
-{
-    printf("val: %d\n", *(int *)pi);
-}
-
 void
 test_new_delete(void)
 {
     CraAList list, *list2;
 
-    cra_alist_init_size0(int, &list, 4, true, NULL);
+    cra_alist_init_size0(int, &list, 4, true);
     list2 = cra_alloc(CraAList);
-    cra_alist_init_size0(int, list2, 2, false, NULL);
+    cra_alist_init_size0(int, list2, 2, false);
 
     cra_alist_uninit(&list);
     cra_alist_uninit(list2);
@@ -42,7 +36,7 @@ test_add(void)
 
     list = cra_alloc(CraAList);
     assert_always(list != NULL);
-    cra_alist_init0(int, list, true, _print_int);
+    cra_alist_init0(int, list, true);
 
     assert_always(cra_alist_append(list, &(int){ 100 }) && cra_alist_get(list, 0, &i) && i == 100);
     cra_alist_clear(list);
@@ -103,7 +97,7 @@ test_remove(void)
     int         *valptr;
     CraAList    *list = cra_alloc(CraAList);
     assert_always(list != NULL);
-    cra_alist_init_size0(int, list, 100, true, NULL);
+    cra_alist_init_size0(int, list, 100, true);
 
     assert_always(!cra_alist_remove_back(list));
     assert_always(!cra_alist_remove_front(list));
@@ -119,8 +113,8 @@ test_remove(void)
         assert_always(cra_alist_append(list, &i));
 
     int val, val2;
-    assert_always(cra_alist_pop(list, 70 - 1, &val) && val == 70);
-    assert_always(cra_alist_pop(list, 60 - 1, &val) && val == 60);
+    assert_always(cra_alist_pop_at(list, 70 - 1, &val) && val == 70);
+    assert_always(cra_alist_pop_at(list, 60 - 1, &val) && val == 60);
     cra_alist_get(list, 38 - 1, &val);
     assert_always(cra_alist_remove_at(list, 38 - 1) && cra_alist_get(list, 38 - 1, &val2) && val != val2);
     cra_alist_get(list, 34 - 1, &val);
@@ -147,14 +141,14 @@ test_remove(void)
 }
 
 static bool
-remove_even(void *val, void *arg)
+remove_even(const void *val, void *arg)
 {
     CRA_UNUSED_VALUE(arg);
     return (*(int *)val) % 2 == 0;
 }
 
 static bool
-remove_all(void *val, void *arg)
+remove_all(const void *val, void *arg)
 {
     CRA_UNUSED_VALUE(val);
     CRA_UNUSED_VALUE(arg);
@@ -170,7 +164,7 @@ test_remove_match(void)
     CraAListIter it;
 
     list = cra_alloc(CraAList);
-    cra_alist_init0(int, list, true, _print_int);
+    cra_alist_init0(int, list, true);
 
     for (int i = 0; i < 100; i++)
         cra_alist_append(list, &i);
@@ -203,7 +197,7 @@ test_set(void)
     CraAListIter it;
     CraAList    *list = cra_alloc(CraAList);
     assert_always(list != NULL);
-    cra_alist_init0(int, list, true, NULL);
+    cra_alist_init0(int, list, true);
 
     for (i = 0; i < 1000; i++)
         assert_always(cra_alist_append(list, &i));
@@ -242,7 +236,7 @@ test_get(void)
     CraAList     list;
     int          val, *valptr1, *valptr2;
 
-    cra_alist_init0(int, &list, false, NULL);
+    cra_alist_init0(int, &list, false);
     for (int i = 0; i < 1000; i++)
         cra_alist_prepend(&list, &i);
 
@@ -265,7 +259,7 @@ test_reverse(void)
     CraAListIter it;
     int         *valptr, i;
     CraAList    *list = cra_alloc(CraAList);
-    cra_alist_init_size0(int, list, 1000, true, NULL);
+    cra_alist_init_size0(int, list, 1000, true);
     for (i = 0; i < 1000; i++)
         cra_alist_append(list, &i);
 
@@ -309,19 +303,13 @@ copy_as(const void *from, void *to)
     *(void **)to = ret;
 }
 
-static void
-free_as(void *val)
-{
-    cra_free(*(void **)val);
-}
-
 void
 test_clone(void)
 {
     CraAList *list1, *list2;
 
     list1 = cra_alloc(CraAList);
-    cra_alist_init_size0(int, list1, 1000, false, NULL);
+    cra_alist_init_size0(int, list1, 1000, false);
     for (int i = 0; i < 1000; i++)
         cra_alist_append(list1, &i);
 
@@ -346,7 +334,7 @@ test_clone(void)
 
     A_s *as1, *as2;
     list1 = cra_alloc(CraAList);
-    cra_alist_init0(A_s *, list1, true, free_as);
+    cra_alist_init0(A_s *, list1, true);
     for (int i = 0; i < 800; i++)
     {
         as1 = cra_malloc(sizeof(A_s));
@@ -373,6 +361,11 @@ test_clone(void)
         assert_always((*(A_s **)as1)->f == (*(A_s **)as2)->f);
         assert_always(*(A_s **)as1 != *(A_s **)as2);
     }
+    CraAListIter it;
+    for (cra_alist_iter_init(list1, &it); cra_alist_iter_next(&it, (void **)&as1);)
+        cra_free(*(void **)as1);
+    for (cra_alist_iter_init(list2, &it); cra_alist_iter_next(&it, (void **)&as1);)
+        cra_free(*(void **)as1);
 
     cra_alist_uninit(list1);
     cra_alist_uninit(list2);
@@ -385,6 +378,7 @@ comare_int1(const void *a, const void *b)
 {
     return *(int *)a - *(int *)b;
 }
+
 static int
 comare_int2(const void *a, const void *b)
 {
@@ -398,7 +392,7 @@ test_sort(void)
     int         *valptr, i;
     CraAList     list, *list2;
 
-    cra_alist_init_size0(int, &list, 10, false, NULL);
+    cra_alist_init_size0(int, &list, 10, false);
 
     assert_always(cra_alist_append(&list, &(int){ 8 }));
     assert_always(cra_alist_append(&list, &(int){ 7 }));
@@ -506,7 +500,7 @@ void
 test_foreach(void)
 {
     CraAList *list = cra_alloc(CraAList);
-    cra_alist_init0(int, list, false, NULL);
+    cra_alist_init0(int, list, false);
 
     CraAListIter it;
     int         *valptr;
@@ -548,7 +542,7 @@ test_test(void)
 {
     CraAListIter it;
     CraAList    *list = cra_alloc(CraAList);
-    cra_alist_init0(int, list, true, NULL);
+    cra_alist_init0(int, list, true);
 
     int i, j, n, v;
     srand((unsigned int)time(NULL));
@@ -621,7 +615,7 @@ test_test(void)
         while (true)
         {
             idx = list->count == 0 ? 0 : (rand() % list->count);
-            if (!cra_alist_pop(list, idx, &j))
+            if (!cra_alist_pop_at(list, idx, &j))
                 break;
 
             assert_always(check[idx] == j);

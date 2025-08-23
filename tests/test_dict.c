@@ -13,17 +13,6 @@
 #include "cra_malloc.h"
 #include <time.h>
 
-static void
-_print_int(void *pi)
-{
-    printf("key: %d\n", *(int *)pi);
-}
-static void
-_print_float(void *pf)
-{
-    printf("val: %f\n", *(float *)pf);
-}
-
 void
 test_new_delete(void)
 {
@@ -31,9 +20,8 @@ test_new_delete(void)
 
     dict1 = cra_alloc(CraDict);
     assert_always(dict1 != NULL);
-    cra_dict_init0(int, float, dict1, true, (cra_hash_fn)cra_hash_int_p, (cra_compare_fn)cra_compare_int_p, NULL, NULL);
-    cra_dict_init0(
-      float, int64_t, &dict2, false, (cra_hash_fn)cra_hash_float_p, (cra_compare_fn)cra_compare_int_p, NULL, NULL);
+    cra_dict_init0(int, float, dict1, true, (cra_hash_fn)cra_hash_int_p, (cra_compare_fn)cra_compare_int_p);
+    cra_dict_init0(float, int64_t, &dict2, false, (cra_hash_fn)cra_hash_float_p, (cra_compare_fn)cra_compare_int_p);
 
     cra_dict_uninit(dict1);
     cra_dealloc(dict1);
@@ -47,8 +35,7 @@ test_add(void)
     int        *keyptr;
     float      *valptr;
     CraDict    *dict = cra_alloc(CraDict);
-    cra_dict_init_size0(
-      int, float, dict, 1000, true, (cra_hash_fn)cra_hash_int_p, (cra_compare_fn)cra_compare_int_p, NULL, NULL);
+    cra_dict_init_size0(int, float, dict, 1000, true, (cra_hash_fn)cra_hash_int_p, (cra_compare_fn)cra_compare_int_p);
 
     for (int i = 0; i < 1000; i++)
         assert_always(cra_dict_add(dict, &i, &(float){ i + .5f }));
@@ -58,9 +45,9 @@ test_add(void)
         assert_always(i == *keyptr && (i + .5f) == *valptr);
 
     assert_always(!cra_dict_add(dict, &(int){ 3 }, &(float){ 3000.5f }));
-    assert_always(cra_dict_put(dict, &(int){ 3 }, &(float){ 30000.5f }));
+    assert_always(cra_dict_put0(dict, &(int){ 3 }, &(float){ 30000.5f }));
     assert_always(cra_dict_get_ptr(dict, &(int){ 3 }, (void **)&valptr) && cra_compare_float(*valptr, 30000.5f) == 0);
-    assert_always(cra_dict_put(dict, &(int){ 3 }, &(float){ 3.5f }));
+    assert_always(cra_dict_put0(dict, &(int){ 3 }, &(float){ 3.5f }));
 
     for (cra_dict_iter_init(dict, &it); cra_dict_iter_next(&it, (void **)&keyptr, (void **)&valptr);)
     {
@@ -77,15 +64,14 @@ test_remove(void)
 {
     float    val;
     CraDict *dict = cra_alloc(CraDict);
-    cra_dict_init0(
-      int, float, dict, true, (cra_hash_fn)cra_hash_int_p, (cra_compare_fn)cra_compare_int_p, _print_int, _print_float);
+    cra_dict_init0(int, float, dict, true, (cra_hash_fn)cra_hash_int_p, (cra_compare_fn)cra_compare_int_p);
 
     assert_always(!cra_dict_remove(dict, &(int){ 0 }));
 
     for (int i = 0; i < 1000; i++)
         cra_dict_add(dict, &i, &(float){ i + .5f });
 
-    assert_always(cra_dict_pop(dict, &(int){ 30 }, &val) && val == 30.5f);
+    assert_always(cra_dict_pop(dict, &(int){ 30 }, NULL, &val) && val == 30.5f);
 
     for (int i = 0; i < 80; i++)
     {
@@ -111,7 +97,7 @@ test_get(void)
 {
     CraDictIter it;
     CraDict    *dict = cra_alloc(CraDict);
-    cra_dict_init0(int, float, dict, true, (cra_hash_fn)cra_hash_int_p, (cra_compare_fn)cra_compare_int_p, NULL, NULL);
+    cra_dict_init0(int, float, dict, true, (cra_hash_fn)cra_hash_int_p, (cra_compare_fn)cra_compare_int_p);
 
     for (int i = -5000; i <= 5000; i++)
         cra_dict_add(dict, &i, &(float){ i + .5f });
@@ -153,12 +139,6 @@ copy_as(const void *from, void *to)
     *(void **)to = ret;
 }
 
-static void
-free_as(void *val)
-{
-    cra_free(*(void **)val);
-}
-
 void
 test_clone(void)
 {
@@ -166,7 +146,7 @@ test_clone(void)
     CraDict *dict2;
 
     dict = cra_alloc(CraDict);
-    cra_dict_init0(int, double, dict, true, (cra_hash_fn)cra_hash_int_p, (cra_compare_fn)cra_compare_int_p, NULL, NULL);
+    cra_dict_init0(int, double, dict, true, (cra_hash_fn)cra_hash_int_p, (cra_compare_fn)cra_compare_int_p);
 
     for (int i = 0; i < 1000; i++)
         cra_dict_add(dict, &i, &(double){ i + .5 });
@@ -189,8 +169,7 @@ test_clone(void)
     cra_dealloc(dict);
 
     dict = cra_alloc(CraDict);
-    cra_dict_init0(
-      int, A_s *, dict, true, (cra_hash_fn)cra_hash_int_p, (cra_compare_fn)cra_compare_int_p, NULL, free_as);
+    cra_dict_init0(int, A_s *, dict, true, (cra_hash_fn)cra_hash_int_p, (cra_compare_fn)cra_compare_int_p);
 
     A_s *as;
     for (int i = 0; i < 1000; i++)
@@ -219,6 +198,11 @@ test_clone(void)
         assert_always(valas1->f == valas2->f);
         assert_always(valas1 != valas2);
     }
+    CraDictIter it;
+    for (cra_dict_iter_init(dict, &it); cra_dict_iter_next(&it, NULL, (void **)&valasptr1);)
+        cra_free(*valasptr1);
+    for (cra_dict_iter_init(dict2, &it); cra_dict_iter_next(&it, NULL, (void **)&valasptr1);)
+        cra_free(*valasptr1);
 
     cra_dict_uninit(dict2);
     cra_dealloc(dict2);
@@ -230,7 +214,7 @@ void
 test_foreach(void)
 {
     CraDict *dict = cra_alloc(CraDict);
-    cra_dict_init0(int, int, dict, false, (cra_hash_fn)cra_hash_int_p, (cra_compare_fn)cra_compare_int_p, NULL, NULL);
+    cra_dict_init0(int, int, dict, false, (cra_hash_fn)cra_hash_int_p, (cra_compare_fn)cra_compare_int_p);
 
     int        *keyptr;
     int        *valptr;
@@ -273,7 +257,7 @@ test_test(void)
 {
     CraDictIter it;
     CraDict    *dict = cra_alloc(CraDict);
-    cra_dict_init0(int, int, dict, true, (cra_hash_fn)cra_hash_int_p, (cra_compare_fn)cra_compare_int_p, NULL, NULL);
+    cra_dict_init0(int, int, dict, true, (cra_hash_fn)cra_hash_int_p, (cra_compare_fn)cra_compare_int_p);
 
     int i, j, n, v;
     srand((unsigned int)time(NULL));
@@ -281,16 +265,16 @@ test_test(void)
     {
         n = (rand() + 1) % 100000;
         for (j = 0; j < n; j++)
-            cra_dict_put(dict, &j, &(int){ j + 100 });
+            cra_dict_put0(dict, &j, &(int){ j + 100 });
 
         n = (rand() + 1) % dict->count;
         for (j = 0; j < n; j++)
         {
-            cra_dict_pop(dict, &j, &v);
+            cra_dict_pop(dict, &j, NULL, &v);
             assert_always(v == j + 100);
         }
 
-        for (; cra_dict_pop(dict, &j, &v); j++)
+        for (; cra_dict_pop(dict, &j, NULL, &v); j++)
             assert_always(v == j + 100);
     }
     assert_always(dict->count == 0);
@@ -304,7 +288,7 @@ test_test(void)
         for (j = 0; j < n; j++)
         {
             idx = rand() % 1000000;
-            cra_dict_put(dict, &idx, &j);
+            cra_dict_put0(dict, &idx, &j);
             check[idx] = j;
         }
         for (cra_dict_iter_init(dict, &it); cra_dict_iter_next(&it, (void **)&pk, (void **)&pv);)
@@ -315,7 +299,7 @@ test_test(void)
         while (cra_dict_get_count(dict) > 0)
         {
             idx = rand() % 1000000;
-            if (cra_dict_pop(dict, &idx, &j))
+            if (cra_dict_pop(dict, &idx, NULL, &j))
                 assert_always(check[idx] == j);
         }
     }

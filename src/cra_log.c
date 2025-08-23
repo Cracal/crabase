@@ -112,13 +112,7 @@ cra_create_buf(void)
 static inline void
 cra_destroy_buf(CraLogBuffer *buf)
 {
-    cra_free(buf);
-}
-
-static void
-cra_destroy_buf_for_llist(void *buf)
-{
-    cra_destroy_buf(*(CraLogBuffer **)buf);
+    cra_dealloc(buf);
 }
 
 #define CRA_LOG_TIME_FMT_UTC   "%04d-%02d-%02dT%02d:%02d:%02d.%dZ%*s"
@@ -239,13 +233,15 @@ static CRA_THRD_FUNC(cra_log_thread)
 {
     CRA_UNUSED_VALUE(arg);
 
-    CraLogBuffer *buf;
-    CraLogBuffer *buf1 = NULL;
-    CraLogBuffer *buf2 = NULL;
-    CraLList     *buffers;
+    CraLogBuffer  *buf;
+    CraLogBuffer  *buf1 = NULL;
+    CraLogBuffer  *buf2 = NULL;
+    CraLList      *buffers;
+    CraLogBuffer **bufptr;
+    CraLListIter   it;
 
     buffers = cra_alloc(CraLList);
-    cra_llist_init0(CraLogBuffer *, buffers, false, cra_destroy_buf_for_llist);
+    cra_llist_init0(CraLogBuffer *, buffers, false);
 
     while (s_logger.running)
     {
@@ -302,6 +298,9 @@ static CRA_THRD_FUNC(cra_log_thread)
         cra_destroy_buf(buf1);
     if (buf2)
         cra_destroy_buf(buf2);
+
+    for (cra_llist_iter_init(buffers, &it); cra_llist_iter_next(&it, (void **)&bufptr);)
+        cra_destroy_buf(*bufptr);
     cra_llist_uninit(buffers);
     cra_dealloc(buffers);
 
@@ -396,7 +395,7 @@ cra_log_startup(CraLogLevel_e level, bool run_write_thread, bool with_localtime)
 #endif
         s_logger.buf2 = NULL;
         s_logger.buffers = cra_alloc(CraLList);
-        cra_llist_init0(CraLogBuffer *, s_logger.buffers, false, cra_destroy_buf_for_llist);
+        cra_llist_init0(CraLogBuffer *, s_logger.buffers, false);
         if (!cra_thrd_create(&s_logger.thrd, cra_log_thread, NULL))
             goto fail;
     }
@@ -404,6 +403,7 @@ cra_log_startup(CraLogLevel_e level, bool run_write_thread, bool with_localtime)
     return true;
 
 fail:
+    assert(cra_llist_get_count(s_logger.buffers) == 0);
     cra_llist_uninit(s_logger.buffers);
     cra_dealloc(s_logger.buffers);
     cra_free(s_logger.buf1);
@@ -429,6 +429,11 @@ cra_log_cleanup(void)
             cra_destroy_buf(s_logger.buf1);
         if (!!s_logger.buf2)
             cra_destroy_buf(s_logger.buf2);
+
+        CraLListIter   it;
+        CraLogBuffer **bufptr;
+        for (cra_llist_iter_init(s_logger.buffers, &it); cra_llist_iter_next(&it, (void **)&bufptr);)
+            cra_destroy_buf(*bufptr);
         cra_llist_uninit(s_logger.buffers);
         cra_dealloc(s_logger.buffers);
     }

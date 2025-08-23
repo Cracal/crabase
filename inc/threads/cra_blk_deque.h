@@ -33,13 +33,9 @@ typedef struct _CraBlkDeque
 } CraBlkDeque;
 
 CRA_API void
-cra_blkdeque_init(CraBlkDeque      *que,
-                  size_t            element_size,
-                  size_t            que_max,
-                  bool              zero_memory,
-                  cra_remove_val_fn remove_val);
-#define cra_blkdeque_init0(_TVal, _que, _que_max, _zero_memory, _remove_val_fn)    \
-    cra_blkdeque_init(_que, sizeof(_TVal), _que_max, _zero_memory, _remove_val_fn)
+cra_blkdeque_init(CraBlkDeque *que, size_t element_size, size_t que_max, bool zero_memory);
+#define cra_blkdeque_init0(_TVal, _que, _que_max, _zero_memory)    \
+    cra_blkdeque_init(_que, sizeof(_TVal), _que_max, _zero_memory)
 
 CRA_API void
 cra_blkdeque_uninit(CraBlkDeque *que);

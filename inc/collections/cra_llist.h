@@ -22,13 +22,12 @@ typedef struct _CraLListNode
 
 typedef struct _CraLList
 {
-    bool              zero_memory;
-    size_t            ele_size;
-    size_t            count;
-    size_t            freelist_count;
-    CraLListNode     *head;
-    CraLListNode     *freelist;
-    cra_remove_val_fn remove_val;
+    bool          zero_memory;
+    size_t        ele_size;
+    size_t        count;
+    size_t        freelist_count;
+    CraLListNode *head;
+    CraLListNode *freelist;
 } CraLList;
 
 typedef struct _CraLListIter
@@ -46,18 +45,14 @@ CRA_API bool
 cra_llist_iter_next(CraLListIter *it, void **retvalptr);
 
 CRA_API void
-cra_llist_init_size(CraLList         *list,
-                    size_t            element_size,
-                    size_t            init_spare_node,
-                    bool              zero_memory,
-                    cra_remove_val_fn remove_val);
+cra_llist_init_size(CraLList *list, size_t element_size, size_t init_spare_node, bool zero_memory);
 
 CRA_API void
-cra_llist_init(CraLList *list, size_t element_size, bool zero_memory, cra_remove_val_fn remove_val);
-#define cra_llist_init_size0(_TVal, _list, _init_spare_node, _zero_memory, _remove_val_fn)    \
-    cra_llist_init_size(_list, sizeof(_TVal), _init_spare_node, _zero_memory, _remove_val_fn)
-#define cra_llist_init0(_TVal, _list, _zero_memory, _remove_val_fn)    \
-    cra_llist_init(_list, sizeof(_TVal), _zero_memory, _remove_val_fn)
+cra_llist_init(CraLList *list, size_t element_size, bool zero_memory);
+
+#define cra_llist_init_size0(_TVal, _list, _init_spare_node, _zero_memory)    \
+    cra_llist_init_size(_list, sizeof(_TVal), _init_spare_node, _zero_memory)
+#define cra_llist_init0(_TVal, _list, _zero_memory) cra_llist_init(_list, sizeof(_TVal), _zero_memory)
 
 CRA_API void
 cra_llist_uninit(CraLList *list);
@@ -82,9 +77,9 @@ cra_llist_remove_at(CraLList *list, size_t index);
 #define cra_llist_remove_back(_list)  cra_llist_remove_at(_list, (_list)->count - 1)
 
 CRA_API bool
-cra_llist_pop(CraLList *list, size_t index, void *retval);
-#define cra_llist_pop_front(_list, _retval) cra_llist_pop(_list, 0, _retval)
-#define cra_llist_pop_back(_list, _retval)  cra_llist_pop(_list, (_list)->count - 1, _retval)
+cra_llist_pop_at(CraLList *list, size_t index, void *retval);
+#define cra_llist_pop_front(_list, _retval) cra_llist_pop_at(_list, 0, _retval)
+#define cra_llist_pop_back(_list, _retval)  cra_llist_pop_at(_list, (_list)->count - 1, _retval)
 
 CRA_API size_t
 cra_llist_remove_match(CraLList *list, cra_match_fn match, void *arg);
@@ -140,18 +135,19 @@ cra_llist_get_node(CraLList *list, size_t index);
 
 typedef struct _CraLListSerInitArgs
 {
-    bool              zero_memory;
-    size_t            element_size;
-    cra_remove_val_fn remove_val_fn;
+    bool   zero_memory;
+    size_t element_size;
 } CraLListSerInitArgs;
 
-CRA_API const CraTypeIter_i g_llist_ser_iter_i;
-CRA_API const CraTypeInit_i g_llist_ser_init_i;
+CRA_API const CraTypeIter_i __g_llist_ser_iter_i;
+CRA_API const CraTypeInit_i __g_llist_ser_init_i;
 
-#define CRA_LLIST_SER_ARGS(_name, _zero_memory, _element_size, _remove_val_fn)  \
-    CraLListSerInitArgs _name = { _zero_memory, _element_size, _remove_val_fn }
-#define CRA_LLIST_SER_ARGS0(_name, _initialized_list)                                                          \
-    CRA_LLIST_SER_ARGS(                                                                                        \
-      _name, (_initialized_list)->zero_memory, (_initialized_list)->ele_size, (_initialized_list)->remove_val)
+#define CRA_LLIST_SER_ITER_I (&__g_llist_ser_iter_i)
+#define CRA_LLIST_SER_INIT_I (&__g_llist_ser_init_i)
+
+#define CRA_LLIST_SER_ARGS(_name, _zero_memory, _element_size)  \
+    CraLListSerInitArgs _name = { _zero_memory, _element_size }
+#define CRA_LLIST_SER_ARGS0(_name, _initialized_list)                                          \
+    CRA_LLIST_SER_ARGS(_name, (_initialized_list)->zero_memory, (_initialized_list)->ele_size)
 
 #endif

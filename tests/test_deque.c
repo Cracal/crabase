@@ -13,20 +13,14 @@
 #include "cra_malloc.h"
 #include <time.h>
 
-static void
-_print_int(void *pi)
-{
-    printf("val: %d\n", *(int *)pi);
-}
-
 void
 test_new_delete(void)
 {
     CraDeque deque, *deque2;
 
-    cra_deque_init0(int, &deque, CRA_DEQUE_INFINITE, true, NULL);
+    cra_deque_init0(int, &deque, CRA_DEQUE_INFINITE, true);
     deque2 = cra_alloc(CraDeque);
-    cra_deque_init0(int, deque2, 0, false, NULL);
+    cra_deque_init0(int, deque2, 0, false);
 
     cra_deque_uninit(&deque);
     cra_deque_uninit(deque2);
@@ -39,7 +33,7 @@ test_insert_and_pop_at(void)
     CraDequeIter it;
     int         *valptr, i;
     CraDeque    *deque = cra_alloc(CraDeque);
-    cra_deque_init0(int, deque, CRA_DEQUE_INFINITE, true, NULL);
+    cra_deque_init0(int, deque, CRA_DEQUE_INFINITE, true);
 
     assert_always(cra_deque_insert(deque, 0, &(int){ 0 }));
     assert_always(cra_deque_insert(deque, 1, &(int){ 2 }));
@@ -93,7 +87,7 @@ test_push(void)
     CraDequeIter it;
     int         *valptr, i;
     CraDeque    *deque = cra_alloc(CraDeque);
-    cra_deque_init0(int, deque, CRA_DEQUE_INFINITE, true, _print_int);
+    cra_deque_init0(int, deque, CRA_DEQUE_INFINITE, true);
 
     assert_always(cra_deque_push(deque, &(int){ 100 }) && cra_deque_peek(deque, &i) && i == 100);
     cra_deque_clear(deque);
@@ -151,7 +145,7 @@ test_push(void)
     printf("\n");
 
     deque = cra_alloc(CraDeque);
-    cra_deque_init0(int, deque, 6, false, _print_int);
+    cra_deque_init0(int, deque, 6, false);
 
     for (i = 0; i < 20; i++)
         assert_always(cra_deque_push_left(deque, &i));
@@ -186,7 +180,7 @@ test_pop(void)
 {
     int       val, i;
     CraDeque *deque = cra_alloc(CraDeque);
-    cra_deque_init0(int, deque, CRA_DEQUE_INFINITE, true, NULL);
+    cra_deque_init0(int, deque, CRA_DEQUE_INFINITE, true);
 
     assert_always(!cra_deque_pop(deque, &i));
     assert_always(!cra_deque_pop_left(deque, &i));
@@ -238,7 +232,7 @@ test_set(void)
     int         *valptr;
     CraDeque    *deque = cra_alloc(CraDeque);
     assert_always(deque != NULL);
-    cra_deque_init0(int, deque, CRA_DEQUE_INFINITE, true, NULL);
+    cra_deque_init0(int, deque, CRA_DEQUE_INFINITE, true);
 
     for (i = 0; i < 10000; i++)
         assert_always(cra_deque_push(deque, &i));
@@ -277,7 +271,7 @@ test_get(void)
     CraDeque     deque;
     int          val, *valptr1, *valptr2;
 
-    cra_deque_init0(int, &deque, 10000, false, NULL);
+    cra_deque_init0(int, &deque, 10000, false);
     for (int i = 0; i < 10000; i++)
         cra_deque_push_left(&deque, &i);
 
@@ -300,7 +294,7 @@ test_peek(void)
     CraDequeIter it;
     int          val, *valptr;
     CraDeque    *deque = cra_alloc(CraDeque);
-    cra_deque_init0(int, deque, 200, false, NULL);
+    cra_deque_init0(int, deque, 200, false);
 
     for (int i = 0; i < 200; i++)
     {
@@ -330,7 +324,7 @@ test_reverse(void)
     CraDequeIter it;
     int         *valptr, i;
     CraDeque    *deque = cra_alloc(CraDeque);
-    cra_deque_init0(int, deque, CRA_DEQUE_INFINITE, true, NULL);
+    cra_deque_init0(int, deque, CRA_DEQUE_INFINITE, true);
 
     for (i = 0; i < 2000; i++)
         cra_deque_push(deque, &i);
@@ -375,14 +369,6 @@ copy_as(const void *from, void *to)
     *(void **)to = ret;
 }
 
-static void
-free_as(void *val)
-{
-    // A_s *as = *(A_s **)val;
-    // printf("free as {i: %d, f: %f}\n", as->i, as->f);
-    cra_free(*(void **)val);
-}
-
 void
 test_clone(void)
 {
@@ -390,7 +376,7 @@ test_clone(void)
     CraDeque *deque;
 
     deque = cra_alloc(CraDeque);
-    cra_deque_init0(int, deque, 10000, false, NULL);
+    cra_deque_init0(int, deque, 10000, false);
 
     for (int i = 0; i < 1000; i++)
         cra_deque_push_left(deque, &i);
@@ -421,7 +407,7 @@ test_clone(void)
     cra_dealloc(deque);
 
     deque = cra_alloc(CraDeque);
-    cra_deque_init0(A_s *, deque, 10000, false, free_as);
+    cra_deque_init0(A_s *, deque, 10000, false);
 
     A_s *as;
     for (int i = 0; i < 1000; i++)
@@ -441,6 +427,7 @@ test_clone(void)
     assert_always(que != NULL);
     assert_always(que->count == deque->count);
 
+    A_s  *valas1, *valas2;
     A_s **valasptr1, **valasptr2;
     while (que->count > 0)
     {
@@ -449,8 +436,10 @@ test_clone(void)
         assert_always((*valasptr1)->i == (*valasptr2)->i);
         assert_always((*valasptr1)->f == (*valasptr2)->f);
         assert_always(*valasptr1 != *valasptr2);
-        cra_deque_pop_left(deque, NULL);
-        cra_deque_pop_left(que, NULL);
+        cra_deque_pop_left(deque, &valas1);
+        cra_deque_pop_left(que, &valas2);
+        cra_dealloc(valas1);
+        cra_dealloc(valas2);
     }
 
     cra_deque_uninit(que);
@@ -463,7 +452,7 @@ void
 test_foreach(void)
 {
     CraDeque *deque = cra_alloc(CraDeque);
-    cra_deque_init0(int, deque, 100, false, NULL);
+    cra_deque_init0(int, deque, 100, false);
 
     int         *valptr;
     CraDequeIter it;
@@ -505,7 +494,7 @@ test_test(void)
 {
     CraDequeIter it;
     CraDeque    *deque = cra_alloc(CraDeque);
-    cra_deque_init0(int, deque, CRA_DEQUE_INFINITE, true, NULL);
+    cra_deque_init0(int, deque, CRA_DEQUE_INFINITE, true);
 
     int i, j, n, v;
     srand((unsigned int)time(NULL));

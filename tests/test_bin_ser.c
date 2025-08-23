@@ -813,11 +813,11 @@ test_list(void)
     CraLListIter llist_it;
     CraDequeIter deque_it;
 
-    CRA_LLIST_SER_ARGS(args4llist, false, sizeof(int32_t), NULL);
-    CRA_DEQUE_SER_ARGS(args4deque, false, CRA_DEQUE_INFINITE, sizeof(int32_t), NULL);
+    CRA_LLIST_SER_ARGS(args4llist, false, sizeof(int32_t));
+    CRA_DEQUE_SER_ARGS(args4deque, false, CRA_DEQUE_INFINITE, sizeof(int32_t));
 
     alist = cra_alloc(CraAList);
-    cra_alist_init0(int32_t, alist, true, NULL);
+    cra_alist_init0(int32_t, alist, true);
     CRA_TYPE_META_BEGIN(meta_list_val)
     CRA_TYPE_META_INT32_ELEMENT()
     CRA_TYPE_META_END();
@@ -830,7 +830,7 @@ test_list(void)
     // test empty
 
     buffsize = sizeof(buff);
-    cra_bin_serialize_list0(buff, &buffsize, alist, meta_list_val, &g_alist_ser_iter_i, &error);
+    cra_bin_serialize_list0(buff, &buffsize, alist, meta_list_val, CRA_ALIST_SER_ITER_I, &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
     cra_bin_serialize_print(buff, buffsize);
 
@@ -840,8 +840,8 @@ test_list(void)
                               sizeof(CraAList),
                               true,
                               meta_list_val,
-                              &g_alist_ser_iter_i,
-                              &g_alist_ser_init_i,
+                              CRA_ALIST_SER_ITER_I,
+                              CRA_ALIST_SER_INIT_I,
                               &args4alist,
                               &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
@@ -853,7 +853,7 @@ test_list(void)
         cra_alist_append(alist, &i);
 
     buffsize = sizeof(buff);
-    cra_bin_serialize_list0(buff, &buffsize, alist, meta_list_val, &g_alist_ser_iter_i, &error);
+    cra_bin_serialize_list0(buff, &buffsize, alist, meta_list_val, CRA_ALIST_SER_ITER_I, &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
 
     cra_bin_serialize_print(buff, buffsize);
@@ -865,8 +865,8 @@ test_list(void)
                               sizeof(CraAList),
                               true,
                               meta_list_val,
-                              &g_alist_ser_iter_i,
-                              &g_alist_ser_init_i,
+                              CRA_ALIST_SER_ITER_I,
+                              CRA_ALIST_SER_INIT_I,
                               &args4alist,
                               &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
@@ -884,8 +884,8 @@ test_list(void)
                               sizeof(CraLList),
                               false,
                               meta_list_val,
-                              &g_llist_ser_iter_i,
-                              &g_llist_ser_init_i,
+                              CRA_LLIST_SER_ITER_I,
+                              CRA_LLIST_SER_INIT_I,
                               &args4llist,
                               &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
@@ -903,8 +903,8 @@ test_list(void)
                               sizeof(CraDeque),
                               false,
                               meta_list_val,
-                              &g_deque_ser_iter_i,
-                              &g_deque_ser_init_i,
+                              CRA_DEQUE_SER_ITER_I,
+                              CRA_DEQUE_SER_INIT_I,
                               &args4deque,
                               &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
@@ -946,7 +946,7 @@ void
 test_list_element_is_pointer(void)
 {
     CraAList list;
-    cra_alist_init0(char *, &list, true, (cra_remove_val_fn)free_str_p);
+    cra_alist_init0(char *, &list, true);
     CRA_ALIST_SER_ARGS0(args4list_str, &list);
     CRA_TYPE_META_BEGIN(meta_list_str)
     CRA_TYPE_META_STRING_ELEMENT(0, true)
@@ -970,7 +970,7 @@ test_list_element_is_pointer(void)
     CraSerError_e error;
 
     buffsize = sizeof(buff);
-    cra_bin_serialize_list0(buff, &buffsize, &list, meta_list_str, &g_alist_ser_iter_i, &error);
+    cra_bin_serialize_list0(buff, &buffsize, &list, meta_list_str, CRA_ALIST_SER_ITER_I, &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
     cra_bin_serialize_print(buff, buffsize);
 
@@ -981,8 +981,8 @@ test_list_element_is_pointer(void)
                               sizeof(CraAList),
                               false,
                               meta_list_str,
-                              &g_alist_ser_iter_i,
-                              &g_alist_ser_init_i,
+                              CRA_ALIST_SER_ITER_I,
+                              CRA_ALIST_SER_INIT_I,
                               &args4list_str,
                               &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
@@ -993,6 +993,10 @@ test_list_element_is_pointer(void)
         cra_alist_get(&list2, i, &retstr2);
         assert_always(strcmp(retstr1, retstr2) == 0);
     }
+    CraAListIter it;
+    char       **strptr;
+    for (cra_alist_iter_init(&list2, &it); cra_alist_iter_next(&it, (void **)&strptr);)
+        cra_free(*strptr);
     cra_alist_uninit(&list2);
 
     // test failed to call uninit func
@@ -1004,14 +1008,16 @@ test_list_element_is_pointer(void)
                              false,
                              true,
                              meta_list_str,
-                             &g_alist_ser_iter_i,
-                             &g_alist_ser_init_i,
+                             CRA_ALIST_SER_ITER_I,
+                             CRA_ALIST_SER_INIT_I,
                              &args4list_str);
     assert_always(list2.count == list.count);
     ser.error = CRA_SER_ERROR_TYPE_MISMATCH;
     cra_bin_deserialize_end(&ser, &error); // list2 will be free
     assert_always(error == CRA_SER_ERROR_TYPE_MISMATCH);
 
+    for (cra_alist_iter_init(&list, &it); cra_alist_iter_next(&it, (void **)&strptr);)
+        cra_free(*strptr);
     cra_alist_uninit(&list);
 }
 
@@ -1057,15 +1063,15 @@ test_array(void)
     // c array -> list
     int32_t   val;
     CraAList *list;
-    CRA_ALIST_SER_ARGS(args_list_i, true, sizeof(int32_t), NULL);
+    CRA_ALIST_SER_ARGS(args_list_i, true, sizeof(int32_t));
     cra_bin_deserialize_list0(buff,
                               buffsize,
                               &list,
                               sizeof(*list),
                               true,
                               meta_int32,
-                              &g_alist_ser_iter_i,
-                              &g_alist_ser_init_i,
+                              CRA_ALIST_SER_ITER_I,
+                              CRA_ALIST_SER_INIT_I,
                               &args_list_i,
                               &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
@@ -1148,28 +1154,20 @@ test_dict(void)
                       sizeof(int32_t),
                       sizeof(char[100]),
                       (cra_hash_fn)cra_hash_int32_t_p,
-                      (cra_compare_fn)cra_compare_int_p,
-                      NULL,
-                      NULL);
+                      (cra_compare_fn)cra_compare_int_p);
     CRA_TYPE_META_BEGIN(meta_dict_kv)
     CRA_TYPE_META_INT32_ELEMENT()                          // key
     CRA_TYPE_META_STRING_ELEMENT(sizeof(char[100]), false) // val
     CRA_TYPE_META_END();
 
     // serialize dict
-    cra_dict_init0(int32_t,
-                   char[100],
-                   &dict,
-                   true,
-                   (cra_hash_fn)cra_hash_int32_t_p,
-                   (cra_compare_fn)cra_compare_int32_t_p,
-                   NULL,
-                   NULL);
+    cra_dict_init0(
+      int32_t, char[100], &dict, true, (cra_hash_fn)cra_hash_int32_t_p, (cra_compare_fn)cra_compare_int32_t_p);
 
     // test empty
 
     buffsize = sizeof(buff);
-    cra_bin_serialize_dict0(buff, &buffsize, &dict, meta_dict_kv, &g_dict_ser_iter_i, &error);
+    cra_bin_serialize_dict0(buff, &buffsize, &dict, meta_dict_kv, CRA_DICT_SER_ITER_I, &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
     cra_bin_serialize_print(buff, buffsize);
 
@@ -1179,8 +1177,8 @@ test_dict(void)
                               sizeof(CraDict),
                               true,
                               meta_dict_kv,
-                              &g_dict_ser_iter_i,
-                              &g_dict_ser_init_i,
+                              CRA_DICT_SER_ITER_I,
+                              CRA_DICT_SER_INIT_I,
                               &args4dict,
                               &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
@@ -1195,7 +1193,7 @@ test_dict(void)
     }
 
     buffsize = sizeof(buff);
-    cra_bin_serialize_dict0(buff, &buffsize, &dict, meta_dict_kv, &g_dict_ser_iter_i, &error);
+    cra_bin_serialize_dict0(buff, &buffsize, &dict, meta_dict_kv, CRA_DICT_SER_ITER_I, &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
     cra_bin_serialize_print(buff, buffsize);
 
@@ -1206,8 +1204,8 @@ test_dict(void)
                               sizeof(CraDict),
                               true,
                               meta_dict_kv,
-                              &g_dict_ser_iter_i,
-                              &g_dict_ser_init_i,
+                              CRA_DICT_SER_ITER_I,
+                              CRA_DICT_SER_INIT_I,
                               &args4dict,
                               &error);
     assert_always(error == CRA_SER_ERROR_SUCCESS);
@@ -1234,9 +1232,7 @@ test_dict_in_struct(void)
                       sizeof(int32_t),
                       sizeof(double),
                       (cra_hash_fn)cra_hash_int32_t_p,
-                      (cra_compare_fn)cra_compare_int32_t_p,
-                      NULL,
-                      NULL);
+                      (cra_compare_fn)cra_compare_int32_t_p);
     CRA_UNUSED_VALUE(args4dict_i_d);
     CRA_TYPE_META_BEGIN(meta_dict_i_d)
     CRA_TYPE_META_INT32_ELEMENT()  // key
@@ -1251,11 +1247,11 @@ test_dict_in_struct(void)
     };
     CRA_TYPE_META_BEGIN(meta_a)
     CRA_TYPE_META_DICT_MEMBER(
-      struct A, dictnull, true, meta_dict_i_d, &g_dict_ser_iter_i, &g_dict_ser_init_i, &args4dict_i_d)
+      struct A, dictnull, true, meta_dict_i_d, CRA_DICT_SER_ITER_I, CRA_DICT_SER_INIT_I, &args4dict_i_d)
     CRA_TYPE_META_DICT_MEMBER(
-      struct A, pdict, true, meta_dict_i_d, &g_dict_ser_iter_i, &g_dict_ser_init_i, &args4dict_i_d)
+      struct A, pdict, true, meta_dict_i_d, CRA_DICT_SER_ITER_I, CRA_DICT_SER_INIT_I, &args4dict_i_d)
     CRA_TYPE_META_DICT_MEMBER(
-      struct A, sdict, false, meta_dict_i_d, &g_dict_ser_iter_i, &g_dict_ser_init_i, &args4dict_i_d)
+      struct A, sdict, false, meta_dict_i_d, CRA_DICT_SER_ITER_I, CRA_DICT_SER_INIT_I, &args4dict_i_d)
     CRA_TYPE_META_END();
 
     unsigned char buff[1024];
@@ -1267,22 +1263,10 @@ test_dict_in_struct(void)
     struct A a;
     a.dictnull = NULL;
     a.pdict = cra_alloc(CraDict);
-    cra_dict_init0(int32_t,
-                   double,
-                   a.pdict,
-                   args4dict_i_d.zero_memory,
-                   args4dict_i_d.hash_key_fn,
-                   args4dict_i_d.compare_key_fn,
-                   args4dict_i_d.remove_key_fn,
-                   args4dict_i_d.remove_val_fn);
-    cra_dict_init0(int32_t,
-                   double,
-                   &a.sdict,
-                   args4dict_i_d.zero_memory,
-                   args4dict_i_d.hash_key_fn,
-                   args4dict_i_d.compare_key_fn,
-                   args4dict_i_d.remove_key_fn,
-                   args4dict_i_d.remove_val_fn);
+    cra_dict_init0(
+      int32_t, double, a.pdict, args4dict_i_d.zero_memory, args4dict_i_d.hash_key_fn, args4dict_i_d.compare_key_fn);
+    cra_dict_init0(
+      int32_t, double, &a.sdict, args4dict_i_d.zero_memory, args4dict_i_d.hash_key_fn, args4dict_i_d.compare_key_fn);
     for (int i = 0; i < 10; i++)
     {
         key = rand();

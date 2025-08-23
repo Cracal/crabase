@@ -14,8 +14,7 @@
 #include <float.h>
 #include <math.h>
 
-typedef void (*cra_remove_val_fn)(void *val);
-typedef bool (*cra_match_fn)(void *val, void *arg);
+typedef bool (*cra_match_fn)(const void *val, void *arg);
 typedef void (*cra_deep_copy_val_fn)(const void *from, void *to);
 
 #if 1 // compare functions
