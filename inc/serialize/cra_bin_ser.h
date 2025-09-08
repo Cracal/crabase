@@ -7,278 +7,189 @@
  *
  * @copyright Copyright (c) 2021
  *
+ * null:         [T:4,P:4]             -- 1 byte
+ * bool:         [T:4,V:4]             -- 1 byte
+ * [u]int8:      [T:4,S:4][V:8]        -- 1 + 1 bytes
+ * [u]int16:     [T:4,S:4][V:16]       -- 1 + 2 bytes
+ * [u]int32:     [T:4,S:4][V:32]       -- 1 + 4 bytes
+ * [u]int64:     [T:4,S:4][V:64]       -- 1 + 8 bytes
+ * var[u]int:    [T:4,S:4][V:N]        -- 1 + (1 ~ 10) bytes
+ * float:        [T:4,S:4][V:32]       -- 1 + 4 bytes
+ * double:       [T:4,S:4][V:64]       -- 1 + 8 bytes
+ * string:       [T:4,P:4][L:N][V]     -- 1 + (1 ~ 10) + N bytes
+ * bytes:        [T:4,P:4][L:N][V]     -- 1 + (1 ~ 10) + N bytes
+ * struct:       [T:4,P:4]{M}[T:4,F:4] -- 1 + N + 1 bytes
+ * list/c array: [T:4,P:4][C:N]<E>     -- 1 + (1 ~ 10) + N bytes
+ * dict:         [T:4,P:4][C:N]<KV>    -- 1 + (1 ~ 10) + N bytes
+ *
+ * T: type,   V: value,  S: size, L: length
+ * C: count   M: member, K: key,  P: padding(ignore)
+ * E: element F: flag
+ *
+ * seq: [code:32][ITEM-1]...[ITEM-N]
+ *
  */
 #ifndef __CRA_BIN_SER_H__
 #define __CRA_BIN_SER_H__
 #include "cra_serialize.h"
 
-CRA_API void
-cra_bin_serialize_begin(CraSerializer *ser, unsigned char *buffer, size_t buffer_length);
+#if 1 // step
+
+CRA_API bool
+cra_bin_serialize_begin(CraSerializer *ser, unsigned char *buffer, size_t buffersize, uint32_t code);
 
 CRA_API unsigned char *
-cra_bin_serialize_end(CraSerializer *ser, size_t *buffer_length, CraSerError_e *error);
+cra_bin_serialize_end(CraSerializer *ser, size_t *retbuffersize, CraSerError_e *reterror);
+
+CRA_API bool
+cra_bin_deserialize_begin(CraSerializer *ser, unsigned char *buffer, size_t buffersize, uint32_t code);
+
+CRA_API bool
+cra_bin_deserialize_end(CraSerializer *ser, CraSerError_e *reterror);
 
 CRA_API bool
 cra_bin_serialize_bool(CraSerializer *ser, bool val);
 
 CRA_API bool
-cra_bin_serialize_int8(CraSerializer *ser, int8_t val);
-
-CRA_API bool
-cra_bin_serialize_int16(CraSerializer *ser, int16_t val);
-
-CRA_API bool
-cra_bin_serialize_int32(CraSerializer *ser, int32_t val);
-
-CRA_API bool
-cra_bin_serialize_int64(CraSerializer *ser, int64_t val);
-
-CRA_API bool
-cra_bin_serialize_uint8(CraSerializer *ser, uint8_t val);
-
-CRA_API bool
-cra_bin_serialize_uint16(CraSerializer *ser, uint16_t val);
-
-CRA_API bool
-cra_bin_serialize_uint32(CraSerializer *ser, uint32_t val);
-
-CRA_API bool
-cra_bin_serialize_uint64(CraSerializer *ser, uint64_t val);
-
-CRA_API bool
-cra_bin_serialize_float(CraSerializer *ser, float val);
-
-CRA_API bool
-cra_bin_serialize_double(CraSerializer *ser, double val);
-
-CRA_API bool
-cra_bin_serialize_string_nz(CraSerializer *ser, const char *val, cra_ser_count_t length);
-
-static inline bool
-cra_bin_serialize_string(CraSerializer *ser, const char *val)
-{
-    size_t len = val == NULL ? 0 : strlen(val);
-    if (len >= CRA_SER_COUNT_MAX)
-    {
-        ser->error = CRA_SER_ERROR_STRING_TOO_LONG;
-        return false;
-    }
-    return cra_bin_serialize_string_nz(ser, val, (cra_ser_count_t)len);
-}
-
-CRA_API bool
-cra_bin_serialize_struct(CraSerializer *ser, void *val, const CraTypeMeta *members_meta);
-
-CRA_API bool
-cra_bin_serialize_list(CraSerializer *ser, void *val, const CraTypeMeta *element_meta, const CraTypeIter_i *iter_i);
-
-CRA_API bool
-cra_bin_serialize_array(CraSerializer *ser, void *val, cra_ser_count_t count, const CraTypeMeta *element_meta);
-
-CRA_API bool
-cra_bin_serialize_dict(CraSerializer *ser, void *val, const CraTypeMeta *kv_meta, const CraTypeIter_i *iter_i);
-
-// ------
-
-CRA_API void
-cra_bin_deserialize_begin(CraSerializer *ser, unsigned char *buffer, size_t buffer_length);
-
-CRA_API void
-cra_bin_deserialize_end(CraSerializer *ser, CraSerError_e *error);
-
-CRA_API bool
 cra_bin_deserialize_bool(CraSerializer *ser, bool *retval);
 
 CRA_API bool
-cra_bin_deserialize_int8(CraSerializer *ser, int8_t *retval);
+cra_bin_serialize_int(CraSerializer *ser, void *val, size_t size);
 
 CRA_API bool
-cra_bin_deserialize_int16(CraSerializer *ser, int16_t *retval);
+cra_bin_deserialize_int(CraSerializer *ser, void *retval, size_t size);
 
 CRA_API bool
-cra_bin_deserialize_int32(CraSerializer *ser, int32_t *retval);
+cra_bin_serialize_uint(CraSerializer *ser, void *val, size_t size);
 
 CRA_API bool
-cra_bin_deserialize_int64(CraSerializer *ser, int64_t *retval);
+cra_bin_deserialize_uint(CraSerializer *ser, void *retval, size_t size);
 
 CRA_API bool
-cra_bin_deserialize_uint8(CraSerializer *ser, uint8_t *retval);
+cra_bin_serialize_varint(CraSerializer *ser, void *val, size_t size);
 
 CRA_API bool
-cra_bin_deserialize_uint16(CraSerializer *ser, uint16_t *retval);
+cra_bin_deserialize_varint(CraSerializer *ser, void *retval, size_t size);
 
 CRA_API bool
-cra_bin_deserialize_uint32(CraSerializer *ser, uint32_t *retval);
+cra_bin_serialize_varuint(CraSerializer *ser, void *val, size_t size);
 
 CRA_API bool
-cra_bin_deserialize_uint64(CraSerializer *ser, uint64_t *retval);
+cra_bin_deserialize_varuint(CraSerializer *ser, void *retval, size_t size);
 
 CRA_API bool
-cra_bin_deserialize_float(CraSerializer *ser, float *retval);
+cra_bin_serialize_float(CraSerializer *ser, void *val, size_t size);
 
 CRA_API bool
-cra_bin_deserialize_double(CraSerializer *ser, double *retval);
-
-/**
- * @brief deserialize string with zero ("x...x\0")
- *
- * @param ser serializer
- * @param retval out string.
- *                          1. char[N]: char str[N] -> func(x, str, ...)
- *                          2. char * : char *str;  -> func(x, (char *)&str, ...)
- * @param max_length max string length:
- *                          1. `retval` is char[N] -> `is_char_ptr`=true, `max_length`=sizeof(char[N])
- *                          2. `retval` is char *  -> `is_char_ptr`=false, ignore `max_length`
- * @param is_char_ptr retval is char -> `true`; retval is * char[N] -> `false`
- * @return true success
- * @return false failure
- */
-CRA_API bool
-cra_bin_deserialize_string(CraSerializer *ser, char *retval, cra_ser_count_t max_length, bool is_char_ptr);
-
-/**
- * @brief deserialize string without zero ("x...x")
- *
- * @param ser serializer
- * @param retval out string.
- *                          1. char[N]: char str[N] -> func(x, str, ...)
- *                          2. char * : char *str;  -> func(x, (char *)&str, ...)
- * @param length in: max string length(only char[N]); out: real string length
- * @param is_char_ptr retval is char -> `true`; retval is * char[N] -> `false`
- * @return true success
- * @return false failure
- */
-CRA_API bool
-cra_bin_deserialize_string_nz(CraSerializer *ser, char *retval, cra_ser_count_t *length, bool is_char_ptr);
-
-/**
- * @brief
- *
- * @param ser serializer
- * @param retval out struct
- * @param valsize sizeof(struct X)
- * @param is_ptr retval is 'struct X *' -> true; retval is 'struct X' -> false
- * @param members_meta
- * @param init_i
- * @param args4init
- * @return
- */
-CRA_API bool
-cra_bin_deserialize_struct(CraSerializer       *ser,
-                           void                *retval,
-                           size_t               valsize,
-                           bool                 is_ptr,
-                           const CraTypeMeta   *members_meta,
-                           const CraTypeInit_i *init_i,
-                           void                *args4init);
+cra_bin_deserialize_float(CraSerializer *ser, void *retval, size_t size);
 
 CRA_API bool
-cra_bin_deserialize_list(CraSerializer       *ser,
-                         void                *retval,
-                         size_t               valsize,
-                         bool                 is_ptr,
-                         const CraTypeMeta   *element_meta,
-                         const CraTypeIter_i *iter_i,
-                         const CraTypeInit_i *init_i,
-                         void                *args4init);
+cra_bin_serialize_string(CraSerializer *ser, const char *val);
 
 CRA_API bool
-cra_bin_deserialize_array(CraSerializer     *ser,
-                          void              *retval,
-                          size_t             valsize,
-                          bool               is_ptr,
-                          cra_ser_count_t   *countptr,
-                          const CraTypeMeta *element_meta);
+cra_bin_deserialize_string(CraSerializer *ser, char *retval, size_t max_chars, bool is_ptr);
 
 CRA_API bool
-cra_bin_deserialize_dict(CraSerializer       *ser,
-                         void                *retval,
-                         size_t               valsize,
-                         bool                 is_ptr,
-                         const CraTypeMeta   *kv_meta,
-                         const CraTypeIter_i *iter_i,
-                         const CraTypeInit_i *init_i,
-                         void                *args4init);
+cra_bin_serialize_bytes(CraSerializer *ser, const char *val, uint64_t length);
 
-//   --------------------------------
+CRA_API bool
+cra_bin_deserialize_bytes(CraSerializer *ser, char *retval, size_t max_chars, bool is_ptr, uint64_t *retlength);
+
+#endif // end step
 
 CRA_API unsigned char *
-cra_bin_serialize_struct0(unsigned char     *buffer,
-                          size_t            *buffer_length,
-                          void              *val,
-                          const CraTypeMeta *members_meta,
-                          CraSerError_e     *error);
+cra_bin_serialize_struct(unsigned char    *buf,
+                         size_t           *bufsize,
+                         void             *val,
+                         const CraTypeMeta members_meta[],
+                         CraSerError_e    *reterror,
+                         uint32_t          code);
 
-CRA_API void
-cra_bin_deserialize_struct0(unsigned char       *buffer,
-                            size_t               buffer_length,
-                            void                *retval,
-                            size_t               valsize,
-                            bool                 is_ptr,
-                            const CraTypeMeta   *members_meta,
-                            const CraTypeInit_i *init_i,
-                            void                *args4init,
-                            CraSerError_e       *error);
-
-CRA_API unsigned char *
-cra_bin_serialize_list0(unsigned char       *buffer,
-                        size_t              *buffer_length,
-                        void                *val,
-                        const CraTypeMeta   *element_meta,
-                        const CraTypeIter_i *iter_i,
-                        CraSerError_e       *error);
-
-CRA_API void
-cra_bin_deserialize_list0(unsigned char       *buffer,
-                          size_t               buffer_length,
-                          void                *retval,
-                          size_t               valsize,
-                          bool                 is_ptr,
-                          const CraTypeMeta   *element_meta,
-                          const CraTypeIter_i *iter_i,
-                          const CraTypeInit_i *init_i,
-                          void                *args4init,
-                          CraSerError_e       *error);
+CRA_API bool
+cra_bin_deserialize_struct_with_dzer_i(unsigned char    *buf,
+                                       size_t            bufsize,
+                                       void             *retval,
+                                       size_t            valsize,
+                                       bool              is_ptr,
+                                       const CraTypeMeta members_meta[],
+                                       const CraDzer_i  *dzer_i,
+                                       const void       *arg4dzer,
+                                       CraSerError_e    *reterror,
+                                       uint32_t          code);
+static inline bool
+cra_bin_deserialize_struct(unsigned char    *buf,
+                           size_t            bufsize,
+                           void             *retval,
+                           size_t            valsize,
+                           bool              is_ptr,
+                           const CraTypeMeta members_meta[],
+                           CraSerError_e    *reterror,
+                           uint32_t          code)
+{
+    return cra_bin_deserialize_struct_with_dzer_i(
+      buf, bufsize, retval, valsize, is_ptr, members_meta, NULL, NULL, reterror, code);
+}
 
 CRA_API unsigned char *
-cra_bin_serialize_array0(unsigned char     *buffer,
-                         size_t            *buffer_length,
-                         void              *val,
-                         cra_ser_count_t    count,
-                         const CraTypeMeta *element_meta,
-                         CraSerError_e     *error);
+cra_bin_serialize_array(unsigned char    *buf,
+                        size_t           *bufsize,
+                        void             *val,
+                        size_t            arraycount,
+                        const CraTypeMeta element_meta[],
+                        CraSerError_e    *reterror,
+                        uint32_t          code);
 
-CRA_API void
-cra_bin_deserialize_array0(unsigned char     *buffer,
-                           size_t             buffer_length,
-                           void              *retval,
-                           size_t             valsize,
-                           bool               is_ptr,
-                           cra_ser_count_t   *countptr,
-                           const CraTypeMeta *element_meta,
-                           CraSerError_e     *error);
+CRA_API bool
+cra_bin_deserialize_array(unsigned char    *buf,
+                          size_t            bufsize,
+                          void             *retval,
+                          size_t            valsize,
+                          bool              is_ptr,
+                          size_t           *retarraycount,
+                          const CraTypeMeta element_meta[],
+                          CraSerError_e    *reterror,
+                          uint32_t          code);
 
 CRA_API unsigned char *
-cra_bin_serialize_dict0(unsigned char       *buffer,
-                        size_t              *buffer_length,
-                        void                *val,
-                        const CraTypeMeta   *kv_meta,
-                        const CraTypeIter_i *iter_i,
-                        CraSerError_e       *error);
+cra_bin_serialize_list(unsigned char    *buf,
+                       size_t           *bufsize,
+                       void             *val,
+                       const CraTypeMeta element_meta[],
+                       const CraSzer_i  *szer_i,
+                       CraSerError_e    *reterror,
+                       uint32_t          code);
 
-CRA_API void
-cra_bin_deserialize_dict0(unsigned char       *buffer,
-                          size_t               buffer_length,
-                          void                *retval,
-                          size_t               valsize,
-                          bool                 is_ptr,
-                          const CraTypeMeta   *kv_meta,
-                          const CraTypeIter_i *iter_i,
-                          const CraTypeInit_i *init_i,
-                          void                *args4init,
-                          CraSerError_e       *error);
+CRA_API bool
+cra_bin_deserialize_list(unsigned char    *buf,
+                         size_t            bufsize,
+                         void             *retval,
+                         size_t            valsize,
+                         bool              is_ptr,
+                         const CraTypeMeta element_meta[],
+                         const CraDzer_i  *dzer_i,
+                         const void       *arg4dzer,
+                         CraSerError_e    *reterror,
+                         uint32_t          code);
 
-CRA_API void
-cra_bin_serialize_print(const unsigned char *buffer, size_t buffer_length);
+CRA_API unsigned char *
+cra_bin_serialize_dict(unsigned char    *buf,
+                       size_t           *bufsize,
+                       void             *val,
+                       const CraTypeMeta kv_meta[],
+                       const CraSzer_i  *szer_i,
+                       CraSerError_e    *reterror,
+                       uint32_t          code);
+
+CRA_API bool
+cra_bin_deserialize_dict(unsigned char    *buf,
+                         size_t            bufsize,
+                         void             *retval,
+                         size_t            valsize,
+                         bool              is_ptr,
+                         const CraTypeMeta kv_meta[],
+                         const CraDzer_i  *dzer_i,
+                         const void       *arg4dzer,
+                         CraSerError_e    *reterror,
+                         uint32_t          code);
 
 #endif

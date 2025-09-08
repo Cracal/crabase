@@ -9,25 +9,22 @@
  *
  */
 #include "serialize/cra_ser_inner.h"
+#include "cra_assert.h"
 #include "cra_malloc.h"
 
-unsigned char *
-cra_serializer_buf(CraSerializer *ser, size_t needed)
+void
+cra_serializer_extend_buf(CraSerializer *ser, size_t needed)
 {
-    if (ser->index + needed > ser->length)
-    {
-        if (ser->noalloc)
-        {
-            ser->error = CRA_SER_ERROR_NOBUF;
-            return NULL;
-        }
-        size_t len = ser->length << 1; // N * 2
-        if (ser->index + needed > len)
-            len += needed;
-        ser->length = len;
-        ser->buffer = cra_realloc(ser->buffer, len);
-    }
-    return ser->buffer + ser->index;
+    assert(ser);
+    assert(needed > 0);
+    assert(ser->buffer);
+    assert(!ser->noalloc);
+
+    size_t newsize = ser->length << 1;
+    if (newsize - ser->index < needed)
+        newsize += needed;
+    ser->buffer = cra_realloc(ser->buffer, newsize);
+    ser->length = newsize;
 }
 
 #define CRA_SER_RELEASE_NODES1_MAX (sizeof(release->nodes1) / sizeof(release->nodes1[0]))
@@ -35,10 +32,10 @@ cra_serializer_buf(CraSerializer *ser, size_t needed)
 void
 cra_ser_release_init(CraSerRelease *release)
 {
-    release->current = 0;
+    // release->current = 0;
     release->n_nodes = CRA_SER_RELEASE_NODES1_MAX;
-    bzero(release->nodes1, sizeof(release->nodes1));
-    release->nodes2 = NULL;
+    // bzero(release->nodes1, sizeof(release->nodes1));
+    // release->nodes2 = NULL;
 }
 
 void

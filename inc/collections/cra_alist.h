@@ -105,21 +105,9 @@ cra_alist_add_sort(CraAList *list, cra_compare_fn compare, void *val);
 
 // =================
 
-typedef struct _CraAListSerInitArgs
-{
-    bool   zero_memory;
-    size_t element_size;
-} CraAListSerInitArgs;
-
-CRA_API const CraTypeIter_i __g_alist_ser_iter_i;
-CRA_API const CraTypeInit_i __g_alist_ser_init_i;
-
-#define CRA_ALIST_SER_ITER_I (&__g_alist_ser_iter_i)
-#define CRA_ALIST_SER_INIT_I (&__g_alist_ser_init_i)
-
-#define CRA_ALIST_SER_ARGS(_name, _zero_memory, _element_size)  \
-    CraAListSerInitArgs _name = { _zero_memory, _element_size }
-#define CRA_ALIST_SER_ARGS0(_name, _initialized_list)                                          \
-    CRA_ALIST_SER_ARGS(_name, (_initialized_list)->zero_memory, (_initialized_list)->ele_size)
+CRA_API const CraSzer_i __g_cra_alist_szer_i;
+CRA_API const CraDzer_i __g_cra_alist_dzer_i;
+#define CRA_ALIST_SZER_I (&__g_cra_alist_szer_i)
+#define CRA_ALIST_DZER_I (&__g_cra_alist_dzer_i)
 
 #endif

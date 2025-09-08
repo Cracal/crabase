@@ -12,51 +12,48 @@
 #define __CRA_SERIALIZE_H__
 #include "cra_defs.h"
 
-typedef uint32_t cra_ser_count_t;
-#define CRA_SER_COUNT_MAX  UINT32_MAX
-#define CRA_SER_SWAP_COUNT CRA_SER_SWAP32
-
-typedef enum _CraSerError_e
+typedef enum
 {
-    CRA_SER_ERROR_SUCCESS = 0,           // success
-    CRA_SER_ERROR_NOBUF,                 // (de)serializer no more buffer
-    CRA_SER_ERROR_MAX_NESTING,           // nested > CRA_SER_MAX_NESTING
-    CRA_SER_ERROR_NOT_SUPPORT,           // this type is not supported
-    CRA_SER_ERROR_INVALID_VALUE,         // invalid value
-    CRA_SER_ERROR_FLOAT_NAN_OR_INF,      // [double/float] == NaN/Inf
-    CRA_SER_ERROR_CANNOT_BE_NULL,        // value cannot be null
-    CRA_SER_ERROR_STRING_TOO_LONG,       // str.length >= CRA_SER_SWAP_COUNT
-    CRA_SER_ERROR_STRING_BUF_TOO_SMALL,  // sizeof(str[N]) < deserializer.str.length
-    CRA_SER_ERROR_ARRAY_TOO_SMALL,       // sizeof(array[N]) < deserializer.array.count
-    CRA_SER_ERROR_MAX_ELEMENTS,          // [list/array/dict].count >= CRA_SER_SWAP_COUNT
-    CRA_SER_ERROR_TYPE_MISMATCH,         // deserializer.val.type != val.meta.type
-    CRA_SER_ERROR_APPEND_ELEMENT_FAILED, // [list/dict].append(...) failed
-    CRA_SER_ERROR_JSON_KEY_IS_NULL,      // json.key is null
-    CRA_SER_ERROR_JSON_CANNOT_BE_KEY,    // this value(type) cannot be a key
+    CRA_SER_ERROR_SUCCESS = 0,       // must be zero
+    CRA_SER_ERROR_NOBUF,             // no more spare buffer
+    CRA_SER_ERROR_CODE_MISMATCH,     // code mismatch
+    CRA_SER_ERROR_TYPE_MISMATCH,     // type mismatch
+    CRA_SER_ERROR_SIZE_MISMATCH,     // value size mismatch
+    CRA_SER_ERROR_INVALID_TYPE,      // invalid type, not supported
+    CRA_SER_ERROR_INVALID_SIZE,      // invalid size, the type does not support the size
+    CRA_SER_ERROR_INVALID_VALUE,     // invalid value
+    CRA_SER_ERROR_CANNOT_BE_NULL,    // this type(not ptr) cannot be null
+    CRA_SER_ERROR_STRING_LENGTH,     // error string length
+    CRA_SER_ERROR_BYTES_LENGTH,      // error bytes length
+    CRA_SER_ERROR_CHARARR_TOO_SMALL, // sizeof(char[N]) < string length from deserialization
+    CRA_SER_ERROR_TOO_MUCH_NESTING,  // too much nesting
+    CRA_SER_ERROR_LIST_COUNT,        // error list count
+    CRA_SER_ERROR_ARRAY_TOO_SMALL,   // array too small. sizeof(T[N]) < element count from deserialization
+    CRA_SER_ERROR_DICT_COUNT,        // error dict count
+    CRA_SER_ERROR_APPEND_FAILED,     // dzer_i.appand failed
+    CRA_SER_ERROR_WRITE_KEY_FAILED,  // write json key failed
+    CRA_SER_ERROR_CANNOT_BE_KEY,     // this type cannot be a json key
+    CRA_SER_ERROR_INVALID_KEY,       // json key error
+    CRA_SER_ERROR_FLOAT_NAN_OR_INF,  // float is NaN or Inf
 } CraSerError_e;
 
-typedef enum _CraType_e
+typedef enum
 {
-    CRA_TYPE_FALSE = 0,
-    CRA_TYPE_TRUE = 1,
-    CRA_TYPE_INT8,
-    CRA_TYPE_INT16,
-    CRA_TYPE_INT32,
-    CRA_TYPE_INT64,
-    CRA_TYPE_UINT8,
-    CRA_TYPE_UINT16,
-    CRA_TYPE_UINT32,
-    CRA_TYPE_UINT64,
-    CRA_TYPE_FLOAT,
-    CRA_TYPE_DOUBLE,
-    CRA_TYPE_STRING,
-    CRA_TYPE_STRUCT,
-    CRA_TYPE_LIST,
-    CRA_TYPE_DICT,
-    CRA_TYPE_NULL,
-    __CRA_TYPE_END,
-    __CRA_TYPE_END_OF_META,
+    CRA_TYPE_NULL = 1, // null
+    CRA_TYPE_BOOL,     // boolean
+    CRA_TYPE_INT,      // int8, int16, int32, int64
+    CRA_TYPE_UINT,     // uint8, uint16, uint32, uint64
+    CRA_TYPE_VARINT,   // varint
+    CRA_TYPE_VARUINT,  // varuint
+    CRA_TYPE_FLOAT,    // float, double
+    CRA_TYPE_STRING,   // string
+    CRA_TYPE_BYTES,    // bytes
+    CRA_TYPE_STRUCT,   // struct
+    CRA_TYPE_LIST,     // c array, list
+    CRA_TYPE_DICT,     // dict
 } CraType_e;
+
+typedef struct _CraTypeMeta CraTypeMeta;
 
 typedef struct _CraSerReleaseNode
 {
@@ -73,200 +70,289 @@ typedef struct _CraSerRelease
     CraSerReleaseNode *nodes2;
 } CraSerRelease;
 
-typedef struct _CraSerializer
+typedef struct
 {
-    CraSerError_e  error;
-    uint16_t       nested;
-    bool           noalloc;
     bool           format;
+    bool           noalloc;
+    CraSerError_e  error;
+    uint32_t       code;
+    uint32_t       nesting;
     size_t         index;
     size_t         length;
     unsigned char *buffer;
     CraSerRelease  release;
 } CraSerializer;
 
-typedef struct _CraTypeMeta CraTypeMeta;
-
-typedef union _CraTypeIter_i
+// serializer interface
+typedef struct
 {
-    struct
+    size_t (*get_count)(void *obj);
+    void   (*iter_init)(void *obj, void *it, size_t itsize);
+    union
     {
-        void (*init)(void *obj, void *const it, size_t itbufsize);
-        bool (*next)(void *it, void **retvalptr);
-        bool (*append)(void *obj, void *val);
-    } list;
-    struct
-    {
-        void (*init)(void *obj, void *const it, size_t itbufsize);
-        bool (*next)(void *it, void **retkeyptr, void **retvalptr);
-        bool (*append)(void *obj, void *key, void *val);
-    } dict;
-} CraTypeIter_i;
-
-#define CRA_SERI_ITER_SIZE 64
-
-typedef struct _CraTypeInit_i
+        bool (*iter_next1)(void *it, void **retvalptr);
+        bool (*iter_next2)(void *it, void **retkeyptr, void **retvalptr);
+    };
+} CraSzer_i;
+// deserializer interface
+typedef struct
 {
-    // 指示序列化程序失败时由谁来释放记录在META中的成员字段。
-    // = true,  由序列化程序释放
-    // = false, 由结构的uninit函数释放
-    bool free_members_by_seri;
-    void (*init)(void *obj, void *args);
+    union
+    {
+        void (*init1)(void *obj, size_t count, size_t element_size, const void *arg);
+        void (*init2)(void *obj, size_t count, size_t key_size, size_t val_size, const void *arg);
+    };
     void (*uninit)(void *obj);
-} CraTypeInit_i;
+    union
+    {
+        bool (*append1)(void *obj, void *val);
+        bool (*append2)(void *obj, void *key, void *val);
+    };
+} CraDzer_i;
 
 struct _CraTypeMeta
 {
-    CraType_e            type;
-    bool                 is_ptr;
-    size_t               size;
-    size_t               offset;
-    size_t               nsize;
-    size_t               noffset;
-    const char          *member;
-    const CraTypeMeta   *meta;
-    const CraTypeIter_i *iter_i;
-    const CraTypeInit_i *init_i;
-    void                *args4init;
+    // `true`: T *varname
+    // `false`: T varname
+    bool               is_ptr;
+    CraType_e          type;
+    const char *const  member; // member variable name
+    size_t             size;
+    size_t             offset;
+    // `for c array`,                   size of the number of elements variable
+    // `for string not ending in zero`, size of string length variable
+    size_t             nsize;
+    // `for c array`,                   offset of the number of elements variable in struct
+    // `for string not ending in zero`, offset of string length variable
+    size_t             noffset;
+    // `for c array/list`, element's meta
+    // `for dict`,         key-val's meta
+    // `for struct`,       members' meta
+    const CraTypeMeta *submeta;
+    // for list/dict
+    const CraSzer_i   *szer_i;
+    // for list/dict
+    const CraDzer_i   *dzer_i;
+    // for list/dict
+    const void        *arg4dzer;
 };
 
-#define __CRA_SIZEOF_0(_Type, _member) sizeof(((_Type *)0)->_member)
-#define __CRA_SIZEOF_FALSE             __CRA_SIZEOF_0
-#define __CRA_SIZEOF_false             __CRA_SIZEOF_0
-#define __CRA_SIZEOF_False             __CRA_SIZEOF_0
-#define __CRA_SIZEOF_1(_Type, _member) sizeof(*((_Type *)0)->_member)
-#define __CRA_SIZEOF_TRUE              __CRA_SIZEOF_1
-#define __CRA_SIZEOF_true              __CRA_SIZEOF_1
-#define __CRA_SIZEOF_True              __CRA_SIZEOF_1
+#define __CRA_SF(_StruType, _member)  sizeof(((_StruType *)0)->_member)
+#define __CRA_SFP(_StruType, _member) sizeof(*((_StruType *)0)->_member)
+#define __CRA_SF_1                    __CRA_SFP
+#define __CRA_SF_true                 __CRA_SF_1
+#define __CRA_SF_TRUE                 __CRA_SF_1
+#define __CRA_SF_True                 __CRA_SF_1
+#define __CRA_SF_0                    __CRA_SF
+#define __CRA_SF_false                __CRA_SF_0
+#define __CRA_SF_FALSE                __CRA_SF_0
+#define __CRA_SF_False                __CRA_SF_0
 
-#define CRA_TYPE_META_DECL(_name)  const CraTypeMeta _name[]
-#define CRA_TYPE_META_BEGIN(_name) CRA_TYPE_META_DECL(_name) = {
-#define CRA_TYPE_META_END()                                                      \
-    { __CRA_TYPE_END_OF_META, false, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL }, \
-    }
+#define __CRA_CHECK(_cond, _setval) ((_cond) ? (_setval) : (1 / 0))
 
-#define __CRA_TYPE_META_NUMBER_ELEMENT(_TYPE, _size) { _TYPE, false, _size, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-#define CRA_TYPE_META_BOOL_ELEMENT()                 __CRA_TYPE_META_NUMBER_ELEMENT(CRA_TYPE_FALSE, sizeof(bool))
-#define CRA_TYPE_META_INT8_ELEMENT()                 __CRA_TYPE_META_NUMBER_ELEMENT(CRA_TYPE_INT8, sizeof(int8_t))
-#define CRA_TYPE_META_INT16_ELEMENT()                __CRA_TYPE_META_NUMBER_ELEMENT(CRA_TYPE_INT16, sizeof(int16_t))
-#define CRA_TYPE_META_INT32_ELEMENT()                __CRA_TYPE_META_NUMBER_ELEMENT(CRA_TYPE_INT32, sizeof(int32_t))
-#define CRA_TYPE_META_INT64_ELEMENT()                __CRA_TYPE_META_NUMBER_ELEMENT(CRA_TYPE_INT64, sizeof(int64_t))
-#define CRA_TYPE_META_UINT8_ELEMENT()                __CRA_TYPE_META_NUMBER_ELEMENT(CRA_TYPE_UINT8, sizeof(uint8_t))
-#define CRA_TYPE_META_UINT16_ELEMENT()               __CRA_TYPE_META_NUMBER_ELEMENT(CRA_TYPE_UINT16, sizeof(uint16_t))
-#define CRA_TYPE_META_UINT32_ELEMENT()               __CRA_TYPE_META_NUMBER_ELEMENT(CRA_TYPE_UINT32, sizeof(uint32_t))
-#define CRA_TYPE_META_UINT64_ELEMENT()               __CRA_TYPE_META_NUMBER_ELEMENT(CRA_TYPE_UINT64, sizeof(uint64_t))
-#define CRA_TYPE_META_FLOAT_ELEMENT()                __CRA_TYPE_META_NUMBER_ELEMENT(CRA_TYPE_FLOAT, sizeof(float))
-#define CRA_TYPE_META_DOUBLE_ELEMENT()               __CRA_TYPE_META_NUMBER_ELEMENT(CRA_TYPE_DOUBLE, sizeof(double))
-// `_is_char_ptr`: is cahr pointer, not char array. `true`: char *; `false`: char[N];
-#define CRA_TYPE_META_STRING_ELEMENT(_length, _is_char_ptr)                            \
-    { CRA_TYPE_STRING, _is_char_ptr, _length, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-// `size`: `1. struct X name -> sizeof(struct X)`; `2. struct X *name -> sizeof(struct X)`
-// `is_ptr`: true` -> struct X *; `false` -> struct X;
-#define CRA_TYPE_META_STRUCT_ELEMENT(_size, _is_ptr, _members_meta, _init_i, _args4init)          \
-    { CRA_TYPE_STRUCT, _is_ptr, _size, 0, 0, 0, NULL, _members_meta, NULL, _init_i, _args4init },
-// `size`: `1. ListType name -> sizeof(ListType)`; `2. ListType *name -> sizeof(ListType)`
-// `is_ptr`: true` -> ListType *; `false` -> ListType;
-#define CRA_TYPE_META_LIST_ELEMENT(_size, _is_ptr, _element_meta, _iter_i, _init_i, _args4init)    \
-    { CRA_TYPE_LIST, _is_ptr, _size, 0, 0, 0, NULL, _element_meta, _iter_i, _init_i, _args4init },
-// `size`: `1. ArrayType name -> sizeof(ArrayType)`; `2. ArrayType *name -> sizeof(ArrayType)`
-// `is_ptr`: true` -> ArrayType *; `false` -> ArrayType;
-#define CRA_TYPE_META_ARRAY_ELEMENT(_size, _is_ptr, _element_meta)                                    \
-    { CRA_TYPE_LIST, _is_ptr, _size, 0, sizeof(uint32_t), 0, NULL, _element_meta, NULL, NULL, NULL },
-// `size`: `1. DictType name -> sizeof(DictType)`; `2. DictType *name -> sizeof(DictType)`
-// `is_ptr`: true` -> DictType *; `false` -> DictType;
-#define CRA_TYPE_META_DICT_ELEMENT(_size, _is_ptr, _kv_meta, _iter_i, _init_i, _args4init)    \
-    { CRA_TYPE_DICT, _is_ptr, _size, 0, 0, 0, NULL, _kv_meta, _iter_i, _init_i, _args4init },
+#define __CRA_CKS(_StruType, _member, _is_ptr)                                         \
+    __CRA_CHECK(sizeof(((_StruType *)0)->_member[0]) == sizeof(char) &&                \
+                  ((_is_ptr) ? __CRA_SF(_StruType, _member) == sizeof(void *) : true), \
+                _is_ptr)
+#define __CRA_CKS2(_maxlen, _is_ptr) __CRA_CHECK((_is_ptr) ? (_maxlen) == 0 : (_maxlen) > 0, _is_ptr)
 
-#define __CRA_TYPE_META_NUMBER_MEMBER(_Type, _TYPE, _member) \
-    { _TYPE, false, __CRA_SIZEOF_0(_Type, _member), offsetof(_Type, _member), 0, 0, #_member, NULL, NULL, NULL, NULL },
-#define CRA_TYPE_META_BOOL_MEMBER(_Type, _member)   __CRA_TYPE_META_NUMBER_MEMBER(_Type, CRA_TYPE_FALSE, _member)
-#define CRA_TYPE_META_INT8_MEMBER(_Type, _member)   __CRA_TYPE_META_NUMBER_MEMBER(_Type, CRA_TYPE_INT8, _member)
-#define CRA_TYPE_META_INT16_MEMBER(_Type, _member)  __CRA_TYPE_META_NUMBER_MEMBER(_Type, CRA_TYPE_INT16, _member)
-#define CRA_TYPE_META_INT32_MEMBER(_Type, _member)  __CRA_TYPE_META_NUMBER_MEMBER(_Type, CRA_TYPE_INT32, _member)
-#define CRA_TYPE_META_INT64_MEMBER(_Type, _member)  __CRA_TYPE_META_NUMBER_MEMBER(_Type, CRA_TYPE_INT64, _member)
-#define CRA_TYPE_META_UINT8_MEMBER(_Type, _member)  __CRA_TYPE_META_NUMBER_MEMBER(_Type, CRA_TYPE_UINT8, _member)
-#define CRA_TYPE_META_UINT16_MEMBER(_Type, _member) __CRA_TYPE_META_NUMBER_MEMBER(_Type, CRA_TYPE_UINT16, _member)
-#define CRA_TYPE_META_UINT32_MEMBER(_Type, _member) __CRA_TYPE_META_NUMBER_MEMBER(_Type, CRA_TYPE_UINT32, _member)
-#define CRA_TYPE_META_UINT64_MEMBER(_Type, _member) __CRA_TYPE_META_NUMBER_MEMBER(_Type, CRA_TYPE_UINT64, _member)
-#define CRA_TYPE_META_FLOAT_MEMBER(_Type, _member)  __CRA_TYPE_META_NUMBER_MEMBER(_Type, CRA_TYPE_FLOAT, _member)
-#define CRA_TYPE_META_DOUBLE_MEMBER(_Type, _member) __CRA_TYPE_META_NUMBER_MEMBER(_Type, CRA_TYPE_DOUBLE, _member)
-// `_is_char_ptr`: is cahr pointer, not char array. `true`: char *; `false`: char[N];
-#define CRA_TYPE_META_STRING_MEMBER(_Type, _member, _is_char_ptr) \
-    { CRA_TYPE_STRING,                                            \
-      _is_char_ptr,                                               \
-      __CRA_SIZEOF_##_is_char_ptr(_Type, _member),                \
-      offsetof(_Type, _member),                                   \
-      0,                                                          \
-      0,                                                          \
-      #_member,                                                   \
-      NULL,                                                       \
-      NULL,                                                       \
-      NULL,                                                       \
-      NULL },
-// `_is_char_ptr`: is not a char array. `true`: char *; `false`: char[N];
-#define CRA_TYPE_META_STRING_NZ_MEMBER(_Type, _member, _is_char_ptr) \
-    { CRA_TYPE_STRING,                                               \
-      _is_char_ptr,                                                  \
-      __CRA_SIZEOF_##_is_char_ptr(_Type, _member),                   \
-      offsetof(_Type, _member),                                      \
-      __CRA_SIZEOF_0(_Type, n##_member),                             \
-      offsetof(_Type, n##_member),                                   \
-      #_member,                                                      \
-      NULL,                                                          \
-      NULL,                                                          \
-      NULL,                                                          \
-      NULL },
-// `is_ptr`: `true` -> struct X *; `false` -> struct X;
-#define CRA_TYPE_META_STRUCT_MEMBER(_Type, _member, _is_ptr, _members_meta, _init_i, _args4init) \
-    { CRA_TYPE_STRUCT,                                                                           \
-      _is_ptr,                                                                                   \
-      __CRA_SIZEOF_##_is_ptr(_Type, _member),                                                    \
-      offsetof(_Type, _member),                                                                  \
-      0,                                                                                         \
-      0,                                                                                         \
-      #_member,                                                                                  \
-      _members_meta,                                                                             \
-      NULL,                                                                                      \
-      _init_i,                                                                                   \
-      _args4init },
-// `is_ptr`: `true` -> ListType *; `false` -> ListType;
-#define CRA_TYPE_META_LIST_MEMBER(_Type, _member, _is_ptr, _element_meta, _iter_i, _init_i, _args4init) \
-    { CRA_TYPE_LIST,                                                                                    \
-      _is_ptr,                                                                                          \
-      __CRA_SIZEOF_##_is_ptr(_Type, _member),                                                           \
-      offsetof(_Type, _member),                                                                         \
-      0,                                                                                                \
-      0,                                                                                                \
-      #_member,                                                                                         \
-      _element_meta,                                                                                    \
-      _iter_i,                                                                                          \
-      _init_i,                                                                                          \
-      _args4init },
-// `is_ptr`: `true` -> ArrayType *; `false` -> ArrayType[N];
-#define CRA_TYPE_META_ARRAY_MEMBER(_Type, _member, _is_ptr, _element_meta) \
-    { CRA_TYPE_LIST,                                                       \
-      _is_ptr,                                                             \
-      __CRA_SIZEOF_##_is_ptr(_Type, _member),                              \
-      offsetof(_Type, _member),                                            \
-      __CRA_SIZEOF_0(_Type, n##_member),                                   \
-      offsetof(_Type, n##_member),                                         \
-      #_member,                                                            \
-      _element_meta,                                                       \
-      NULL,                                                                \
-      NULL,                                                                \
-      NULL },
-// `is_ptr`: `true` -> DictType *; `false` -> DictType;
-#define CRA_TYPE_META_DICT_MEMBER(_Type, _member, _is_ptr, _kv_meta, _iter_i, _init_i, _args4init) \
-    { CRA_TYPE_DICT,                                                                               \
-      _is_ptr,                                                                                     \
-      __CRA_SIZEOF_##_is_ptr(_Type, _member),                                                      \
-      offsetof(_Type, _member),                                                                    \
-      0,                                                                                           \
-      0,                                                                                           \
-      #_member,                                                                                    \
-      _kv_meta,                                                                                    \
-      _iter_i,                                                                                     \
-      _init_i,                                                                                     \
-      _args4init },
+#define __CRA_CKO(_size, _is_ptr) __CRA_CHECK(((_is_ptr) ? (_size) == sizeof(void *) : (_size) > 0), _is_ptr)
+
+#define __CRA_CS1(_size, _cmp_size) __CRA_CHECK((_size) == (_cmp_size), (_cmp_size))
+#define __CRA_CS2(_size, _cmp_size1, _cmp_size2)                             \
+    __CRA_CHECK((_size) == (_cmp_size1) || (_size) == (_cmp_size2), (_size))
+#define __CRA_CS4(_size, _cmp_size1, _cmp_size2, _cmp_size3, _cmp_size4)                         \
+    __CRA_CHECK((_size) == (_cmp_size1) || (_size) == (_cmp_size2) || (_size) == (_cmp_size3) || \
+                  (_size) == (_cmp_size4),                                                       \
+                (_size))
+
+// 当META定义失败(除零)时，请检查:
+//    成员变量的大小是否匹配, 比如：bool的大小应该是1字节，但你在struct中错误的定义成了`int b`，b占用了4字节
+#define CRA_TYPE_META_BEGIN(_name) CraTypeMeta _name[] = {
+#define CRA_TYPE_META_END() { 0 } }
+
+#if 1 // for members
+
+#define __CRA_TYPE_META_BASE(_StruType, _member, _TYPE, _size)                         \
+    { false, _TYPE, #_member, _size, offsetof(_StruType, _member), 0, 0, 0, 0, 0, 0 },
+// def bool meta
+#define CRA_TYPE_META_MEMBER_BOOL(_StruType, _member)                                                   \
+    __CRA_TYPE_META_BASE(_StruType, _member, CRA_TYPE_BOOL, __CRA_CS1(__CRA_SF(_StruType, _member), 1))
+// def int meta
+#define CRA_TYPE_META_MEMBER_INT(_StruType, _member)                                                            \
+    __CRA_TYPE_META_BASE(_StruType, _member, CRA_TYPE_INT, __CRA_CS4(__CRA_SF(_StruType, _member), 1, 2, 4, 8))
+// def uint meta
+#define CRA_TYPE_META_MEMBER_UINT(_StruType, _member)                                                            \
+    __CRA_TYPE_META_BASE(_StruType, _member, CRA_TYPE_UINT, __CRA_CS4(__CRA_SF(_StruType, _member), 1, 2, 4, 8))
+// def varint meta
+#define CRA_TYPE_META_MEMBER_VARINT(_StruType, _member)                                                            \
+    __CRA_TYPE_META_BASE(_StruType, _member, CRA_TYPE_VARINT, __CRA_CS4(__CRA_SF(_StruType, _member), 1, 2, 4, 8))
+// def varuint meta
+#define CRA_TYPE_META_MEMBER_VARUINT(_StruType, _member)                                                            \
+    __CRA_TYPE_META_BASE(_StruType, _member, CRA_TYPE_VARUINT, __CRA_CS4(__CRA_SF(_StruType, _member), 1, 2, 4, 8))
+// def float meta
+#define CRA_TYPE_META_MEMBER_FLOAT(_StruType, _member)                                                      \
+    __CRA_TYPE_META_BASE(_StruType, _member, CRA_TYPE_FLOAT, __CRA_CS2(__CRA_SF(_StruType, _member), 4, 8))
+// def string meta
+#define CRA_TYPE_META_MEMBER_STRING(_StruType, _member, _is_ptr) \
+    { __CRA_CKS(_StruType, _member, _is_ptr),                    \
+      CRA_TYPE_STRING,                                           \
+      #_member,                                                  \
+      _is_ptr ? 0 : __CRA_SF(_StruType, _member),                \
+      offsetof(_StruType, _member),                              \
+      0,                                                         \
+      0,                                                         \
+      0,                                                         \
+      0,                                                         \
+      0,                                                         \
+      0 },
+// def bytes meta
+#define CRA_TYPE_META_MEMBER_BYTES(_StruType, _member, _is_ptr) \
+    { __CRA_CKS(_StruType, _member, _is_ptr),                   \
+      CRA_TYPE_BYTES,                                           \
+      #_member,                                                 \
+      _is_ptr ? 0 : __CRA_SF(_StruType, _member),               \
+      offsetof(_StruType, _member),                             \
+      __CRA_SF(_StruType, n##_member),                          \
+      offsetof(_StruType, n##_member),                          \
+      0,                                                        \
+      0,                                                        \
+      0,                                                        \
+      0 },
+// def struct meta
+#define CRA_TYPE_META_MEMBER_STRUCT(_StruType, _member, _is_ptr, _members_meta) \
+    { __CRA_CKO(__CRA_SF(_StruType, _member), _is_ptr),                         \
+      CRA_TYPE_STRUCT,                                                          \
+      #_member,                                                                 \
+      __CRA_SF_##_is_ptr(_StruType, _member),                                   \
+      offsetof(_StruType, _member),                                             \
+      0,                                                                        \
+      0,                                                                        \
+      _members_meta,                                                            \
+      0,                                                                        \
+      0,                                                                        \
+      0 },
+// def array meta
+#define CRA_TYPE_META_MEMBER_ARRAY(_StruType, _member, _is_ptr, _element_meta) \
+    { __CRA_CKO(__CRA_SF(_StruType, _member), _is_ptr),                        \
+      CRA_TYPE_LIST,                                                           \
+      #_member,                                                                \
+      __CRA_SF(_StruType, _member),                                            \
+      offsetof(_StruType, _member),                                            \
+      __CRA_SF(_StruType, n##_member),                                         \
+      offsetof(_StruType, n##_member),                                         \
+      _element_meta,                                                           \
+      0,                                                                       \
+      0,                                                                       \
+      0 },
+// def list meta
+#define CRA_TYPE_META_MEMBER_LIST(_StruType, _member, _is_ptr, _element_meta, _szer_i, _dzer_i, _arg4dzer) \
+    { __CRA_CKO(__CRA_SF(_StruType, _member), _is_ptr),                                                    \
+      CRA_TYPE_LIST,                                                                                       \
+      #_member,                                                                                            \
+      __CRA_SF_##_is_ptr(_StruType, _member),                                                              \
+      offsetof(_StruType, _member),                                                                        \
+      0,                                                                                                   \
+      0,                                                                                                   \
+      _element_meta,                                                                                       \
+      _szer_i,                                                                                             \
+      _dzer_i,                                                                                             \
+      _arg4dzer },
+// def dict meta
+#define CRA_TYPE_META_MEMBER_DICT(_StruType, _member, _is_ptr, _kv_meta, _szer_i, _dzer_i, _arg4dzer) \
+    { __CRA_CKO(__CRA_SF(_StruType, _member), _is_ptr),                                               \
+      CRA_TYPE_DICT,                                                                                  \
+      #_member,                                                                                       \
+      __CRA_SF_##_is_ptr(_StruType, _member),                                                         \
+      offsetof(_StruType, _member),                                                                   \
+      0,                                                                                              \
+      0,                                                                                              \
+      _kv_meta,                                                                                       \
+      _szer_i,                                                                                        \
+      _dzer_i,                                                                                        \
+      _arg4dzer },
+
+#endif // end for members
+
+#if 1 // for items
+
+#define __CRA_TYPE_META_ITEM_BASE(_TYPE, _size) { false, CRA_TYPE_##_TYPE, 0, _size, 0, 0, 0, 0, 0, 0 },
+// `type`: bool
+#define CRA_TYPE_META_ITEM_BOOL(_type)          __CRA_TYPE_META_ITEM_BASE(BOOL, __CRA_CS1(sizeof(_type), 1))
+// `type`: int8, int16, int32, int64
+#define CRA_TYPE_META_ITEM_INT(_type)           __CRA_TYPE_META_ITEM_BASE(INT, __CRA_CS4(sizeof(_type), 1, 2, 4, 8))
+// `type`: uint8, uint16, uint32, uint64
+#define CRA_TYPE_META_ITEM_UINT(_type)          __CRA_TYPE_META_ITEM_BASE(UINT, __CRA_CS4(sizeof(_type), 1, 2, 4, 8))
+// `type`: int8, int16, int32, int64
+#define CRA_TYPE_META_ITEM_VARINT(_type)        __CRA_TYPE_META_ITEM_BASE(VARINT, __CRA_CS4(sizeof(_type), 1, 2, 4, 8))
+// `type`: uint8, uint16, uint32, uint64
+#define CRA_TYPE_META_ITEM_VARUINT(_type)       __CRA_TYPE_META_ITEM_BASE(VARUINT, __CRA_CS4(sizeof(_type), 1, 2, 4, 8))
+// `type`: float, double
+#define CRA_TYPE_META_ITEM_FLOAT(_type)         __CRA_TYPE_META_ITEM_BASE(FLOAT, __CRA_CS2(sizeof(_type), 4, 8))
+// `maxlen`: is_ptr => 0; !is_ptr => sizeof(char[N])
+#define CRA_TYPE_META_ITEM_STRING(_maxlen, _is_ptr)                                     \
+    { __CRA_CKS2(_maxlen, _is_ptr), CRA_TYPE_STRING, 0, _maxlen, 0, 0, 0, 0, 0, 0, 0 },
+// `type`: struct XX * (is_ptr), struct XX (!is_ptr)
+#define CRA_TYPE_META_ITEM_STRUCT(_type, _is_ptr, _members_meta) \
+    { __CRA_CKO(sizeof(_type), _is_ptr),                         \
+      CRA_TYPE_STRUCT,                                           \
+      0,                                                         \
+      __CRA_SF_##_is_ptr(                                        \
+        struct { _type o; }, o),                                 \
+      0,                                                         \
+      0,                                                         \
+      0,                                                         \
+      _members_meta,                                             \
+      0,                                                         \
+      0,                                                         \
+      0 },
+// `type`: List<T> * (is_ptr), List<T> (!is_ptr)
+#define CRA_TYPE_META_ITEM_LIST(_type, _is_ptr, _element_meta, _szer_i, _dzer_i, _arg4dzer) \
+    { __CRA_CKO(sizeof(_type), _is_ptr),                                                    \
+      CRA_TYPE_LIST,                                                                        \
+      0,                                                                                    \
+      __CRA_SF_##_is_ptr(                                                                   \
+        struct { _type o; }, o),                                                            \
+      0,                                                                                    \
+      0,                                                                                    \
+      0,                                                                                    \
+      _element_meta,                                                                        \
+      _szer_i,                                                                              \
+      _dzer_i,                                                                              \
+      _arg4dzer },
+// `type`: Dict<TK, TV> * (is_ptr), Dict<TK, TV> (!is_ptr)
+#define CRA_TYPE_META_ITEM_DICT(_type, _is_ptr, _kv_meta, _szer_i, _dzer_i, _arg4dzer) \
+    { __CRA_CKO(sizeof(_type), _is_ptr),                                               \
+      CRA_TYPE_DICT,                                                                   \
+      0,                                                                               \
+      __CRA_SF_##_is_ptr(                                                              \
+        struct { _type o; }, o),                                                       \
+      0,                                                                               \
+      0,                                                                               \
+      0,                                                                               \
+      _kv_meta,                                                                        \
+      _szer_i,                                                                         \
+      _dzer_i,                                                                         \
+      _arg4dzer },
+
+// static
+// CRA_TYPE_META_BEGIN(g_test_meta)
+// CRA_TYPE_META_ITEM_BOOL(bool)
+// CRA_TYPE_META_ITEM_INT(int)
+// CRA_TYPE_META_ITEM_UINT(uint64_t)
+// CRA_TYPE_META_ITEM_VARINT(short)
+// CRA_TYPE_META_ITEM_VARUINT(unsigned long)
+// CRA_TYPE_META_ITEM_FLOAT(float)
+// CRA_TYPE_META_ITEM_STRING(10, false)
+// CRA_TYPE_META_ITEM_STRING(0, true)
+// CRA_TYPE_META_ITEM_STRUCT(CraSerializer, false, 0)
+// CRA_TYPE_META_ITEM_STRUCT(CraSerializer *, true, 0)
+// CRA_TYPE_META_ITEM_LIST(CraSerializer, false, 0, 0, 0, 0)
+// CRA_TYPE_META_ITEM_LIST(CraSerializer *, true, 0, 0, 0, 0)
+// CRA_TYPE_META_ITEM_DICT(CraSerializer, false, 0, 0, 0, 0)
+// CRA_TYPE_META_ITEM_DICT(CraSerializer *, true, 0, 0, 0, 0)
+// CRA_TYPE_META_END();
+
+#endif // end for items
 
 #endif

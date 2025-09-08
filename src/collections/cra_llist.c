@@ -514,38 +514,36 @@ cra_llist_get_node(CraLList *list, size_t index)
 // ===============
 
 static void
-cra_llist_ser_iter_init(void *obj, void *const it, size_t itbufsize)
+cra_llist_szer_iter_init(void *obj, void *it, size_t itsize)
 {
-    CRA_UNUSED_VALUE(itbufsize);
-    assert(sizeof(CraLListIter) <= itbufsize);
+    CRA_UNUSED_VALUE(itsize);
+    assert(sizeof(CraLListIter) <= itsize);
     cra_llist_iter_init((CraLList *)obj, (CraLListIter *)it);
 }
 
+static void
+cra_llist_dzer_init(void *obj, size_t count, size_t element_size, const void *arg)
+{
+    assert(obj);
+    assert(element_size > 0);
+    CRA_UNUSED_VALUE(arg);
+    cra_llist_init_size((CraLList *)obj, element_size, count, false);
+}
+
 static bool
-cra_llist_ser_iter_append(void *obj, void *val)
+cra_llist_dzer_append(void *obj, void *val)
 {
     return cra_llist_append((CraLList *)obj, val);
 }
 
-static void
-cra_llist_ser_init(void *obj, void *args)
-{
-    assert_always(args != NULL);
-
-    CraLList            *list = (CraLList *)obj;
-    CraLListSerInitArgs *params = (CraLListSerInitArgs *)args;
-
-    cra_llist_init(list, params->element_size, params->zero_memory);
-}
-
-const CraTypeIter_i __g_llist_ser_iter_i = {
-    .list.init = cra_llist_ser_iter_init,
-    .list.next = (bool (*)(void *, void **))cra_llist_iter_next,
-    .list.append = cra_llist_ser_iter_append,
+const CraSzer_i __g_cra_llist_szer_i = {
+    .get_count = (size_t (*)(void *))cra_llist_get_count,
+    .iter_init = cra_llist_szer_iter_init,
+    .iter_next1 = (bool (*)(void *, void **))cra_llist_iter_next,
 };
 
-const CraTypeInit_i __g_llist_ser_init_i = {
-    .free_members_by_seri = true,
-    .init = cra_llist_ser_init,
+const CraDzer_i __g_cra_llist_dzer_i = {
+    .init1 = cra_llist_dzer_init,
     .uninit = (void (*)(void *))cra_llist_uninit,
+    .append1 = cra_llist_dzer_append,
 };

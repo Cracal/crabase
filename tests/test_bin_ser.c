@@ -17,1358 +17,1007 @@
 #include "serialize/cra_bin_ser.h"
 #include <float.h>
 
-void
-test_begin_end(void)
+static void
+test_boolean(void)
 {
-#if 1 // serialize
-    CraSerializer ser;
-
-    unsigned char buff[100];
-    cra_bin_serialize_begin(&ser, buff, sizeof(buff));
-    assert_always(ser.error == CRA_SER_ERROR_SUCCESS);
-    assert_always(ser.index == 0);
-    assert_always(ser.length == sizeof(buff));
-    assert_always(ser.noalloc == true);
-    assert_always(ser.buffer == buff);
-
-    size_t         buffsize;
+    unsigned char *buf;
+    size_t         bufsize;
     CraSerError_e  error;
-    unsigned char *resbuf = cra_bin_serialize_end(&ser, &buffsize, &error);
-    assert_always(buffsize == 0);
-    assert_always(resbuf == buff);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
+    bool           b;
 
-    cra_bin_serialize_begin(&ser, NULL, 1000);
-    assert_always(ser.error == CRA_SER_ERROR_SUCCESS);
-    assert_always(ser.index == 0);
-    assert_always(ser.length == 1000);
-    assert_always(ser.noalloc == false);
-    assert_always(ser.buffer != NULL);
-
-    resbuf = cra_bin_serialize_end(&ser, &buffsize, NULL);
-    assert_always(buffsize == 0);
-    assert_always(resbuf != NULL);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-
-    cra_free(resbuf);
-
-    // error input
-
-    // cra_bin_serialize_begin(NULL, buff, 0);
-    // cra_bin_serialize_begin(&ser, buff, 0);
-
-    cra_bin_serialize_begin(&ser, buff, sizeof(buff));
-    ser.error = CRA_SER_ERROR_NOBUF;
-    resbuf = cra_bin_serialize_end(&ser, &buffsize, &error);
-    assert_always(resbuf == NULL);
-    assert_always(error != CRA_SER_ERROR_SUCCESS);
-
-    // cra_bin_serialize_begin(&ser, buff, sizeof(buff));
-    // cra_bin_serialize_end(&ser, NULL, &error);
-
-    // cra_bin_serialize_begin(&ser, buff, sizeof(buff));
-    // ser.index = ser.length;
-    // cra_bin_serialize_end(&ser, &buffsize, &error);
-
-    // cra_bin_serialize_begin(&ser, buff, sizeof(buff));
-    // ser.index = ser.length + 1;
-    // cra_bin_serialize_end(&ser, &buffsize, &error);
-
-#endif // end serialize
-
-#if 1 // deserialize
-
-    cra_bin_deserialize_begin(&ser, buff, sizeof(buff));
-    assert_always(ser.error == CRA_SER_ERROR_SUCCESS);
-    assert_always(ser.noalloc == true);
-    assert_always(ser.index == 0);
-    assert_always(ser.length == sizeof(buff));
-    assert_always(ser.buffer == buff);
-    cra_bin_deserialize_end(&ser, NULL);
-    cra_bin_deserialize_end(&ser, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-
-    // error input
-
-    // cra_bin_deserialize_begin(NULL, buff, 100);
-    // cra_bin_deserialize_begin(&ser, NULL, 100);
-    // cra_bin_deserialize_begin(&ser, buff, 0);
-
-    // cra_bin_deserialize_begin(&ser, buff, 100);
-    // ser.buffer = NULL;
-    // cra_bin_deserialize_end(&ser, &error);
-
-    cra_bin_deserialize_begin(&ser, buff, 100);
-    ser.index = ser.length;
-    cra_bin_deserialize_end(&ser, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-
-    // cra_bin_deserialize_begin(&ser, buff, 100);
-    // ser.index = ser.length + 1;
-    // cra_bin_deserialize_end(&ser, &error);
-
-#endif // end deserialize
-}
-
-void
-test_base(void)
-{
-    bool          res;
-    CraSerError_e error;
-    CraSerializer ser;
-    unsigned char buff[1024];
-    size_t        buffsize;
-
-    buffsize = sizeof(buff);
-    cra_bin_serialize_begin(&ser, buff, buffsize);
-
-    res = cra_bin_serialize_bool(&ser, true);
-    assert_always(res);
-    res = cra_bin_serialize_bool(&ser, false);
-    assert_always(res);
-
-    res = cra_bin_serialize_int8(&ser, INT8_MIN);
-    assert_always(res);
-    res = cra_bin_serialize_int8(&ser, INT8_MAX);
-    assert_always(res);
-    res = cra_bin_serialize_int8(&ser, -100);
-    assert_always(res);
-
-    res = cra_bin_serialize_int16(&ser, INT16_MIN);
-    assert_always(res);
-    res = cra_bin_serialize_int16(&ser, INT16_MAX);
-    assert_always(res);
-    res = cra_bin_serialize_int16(&ser, -1000);
-    assert_always(res);
-
-    res = cra_bin_serialize_int32(&ser, INT32_MIN);
-    assert_always(res);
-    res = cra_bin_serialize_int32(&ser, INT32_MAX);
-    assert_always(res);
-    res = cra_bin_serialize_int32(&ser, -10000);
-    assert_always(res);
-
-    res = cra_bin_serialize_int64(&ser, INT64_MIN);
-    assert_always(res);
-    res = cra_bin_serialize_int64(&ser, INT64_MAX);
-    assert_always(res);
-    res = cra_bin_serialize_int64(&ser, -100000);
-    assert_always(res);
-
-    res = cra_bin_serialize_uint8(&ser, UINT8_MAX);
-    assert_always(res);
-    res = cra_bin_serialize_uint8(&ser, 100);
-    assert_always(res);
-
-    res = cra_bin_serialize_uint16(&ser, UINT16_MAX);
-    assert_always(res);
-    res = cra_bin_serialize_uint16(&ser, 1000);
-    assert_always(res);
-
-    res = cra_bin_serialize_uint32(&ser, UINT32_MAX);
-    assert_always(res);
-    res = cra_bin_serialize_uint32(&ser, 10000);
-    assert_always(res);
-
-    res = cra_bin_serialize_uint64(&ser, UINT64_MAX);
-    assert_always(res);
-    res = cra_bin_serialize_uint64(&ser, 100000);
-    assert_always(res);
-
-    res = cra_bin_serialize_float(&ser, FLT_MIN);
-    assert_always(res);
-    res = cra_bin_serialize_float(&ser, FLT_MAX);
-    assert_always(res);
-    res = cra_bin_serialize_float(&ser, -1000.8f);
-    assert_always(res);
-
-    res = cra_bin_serialize_double(&ser, DBL_MIN);
-    assert_always(res);
-    res = cra_bin_serialize_double(&ser, DBL_MAX);
-    assert_always(res);
-    res = cra_bin_serialize_double(&ser, 10000.5);
-    assert_always(res);
-
-    cra_bin_serialize_end(&ser, &buffsize, &error);
-    assert_always(buffsize > 0);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-
-    cra_bin_serialize_print(buff, buffsize);
-
-    // =================================
-
-    cra_bin_deserialize_begin(&ser, buff, buffsize);
-
-    bool b;
-    res = cra_bin_deserialize_bool(&ser, &b);
-    assert_always(res);
-    assert_always(b == true);
-    res = cra_bin_deserialize_bool(&ser, &b);
-    assert_always(res);
-    assert_always(b == false);
-
-    int8_t i8;
-    res = cra_bin_deserialize_int8(&ser, &i8);
-    assert_always(res);
-    assert_always(i8 == INT8_MIN);
-    res = cra_bin_deserialize_int8(&ser, &i8);
-    assert_always(res);
-    assert_always(i8 == INT8_MAX);
-    res = cra_bin_deserialize_int8(&ser, &i8);
-    assert_always(i8 == -100);
-    assert_always(res);
-
-    int16_t i16;
-    res = cra_bin_deserialize_int16(&ser, &i16);
-    assert_always(res);
-    assert_always(i16 == INT16_MIN);
-    res = cra_bin_deserialize_int16(&ser, &i16);
-    assert_always(res);
-    assert_always(i16 == INT16_MAX);
-    res = cra_bin_deserialize_int16(&ser, &i16);
-    assert_always(res);
-    assert_always(i16 == -1000);
-
-    int32_t i32;
-    res = cra_bin_deserialize_int32(&ser, &i32);
-    assert_always(res);
-    assert_always(i32 == INT32_MIN);
-    res = cra_bin_deserialize_int32(&ser, &i32);
-    assert_always(res);
-    assert_always(i32 == INT32_MAX);
-    res = cra_bin_deserialize_int32(&ser, &i32);
-    assert_always(res);
-    assert_always(i32 == -10000);
-
-    int64_t i64;
-    res = cra_bin_deserialize_int64(&ser, &i64);
-    assert_always(res);
-    assert_always(i64 == INT64_MIN);
-    res = cra_bin_deserialize_int64(&ser, &i64);
-    assert_always(res);
-    assert_always(i64 == INT64_MAX);
-    res = cra_bin_deserialize_int64(&ser, &i64);
-    assert_always(res);
-    assert_always(i64 == -100000);
-
-    uint8_t u8;
-    res = cra_bin_deserialize_uint8(&ser, &u8);
-    assert_always(res);
-    assert_always(u8 == UINT8_MAX);
-    res = cra_bin_deserialize_uint8(&ser, &u8);
-    assert_always(res);
-    assert_always(u8 == 100);
-
-    uint16_t u16;
-    res = cra_bin_deserialize_uint16(&ser, &u16);
-    assert_always(res);
-    assert_always(u16 == UINT16_MAX);
-    res = cra_bin_deserialize_uint16(&ser, &u16);
-    assert_always(res);
-    assert_always(u16 == 1000);
-
-    uint32_t u32;
-    res = cra_bin_deserialize_uint32(&ser, &u32);
-    assert_always(res);
-    assert_always(u32 == UINT32_MAX);
-    res = cra_bin_deserialize_uint32(&ser, &u32);
-    assert_always(res);
-    assert_always(u32 == 10000);
-
-    uint64_t u64;
-    res = cra_bin_deserialize_uint64(&ser, &u64);
-    assert_always(res);
-    assert_always(u64 == UINT64_MAX);
-    res = cra_bin_deserialize_uint64(&ser, &u64);
-    assert_always(res);
-    assert_always(u64 == 100000);
-
-    float flt;
-    res = cra_bin_deserialize_float(&ser, &flt);
-    assert_always(res);
-    assert_always(flt == FLT_MIN);
-    res = cra_bin_deserialize_float(&ser, &flt);
-    assert_always(res);
-    assert_always(flt == FLT_MAX);
-    res = cra_bin_deserialize_float(&ser, &flt);
-    assert_always(res);
-    assert_always(flt == -1000.8f);
-
-    double dbl;
-    res = cra_bin_deserialize_double(&ser, &dbl);
-    assert_always(res);
-    assert_always(dbl == DBL_MIN);
-    res = cra_bin_deserialize_double(&ser, &dbl);
-    assert_always(res);
-    assert_always(dbl == DBL_MAX);
-    res = cra_bin_deserialize_double(&ser, &dbl);
-    assert_always(res);
-    assert_always(dbl == 10000.5);
-
-    cra_bin_deserialize_end(&ser, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-}
-
-void
-test_string(void)
-{
-    bool          res;
-    CraSerError_e error;
-    CraSerializer ser;
-    unsigned char buff[1024];
-    size_t        buffsize;
-
-#if 0 // out of string buf
-
-    buffsize = sizeof(buff);
-    cra_bin_serialize_begin(&ser, NULL, (size_t)(UINT32_MAX) + 20);
-
-    char *stre = cra_malloc((size_t)(UINT32_MAX) + 2);
-    for (size_t i = 0; i < UINT32_MAX; i += 4)
+    struct BS
     {
-        stre[i] = 'x';
-        stre[i + 1] = 'y';
-        stre[i + 2] = 'z';
-        stre[i + 3] = 'w';
-    }
-
-#if 1 // string len > UINT32_MAX
-    stre[(size_t)(UINT32_MAX) + 1] = '\0';
-    res = cra_bin_serialize_string(&ser, stre);
-    assert_always(!res);
-
-    cra_bin_serialize_end(&ser, &buffsize, &error);
-    assert_always(error == CRA_SER_ERROR_STRING_TOO_LONG);
-#endif
-#if 1 // string len == UINT32_MAX
-    ser.index = 0;
-    ser.error = CRA_SER_ERROR_SUCCESS;
-    stre[UINT32_MAX] = '\0';
-    res = cra_bin_serialize_string(&ser, stre);
-    assert_always(!res);
-
-    cra_bin_serialize_end(&ser, &buffsize, &error);
-    assert_always(error == CRA_SER_ERROR_STRING_TOO_LONG);
-#endif
-    cra_free(ser.buffer);
-    cra_free(stre);
-#endif
-
-    // test empty
-
-    buffsize = sizeof(buff);
-    cra_bin_serialize_begin(&ser, buff, buffsize);
-
-    char *strpempty = "";
-    char  straempty[] = "";
-    res = cra_bin_serialize_string(&ser, strpempty);
-    assert_always(res);
-    res = cra_bin_serialize_string(&ser, straempty);
-    assert_always(res);
-
-    cra_bin_serialize_end(&ser, &buffsize, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-
-    cra_bin_serialize_print(buff, buffsize);
-
-    cra_bin_deserialize_begin(&ser, buff, buffsize);
-
-    char *resstrpempty;
-    char  resstraempty[1];
-    res = cra_bin_deserialize_string(&ser, (char *)&resstrpempty, 0, true);
-    assert_always(res);
-    assert_always(strcmp(strpempty, resstrpempty) == 0);
-    res = cra_bin_deserialize_string(&ser, resstraempty, sizeof(resstraempty), false);
-    assert_always(res);
-    assert_always(strcmp(straempty, resstraempty) == 0);
-
-    cra_bin_deserialize_end(&ser, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-    cra_free(resstrpempty);
-
-    // other
-
-    buffsize = sizeof(buff);
-    cra_bin_serialize_begin(&ser, buff, buffsize);
-
-    char *strp = "string (char pointer)";
-    char  stra[] = "string (char array)";
-    char *strnull = NULL; // string null (pointer)
-    res = cra_bin_serialize_string(&ser, strp);
-    assert_always(res);
-    res = cra_bin_serialize_string(&ser, stra);
-    assert_always(res);
-    res = cra_bin_serialize_string(&ser, strnull);
-    assert_always(res);
-
-    cra_bin_serialize_end(&ser, &buffsize, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-
-    cra_bin_serialize_print(buff, buffsize);
-
-    // 1 normal
-    cra_bin_deserialize_begin(&ser, buff, buffsize);
-
-    char *resstrp;
-    char  resstra[sizeof(stra) + 2];
-    char *resstrnull;
-    res = cra_bin_deserialize_string(&ser, (char *)&resstrp, 0, true);
-    assert_always(res);
-    assert_always(strcmp(strp, resstrp) == 0);
-    res = cra_bin_deserialize_string(&ser, resstra, sizeof(resstra), false);
-    assert_always(res);
-    assert_always(strcmp(stra, resstra) == 0);
-    res = cra_bin_deserialize_string(&ser, (char *)&resstrnull, 0, true);
-    assert_always(res);
-    assert_always(strnull == resstrnull && resstrnull == NULL);
-
-    cra_bin_deserialize_end(&ser, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-    cra_free(resstrp);
-
-    // 2 char * <-> char[N]
-    cra_bin_deserialize_begin(&ser, buff, buffsize);
-
-    res = cra_bin_deserialize_string(&ser, resstra, sizeof(resstra), false);
-    assert_always(res);
-    assert_always(strcmp(strp, resstra) == 0);
-    res = cra_bin_deserialize_string(&ser, (char *)&resstrp, 0, true);
-    assert_always(res);
-    assert_always(strcmp(stra, resstrp) == 0);
-    res = cra_bin_deserialize_string(&ser, (char *)&resstrnull, 0, true);
-    assert_always(res);
-    assert_always(strnull == resstrnull && resstrnull == NULL);
-
-    cra_bin_deserialize_end(&ser, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-    cra_free(resstrp);
-
-    // 3 null -> char[N] !! ERROR
-    cra_bin_deserialize_begin(&ser, buff, buffsize);
-
-    res = cra_bin_deserialize_string(&ser, (char *)&resstrp, 0, true);
-    assert_always(res);
-    assert_always(strcmp(strp, resstrp) == 0);
-    res = cra_bin_deserialize_string(&ser, resstra, sizeof(resstra), false);
-    assert_always(res);
-    assert_always(strcmp(stra, resstra) == 0);
-    char nullerr[100];
-    res = cra_bin_deserialize_string(&ser, nullerr, sizeof(nullerr), false);
-    assert_always(!res);
-
-    cra_bin_deserialize_end(&ser, &error);
-    assert_always(error == CRA_SER_ERROR_CANNOT_BE_NULL);
-
-    // 4 string array is too small
-    cra_bin_deserialize_begin(&ser, buff, buffsize);
-
-    char resarray[21];
-    res = cra_bin_deserialize_string(&ser, resarray, sizeof(resarray), false);
-    assert_always(!res);
-
-    cra_bin_deserialize_end(&ser, &error);
-    assert_always(error == CRA_SER_ERROR_STRING_BUF_TOO_SMALL);
-}
-
-void
-test_string_nz(void)
-{
-    CraSerError_e error;
-    CraSerializer ser;
-    unsigned char buff[1024];
-    size_t        buffsize;
-
-    // test empty
-
-    buffsize = sizeof(buff);
-    cra_bin_serialize_begin(&ser, buff, buffsize);
-
-    char *strpempty = "";
-    char  straempty[] = "";
-    cra_bin_serialize_string_nz(&ser, strpempty, 0);
-    cra_bin_serialize_string_nz(&ser, straempty, 0);
-
-    cra_bin_serialize_end(&ser, &buffsize, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-
-    cra_bin_serialize_print(buff, buffsize);
-
-    cra_bin_deserialize_begin(&ser, buff, buffsize);
-
-    uint32_t len;
-    char    *resstrpempty;
-    char     resstraempty[1];
-    cra_bin_deserialize_string_nz(&ser, (char *)&resstrpempty, &len, true);
-    assert_always(len == 0);
-    len = sizeof(resstraempty);
-    cra_bin_deserialize_string_nz(&ser, resstraempty, &len, false);
-    assert_always(len == 0);
-
-    cra_bin_deserialize_end(&ser, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-    cra_free(resstrpempty);
-
-    // test normal
-
-    buffsize = sizeof(buff);
-    cra_bin_serialize_begin(&ser, buff, buffsize);
-    char strnz[10];
-    strnz[0] = 'a';
-    strnz[1] = 'b';
-    strnz[2] = 'c';
-    strnz[3] = 'd';
-    cra_bin_serialize_string_nz(&ser, strnz, 4);
-    cra_bin_serialize_end(&ser, &buffsize, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-    cra_bin_serialize_print(buff, buffsize);
-
-    char    *strnz2;
-    uint32_t nstrnz2;
-    cra_bin_deserialize_begin(&ser, buff, buffsize);
-    cra_bin_deserialize_string_nz(&ser, (char *)&strnz2, &nstrnz2, true);
-    cra_bin_deserialize_end(&ser, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-    assert_always(nstrnz2 == 4);
-    assert_always(strncmp(strnz, strnz2, 4) == 0);
-    cra_free(strnz2);
-
-    struct A
-    {
-        uint32_t nstra;
-        char     stra[100];
-        uint32_t nstrp;
-        char    *strp;
-        uint32_t nstrnull;
-        char    *strnull;
+        bool btrue;
+        bool bfalse;
+        bool btrue_not_1;
     };
-    CRA_TYPE_META_BEGIN(meta_a)
-    CRA_TYPE_META_STRING_NZ_MEMBER(struct A, stra, false)
-    CRA_TYPE_META_STRING_NZ_MEMBER(struct A, strp, true)
-    CRA_TYPE_META_STRING_NZ_MEMBER(struct A, strnull, true)
+    CRA_TYPE_META_BEGIN(bs_meta)
+    CRA_TYPE_META_MEMBER_BOOL(struct BS, btrue)
+    CRA_TYPE_META_MEMBER_BOOL(struct BS, bfalse)
+    CRA_TYPE_META_MEMBER_BOOL(struct BS, btrue_not_1)
     CRA_TYPE_META_END();
 
-    struct A a = {
-        4, "1234", 3, "abc", 0, NULL,
-    };
+    struct BS bs = { .btrue = true, .bfalse = false, .btrue_not_1 = 2 };
 
-    buffsize = sizeof(buff);
-    cra_bin_serialize_struct0(buff, &buffsize, &a, meta_a, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-    cra_bin_serialize_print(buff, buffsize);
+    bufsize = 5;
+    buf = cra_bin_serialize_struct(NULL, &bufsize, &bs, bs_meta, &error, 0x11223344);
+    assert_always(buf && error == CRA_SER_ERROR_SUCCESS);
 
-    struct A aa;
-    cra_bin_deserialize_struct0(buff, buffsize, &aa, sizeof(struct A), false, meta_a, NULL, NULL, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-    assert_always(a.nstra == aa.nstra);
-    assert_always(strncmp(a.stra, aa.stra, a.nstra) == 0);
-    assert_always(a.nstrp == aa.nstrp);
-    assert_always(strncmp(a.strp, aa.strp, a.nstrp) == 0);
-    assert_always(a.nstrnull == aa.nstrnull);
-    assert_always(a.strnull == aa.strnull && aa.strnull == NULL);
-    cra_free(aa.strp);
+    struct BS rbs, *prbs;
+    b = cra_bin_deserialize_struct(buf, bufsize, &rbs, sizeof(rbs), false, bs_meta, &error, 0x11223344);
+    assert_always(b && !error);
+    assert_always(bs.btrue == rbs.btrue);
+    assert_always(bs.bfalse == rbs.bfalse);
+    assert_always(rbs.btrue_not_1 == true);
+    assert_always(b && !error);
+    b = cra_bin_deserialize_struct(buf, bufsize, &prbs, sizeof(*prbs), true, bs_meta, &error, 0x11223344);
+    assert_always(b && !error);
+    assert_always(bs.btrue == prbs->btrue);
+    assert_always(bs.bfalse == prbs->bfalse);
+    assert_always(prbs->btrue_not_1 == true);
+    assert_always(b && !error);
+
+    cra_free(prbs);
+    cra_free(buf);
 }
 
-void
-test_struct_base(void)
+static void
+test_int(void)
 {
-    struct A
+    unsigned char buf[1024];
+    size_t        bufsize;
+    CraSerError_e error;
+    bool          b;
+
+    struct IS
+    {
+        int8_t  i8n;
+        int8_t  i8m;
+        int8_t  i8M;
+        int16_t i16n;
+        int16_t i16m;
+        int16_t i16M;
+        int32_t i32n;
+        int32_t i32m;
+        int32_t i32M;
+        int64_t i64n;
+        int64_t i64m;
+        int64_t i64M;
+    };
+    CRA_TYPE_META_BEGIN(is_meta)
+    CRA_TYPE_META_MEMBER_INT(struct IS, i8n)
+    CRA_TYPE_META_MEMBER_INT(struct IS, i8m)
+    CRA_TYPE_META_MEMBER_INT(struct IS, i8M)
+    CRA_TYPE_META_MEMBER_INT(struct IS, i16n)
+    CRA_TYPE_META_MEMBER_INT(struct IS, i16m)
+    CRA_TYPE_META_MEMBER_INT(struct IS, i16M)
+    CRA_TYPE_META_MEMBER_INT(struct IS, i32n)
+    CRA_TYPE_META_MEMBER_INT(struct IS, i32m)
+    CRA_TYPE_META_MEMBER_INT(struct IS, i32M)
+    CRA_TYPE_META_MEMBER_INT(struct IS, i64n)
+    CRA_TYPE_META_MEMBER_INT(struct IS, i64m)
+    CRA_TYPE_META_MEMBER_INT(struct IS, i64M)
+    CRA_TYPE_META_END();
+
+    struct IS *is = cra_alloc(struct IS);
+    is->i8n = -8;
+    is->i8m = INT8_MIN;
+    is->i8M = INT8_MAX;
+    is->i16n = -16;
+    is->i16m = INT16_MIN;
+    is->i16M = INT16_MAX;
+    is->i32n = -32;
+    is->i32m = INT32_MIN;
+    is->i32M = INT32_MAX;
+    is->i64n = -64;
+    is->i64m = INT64_MIN;
+    is->i64M = INT64_MAX;
+
+    bufsize = sizeof(buf);
+    cra_bin_serialize_struct(buf, &bufsize, is, is_meta, &error, 0x55667788);
+    assert_always(!error);
+
+    struct IS ris, *pris;
+    b = cra_bin_deserialize_struct(buf, bufsize, &ris, sizeof(ris), false, is_meta, &error, 0x55667788);
+    assert_always(b && !error);
+    assert_always(is->i8n == ris.i8n);
+    assert_always(is->i8m == ris.i8m);
+    assert_always(is->i8M == ris.i8M);
+    assert_always(is->i16n == ris.i16n);
+    assert_always(is->i16m == ris.i16m);
+    assert_always(is->i16M == ris.i16M);
+    assert_always(is->i32n == ris.i32n);
+    assert_always(is->i32m == ris.i32m);
+    assert_always(is->i32M == ris.i32M);
+    assert_always(is->i64n == ris.i64n);
+    assert_always(is->i64m == ris.i64m);
+    assert_always(is->i64M == ris.i64M);
+    b = cra_bin_deserialize_struct(buf, bufsize, &pris, sizeof(*pris), true, is_meta, &error, 0x55667788);
+    assert_always(b && !error);
+    assert_always(is->i8n == pris->i8n);
+    assert_always(is->i8m == pris->i8m);
+    assert_always(is->i8M == pris->i8M);
+    assert_always(is->i16n == pris->i16n);
+    assert_always(is->i16m == pris->i16m);
+    assert_always(is->i16M == pris->i16M);
+    assert_always(is->i32n == pris->i32n);
+    assert_always(is->i32m == pris->i32m);
+    assert_always(is->i32M == pris->i32M);
+    assert_always(is->i64n == pris->i64n);
+    assert_always(is->i64m == pris->i64m);
+    assert_always(is->i64M == pris->i64M);
+
+    cra_dealloc(is);
+    cra_free(pris);
+}
+
+static void
+test_uint(void)
+{
+    unsigned char buf[1024];
+    size_t        bufsize;
+    CraSerError_e error;
+    bool          b;
+
+    struct US
+    {
+        uint8_t  u8n;
+        uint8_t  u8M;
+        uint16_t u16n;
+        uint16_t u16M;
+        uint32_t u32n;
+        uint32_t u32M;
+        uint64_t u64n;
+        uint64_t u64M;
+    };
+    CRA_TYPE_META_BEGIN(us_meta)
+    CRA_TYPE_META_MEMBER_UINT(struct US, u8n)
+    CRA_TYPE_META_MEMBER_UINT(struct US, u8M)
+    CRA_TYPE_META_MEMBER_UINT(struct US, u16n)
+    CRA_TYPE_META_MEMBER_UINT(struct US, u16M)
+    CRA_TYPE_META_MEMBER_UINT(struct US, u32n)
+    CRA_TYPE_META_MEMBER_UINT(struct US, u32M)
+    CRA_TYPE_META_MEMBER_UINT(struct US, u64n)
+    CRA_TYPE_META_MEMBER_UINT(struct US, u64M)
+    CRA_TYPE_META_END();
+
+    struct US *us = cra_alloc(struct US);
+    us->u8n = 8;
+    us->u8M = UINT8_MAX;
+    us->u16n = 16;
+    us->u16M = UINT16_MAX;
+    us->u32n = 32;
+    us->u32M = UINT32_MAX;
+    us->u64n = 64;
+    us->u64M = UINT64_MAX;
+
+    bufsize = sizeof(buf);
+    cra_bin_serialize_struct(buf, &bufsize, us, us_meta, &error, 0x55667788);
+    assert_always(!error);
+
+    struct US rus, *prus;
+    b = cra_bin_deserialize_struct(buf, bufsize, &rus, sizeof(rus), false, us_meta, &error, 0x55667788);
+    assert_always(b && !error);
+    assert_always(us->u8n == rus.u8n);
+    assert_always(us->u8M == rus.u8M);
+    assert_always(us->u16n == rus.u16n);
+    assert_always(us->u16M == rus.u16M);
+    assert_always(us->u32n == rus.u32n);
+    assert_always(us->u32M == rus.u32M);
+    assert_always(us->u64n == rus.u64n);
+    assert_always(us->u64M == rus.u64M);
+    b = cra_bin_deserialize_struct(buf, bufsize, &prus, sizeof(*prus), true, us_meta, &error, 0x55667788);
+    assert_always(b && !error);
+    assert_always(us->u8n == prus->u8n);
+    assert_always(us->u8M == prus->u8M);
+    assert_always(us->u16n == prus->u16n);
+    assert_always(us->u16M == prus->u16M);
+    assert_always(us->u32n == prus->u32n);
+    assert_always(us->u32M == prus->u32M);
+    assert_always(us->u64n == prus->u64n);
+    assert_always(us->u64M == prus->u64M);
+
+    cra_dealloc(us);
+    cra_free(prus);
+}
+
+static void
+test_varint(void)
+{
+    unsigned char buf[1024];
+    size_t        bufsize;
+    CraSerError_e error;
+    bool          b;
+
+    struct VIS
+    {
+        int8_t  i8n;
+        int8_t  i8m;
+        int8_t  i8M;
+        int16_t i16n;
+        int16_t i16m;
+        int16_t i16M;
+        int32_t i32n;
+        int32_t i32m;
+        int32_t i32M;
+        int64_t i64n;
+        int64_t i64m;
+        int64_t i64M;
+    };
+    CRA_TYPE_META_BEGIN(is_meta)
+    CRA_TYPE_META_MEMBER_VARINT(struct VIS, i8n)
+    CRA_TYPE_META_MEMBER_VARINT(struct VIS, i8m)
+    CRA_TYPE_META_MEMBER_VARINT(struct VIS, i8M)
+    CRA_TYPE_META_MEMBER_VARINT(struct VIS, i16n)
+    CRA_TYPE_META_MEMBER_VARINT(struct VIS, i16m)
+    CRA_TYPE_META_MEMBER_VARINT(struct VIS, i16M)
+    CRA_TYPE_META_MEMBER_VARINT(struct VIS, i32n)
+    CRA_TYPE_META_MEMBER_VARINT(struct VIS, i32m)
+    CRA_TYPE_META_MEMBER_VARINT(struct VIS, i32M)
+    CRA_TYPE_META_MEMBER_VARINT(struct VIS, i64n)
+    CRA_TYPE_META_MEMBER_VARINT(struct VIS, i64m)
+    CRA_TYPE_META_MEMBER_VARINT(struct VIS, i64M)
+    CRA_TYPE_META_END();
+
+    struct VIS *is = cra_alloc(struct VIS);
+    is->i8n = -8;
+    is->i8m = INT8_MIN;
+    is->i8M = INT8_MAX;
+    is->i16n = -16;
+    is->i16m = INT16_MIN;
+    is->i16M = INT16_MAX;
+    is->i32n = -32;
+    is->i32m = INT32_MIN;
+    is->i32M = INT32_MAX;
+    is->i64n = -64;
+    is->i64m = INT64_MIN;
+    is->i64M = INT64_MAX;
+
+    bufsize = sizeof(buf);
+    cra_bin_serialize_struct(buf, &bufsize, is, is_meta, &error, 0x55667788);
+    assert_always(!error);
+
+    struct VIS ris, *pris;
+    b = cra_bin_deserialize_struct(buf, bufsize, &ris, sizeof(ris), false, is_meta, &error, 0x55667788);
+    assert_always(b && !error);
+    assert_always(is->i8n == ris.i8n);
+    assert_always(is->i8m == ris.i8m);
+    assert_always(is->i8M == ris.i8M);
+    assert_always(is->i16n == ris.i16n);
+    assert_always(is->i16m == ris.i16m);
+    assert_always(is->i16M == ris.i16M);
+    assert_always(is->i32n == ris.i32n);
+    assert_always(is->i32m == ris.i32m);
+    assert_always(is->i32M == ris.i32M);
+    assert_always(is->i64n == ris.i64n);
+    assert_always(is->i64m == ris.i64m);
+    assert_always(is->i64M == ris.i64M);
+    b = cra_bin_deserialize_struct(buf, bufsize, &pris, sizeof(*pris), true, is_meta, &error, 0x55667788);
+    assert_always(b && !error);
+    assert_always(is->i8n == pris->i8n);
+    assert_always(is->i8m == pris->i8m);
+    assert_always(is->i8M == pris->i8M);
+    assert_always(is->i16n == pris->i16n);
+    assert_always(is->i16m == pris->i16m);
+    assert_always(is->i16M == pris->i16M);
+    assert_always(is->i32n == pris->i32n);
+    assert_always(is->i32m == pris->i32m);
+    assert_always(is->i32M == pris->i32M);
+    assert_always(is->i64n == pris->i64n);
+    assert_always(is->i64m == pris->i64m);
+    assert_always(is->i64M == pris->i64M);
+
+    cra_dealloc(is);
+    cra_free(pris);
+}
+
+static void
+test_varuint(void)
+{
+    unsigned char buf[1024];
+    size_t        bufsize;
+    CraSerError_e error;
+    bool          b;
+
+    struct VUS
+    {
+        uint8_t  u8n;
+        uint8_t  u8M;
+        uint16_t u16n;
+        uint16_t u16M;
+        uint32_t u32n;
+        uint32_t u32M;
+        uint64_t u64n;
+        uint64_t u64M;
+    };
+    CRA_TYPE_META_BEGIN(us_meta)
+    CRA_TYPE_META_MEMBER_VARUINT(struct VUS, u8n)
+    CRA_TYPE_META_MEMBER_VARUINT(struct VUS, u8M)
+    CRA_TYPE_META_MEMBER_VARUINT(struct VUS, u16n)
+    CRA_TYPE_META_MEMBER_VARUINT(struct VUS, u16M)
+    CRA_TYPE_META_MEMBER_VARUINT(struct VUS, u32n)
+    CRA_TYPE_META_MEMBER_VARUINT(struct VUS, u32M)
+    CRA_TYPE_META_MEMBER_VARUINT(struct VUS, u64n)
+    CRA_TYPE_META_MEMBER_VARUINT(struct VUS, u64M)
+    CRA_TYPE_META_END();
+
+    struct VUS *us = cra_alloc(struct VUS);
+    us->u8n = 8;
+    us->u8M = UINT8_MAX;
+    us->u16n = 16;
+    us->u16M = UINT16_MAX;
+    us->u32n = 32;
+    us->u32M = UINT32_MAX;
+    us->u64n = 64;
+    us->u64M = UINT64_MAX;
+
+    bufsize = sizeof(buf);
+    cra_bin_serialize_struct(buf, &bufsize, us, us_meta, &error, 0x55667788);
+    assert_always(!error);
+
+    struct VUS rus, *prus;
+    b = cra_bin_deserialize_struct(buf, bufsize, &rus, sizeof(rus), false, us_meta, &error, 0x55667788);
+    assert_always(b && !error);
+    assert_always(us->u8n == rus.u8n);
+    assert_always(us->u8M == rus.u8M);
+    assert_always(us->u16n == rus.u16n);
+    assert_always(us->u16M == rus.u16M);
+    assert_always(us->u32n == rus.u32n);
+    assert_always(us->u32M == rus.u32M);
+    assert_always(us->u64n == rus.u64n);
+    assert_always(us->u64M == rus.u64M);
+    b = cra_bin_deserialize_struct(buf, bufsize, &prus, sizeof(*prus), true, us_meta, &error, 0x55667788);
+    assert_always(b && !error);
+    assert_always(us->u8n == prus->u8n);
+    assert_always(us->u8M == prus->u8M);
+    assert_always(us->u16n == prus->u16n);
+    assert_always(us->u16M == prus->u16M);
+    assert_always(us->u32n == prus->u32n);
+    assert_always(us->u32M == prus->u32M);
+    assert_always(us->u64n == prus->u64n);
+    assert_always(us->u64M == prus->u64M);
+
+    cra_dealloc(us);
+    cra_free(prus);
+}
+
+static void
+test_float(void)
+{
+    unsigned char buf[1024];
+    size_t        bufsize;
+    CraSerError_e error;
+    bool          b;
+
+    struct FS
+    {
+        float  fn;
+        float  fm;
+        float  fM;
+        float  fW;
+        double dn;
+        double dm;
+        double dM;
+        double dW;
+    };
+    CRA_TYPE_META_BEGIN(fs_meta)
+    CRA_TYPE_META_MEMBER_FLOAT(struct FS, fn)
+    CRA_TYPE_META_MEMBER_FLOAT(struct FS, fm)
+    CRA_TYPE_META_MEMBER_FLOAT(struct FS, fM)
+    CRA_TYPE_META_MEMBER_FLOAT(struct FS, fW)
+    CRA_TYPE_META_MEMBER_FLOAT(struct FS, dn)
+    CRA_TYPE_META_MEMBER_FLOAT(struct FS, dm)
+    CRA_TYPE_META_MEMBER_FLOAT(struct FS, dM)
+    CRA_TYPE_META_MEMBER_FLOAT(struct FS, dW)
+    CRA_TYPE_META_END();
+
+    struct FS fs = {
+        .fn = -1.5f,
+        .fm = FLT_MIN,
+        .fM = FLT_MAX,
+        .fW = -FLT_MAX,
+        .dn = 60.83,
+        .dm = DBL_MIN,
+        .dM = DBL_MAX,
+        .dW = -DBL_MAX,
+    };
+
+    bufsize = sizeof(buf);
+    cra_bin_serialize_struct(buf, &bufsize, &fs, fs_meta, &error, 0x99887766);
+    assert_always(!error);
+
+    struct FS rfs, *prfs;
+    b = cra_bin_deserialize_struct(buf, bufsize, &rfs, sizeof(struct FS), false, fs_meta, &error, 0x99887766);
+    assert_always(b && !error);
+    assert_always(cra_compare_float(fs.fn, rfs.fn) == 0);
+    assert_always(cra_compare_float(fs.fm, rfs.fm) == 0);
+    assert_always(cra_compare_float(fs.fM, rfs.fM) == 0);
+    assert_always(cra_compare_float(fs.fW, rfs.fW) == 0);
+    assert_always(cra_compare_double(fs.dn, rfs.dn) == 0);
+    assert_always(cra_compare_double(fs.dm, rfs.dm) == 0);
+    assert_always(cra_compare_double(fs.dM, rfs.dM) == 0);
+    assert_always(cra_compare_double(fs.dW, rfs.dW) == 0);
+    b = cra_bin_deserialize_struct(buf, bufsize, &prfs, sizeof(struct FS), true, fs_meta, &error, 0x99887766);
+    assert_always(b && !error);
+    assert_always(cra_compare_float(fs.fn, prfs->fn) == 0);
+    assert_always(cra_compare_float(fs.fm, prfs->fm) == 0);
+    assert_always(cra_compare_float(fs.fM, prfs->fM) == 0);
+    assert_always(cra_compare_float(fs.fW, prfs->fW) == 0);
+    assert_always(cra_compare_double(fs.dn, prfs->dn) == 0);
+    assert_always(cra_compare_double(fs.dm, prfs->dm) == 0);
+    assert_always(cra_compare_double(fs.dM, prfs->dM) == 0);
+    assert_always(cra_compare_double(fs.dW, prfs->dW) == 0);
+
+    cra_free(prfs);
+}
+
+static void
+test_string(void)
+{
+    unsigned char buf[1024];
+    size_t        bufsize;
+    CraSerError_e error;
+    bool          b;
+
+    struct SS
+    {
+        char  anormal[10];
+        char  aempty[100];
+        char *pnormal;
+        char *pempty;
+        char *pnull;
+    };
+    CRA_TYPE_META_BEGIN(ss_meta)
+    CRA_TYPE_META_MEMBER_STRING(struct SS, anormal, false)
+    CRA_TYPE_META_MEMBER_STRING(struct SS, aempty, false)
+    CRA_TYPE_META_MEMBER_STRING(struct SS, pnormal, true)
+    CRA_TYPE_META_MEMBER_STRING(struct SS, pempty, true)
+    CRA_TYPE_META_MEMBER_STRING(struct SS, pnull, true)
+    CRA_TYPE_META_END();
+
+    struct SS ss = {
+        .anormal = "hello",
+        .aempty = "",
+        .pnormal = "world",
+        .pempty = "",
+        .pnull = NULL,
+    };
+
+    bufsize = sizeof(buf);
+    cra_bin_serialize_struct(buf, &bufsize, &ss, ss_meta, &error, 0x12345678);
+    assert_always(!error);
+
+    struct SS rss, *prss;
+    b = cra_bin_deserialize_struct(buf, bufsize, &rss, sizeof(struct SS), false, ss_meta, &error, 0x12345678);
+    assert_always(b && !error);
+    assert_always(strcmp(ss.anormal, rss.anormal) == 0);
+    assert_always(strcmp(ss.aempty, rss.aempty) == 0);
+    assert_always(strcmp(ss.pnormal, rss.pnormal) == 0);
+    assert_always(strcmp(ss.pempty, rss.pempty) == 0);
+    assert_always(ss.pnull == rss.pnull && ss.pnull == NULL);
+    b = cra_bin_deserialize_struct(buf, bufsize, &prss, sizeof(struct SS), true, ss_meta, &error, 0x12345678);
+    assert_always(b && !error);
+    assert_always(strcmp(ss.anormal, prss->anormal) == 0);
+    assert_always(strcmp(ss.aempty, prss->aempty) == 0);
+    assert_always(strcmp(ss.pnormal, prss->pnormal) == 0);
+    assert_always(strcmp(ss.pempty, prss->pempty) == 0);
+    assert_always(ss.pnull == prss->pnull && ss.pnull == NULL);
+
+    cra_free(rss.pnormal);
+    cra_free(rss.pempty);
+    cra_free(prss->pnormal);
+    cra_free(prss->pempty);
+    cra_free(prss);
+}
+
+static void
+test_bytes(void)
+{
+    unsigned char buf[1024];
+    size_t        bufsize;
+    CraSerError_e error;
+    bool          b;
+
+    struct SNZS
+    {
+        unsigned int   nanormal;
+        char           anormal[10];
+        size_t         naempty;
+        char           aempty[100];
+        unsigned short npnormal;
+        char          *pnormal;
+        unsigned char  npempty;
+        char          *pempty;
+        size_t         npnull;
+        char          *pnull;
+    };
+    CRA_TYPE_META_BEGIN(ss_meta)
+    CRA_TYPE_META_MEMBER_BYTES(struct SNZS, anormal, false)
+    CRA_TYPE_META_MEMBER_BYTES(struct SNZS, aempty, false)
+    CRA_TYPE_META_MEMBER_BYTES(struct SNZS, pnormal, true)
+    CRA_TYPE_META_MEMBER_BYTES(struct SNZS, pempty, true)
+    CRA_TYPE_META_MEMBER_BYTES(struct SNZS, pnull, true)
+    CRA_TYPE_META_END();
+
+    struct SNZS ss = {
+        .nanormal = 5,
+        .anormal = "HELLO",
+        .naempty = 0,
+        .aempty = "",
+        .npnormal = 3,
+        .pnormal = "WORLD",
+        .npempty = 0,
+        .pempty = "",
+        .npnull = 0,
+        .pnull = NULL,
+    };
+
+    bufsize = sizeof(buf);
+    cra_bin_serialize_struct(buf, &bufsize, &ss, ss_meta, &error, 0x12345678);
+    assert_always(!error);
+
+    struct SNZS rss, *prss;
+    b = cra_bin_deserialize_struct(buf, bufsize, &rss, sizeof(struct SNZS), false, ss_meta, &error, 0x12345678);
+    assert_always(b && !error);
+    assert_always(ss.nanormal == rss.nanormal);
+    assert_always(strncmp(ss.anormal, rss.anormal, rss.nanormal) == 0);
+    assert_always(ss.naempty == rss.naempty);
+    assert_always(strncmp(ss.aempty, rss.aempty, rss.naempty) == 0);
+    assert_always(ss.npnormal == rss.npnormal);
+    assert_always(strncmp(ss.pnormal, rss.pnormal, rss.npnormal) == 0);
+    assert_always(ss.npempty == rss.npempty);
+    assert_always(strncmp(ss.pempty, rss.pempty, rss.npempty) == 0);
+    assert_always(ss.npnull == rss.npnull);
+    assert_always(ss.pnull == rss.pnull && ss.pnull == NULL);
+    b = cra_bin_deserialize_struct(buf, bufsize, &prss, sizeof(struct SNZS), true, ss_meta, &error, 0x12345678);
+    assert_always(b && !error);
+    assert_always(ss.nanormal == prss->nanormal);
+    assert_always(strncmp(ss.anormal, prss->anormal, prss->nanormal) == 0);
+    assert_always(ss.naempty == prss->naempty);
+    assert_always(strncmp(ss.aempty, prss->aempty, prss->naempty) == 0);
+    assert_always(ss.npnormal == prss->npnormal);
+    assert_always(strncmp(ss.pnormal, prss->pnormal, prss->npnormal) == 0);
+    assert_always(ss.npempty == prss->npempty);
+    assert_always(strncmp(ss.pempty, prss->pempty, prss->npempty) == 0);
+    assert_always(ss.npnull == prss->npnull);
+    assert_always(ss.pnull == prss->pnull && ss.pnull == NULL);
+
+    cra_free(rss.pnormal);
+    cra_free(rss.pempty);
+    cra_free(prss->pnormal);
+    cra_free(prss->pempty);
+    cra_free(prss);
+}
+
+static void
+test_struct(void)
+{
+    unsigned char buf[1024];
+    size_t        bufsize;
+    CraSerError_e error;
+    bool          b;
+
+    struct AS
     {
         int    i;
         double d;
     };
-    CRA_TYPE_META_BEGIN(meta_a)
-    CRA_TYPE_META_INT32_MEMBER(struct A, i)
-    CRA_TYPE_META_DOUBLE_MEMBER(struct A, d)
+    CRA_TYPE_META_BEGIN(as_meta)
+    CRA_TYPE_META_MEMBER_INT(struct AS, i)
+    CRA_TYPE_META_MEMBER_FLOAT(struct AS, d)
     CRA_TYPE_META_END();
-
-    bool          res;
-    CraSerError_e error;
-    CraSerializer ser;
-    unsigned char buff[1024];
-    size_t        buffsize;
-
-    buffsize = sizeof(buff);
-    cra_bin_serialize_begin(&ser, buff, buffsize);
-
-    struct A *anull = NULL;
-    struct A  a = { .i = 100, .d = 2.5 };
-    res = cra_bin_serialize_struct(&ser, anull, meta_a);
-    assert_always(res);
-    res = cra_bin_serialize_struct(&ser, &a, meta_a);
-    assert_always(res);
-
-    cra_bin_serialize_end(&ser, &buffsize, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-
-    cra_bin_serialize_print(buff, buffsize);
-
-    // 1 normal
-    cra_bin_deserialize_begin(&ser, buff, buffsize);
-
-    struct A *anull2;
-    struct A  as;
-    res = cra_bin_deserialize_struct(&ser, &anull2, sizeof(struct A), true, meta_a, NULL, NULL);
-    assert_always(res);
-    assert_always(anull2 == anull && anull2 == NULL);
-    res = cra_bin_deserialize_struct(&ser, &as, sizeof(struct A), false, meta_a, NULL, NULL);
-    assert_always(res);
-    assert_always(a.i == as.i);
-    assert_always(a.d == as.d);
-
-    cra_bin_deserialize_end(&ser, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-
-    // 2 struct X -> struct X *
-    cra_bin_deserialize_begin(&ser, buff, buffsize);
-
-    struct A *ap;
-    res = cra_bin_deserialize_struct(&ser, &anull2, sizeof(struct A), true, meta_a, NULL, NULL);
-    assert_always(res);
-    assert_always(anull2 == anull && anull2 == NULL);
-    res = cra_bin_deserialize_struct(&ser, &ap, sizeof(struct A), true, meta_a, NULL, NULL);
-    assert_always(res);
-    assert_always(a.i == ap->i);
-    assert_always(a.d == ap->d);
-    cra_free(ap);
-
-    cra_bin_deserialize_end(&ser, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-
-    // 2 null -> struct X !! ERROR
-    cra_bin_deserialize_begin(&ser, buff, buffsize);
-
-    struct A asnull;
-    res = cra_bin_deserialize_struct(&ser, &asnull, sizeof(struct A), false, meta_a, NULL, NULL);
-    assert_always(!res);
-
-    cra_bin_deserialize_end(&ser, &error);
-    assert_always(error == CRA_SER_ERROR_CANNOT_BE_NULL);
-}
-
-void
-test_struct_struct(void)
-{
-    struct A
+    struct BS
     {
-        int i;
+        struct AS  sas;
+        struct AS *oas;
+        struct AS *oasnull;
     };
-    CRA_TYPE_META_BEGIN(meta_a)
-    CRA_TYPE_META_INT32_MEMBER(struct A, i)
-    CRA_TYPE_META_END();
-    struct B
-    {
-        struct A *anull;
-        struct A *ap;
-        struct A  as;
-    };
-    CRA_TYPE_META_BEGIN(meta_b)
-    CRA_TYPE_META_STRUCT_MEMBER(struct B, anull, true, meta_a, NULL, NULL)
-    CRA_TYPE_META_STRUCT_MEMBER(struct B, ap, true, meta_a, NULL, NULL)
-    CRA_TYPE_META_STRUCT_MEMBER(struct B, as, false, meta_a, NULL, NULL)
+    CRA_TYPE_META_BEGIN(bs_meta)
+    CRA_TYPE_META_MEMBER_STRUCT(struct BS, sas, false, as_meta)
+    CRA_TYPE_META_MEMBER_STRUCT(struct BS, oas, true, as_meta)
+    CRA_TYPE_META_MEMBER_STRUCT(struct BS, oasnull, true, as_meta)
     CRA_TYPE_META_END();
 
-    CraSerError_e error;
-    unsigned char buff[1024];
-    size_t        buffsize;
+    struct AS as = { 200, -6.8 };
+    struct BS bs = { .sas = { 100, 3.4 }, .oas = &as, .oasnull = NULL };
 
-    struct A a = { 100 };
-    struct B b = {
-        NULL,
-        &a,
-        { 200 },
-    };
+    bufsize = sizeof(buf);
+    cra_bin_serialize_struct(buf, &bufsize, &bs, bs_meta, &error, 12345);
+    assert_always(!error);
 
-    buffsize = sizeof(buff);
-    cra_bin_serialize_struct0(buff, &buffsize, &b, meta_b, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
+    struct BS rbs, *prbs;
+    b = cra_bin_deserialize_struct(buf, bufsize, &rbs, sizeof(struct BS), false, bs_meta, &error, 12345);
+    assert_always(b && !error);
+    assert_always(bs.sas.i == rbs.sas.i);
+    assert_always(cra_compare_double(bs.sas.d, rbs.sas.d) == 0);
+    assert_always(bs.oas->i == rbs.oas->i);
+    assert_always(cra_compare_double(bs.oas->d, rbs.oas->d) == 0);
+    assert_always(bs.oasnull == rbs.oasnull && rbs.oasnull == NULL);
+    b = cra_bin_deserialize_struct(buf, bufsize, &prbs, sizeof(struct BS), true, bs_meta, &error, 12345);
+    assert_always(b && !error);
+    assert_always(bs.sas.i == prbs->sas.i);
+    assert_always(cra_compare_double(bs.sas.d, prbs->sas.d) == 0);
+    assert_always(bs.oas->i == prbs->oas->i);
+    assert_always(cra_compare_double(bs.oas->d, prbs->oas->d) == 0);
+    assert_always(bs.oasnull == prbs->oasnull && prbs->oasnull == NULL);
 
-    cra_bin_serialize_print(buff, buffsize);
-
-    struct B bs;
-    cra_bin_deserialize_struct0(buff, buffsize, &bs, sizeof(struct B), false, meta_b, NULL, NULL, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-    assert_always(bs.anull == b.anull && bs.anull == NULL);
-    assert_always(bs.ap->i == b.ap->i);
-    assert_always(bs.as.i == b.as.i);
-    cra_free(bs.ap);
-
-    struct B *bp;
-    cra_bin_deserialize_struct0(buff, buffsize, &bp, sizeof(struct B), true, meta_b, NULL, NULL, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-    assert_always(bp->anull == b.anull && bp->anull == NULL);
-    assert_always(bp->ap->i == b.ap->i);
-    assert_always(bp->as.i == b.as.i);
-    cra_free(bp->ap);
-    cra_free(bp);
+    cra_free(rbs.oas);
+    cra_free(prbs->oas);
+    cra_free(prbs);
 }
 
-#if 1 // test struct with init_i
-struct InitX
-{
-    int    i;
-    float  f;
-    double d;
-    char  *str;
-};
-CRA_TYPE_META_BEGIN(meta_initx)
-CRA_TYPE_META_INT32_MEMBER(struct InitX, i)
-CRA_TYPE_META_DOUBLE_MEMBER(struct InitX, d)
-CRA_TYPE_META_STRING_MEMBER(struct InitX, str, true)
-CRA_TYPE_META_END();
-
-int calledcnt = 0;
-
-void
-init_initx(void *obj, void *args)
-{
-    CRA_UNUSED_VALUE(args);
-
-    struct InitX *o = (struct InitX *)obj;
-    o->i = 100;
-    o->f = 1.5f;
-    o->d = 2.5;
-    o->str = NULL;
-    ++calledcnt;
-}
-
-void
-uninit_initx(void *obj)
-{
-    struct InitX *o = (struct InitX *)obj;
-    if (o->str)
-        cra_free(o->str);
-    bzero(o, sizeof(struct InitX));
-    ++calledcnt;
-}
-
-const CraTypeInit_i initx_i = {
-    .free_members_by_seri = false,
-    .init = init_initx,
-    .uninit = uninit_initx,
-};
-
-void
-test_struct_with_init_i(void)
-{
-    struct InitX *x = cra_alloc(struct InitX);
-    x->i = 200;
-    x->f = 200.5f;
-    x->d = 2000.6;
-    x->str = "hello world";
-
-    unsigned char buff[1024];
-    size_t        buffsize;
-    CraSerError_e error;
-
-    buffsize = sizeof(buff);
-    cra_bin_serialize_struct0(buff, &buffsize, x, meta_initx, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-    cra_bin_serialize_print(buff, buffsize);
-
-    struct InitX *xx;
-    cra_bin_deserialize_struct0(buff, buffsize, &xx, sizeof(struct InitX), true, meta_initx, &initx_i, NULL, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-    assert_always(x->i == xx->i);
-    assert_always(xx->f == 1.5f); // default value (from init_initx)
-    assert_always(x->d == xx->d);
-    assert_always(strcmp(x->str, xx->str) == 0);
-    cra_free(xx->str);
-    cra_free(xx);
-
-    // test failed to call uninit_initx
-    CraSerializer ser;
-    calledcnt = 0;
-    cra_bin_deserialize_begin(&ser, buff, buffsize);
-    cra_bin_deserialize_struct(&ser, &xx, sizeof(struct InitX), true, meta_initx, &initx_i, NULL);
-    assert_always(strcmp(x->str, xx->str) == 0);
-    ser.error = CRA_SER_ERROR_TYPE_MISMATCH;
-    cra_bin_deserialize_end(&ser, &error);
-    assert_always(error == CRA_SER_ERROR_TYPE_MISMATCH);
-    assert_always(calledcnt == 2);
-
-    cra_dealloc(x);
-}
-#endif
-
-void
+static void
 test_list(void)
 {
-    int32_t      idx, val;
-    int32_t     *valptr;
-    CraAList    *alist, *alist2;
-    CraLList     llist;
-    CraDeque     deque;
-    CraAListIter alist_it;
-    CraLListIter llist_it;
-    CraDequeIter deque_it;
-
-    CRA_LLIST_SER_ARGS(args4llist, false, sizeof(int32_t));
-    CRA_DEQUE_SER_ARGS(args4deque, false, CRA_DEQUE_INFINITE, sizeof(int32_t));
-
-    alist = cra_alloc(CraAList);
-    cra_alist_init0(int32_t, alist, true);
-    CRA_TYPE_META_BEGIN(meta_list_val)
-    CRA_TYPE_META_INT32_ELEMENT()
-    CRA_TYPE_META_END();
-    CRA_ALIST_SER_ARGS0(args4alist, alist);
-
-    unsigned char buff[1024];
-    size_t        buffsize;
+    unsigned char buf[1024];
+    size_t        bufsize;
     CraSerError_e error;
+    bool          b;
 
-    // test empty
-
-    buffsize = sizeof(buff);
-    cra_bin_serialize_list0(buff, &buffsize, alist, meta_list_val, CRA_ALIST_SER_ITER_I, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-    cra_bin_serialize_print(buff, buffsize);
-
-    cra_bin_deserialize_list0(buff,
-                              buffsize,
-                              &alist2,
-                              sizeof(CraAList),
-                              true,
-                              meta_list_val,
-                              CRA_ALIST_SER_ITER_I,
-                              CRA_ALIST_SER_INIT_I,
-                              &args4alist,
-                              &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-    cra_alist_uninit(alist2);
-    cra_dealloc(alist2);
-
-    // add vals
-    for (int i = 0; i < 10; i++)
-        cra_alist_append(alist, &i);
-
-    buffsize = sizeof(buff);
-    cra_bin_serialize_list0(buff, &buffsize, alist, meta_list_val, CRA_ALIST_SER_ITER_I, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-
-    cra_bin_serialize_print(buff, buffsize);
-
-    // alist -> alist
-    cra_bin_deserialize_list0(buff,
-                              buffsize,
-                              &alist2,
-                              sizeof(CraAList),
-                              true,
-                              meta_list_val,
-                              CRA_ALIST_SER_ITER_I,
-                              CRA_ALIST_SER_INIT_I,
-                              &args4alist,
-                              &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-    idx = 0;
-    for (cra_alist_iter_init(alist2, &alist_it); cra_alist_iter_next(&alist_it, (void **)&valptr); idx++)
+    struct LS
     {
-        cra_alist_get(alist, idx, &val);
-        assert_always(val == *valptr);
-    }
+        uint32_t  ni32array;
+        int32_t   i32array[10]; // array<int32_t>
+        uint32_t  nbarray;
+        bool     *barray; // array<bool>
+        CraAList  alist;  // list<int32_t>
+        CraLList *llist;  // list<bool>
+        CraDeque *deque;  // deque<uint64_t>
 
-    // alist -> llist
-    cra_bin_deserialize_list0(buff,
-                              buffsize,
-                              &llist,
-                              sizeof(CraLList),
-                              false,
-                              meta_list_val,
-                              CRA_LLIST_SER_ITER_I,
-                              CRA_LLIST_SER_INIT_I,
-                              &args4llist,
-                              &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-    idx = 0;
-    for (cra_llist_iter_init(&llist, &llist_it); cra_llist_iter_next(&llist_it, (void **)&valptr); idx++)
-    {
-        cra_alist_get(alist, idx, &val);
-        assert_always(val == *valptr);
-    }
+        uint16_t  narrayempty1;
+        uint16_t  narrayempty2;
+        int32_t   arrayempty1[10];
+        int32_t  *arrayempty2;
+        CraAList  alistempty1;
+        CraAList *alistempty2;
+        CraLList  llistempty1;
+        CraLList *llistempty2;
+        CraDeque  dequeempty1;
+        CraDeque *dequeempty2;
 
-    // alist -> deque
-    cra_bin_deserialize_list0(buff,
-                              buffsize,
-                              &deque,
-                              sizeof(CraDeque),
-                              false,
-                              meta_list_val,
-                              CRA_DEQUE_SER_ITER_I,
-                              CRA_DEQUE_SER_INIT_I,
-                              &args4deque,
-                              &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-    idx = 0;
-    for (cra_deque_iter_init(&deque, &deque_it); cra_deque_iter_next(&deque_it, (void **)&valptr); idx++)
-    {
-        cra_alist_get(alist, idx, &val);
-        assert_always(val == *valptr);
-    }
-
-    // alist -> c array
-    int32_t        *array;
-    cra_ser_count_t narray;
-    cra_bin_deserialize_array0(buff, buffsize, &array, sizeof(array), true, &narray, meta_list_val, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-    assert_always(narray == alist->count);
-    for (idx = 0; idx < (int32_t)narray; idx++)
-    {
-        cra_alist_get(alist, idx, &val);
-        assert_always(val == array[idx]);
-    }
-
-    cra_alist_uninit(alist);
-    cra_dealloc(alist);
-    cra_alist_uninit(alist2);
-    cra_dealloc(alist2);
-    cra_llist_uninit(&llist);
-    cra_deque_uninit(&deque);
-    cra_free(array);
-}
-
-void
-free_str_p(char **strp)
-{
-    cra_free(*strp);
-}
-
-void
-test_list_element_is_pointer(void)
-{
-    CraAList list;
-    cra_alist_init0(char *, &list, true);
-    CRA_ALIST_SER_ARGS0(args4list_str, &list);
-    CRA_TYPE_META_BEGIN(meta_list_str)
-    CRA_TYPE_META_STRING_ELEMENT(0, true)
-    CRA_TYPE_META_END();
-
-    char *str;
-    for (int i = 0; i < 10; i++)
-    {
-        str = cra_malloc(10);
-        assert_always(str != NULL);
-#ifdef CRA_COMPILER_MSVC
-        sprintf_s(str, 10, "hello %d", i);
-#else
-        sprintf(str, "hello %d", i);
-#endif
-        cra_alist_append(&list, &str);
-    }
-
-    unsigned char buff[1024];
-    size_t        buffsize;
-    CraSerError_e error;
-
-    buffsize = sizeof(buff);
-    cra_bin_serialize_list0(buff, &buffsize, &list, meta_list_str, CRA_ALIST_SER_ITER_I, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-    cra_bin_serialize_print(buff, buffsize);
-
-    CraAList list2;
-    cra_bin_deserialize_list0(buff,
-                              buffsize,
-                              &list2,
-                              sizeof(CraAList),
-                              false,
-                              meta_list_str,
-                              CRA_ALIST_SER_ITER_I,
-                              CRA_ALIST_SER_INIT_I,
-                              &args4list_str,
-                              &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-    for (int i = 0; i < 10; i++)
-    {
-        char *retstr1, *retstr2;
-        cra_alist_get(&list, i, &retstr1);
-        cra_alist_get(&list2, i, &retstr2);
-        assert_always(strcmp(retstr1, retstr2) == 0);
-    }
-    CraAListIter it;
-    char       **strptr;
-    for (cra_alist_iter_init(&list2, &it); cra_alist_iter_next(&it, (void **)&strptr);)
-        cra_free(*strptr);
-    cra_alist_uninit(&list2);
-
-    // test failed to call uninit func
-    CraSerializer ser;
-    cra_bin_deserialize_begin(&ser, buff, buffsize);
-    cra_bin_deserialize_list(
-      &ser, &list2, sizeof(CraAList), false, meta_list_str, CRA_ALIST_SER_ITER_I, CRA_ALIST_SER_INIT_I, &args4list_str);
-    assert_always(list2.count == list.count);
-    ser.error = CRA_SER_ERROR_TYPE_MISMATCH;
-    cra_bin_deserialize_end(&ser, &error); // list2 will be free
-    assert_always(error == CRA_SER_ERROR_TYPE_MISMATCH);
-
-    for (cra_alist_iter_init(&list, &it); cra_alist_iter_next(&it, (void **)&strptr);)
-        cra_free(*strptr);
-    cra_alist_uninit(&list);
-}
-
-void
-test_array(void)
-{
-    int32_t         array[] = { 1, 2, 3, 4 };
-    cra_ser_count_t narray = sizeof(array) / sizeof(array[0]);
-    CRA_TYPE_META_BEGIN(meta_int32)
-    CRA_TYPE_META_INT32_ELEMENT()
-    CRA_TYPE_META_END();
-
-    CraSerError_e error;
-    unsigned char buff[1024];
-    size_t        buffsize;
-
-    buffsize = sizeof(buff);
-    cra_bin_serialize_array0(buff, &buffsize, array, narray, meta_int32, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-    cra_bin_serialize_print(buff, buffsize);
-
-    int32_t        *array2;
-    cra_ser_count_t narray2;
-    cra_bin_deserialize_array0(buff, buffsize, &array2, 0, true, &narray2, meta_int32, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-    assert_always(narray == narray2);
-    for (cra_ser_count_t i = 0; i < narray; i++)
-    {
-        assert_always(array[i] == array2[i]);
-    }
-    cra_free(array2);
-
-    int32_t         array3[10];
-    cra_ser_count_t narray3;
-    cra_bin_deserialize_array0(buff, buffsize, array3, sizeof(array3), false, &narray3, meta_int32, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-    assert_always(narray == narray3);
-    for (cra_ser_count_t i = 0; i < narray; i++)
-    {
-        assert_always(array[i] == array3[i]);
-    }
-
-    // c array -> list
-    int32_t   val;
-    CraAList *list;
-    CRA_ALIST_SER_ARGS(args_list_i, true, sizeof(int32_t));
-    cra_bin_deserialize_list0(buff,
-                              buffsize,
-                              &list,
-                              sizeof(*list),
-                              true,
-                              meta_int32,
-                              CRA_ALIST_SER_ITER_I,
-                              CRA_ALIST_SER_INIT_I,
-                              &args_list_i,
-                              &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-    assert_always(narray == list->count);
-    for (cra_ser_count_t i = 0; i < narray; i++)
-    {
-        cra_alist_get(list, i, &val);
-        assert_always(array[i] == val);
-    }
-    cra_alist_uninit(list);
-    cra_dealloc(list);
-}
-
-void
-test_array_in_struct(void)
-{
-    struct A
-    {
-        cra_ser_count_t narray;
-        char          **array;
+        uint32_t  narraynull;
+        int32_t  *arraynull;
+        CraAList *alistnull;
+        CraLList *llistnull;
+        CraDeque *dequenull;
     };
-    CRA_TYPE_META_BEGIN(meta_str)
-    CRA_TYPE_META_STRING_ELEMENT(0, true)
+
+    CRA_TYPE_META_BEGIN(i32_meta)
+    CRA_TYPE_META_ITEM_INT(int32_t)
+    CRA_TYPE_META_END();
+    CRA_TYPE_META_BEGIN(b_meta)
+    CRA_TYPE_META_ITEM_BOOL(bool)
+    CRA_TYPE_META_END();
+    CRA_TYPE_META_BEGIN(u64_meta)
+    CRA_TYPE_META_ITEM_UINT(uint64_t)
     CRA_TYPE_META_END();
 
-    CRA_TYPE_META_BEGIN(meta_a)
-    CRA_TYPE_META_ARRAY_MEMBER(struct A, array, true, meta_str)
+    CRA_TYPE_META_BEGIN(ls_meta)
+    CRA_TYPE_META_MEMBER_ARRAY(struct LS, i32array, false, i32_meta)
+    CRA_TYPE_META_MEMBER_ARRAY(struct LS, barray, true, b_meta)
+    CRA_TYPE_META_MEMBER_LIST(struct LS, alist, false, i32_meta, CRA_ALIST_SZER_I, CRA_ALIST_DZER_I, NULL)
+    CRA_TYPE_META_MEMBER_LIST(struct LS, llist, true, b_meta, CRA_LLIST_SZER_I, CRA_LLIST_DZER_I, NULL)
+    CRA_TYPE_META_MEMBER_LIST(struct LS, deque, true, u64_meta, CRA_DEQUE_SZER_I, CRA_DEQUE_DZER_I, NULL)
+
+    CRA_TYPE_META_MEMBER_ARRAY(struct LS, arrayempty1, false, i32_meta)
+    CRA_TYPE_META_MEMBER_ARRAY(struct LS, arrayempty2, true, i32_meta)
+    CRA_TYPE_META_MEMBER_LIST(struct LS, alistempty1, false, i32_meta, CRA_ALIST_SZER_I, CRA_ALIST_DZER_I, NULL)
+    CRA_TYPE_META_MEMBER_LIST(struct LS, alistempty2, true, i32_meta, CRA_ALIST_SZER_I, CRA_ALIST_DZER_I, NULL)
+    CRA_TYPE_META_MEMBER_LIST(struct LS, llistempty1, false, i32_meta, CRA_LLIST_SZER_I, CRA_LLIST_DZER_I, NULL)
+    CRA_TYPE_META_MEMBER_LIST(struct LS, llistempty2, true, i32_meta, CRA_LLIST_SZER_I, CRA_LLIST_DZER_I, NULL)
+    CRA_TYPE_META_MEMBER_LIST(struct LS, dequeempty1, false, i32_meta, CRA_DEQUE_SZER_I, CRA_DEQUE_DZER_I, NULL)
+    CRA_TYPE_META_MEMBER_LIST(struct LS, dequeempty2, true, i32_meta, CRA_DEQUE_SZER_I, CRA_DEQUE_DZER_I, NULL)
+
+    CRA_TYPE_META_MEMBER_ARRAY(struct LS, arraynull, true, i32_meta)
+    CRA_TYPE_META_MEMBER_LIST(struct LS, alistnull, true, i32_meta, CRA_ALIST_SZER_I, CRA_ALIST_DZER_I, NULL)
+    CRA_TYPE_META_MEMBER_LIST(struct LS, llistnull, true, i32_meta, CRA_LLIST_SZER_I, CRA_LLIST_DZER_I, NULL)
+    CRA_TYPE_META_MEMBER_LIST(struct LS, dequenull, true, i32_meta, CRA_DEQUE_SZER_I, CRA_DEQUE_DZER_I, NULL)
     CRA_TYPE_META_END();
 
-    struct A a;
-    a.narray = 8;
-    a.array = cra_malloc(sizeof(char *) * a.narray);
-    for (cra_ser_count_t i = 0; i < a.narray; i++)
+    struct LS ls;
+    ls.ni32array = 8;
+    ls.nbarray = 20;
+    ls.barray = cra_malloc(sizeof(ls.barray[0]) * ls.nbarray);
+    ls.llist = cra_alloc(CraLList);
+    ls.deque = cra_alloc(CraDeque);
+    ls.narrayempty1 = 0;
+    ls.narrayempty2 = 0;
+    ls.arrayempty2 = cra_malloc(sizeof(ls.arrayempty2[0]) * 8);
+    ls.alistempty2 = cra_alloc(CraAList);
+    ls.llistempty2 = cra_alloc(CraLList);
+    ls.dequeempty2 = cra_alloc(CraDeque);
+    cra_alist_init0(int32_t, &ls.alist, false);
+    cra_llist_init0(bool, ls.llist, false);
+    cra_deque_init0(uint64_t, ls.deque, CRA_DEQUE_INFINITE, false);
+    bzero(ls.arrayempty1, sizeof(ls.arrayempty1));
+    bzero(ls.arrayempty2, sizeof(ls.arrayempty2[0]) * 8);
+    cra_alist_init0(int32_t, &ls.alistempty1, false);
+    cra_alist_init0(int32_t, ls.alistempty2, false);
+    cra_llist_init0(int32_t, &ls.llistempty1, false);
+    cra_llist_init0(int32_t, ls.llistempty2, false);
+    cra_deque_init0(int32_t, &ls.dequeempty1, CRA_DEQUE_INFINITE, false);
+    cra_deque_init0(int32_t, ls.dequeempty2, CRA_DEQUE_INFINITE, false);
+    ls.narraynull = 0;
+    ls.arraynull = NULL;
+    ls.alistnull = NULL;
+    ls.llistnull = NULL;
+    ls.dequenull = NULL;
+    for (int i = 0; i < 30; i++)
     {
-        char *str = cra_malloc(10);
-        assert_always(str != NULL);
-#ifdef CRA_COMPILER_MSVC
-        sprintf_s(str, 10, "hello %d", i);
-#else
-        sprintf(str, "hello %d", i);
-#endif
-        a.array[i] = str;
+        if ((uint32_t)i < ls.ni32array)
+            ls.i32array[i] = i * 32;
+        if ((uint32_t)i < ls.nbarray)
+            ls.barray[i] = i % 2 == 0;
+        if (i < 15)
+            cra_alist_append(&ls.alist, &(int32_t){ i - 18 });
+        cra_llist_append(ls.llist, &(bool){ i % 7 == 0 });
+        cra_deque_push(ls.deque, &(uint64_t){ i * 80 });
     }
 
-    CraSerError_e error;
-    unsigned char buff[1024];
-    size_t        buffsize;
+    bufsize = sizeof(buf);
+    cra_bin_serialize_struct(buf, &bufsize, &ls, ls_meta, &error, 57864);
+    assert_always(!error);
 
-    buffsize = sizeof(buff);
-    cra_bin_serialize_struct0(buff, &buffsize, &a, meta_a, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-    cra_bin_serialize_print(buff, buffsize);
-
-    struct A *aa;
-    cra_bin_deserialize_struct0(buff, buffsize, &aa, sizeof(struct A), true, meta_a, NULL, NULL, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-    assert_always(a.narray == aa->narray);
-    for (cra_ser_count_t i = 0; i < a.narray; i++)
+    struct LS rls;
+    b = cra_bin_deserialize_struct(buf, bufsize, &rls, sizeof(struct LS), false, ls_meta, &error, 57864);
+    assert_always(b && !error);
+    assert_always(ls.ni32array == rls.ni32array);
+    assert_always(ls.nbarray == rls.nbarray);
+    assert_always(ls.alist.count == rls.alist.count);
+    assert_always(ls.llist->count == rls.llist->count);
+    assert_always(ls.deque->count == rls.deque->count);
+    assert_always(ls.narrayempty1 == rls.narrayempty1);
+    assert_always(ls.narrayempty2 == rls.narrayempty2);
+    assert_always(ls.alistempty1.count == rls.alistempty1.count);
+    assert_always(ls.alistempty2->count == rls.alistempty2->count);
+    assert_always(ls.llistempty1.count == rls.llistempty1.count);
+    assert_always(ls.llistempty2->count == rls.llistempty2->count);
+    assert_always(ls.dequeempty1.count == rls.dequeempty1.count);
+    assert_always(ls.dequeempty2->count == rls.dequeempty2->count);
+    assert_always(ls.narraynull == rls.narraynull);
+    assert_always(ls.arraynull == rls.arraynull);
+    assert_always(ls.alistnull == rls.alistnull);
+    assert_always(ls.llistnull == rls.llistnull);
+    assert_always(ls.dequenull == rls.dequenull);
+    for (uint32_t i = 0; i < ls.ni32array; i++)
     {
-        assert_always(strcmp(a.array[i], aa->array[i]) == 0);
-        cra_free(a.array[i]);
-        cra_free(aa->array[i]);
+        assert_always(ls.i32array[i] == rls.i32array[i]);
     }
-    cra_free(a.array);
-    cra_free(aa->array);
-    cra_free(aa);
+    for (uint32_t i = 0; i < ls.nbarray; i++)
+    {
+        assert_always(ls.barray[i] == rls.barray[i]);
+    }
+    int32_t i321, i322;
+    for (size_t i = 0; i < ls.alist.count; i++)
+    {
+        cra_alist_get(&ls.alist, i, &i321);
+        cra_alist_get(&rls.alist, i, &i322);
+        assert_always(i321 == i322);
+    }
+    bool b1, b2;
+    for (size_t i = 0; i < ls.llist->count; i++)
+    {
+        cra_llist_get(ls.llist, i, &b1);
+        cra_llist_get(rls.llist, i, &b2);
+        assert_always(b1 == b2);
+    }
+    uint64_t u641, u642;
+    for (size_t i = 0; i < ls.deque->count; i++)
+    {
+        cra_deque_get(ls.deque, i, &u641);
+        cra_deque_get(rls.deque, i, &u642);
+        assert_always(u641 == u642);
+    }
+
+    cra_free(ls.barray);
+    cra_free(rls.barray);
+    cra_alist_uninit(&ls.alist);
+    cra_alist_uninit(&rls.alist);
+    cra_llist_uninit(ls.llist);
+    cra_llist_uninit(rls.llist);
+    cra_dealloc(ls.llist);
+    cra_dealloc(rls.llist);
+    cra_deque_uninit(ls.deque);
+    cra_deque_uninit(rls.deque);
+    cra_dealloc(ls.deque);
+    cra_dealloc(rls.deque);
+    cra_free(ls.arrayempty2);
+    cra_free(rls.arrayempty2);
+    cra_alist_uninit(&ls.alistempty1);
+    cra_alist_uninit(&rls.alistempty1);
+    cra_alist_uninit(ls.alistempty2);
+    cra_alist_uninit(rls.alistempty2);
+    cra_dealloc(ls.alistempty2);
+    cra_dealloc(rls.alistempty2);
+    cra_llist_uninit(&ls.llistempty1);
+    cra_llist_uninit(&rls.llistempty1);
+    cra_llist_uninit(ls.llistempty2);
+    cra_llist_uninit(rls.llistempty2);
+    cra_dealloc(ls.llistempty2);
+    cra_dealloc(rls.llistempty2);
+    cra_deque_uninit(&ls.dequeempty1);
+    cra_deque_uninit(&rls.dequeempty1);
+    cra_deque_uninit(ls.dequeempty2);
+    cra_deque_uninit(rls.dequeempty2);
+    cra_dealloc(ls.dequeempty2);
+    cra_dealloc(rls.dequeempty2);
 }
 
-void
+static void
 test_dict(void)
 {
-    CraDict       dict;
-    CraDict      *dict2;
-    unsigned char buff[1024];
-    size_t        buffsize;
+    unsigned char buf[1024];
+    size_t        bufsize;
     CraSerError_e error;
+    bool          b;
 
-    CRA_DICT_SER_ARGS(args4dict,
-                      false,
-                      sizeof(int32_t),
-                      sizeof(char[100]),
-                      (cra_hash_fn)cra_hash_int32_t_p,
-                      (cra_compare_fn)cra_compare_int_p);
-    CRA_TYPE_META_BEGIN(meta_dict_kv)
-    CRA_TYPE_META_INT32_ELEMENT()                          // key
-    CRA_TYPE_META_STRING_ELEMENT(sizeof(char[100]), false) // val
-    CRA_TYPE_META_END();
-
-    // serialize dict
-    cra_dict_init0(
-      int32_t, char[100], &dict, true, (cra_hash_fn)cra_hash_int32_t_p, (cra_compare_fn)cra_compare_int32_t_p);
-
-    // test empty
-
-    buffsize = sizeof(buff);
-    cra_bin_serialize_dict0(buff, &buffsize, &dict, meta_dict_kv, CRA_DICT_SER_ITER_I, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-    cra_bin_serialize_print(buff, buffsize);
-
-    cra_bin_deserialize_dict0(buff,
-                              buffsize,
-                              &dict2,
-                              sizeof(CraDict),
-                              true,
-                              meta_dict_kv,
-                              CRA_DICT_SER_ITER_I,
-                              CRA_DICT_SER_INIT_I,
-                              &args4dict,
-                              &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-    cra_dict_uninit(dict2);
-    cra_dealloc(dict2);
-
-    char cval[] = "hello x";
-    for (int32_t i = 0; i < 10; i++)
+    struct DS
     {
-        cval[6] = '0' + (char)i;
-        cra_dict_add(&dict, &i, &cval);
-    }
-
-    buffsize = sizeof(buff);
-    cra_bin_serialize_dict0(buff, &buffsize, &dict, meta_dict_kv, CRA_DICT_SER_ITER_I, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-    cra_bin_serialize_print(buff, buffsize);
-
-    // dict -> dict
-    cra_bin_deserialize_dict0(buff,
-                              buffsize,
-                              &dict2,
-                              sizeof(CraDict),
-                              true,
-                              meta_dict_kv,
-                              CRA_DICT_SER_ITER_I,
-                              CRA_DICT_SER_INIT_I,
-                              &args4dict,
-                              &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-
-    char strv1[100];
-    char strv2[100];
-    for (int32_t i = 0; i < 10; i++)
-    {
-        cra_dict_get(&dict, &i, &strv1);
-        cra_dict_get(dict2, &i, &strv2);
-        assert_always(strcmp(strv1, strv2) == 0);
-    }
-
-    cra_dict_uninit(&dict);
-    cra_dict_uninit(dict2);
-    cra_dealloc(dict2);
-}
-
-void
-test_dict_in_struct(void)
-{
-    CRA_DICT_SER_ARGS(args4dict_i_d,
-                      false,
-                      sizeof(int32_t),
-                      sizeof(double),
-                      (cra_hash_fn)cra_hash_int32_t_p,
-                      (cra_compare_fn)cra_compare_int32_t_p);
-    CRA_UNUSED_VALUE(args4dict_i_d);
-    CRA_TYPE_META_BEGIN(meta_dict_i_d)
-    CRA_TYPE_META_INT32_ELEMENT()  // key
-    CRA_TYPE_META_DOUBLE_ELEMENT() // val
-    CRA_TYPE_META_END();
-
-    struct A
-    {
-        CraDict *dictnull;
-        CraDict *pdict;
-        CraDict  sdict;
+        CraDict  dict;       // dict<int32_t, float>
+        CraDict  dictempty1; // dict<float, uint64_t>
+        CraDict *dictempty2; // dict<int32_t, float>
+        CraDict *dictnull;   // dict<int32_t, float>
     };
-    CRA_TYPE_META_BEGIN(meta_a)
-    CRA_TYPE_META_DICT_MEMBER(
-      struct A, dictnull, true, meta_dict_i_d, CRA_DICT_SER_ITER_I, CRA_DICT_SER_INIT_I, &args4dict_i_d)
-    CRA_TYPE_META_DICT_MEMBER(
-      struct A, pdict, true, meta_dict_i_d, CRA_DICT_SER_ITER_I, CRA_DICT_SER_INIT_I, &args4dict_i_d)
-    CRA_TYPE_META_DICT_MEMBER(
-      struct A, sdict, false, meta_dict_i_d, CRA_DICT_SER_ITER_I, CRA_DICT_SER_INIT_I, &args4dict_i_d)
+
+    CRA_TYPE_META_BEGIN(i32_f_meta)
+    CRA_TYPE_META_ITEM_INT(int32_t)
+    CRA_TYPE_META_ITEM_FLOAT(float)
     CRA_TYPE_META_END();
 
-    unsigned char buff[1024];
-    size_t        buffsize;
-    CraSerError_e error;
+    CRA_TYPE_META_BEGIN(f_u64_meta)
+    CRA_TYPE_META_ITEM_FLOAT(float)
+    CRA_TYPE_META_ITEM_INT(uint64_t)
+    CRA_TYPE_META_END();
 
-    int32_t  key;
-    double   val;
-    struct A a;
-    a.dictnull = NULL;
-    a.pdict = cra_alloc(CraDict);
-    cra_dict_init0(
-      int32_t, double, a.pdict, args4dict_i_d.zero_memory, args4dict_i_d.hash_key_fn, args4dict_i_d.compare_key_fn);
-    cra_dict_init0(
-      int32_t, double, &a.sdict, args4dict_i_d.zero_memory, args4dict_i_d.hash_key_fn, args4dict_i_d.compare_key_fn);
-    for (int i = 0; i < 10; i++)
+    const CraDictDzerArg key_i32_fns = {
+        .hash = (cra_hash_fn)cra_hash_int32_t_p,
+        .compare = (cra_compare_fn)cra_compare_int32_t_p,
+    };
+    const CraDictDzerArg key_flt_fns = {
+        .hash = (cra_hash_fn)cra_hash_float_p,
+        .compare = (cra_compare_fn)cra_compare_float_p,
+    };
+
+    CRA_TYPE_META_BEGIN(ds_meta)
+    CRA_TYPE_META_MEMBER_DICT(struct DS, dict, false, i32_f_meta, CRA_DICT_SZER_I, CRA_DICT_DZER_I, &key_i32_fns)
+    CRA_TYPE_META_MEMBER_DICT(struct DS, dictempty1, false, f_u64_meta, CRA_DICT_SZER_I, CRA_DICT_DZER_I, &key_flt_fns)
+    CRA_TYPE_META_MEMBER_DICT(struct DS, dictempty2, true, i32_f_meta, CRA_DICT_SZER_I, CRA_DICT_DZER_I, &key_i32_fns)
+    CRA_TYPE_META_MEMBER_DICT(struct DS, dictnull, true, i32_f_meta, CRA_DICT_SZER_I, CRA_DICT_DZER_I, &key_i32_fns)
+    CRA_TYPE_META_END();
+
+    struct DS ds;
+    cra_dict_init0(int32_t, float, &ds.dict, false, key_i32_fns.hash, key_i32_fns.compare);
+    cra_dict_init0(float, uint64_t, &ds.dictempty1, false, key_flt_fns.hash, key_flt_fns.compare);
+    ds.dictempty2 = cra_alloc(CraDict);
+    cra_dict_init0(int32_t, float, ds.dictempty2, false, key_i32_fns.hash, key_i32_fns.compare);
+    ds.dictnull = NULL;
+    for (int i = 0; i < 40; i++)
     {
-        key = rand();
-        val = key * 2.5;
-        cra_dict_add(a.pdict, &key, &val);
-        val = key * 1.5;
-        cra_dict_add(&a.sdict, &key, &val);
+        cra_dict_put0(&ds.dict, &(int32_t){ i }, &(float){ i + 89.5f });
     }
 
-    buffsize = sizeof(buff);
-    cra_bin_serialize_struct0(buff, &buffsize, &a, meta_a, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-    cra_bin_serialize_print(buff, buffsize);
+    bufsize = sizeof(buf);
+    cra_bin_serialize_struct(buf, &bufsize, &ds, ds_meta, &error, 12345);
+    assert_always(!error);
 
-    struct A aa;
-    cra_bin_deserialize_struct0(buff, buffsize, &aa, sizeof(struct A), false, meta_a, NULL, NULL, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-
-    CraDictIter it;
-    int32_t    *rkey;
-    double     *rval, rval1, rval2;
-
-    cra_dict_iter_init(a.pdict, &it);
-    while (cra_dict_iter_next(&it, (void **)&rkey, (void **)&rval))
+    struct DS rds;
+    b = cra_bin_deserialize_struct(buf, bufsize, &rds, sizeof(struct DS), false, ds_meta, &error, 12345);
+    assert_always(b && !error);
+    assert_always(ds.dict.count == rds.dict.count);
+    assert_always(ds.dictempty1.count == rds.dictempty1.count);
+    assert_always(ds.dictempty2->count == rds.dictempty2->count);
+    assert_always(ds.dictnull == rds.dictnull);
+    for (size_t i = 0; i < (size_t)ds.dict.count; i++)
     {
-        cra_dict_get(aa.pdict, rkey, &rval1);
-        assert_always(*rval == rval1);
-
-        cra_dict_get(&a.sdict, rkey, &rval1);
-        cra_dict_get(&aa.sdict, rkey, &rval2);
-        assert_always(rval1 == rval2);
+        float v1, v2;
+        cra_dict_get(&ds.dict, &i, &v1);
+        cra_dict_get(&rds.dict, &i, &v2);
+        assert_always(cra_compare_float(v1, v2) == 0);
     }
 
-    cra_dict_uninit(&a.sdict);
-    cra_dict_uninit(a.pdict);
-    cra_dealloc(a.pdict);
-    cra_dict_uninit(&aa.sdict);
-    cra_dict_uninit(aa.pdict);
-    cra_dealloc(aa.pdict);
+    cra_dict_uninit(&ds.dict);
+    cra_dict_uninit(&rds.dict);
+    cra_dict_uninit(&ds.dictempty1);
+    cra_dict_uninit(&rds.dictempty1);
+    cra_dict_uninit(ds.dictempty2);
+    cra_dict_uninit(rds.dictempty2);
+    cra_dealloc(ds.dictempty2);
+    cra_dealloc(rds.dictempty2);
 }
 
-#if 1 // 测试结构字段数不同
+#if 1
 
-struct Old
+struct MyOld
 {
-    int32_t i;
-    char   *str;
+    int   i;
+    char *str;
 };
-CRA_TYPE_META_BEGIN(meta_old)
-CRA_TYPE_META_INT32_MEMBER(struct Old, i)
-CRA_TYPE_META_STRING_MEMBER(struct Old, str, true)
-CRA_TYPE_META_END();
-struct New
-{
-    float   f; // 新字段在结构中位置随意
-    int32_t i;
-    char   *str;
-};
-CRA_TYPE_META_BEGIN(meta_new)
-CRA_TYPE_META_INT32_MEMBER(struct New, i)
-CRA_TYPE_META_STRING_MEMBER(struct New, str, true)
-CRA_TYPE_META_FLOAT_MEMBER(struct New, f) // 保证新的字段的meta在旧的meta后面
+CRA_TYPE_META_BEGIN(old_meta)
+CRA_TYPE_META_MEMBER_INT(struct MyOld, i)
+CRA_TYPE_META_MEMBER_STRING(struct MyOld, str, true)
 CRA_TYPE_META_END();
 
-void
-test_new2old(void)
+struct MyNew
 {
-    unsigned char buff[1024];
-    size_t        buffsize;
+    int   i;
+    float f;
+    char *str;
+    char  arr[10];
+};
+CRA_TYPE_META_BEGIN(new_meta)
+CRA_TYPE_META_MEMBER_INT(struct MyNew, i)
+CRA_TYPE_META_MEMBER_STRING(struct MyNew, str, true)
+// 保证新旧版本的都有的字段的meta在定义中位置不变:
+//      共有的在前保持位置一致
+//      新增的在后
+CRA_TYPE_META_MEMBER_FLOAT(struct MyNew, f)
+CRA_TYPE_META_MEMBER_STRING(struct MyNew, arr, false)
+CRA_TYPE_META_END();
+
+static void
+set_default_val_to_new(void *obj, size_t count, size_t element_size, const void *arg)
+{
+    CRA_UNUSED_VALUE(arg);
+    CRA_UNUSED_VALUE(count);
+    CRA_UNUSED_VALUE(element_size);
+    assert(element_size == sizeof(struct MyNew));
+
+    struct MyNew *n = (struct MyNew *)obj;
+    n->i = 1000;
+    n->f = 78.2f;
+    n->str = NULL;
+    memcpy(n->arr, "OK!", sizeof("OK!"));
+}
+
+static const CraDzer_i my_new_dzer_i = {
+    .init1 = set_default_val_to_new,
+};
+
+static void
+test_old_to_new(void)
+{
+    unsigned char buf[1024];
+    size_t        bufsize;
     CraSerError_e error;
+    bool          b;
 
-    struct New n = { 1.5f, 100, "hello world" };
-    buffsize = sizeof(buff);
-    cra_bin_serialize_struct0(buff, &buffsize, &n, meta_new, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
+    bufsize = sizeof(buf);
+    struct MyOld o = { .i = 100, .str = "hello world!" };
+    cra_bin_serialize_struct(buf, &bufsize, &o, old_meta, &error, 0x87654321);
+    assert_always(!error);
 
-    cra_bin_serialize_print(buff, buffsize);
+    struct MyNew n;
+    b = cra_bin_deserialize_struct_with_dzer_i(
+      buf, bufsize, &n, sizeof(n), false, new_meta, &my_new_dzer_i, NULL, &error, 0x87654321);
+    assert_always(b && !error);
+    assert_always(o.i == n.i);
+    assert_always(strcmp(o.str, n.str) == 0);
+    assert_always(cra_compare_float(n.f, 78.2f) == 0); // default value, from `set_default_val_to_new()`
+    assert_always(strcmp(n.arr, "OK!") == 0);          // default value, from `set_default_val_to_new()`
 
-    struct Old o;
-    cra_bin_deserialize_struct0(buff, buffsize, &o, sizeof(o), false, meta_old, NULL, NULL, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
+    cra_free(n.str);
+}
+
+static void
+test_new_to_old(void)
+{
+    unsigned char buf[1024];
+    size_t        bufsize;
+    CraSerError_e error;
+    bool          b;
+
+    bufsize = sizeof(buf);
+    struct MyNew n = { .i = 300, .str = "good~~~~", .arr = "ABCE", .f = 128.34f };
+    cra_bin_serialize_struct(buf, &bufsize, &n, new_meta, &error, 0x87654321);
+    assert_always(!error);
+
+    struct MyOld o;
+    b = cra_bin_deserialize_struct(buf, bufsize, &o, sizeof(o), false, old_meta, &error, 0x87654321);
+    assert_always(b && !error);
     assert_always(o.i == n.i);
     assert_always(strcmp(o.str, n.str) == 0);
 
     cra_free(o.str);
-}
-
-// 设置缺省值
-static void
-init_new(struct New *n, void *ignore)
-{
-    CRA_UNUSED_VALUE(ignore);
-    n->f = 2.8f;
-    n->i = 200;
-    n->str = NULL;
-}
-
-void
-test_old2new(void)
-{
-    unsigned char buff[1024];
-    size_t        buffsize;
-    CraSerError_e error;
-
-    struct Old o = { 100, "hello world" };
-    buffsize = sizeof(buff);
-    cra_bin_serialize_struct0(buff, &buffsize, &o, meta_old, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-
-    cra_bin_serialize_print(buff, buffsize);
-
-    struct New          n;
-    const CraTypeInit_i init_i = { true, (void (*)(void *, void *))init_new, 0 };
-    cra_bin_deserialize_struct0(buff, buffsize, &n, sizeof(n), false, meta_new, &init_i, NULL, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-    assert_always(o.i == n.i);
-    assert_always(strcmp(o.str, n.str) == 0);
-    assert_always(cra_compare_float(n.f, 2.8f) == 0);
-
-    cra_free(n.str);
 }
 
 #endif
@@ -1376,21 +1025,19 @@ test_old2new(void)
 int
 main(void)
 {
-    test_begin_end();
-    test_base();
+    test_boolean();
+    test_int();
+    test_uint();
+    test_varint();
+    test_varuint();
+    test_float();
     test_string();
-    test_string_nz();
-    test_struct_base();
-    test_struct_struct();
-    test_struct_with_init_i();
+    test_bytes();
+    test_struct();
     test_list();
-    test_list_element_is_pointer();
-    test_array();
-    test_array_in_struct();
     test_dict();
-    test_dict_in_struct();
-    test_new2old();
-    test_old2new();
+    test_old_to_new();
+    test_new_to_old();
 
     cra_memory_leak_report();
     return 0;

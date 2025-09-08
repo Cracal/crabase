@@ -108,23 +108,9 @@ cra_deque_clone(CraDeque *deque, cra_deep_copy_val_fn deep_copy_val);
 
 // =================
 
-typedef struct _CraDequeSerInitArgs
-{
-    bool   zero_memory;
-    size_t que_max;
-    size_t element_size;
-} CraDequeSerInitArgs;
-
-CRA_API const CraTypeIter_i __g_deque_ser_iter_i;
-CRA_API const CraTypeInit_i __g_deque_ser_init_i;
-
-#define CRA_DEQUE_SER_ITER_I (&__g_deque_ser_iter_i)
-#define CRA_DEQUE_SER_INIT_I (&__g_deque_ser_init_i)
-
-#define CRA_DEQUE_SER_ARGS(_name, _zero_memory, _que_max, _element_size)  \
-    CraDequeSerInitArgs _name = { _zero_memory, _que_max, _element_size }
-#define CRA_DEQUE_SER_ARGS0(_name, _initialized_deque)                                                         \
-    CRA_DEQUE_SER_ARGS(                                                                                        \
-      _name, (_initialized_deque)->zero_memory, (_initialized_deque)->que_max, (_initialized_deque)->ele_size)
+CRA_API const CraSzer_i __g_cra_deque_szer_i;
+CRA_API const CraDzer_i __g_cra_deque_dzer_i;
+#define CRA_DEQUE_SZER_I (&__g_cra_deque_szer_i)
+#define CRA_DEQUE_DZER_I (&__g_cra_deque_dzer_i)
 
 #endif

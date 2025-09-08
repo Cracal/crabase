@@ -103,29 +103,15 @@ cra_dict_clone(CraDict *dict, cra_deep_copy_val_fn deep_copy_key, cra_deep_copy_
 
 // =========
 
-typedef struct _CraDictSerInitArgs
+typedef struct
 {
-    bool           zero_memory;
-    size_t         key_size;
-    size_t         val_size;
-    cra_hash_fn    hash_key_fn;
-    cra_compare_fn compare_key_fn;
-} CraDictSerInitArgs;
+    cra_hash_fn    hash;
+    cra_compare_fn compare;
+} CraDictDzerArg;
 
-CRA_API const CraTypeIter_i __g_dict_ser_iter_i;
-CRA_API const CraTypeInit_i __g_dict_ser_init_i;
-
-#define CRA_DICT_SER_ITER_I (&__g_dict_ser_iter_i)
-#define CRA_DICT_SER_INIT_I (&__g_dict_ser_init_i)
-
-#define CRA_DICT_SER_ARGS(_name, _zero_memory, _key_size, _val_size, _hash_key_fn, _cmp_key_fn)  \
-    CraDictSerInitArgs _name = { _zero_memory, _key_size, _val_size, _hash_key_fn, _cmp_key_fn }
-#define CRA_DICT_SER_ARGS0(_name, _initialized_dict)    \
-    CRA_DICT_SER_ARGS(_name,                            \
-                      (_initialized_dict)->zero_memory, \
-                      (_initialized_dict)->key_size,    \
-                      (_initialized_dict)->val_size,    \
-                      (_initialized_dict)->hash_key,    \
-                      (_initialized_dict)->compare_key)
+CRA_API const CraSzer_i __g_cra_dict_szer_i;
+CRA_API const CraDzer_i __g_cra_dict_dzer_i;
+#define CRA_DICT_SZER_I (&__g_cra_dict_szer_i)
+#define CRA_DICT_DZER_I (&__g_cra_dict_dzer_i)
 
 #endif

@@ -399,33 +399,32 @@ fail:
 // =============
 
 static void
-cra_dict_ser_iter_init(void *obj, void *const it, size_t itbufsize)
+cra_dict_szer_iter_init(void *obj, void *it, size_t itsize)
 {
-    CRA_UNUSED_VALUE(itbufsize);
-    assert(sizeof(CraDictIter) <= itbufsize);
+    CRA_UNUSED_VALUE(itsize);
+    assert(sizeof(CraDictIter) <= itsize);
     cra_dict_iter_init((CraDict *)obj, (CraDictIter *)it);
 }
 
 static void
-cra_dict_ser_init(void *obj, void *args)
+cra_dict_dzer_init(void *obj, size_t count, size_t key_size, size_t val_size, const void *arg)
 {
-    assert_always(args != NULL);
-
-    CraDict            *dict = (CraDict *)obj;
-    CraDictSerInitArgs *params = (CraDictSerInitArgs *)args;
-
-    cra_dict_init(
-      dict, params->key_size, params->val_size, params->zero_memory, params->hash_key_fn, params->compare_key_fn);
+    assert(obj);
+    assert(arg);
+    assert(key_size > 0 && val_size > 0);
+    CraDictDzerArg *fn = (CraDictDzerArg *)arg;
+    assert(fn->hash && fn->compare);
+    cra_dict_init_size((CraDict *)obj, key_size, val_size, count, false, fn->hash, fn->compare);
 }
 
-const CraTypeIter_i __g_dict_ser_iter_i = {
-    .dict.init = cra_dict_ser_iter_init,
-    .dict.next = (bool (*)(void *, void **, void **))cra_dict_iter_next,
-    .dict.append = (bool (*)(void *, void *, void *))cra_dict_add,
+const CraSzer_i __g_cra_dict_szer_i = {
+    .get_count = (size_t (*)(void *))cra_dict_get_count,
+    .iter_init = cra_dict_szer_iter_init,
+    .iter_next2 = (bool (*)(void *, void **, void **))cra_dict_iter_next,
 };
 
-const CraTypeInit_i __g_dict_ser_init_i = {
-    .free_members_by_seri = true,
-    .init = cra_dict_ser_init,
+const CraDzer_i __g_cra_dict_dzer_i = {
+    .init2 = cra_dict_dzer_init,
     .uninit = (void (*)(void *))cra_dict_uninit,
+    .append2 = (bool (*)(void *, void *, void *))cra_dict_add,
 };
