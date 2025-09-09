@@ -535,7 +535,7 @@ __cra_bin_serialize_string(CraSerializer *ser, const char *val, const CraTypeMet
     // write type
     *buf = CRA_SER_MAKE_TYPE(CRA_TYPE_STRING, 0);
     // write length
-    length = strnlen(val, SIZE_MAX);
+    length = strnlen(val, SSIZE_MAX);
     if (!__cra_bin_serialize_varuint__(ser, (uint64_t)length))
     {
         ser->error = CRA_SER_ERROR_STRING_LENGTH;

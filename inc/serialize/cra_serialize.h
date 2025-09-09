@@ -276,7 +276,7 @@ struct _CraTypeMeta
 
 #if 1 // for items
 
-#define __CRA_TYPE_META_ITEM_BASE(_TYPE, _size) { false, CRA_TYPE_##_TYPE, 0, _size, 0, 0, 0, 0, 0, 0 },
+#define __CRA_TYPE_META_ITEM_BASE(_TYPE, _size) { false, CRA_TYPE_##_TYPE, 0, _size, 0, 0, 0, 0, 0, 0, 0 },
 // `type`: bool
 #define CRA_TYPE_META_ITEM_BOOL(_type)          __CRA_TYPE_META_ITEM_BASE(BOOL, __CRA_CS1(sizeof(_type), 1))
 // `type`: int8, int16, int32, int64

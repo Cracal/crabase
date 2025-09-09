@@ -292,7 +292,7 @@ __cra_json_stringify_float(CraSerializer *ser, void *val, const CraTypeMeta *met
     }
 
     // write val
-    CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, len + sizeof(""), fabs);
+    CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, len + sizeof(""), false);
     ser->index -= sizeof("");
     memcpy(buf, dblstr, len);
     buf[len] = '\0';
@@ -1284,6 +1284,7 @@ static inline bool
 __cra_json_parse_dict_key(CraSerializer *ser, void *retkey, const CraTypeMeta *meta)
 {
     unsigned char *buf;
+    CRA_UNUSED_VALUE(buf);
     // skip '\"'
     if (meta->type != CRA_TYPE_STRING)
     {
