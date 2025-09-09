@@ -58,7 +58,7 @@ cra_thrdpool_init(CraThrdPool *pool, int threads, size_t task_max)
     pool->threadcnt = 0;
     pool->task_max = task_max;
     cra_blkdeque_init0(CraThrdPoolTask, &pool->task_que, task_max, false);
-    pool->threads = cra_malloc(sizeof(CraThrdPoolWorker) * threads);
+    pool->threads = (CraThrdPoolWorker *)cra_malloc(sizeof(CraThrdPoolWorker) * threads);
 
 #if 1 // create threads
     CraCDL cdl;

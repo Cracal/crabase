@@ -24,7 +24,7 @@ cra_json_stringify_begin(CraSerializer *ser, unsigned char *buffer, size_t buffs
         ser->format = format;
         ser->noalloc = !!buffer;
         ser->length = buffsize;
-        ser->buffer = !!buffer ? buffer : cra_malloc(ser->length);
+        ser->buffer = !!buffer ? buffer : (unsigned char *)cra_malloc(ser->length);
         return true;
     }
     else
@@ -575,7 +575,7 @@ __cra_json_parse_string(CraSerializer *ser, char *retval, const CraTypeMeta *met
     if (meta->is_ptr)
     {
         max_length = len + sizeof("");
-        str = *(unsigned char **)retval = cra_malloc(max_length);
+        str = *(unsigned char **)retval = (unsigned char *)cra_malloc(max_length);
         cra_ser_release_add(&ser->release, str, NULL, cra_free);
     }
     else
@@ -1181,7 +1181,7 @@ __cra_json_parse_list(CraSerializer *ser, void *retval, uint64_t *outcount, cons
         goto ok;
 
     // read elements
-    char *element = cra_malloc(slot_size);
+    char *element = (char *)cra_malloc(slot_size);
     for (; CRA_SERIALIZER_ENOUGH(ser, sizeof("X")); ++i)
     {
         __cra_json_skip_whitespaces(ser);

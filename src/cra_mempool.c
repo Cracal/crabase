@@ -17,7 +17,7 @@ cra_mempool_init(CraMemPool *pool, size_t itemsize, unsigned int count)
     CRA_MEMPOOL_UNLOCK; // init locker
     pool->count = count;
     pool->itemsize = itemsize;
-    pool->memory = cra_malloc(itemsize * count);
+    pool->memory = (unsigned char *)cra_malloc(itemsize * count);
     cra_deque_init0(void *, &pool->stack, CRA_DEQUE_INFINITE, false);
     for (unsigned int i = 0; i < count; ++i)
     {

@@ -40,7 +40,7 @@ test_thread_pool(void)
     assert_always(!!tp);
     cra_thrdpool_init(tp, num_threads, num_items);
 
-    vals = cra_malloc(sizeof(*vals) * num_items);
+    vals = (int *)cra_malloc(sizeof(*vals) * num_items);
     bzero(vals, sizeof(*vals) * num_items);
 
     for (i = 0; i < num_items; i++)
@@ -77,7 +77,7 @@ test_thread_pool2(void)
     // cra_thrdpool_set_discard_policy(tp, CRA_TPTASK_DISCARD_LAST);
     cra_thrdpool_set_discard_policy(tp, CRA_TPTASK_DISCARD_FIRST);
     // cra_thrdpool_set_discard_policy(tp, CRA_TPTASK_DISCARD_SELF);
-    vals = cra_malloc(sizeof(*vals) * num_items);
+    vals = (int *)cra_malloc(sizeof(*vals) * num_items);
     bzero(vals, sizeof(*vals) * num_items);
 
     for (i = 0; i < num_items; i++)
@@ -116,7 +116,7 @@ test_thread_pool3(void)
     tp = cra_alloc(CraThrdPool);
     cra_thrdpool_init(tp, num_threads, num_items);
     cra_thrdpool_set_discard_policy(tp, CRA_TPTASK_DISCARD_FIRST);
-    vals = cra_malloc(sizeof(*vals) * num_items);
+    vals = (int *)cra_malloc(sizeof(*vals) * num_items);
     bzero(vals, sizeof(*vals) * num_items);
 
     for (i = 0; i < num_items; i++)

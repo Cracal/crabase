@@ -709,12 +709,12 @@ test_list(void)
     struct LS ls;
     ls.ni32array = 8;
     ls.nbarray = 20;
-    ls.barray = cra_malloc(sizeof(ls.barray[0]) * ls.nbarray);
+    ls.barray = (bool *)cra_malloc(sizeof(ls.barray[0]) * ls.nbarray);
     ls.llist = cra_alloc(CraLList);
     ls.deque = cra_alloc(CraDeque);
     ls.narrayempty1 = 0;
     ls.narrayempty2 = 0;
-    ls.arrayempty2 = cra_malloc(sizeof(ls.arrayempty2[0]) * 8);
+    ls.arrayempty2 = (int32_t *)cra_malloc(sizeof(ls.arrayempty2[0]) * 8);
     ls.alistempty2 = cra_alloc(CraAList);
     ls.llistempty2 = cra_alloc(CraLList);
     ls.dequeempty2 = cra_alloc(CraDeque);

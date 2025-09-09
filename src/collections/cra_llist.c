@@ -15,7 +15,7 @@
 static inline CraLListNode *
 __cra_llist_create_node(size_t element_size)
 {
-    return cra_malloc(sizeof(CraLListNode) + element_size);
+    return (CraLListNode *)cra_malloc(sizeof(CraLListNode) + element_size);
 }
 
 static inline void

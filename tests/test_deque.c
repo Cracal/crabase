@@ -363,7 +363,7 @@ static void
 copy_as(const void *from, void *to)
 {
     A_s *v = *(A_s **)from;
-    A_s *ret = cra_malloc(sizeof(A_s));
+    A_s *ret = (A_s *)cra_malloc(sizeof(A_s));
     ret->i = v->i;
     ret->f = v->f;
     *(void **)to = ret;
@@ -412,7 +412,7 @@ test_clone(void)
     A_s *as;
     for (int i = 0; i < 1000; i++)
     {
-        as = cra_malloc(sizeof(A_s));
+        as = (A_s *)cra_malloc(sizeof(A_s));
         as->i = i + 1;
         as->f = i + 1.5f;
         cra_deque_push(deque, &as);

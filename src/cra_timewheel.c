@@ -75,7 +75,7 @@ __cra_timewheel_init(CraTimewheel *wheel, uint32_t tick_ms, uint32_t wheel_size,
     wheel->tick_ms = tick_ms;
     wheel->current = 0;
     wheel->wheel_size = wheel_size;
-    wheel->wheel_buckets = cra_calloc(wheel->wheel_size, sizeof(CraLList *));
+    wheel->wheel_buckets = (CraLList **)cra_calloc(wheel->wheel_size, sizeof(CraLList *));
     wheel->freenodelist = freenodelist;
     wheel->upper_wheel = NULL;
 }

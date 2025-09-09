@@ -11,7 +11,7 @@ cra_buffer_init(CraBuffer *buffer, size_t init_size)
     buffer->size = init_size;
     buffer->read_idx = 0;
     buffer->write_idx = 0;
-    buffer->buffer = cra_malloc(init_size);
+    buffer->buffer = (unsigned char *)cra_malloc(init_size);
 }
 
 void
@@ -34,7 +34,7 @@ cra_buffer_resize(CraBuffer *buffer, size_t new_size)
 
     if (new_size != 0 && (new_size = CRA_MAX(new_size, readable)) != buffer->size)
     {
-        buffer->buffer = cra_realloc(buffer->buffer, new_size);
+        buffer->buffer = (unsigned char *)cra_realloc(buffer->buffer, new_size);
         buffer->size = new_size;
     }
     return buffer->size;

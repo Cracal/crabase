@@ -81,7 +81,7 @@ cra_bin_serialize_begin(CraSerializer *ser, unsigned char *buffer, size_t buffsi
         ser->code = code;
         ser->noalloc = !!buffer;
         ser->length = buffsize;
-        ser->buffer = !!buffer ? buffer : cra_malloc(ser->length);
+        ser->buffer = !!buffer ? buffer : (unsigned char *)cra_malloc(ser->length);
         // write code
         ser->index = sizeof(code);
         code = CRA_SER_SWAP32(code);
@@ -568,7 +568,7 @@ __cra_bin_deserialize_string(CraSerializer *ser, char *retval, const CraTypeMeta
     }
     if (meta->is_ptr)
     {
-        retval = *(void **)retval = cra_malloc(len + 1); // more 1 char
+        retval = *(char **)retval = (char *)cra_malloc(len + 1); // more 1 char
         cra_ser_release_add(&ser->release, retval, NULL, cra_free);
     }
     // char array enough?
@@ -656,7 +656,7 @@ __cra_bin_deserialize_bytes(CraSerializer *ser, char *retval, uint64_t *outlengt
     }
     if (meta->is_ptr)
     {
-        retval = *(void **)retval = cra_malloc(len > 0 ? len : 1);
+        retval = *(char **)retval = (char *)cra_malloc(len > 0 ? len : 1);
         cra_ser_release_add(&ser->release, retval, NULL, cra_free);
     }
     // char array enough?
@@ -988,7 +988,7 @@ __cra_bin_deserialize_list(CraSerializer *ser, void *retval, uint64_t *outcount,
     }
 
     // read elements
-    char *element = cra_malloc(slot_size);
+    char *element = (char *)cra_malloc(slot_size);
     for (uint64_t i = 0; i < count; ++i)
     {
         // read one element

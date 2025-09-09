@@ -82,8 +82,8 @@ __cra_dict_init_size(CraDict       *dict,
     dict->hash_key = hash_key;
     dict->compare_key = compare_key;
 
-    dict->buckets = cra_malloc(dict->capacity * sizeof(ssize_t));
-    dict->entries = cra_malloc(CRA_DICT_USABLE_FRACTION(dict->capacity) * dict->entry_size);
+    dict->buckets = (ssize_t *)cra_malloc(dict->capacity * sizeof(ssize_t));
+    dict->entries = (CraDictEntry *)cra_malloc(CRA_DICT_USABLE_FRACTION(dict->capacity) * dict->entry_size);
 
     // set to [-1, -1, ...]
     memset(dict->buckets, 0xff, dict->capacity * sizeof(ssize_t));
@@ -172,8 +172,8 @@ __cra_dict_resize(CraDict *dict, ssize_t newcapacity)
     newcapacity = __cra_next_prime(newcapacity);
     new_entries_capacity = CRA_DICT_USABLE_FRACTION(newcapacity);
 
-    newbuckets = cra_realloc(dict->buckets, newcapacity * sizeof(ssize_t));
-    newentries = cra_realloc(dict->entries, new_entries_capacity * dict->entry_size);
+    newbuckets = (ssize_t *)cra_realloc(dict->buckets, newcapacity * sizeof(ssize_t));
+    newentries = (CraDictEntry *)cra_realloc(dict->entries, new_entries_capacity * dict->entry_size);
 
     // set to [-1, -1, ...]
     memset(newbuckets, 0xff, newcapacity * sizeof(ssize_t));

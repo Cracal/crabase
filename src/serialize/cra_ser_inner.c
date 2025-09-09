@@ -23,7 +23,7 @@ cra_serializer_extend_buf(CraSerializer *ser, size_t needed)
     size_t newsize = ser->length << 1;
     if (newsize - ser->index < needed)
         newsize += needed;
-    ser->buffer = cra_realloc(ser->buffer, newsize);
+    ser->buffer = (unsigned char *)cra_realloc(ser->buffer, newsize);
     ser->length = newsize;
 }
 
@@ -74,12 +74,13 @@ cra_ser_release_add(CraSerRelease *release, void *ptr, void (*uninit_fn)(void *)
         release->n_nodes <<= 1; // * 2
         if (release->nodes2 == NULL)
         {
-            release->nodes2 = cra_malloc(sizeof(CraSerReleaseNode) * (release->n_nodes - CRA_SER_RELEASE_NODES1_MAX));
+            release->nodes2 = (CraSerReleaseNode *)cra_malloc(sizeof(CraSerReleaseNode) *
+                                                              (release->n_nodes - CRA_SER_RELEASE_NODES1_MAX));
         }
         else
         {
-            release->nodes2 =
-              cra_realloc(release->nodes2, sizeof(CraSerReleaseNode) * (release->n_nodes - CRA_SER_RELEASE_NODES1_MAX));
+            release->nodes2 = (CraSerReleaseNode *)cra_realloc(
+              release->nodes2, sizeof(CraSerReleaseNode) * (release->n_nodes - CRA_SER_RELEASE_NODES1_MAX));
         }
     }
     if (release->n_nodes <= CRA_SER_RELEASE_NODES1_MAX)

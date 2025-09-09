@@ -54,7 +54,7 @@ __cra_alist_init_size(CraAList *list, size_t element_size, size_t init_capacity,
     list->count = 0;
     list->ele_size = element_size;
     list->capacity = init_capacity == 0 ? 8 : init_capacity;
-    list->array = cra_malloc(element_size * list->capacity);
+    list->array = (unsigned char *)cra_malloc(element_size * list->capacity);
     if (zero_memory)
         bzero(list->array, element_size * list->capacity);
 }
@@ -113,7 +113,7 @@ cra_alist_resize(CraAList *list, size_t new_capacity)
     // 新容量必须大于alist存有的元素个数
     if (new_capacity < list->count)
         return false;
-    newarr = cra_realloc(list->array, new_capacity * list->ele_size);
+    newarr = (unsigned char *)cra_realloc(list->array, new_capacity * list->ele_size);
     if (list->zero_memory && new_capacity > list->capacity)
         bzero(newarr + list->capacity * list->ele_size, (new_capacity - list->capacity) * list->ele_size);
     list->array = newarr;
@@ -208,7 +208,7 @@ cra_alist_reverse(CraAList *list)
     unsigned char *val1, *val2;
 
 #ifdef CRA_COMPILER_MSVC
-    unsigned char *temp = cra_malloc(list->ele_size);
+    unsigned char *temp = (unsigned char *)cra_malloc(list->ele_size);
 #else
     unsigned char temp[list->ele_size];
 #endif
@@ -255,7 +255,7 @@ cra_alist_partition(CraAList *list, cra_compare_fn compare, size_t begin, size_t
     size_t left, right;
 
 #ifdef CRA_COMPILER_MSVC
-    unsigned char *temp = cra_malloc(list->ele_size);
+    unsigned char *temp = (unsigned char *)cra_malloc(list->ele_size);
 #else
     unsigned char temp[list->ele_size];
 #endif

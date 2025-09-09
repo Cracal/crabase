@@ -297,7 +297,7 @@ static void
 copy_as(const void *from, void *to)
 {
     A_s *v = *(A_s **)from;
-    A_s *ret = cra_malloc(sizeof(A_s));
+    A_s *ret = (A_s *)cra_malloc(sizeof(A_s));
     ret->i = v->i;
     ret->f = v->f;
     *(void **)to = ret;
@@ -337,7 +337,7 @@ test_clone(void)
     cra_alist_init0(A_s *, list1, true);
     for (int i = 0; i < 800; i++)
     {
-        as1 = cra_malloc(sizeof(A_s));
+        as1 = (A_s *)cra_malloc(sizeof(A_s));
         as1->i = i + 1;
         as1->f = i + .5f;
         cra_alist_append(list1, &as1);

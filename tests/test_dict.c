@@ -133,7 +133,7 @@ static void
 copy_as(const void *from, void *to)
 {
     A_s *v = *(A_s **)from;
-    A_s *ret = cra_malloc(sizeof(A_s));
+    A_s *ret = (A_s *)cra_malloc(sizeof(A_s));
     ret->i = v->i;
     ret->f = v->f;
     *(void **)to = ret;
@@ -174,7 +174,7 @@ test_clone(void)
     A_s *as;
     for (int i = 0; i < 1000; i++)
     {
-        as = cra_malloc(sizeof(A_s));
+        as = (A_s *)cra_malloc(sizeof(A_s));
         as->i = i + 1;
         as->f = i + 1.5f;
         cra_dict_add(dict, &i, &as);
@@ -280,7 +280,7 @@ test_test(void)
     assert_always(dict->count == 0);
 
     int  idx, *pk, *pv;
-    int *check = cra_malloc(sizeof(int) * 1000000);
+    int *check = (int *)cra_malloc(sizeof(int) * 1000000);
     bzero(check, sizeof(sizeof(int) * 1000000));
     for (i = 0; i < 100; i++)
     {
