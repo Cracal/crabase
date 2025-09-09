@@ -12,12 +12,30 @@
 #include "cra_assert.h"
 #include "cra_atomic.h"
 
+static void
+__cra_malloc_failed_default(const char *fname, size_t size)
+{
+    int err = cra_get_last_error();
+    fprintf(stderr, "allocate failed. error: %d, function: %s, size: %zu.\n", err, fname, size);
+    exit(-1);
+}
+
+static void (*s_cra_malloc_failed_cb)(const char *fname, size_t size) = __cra_malloc_failed_default;
+
+void
+cra_set_malloc_failed_cb(void (*cb)(const char *fname, size_t size))
+{
+    assert(cb != NULL);
+    s_cra_malloc_failed_cb = cb;
+}
+
 void *
 __cra_malloc(size_t size)
 {
     assert(size > 0);
     void *ptr = malloc(size);
-    assert_always(ptr != NULL);
+    if (!ptr)
+        s_cra_malloc_failed_cb("malloc", size);
     return ptr;
 }
 
@@ -26,23 +44,31 @@ __cra_calloc(size_t num, size_t size)
 {
     assert(num > 0 && size > 0);
     void *ptr = calloc(num, size);
-    assert_always(ptr != NULL);
+    if (!ptr)
+        s_cra_malloc_failed_cb("calloc", num * size);
     return ptr;
 }
 
 void *
 __cra_realloc(void *oldptr, size_t newsize)
 {
+#ifdef CRA_COMPILER_GNUC
+    assert(newsize > 0);
+#else
     assert(oldptr != NULL && newsize > 0);
+#endif
     void *newptr = realloc(oldptr, newsize);
-    assert_always(newptr != NULL);
+    if (!newptr)
+        s_cra_malloc_failed_cb("malloc", newsize);
     return newptr;
 }
 
 void
 __cra_free(void *ptr)
 {
+#ifndef CRA_COMPILER_GNUC
     assert(ptr != NULL);
+#endif
     free(ptr);
 }
 

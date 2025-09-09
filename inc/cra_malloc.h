@@ -17,7 +17,6 @@
 #define ATTR_CALLOC __attribute__((malloc, returns_nonnull, alloc_size(1, 2), warn_unused_result))
 #define ATTR_REALLO __attribute__((returns_nonnull, nonnull(1), alloc_size(2), warn_unused_result))
 #define ATTR_FREEEE __attribute__((nonnull(1)))
-
 #elif defined(CRA_COMPILER_MSVC)
 #define ATTR_MALLOC _Ret_notnull_ _Check_return_ _CRTALLOCATOR
 #define ATTR_CALLOC _Ret_notnull_ _Check_return_ _CRTALLOCATOR
@@ -84,5 +83,8 @@ __cra_memory_leak_report(void);
 
 #define cra_alloc(_Type) cra_malloc(sizeof(_Type))
 #define cra_dealloc      cra_free
+
+CRA_API void
+cra_set_malloc_failed_cb(void (*cb)(const char *fname, size_t size));
 
 #endif
