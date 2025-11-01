@@ -38,6 +38,18 @@ typedef struct
 
 static CraLogger *s_logger = NULL;
 
+CraLogLevel_e
+cra_log_get_level(void)
+{
+    return s_logger->level;
+}
+
+void
+cra_log_set_level(CraLogLevel_e level)
+{
+    s_logger->level = level;
+}
+
 void
 cra_log_startup(CraLogLevel_e level, bool with_localtime, CraLogTo_i **logto)
 {

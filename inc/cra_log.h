@@ -38,6 +38,12 @@ struct _CraLogTo_i
 
 #if 1 // Logger
 
+CRA_API CraLogLevel_e
+cra_log_get_level(void);
+
+CRA_API void
+cra_log_set_level(CraLogLevel_e level);
+
 CRA_API void
 cra_log_startup(CraLogLevel_e level, bool with_localtime, CraLogTo_i **logto);
 
