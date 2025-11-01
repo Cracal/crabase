@@ -248,7 +248,7 @@ test_timer_cancel_self(void)
 int
 main(void)
 {
-    cra_log_startup(CRA_LOG_LEVEL_DEBUG, false, true);
+    cra_log_startup(CRA_LOG_LEVEL_DEBUG, true, (CraLogTo_i **)cra_logto_stdout_create(false));
 
     test_timewheel();
     cra_log_info("----------------------- ^_^ -----------------------");

@@ -17,7 +17,7 @@ void
 test_log(void)
 {
 #define CRA_LOG_NAME "TEST-LOG"
-    cra_log_startup(CRA_LOG_LEVEL_TRACE, false, false);
+    cra_log_startup(CRA_LOG_LEVEL_TRACE, true, (CraLogTo_i **)cra_logto_stdout_create(false));
     cra_log_trace("hello trace");
     cra_log_debug("hello debug");
     cra_log_info("hello info");
@@ -27,9 +27,8 @@ test_log(void)
     cra_log_cleanup();
 
     cra_log_fatal("noooooooo!");
-    cra_log_debug("noooooooo!!");
 
-    cra_log_startup(CRA_LOG_LEVEL_INFO, false, false);
+    cra_log_startup(CRA_LOG_LEVEL_INFO, false, (CraLogTo_i **)cra_logto_stdout_create(true));
     cra_log_trace("no trace");
     cra_log_debug("no debug");
     cra_log_info("output info");
@@ -39,7 +38,6 @@ test_log(void)
     cra_log_cleanup();
 
     cra_log_fatal("noooooooo!!!");
-    cra_log_debug("noooooooo!!!!");
 
 #undef CRA_LOG_NAME
 }
@@ -48,7 +46,7 @@ void
 test_log_out_of_msg_buf(void)
 {
 #define CRA_LOG_NAME "TEST-OUT-OF-MSG"
-    cra_log_startup(CRA_LOG_LEVEL_WARN, false, true);
+    cra_log_startup(CRA_LOG_LEVEL_WARN, false, (CraLogTo_i **)cra_logto_stdout_create(true));
 
 #ifdef CRA_LOG_FILE_LINE
 #define LEN CRA_LOG_MSG_MAX - 53 - 65 - 1
@@ -84,8 +82,10 @@ write_log(const CraThrdPoolArgs0 *arg)
 void
 test_log_multithreads_sync(void)
 {
-    cra_log_startup(CRA_LOG_LEVEL_DEBUG, false, true);
-    cra_log_output_to_file("log/test", "multi_threads_sync", 10 * 1024 * 1024);
+    cra_log_startup(
+      CRA_LOG_LEVEL_DEBUG,
+      false,
+      (CraLogTo_i **)cra_logto_file_create(false, false, "log/test", "multi_threads_sync", 10 * 1024 * 1024));
 
     CraThrdPool pool;
     cra_thrdpool_init(&pool, 4, 4);
@@ -107,8 +107,10 @@ test_log_multithreads_sync(void)
 void
 test_log_multithreads_async(void)
 {
-    cra_log_startup(CRA_LOG_LEVEL_DEBUG, true, true);
-    cra_log_output_to_file("log/test", "multi_threads_async", 10 * 1024 * 1024);
+    cra_log_startup(
+      CRA_LOG_LEVEL_DEBUG,
+      true,
+      (CraLogTo_i **)cra_logto_file_create(true, true, "log/test", "multi_threads_async", 10 * 1024 * 1024));
 
     CraThrdPool pool;
     cra_thrdpool_init(&pool, 4, 4);
@@ -130,13 +132,13 @@ test_log_multithreads_async(void)
 void
 test_log_syn(void)
 {
-    cra_log_startup(CRA_LOG_LEVEL_DEBUG, false, false);
+    cra_log_startup(CRA_LOG_LEVEL_DEBUG, false, (CraLogTo_i **)cra_logto_stdout_create(false));
 
     unsigned long start, end;
 
     start = cra_tick_ms();
     for (int i = 0; i < 10000; i++)
-        cra_log_message("LOG-SYN", CRA_LOG_LEVEL_INFO, "hello world %d !!", i);
+        cra_log_message_with_logname("LOG-SYN", CRA_LOG_LEVEL_INFO, "hello world %d !!", i);
     end = cra_tick_ms();
 
     cra_log_cleanup();
@@ -147,7 +149,7 @@ test_log_syn(void)
 void
 test_log_asyn(void)
 {
-    cra_log_startup(CRA_LOG_LEVEL_DEBUG, true, false);
+    cra_log_startup(CRA_LOG_LEVEL_DEBUG, true, (CraLogTo_i **)cra_logto_stdout_create(true));
 
     unsigned long start, end;
 
@@ -156,7 +158,7 @@ test_log_asyn(void)
 
     start = cra_tick_ms();
     for (int i = 0; i < 10000; i++)
-        cra_log_message("LOG-ASYN", CRA_LOG_LEVEL_INFO, "hello world %d !!", i);
+        cra_log_message_with_logname("LOG-ASYN", CRA_LOG_LEVEL_INFO, "hello world %d !!", i);
     end = cra_tick_ms();
 
     cra_log_cleanup();
@@ -168,20 +170,22 @@ void
 test_log_to_file_sync(void)
 {
 #define CRA_LOG_NAME "LOG-FILE"
-    cra_log_startup(CRA_LOG_LEVEL_TRACE, false, false);
+    cra_log_startup(
+      CRA_LOG_LEVEL_TRACE,
+      false,
+      (CraLogTo_i **)cra_logto_file_create(false, false, "./log/test/", "test-log-sync", 2 * 1024 * 1024));
 
     unsigned long start, end;
-
-    cra_log_output_to_file("./log/test", "test-log", 2 * 1024 * 1024);
+    int           n = 1000000;
 
     start = cra_tick_ms();
-    for (int i = 0; i < 1000000; i++)
+    for (int i = 0; i < n; i++)
         cra_log_info("hello log %d!!!", i + 1);
     end = cra_tick_ms();
 
     cra_log_cleanup();
 
-    printf("test_log_to_file_sync() takes %lums\n", end - start);
+    printf("test_log_to_file_sync() takes %lums\t%.2fmsg/s\n", end - start, n / ((end - start) / 1000.0f));
 #undef CRA_LOG_NAME
 }
 
@@ -189,20 +193,21 @@ void
 test_log_to_file_async(void)
 {
 #define CRA_LOG_NAME "LOG-FILE"
-    cra_log_startup(CRA_LOG_LEVEL_TRACE, true, false);
+    cra_log_startup(CRA_LOG_LEVEL_TRACE,
+                    true,
+                    (CraLogTo_i **)cra_logto_file_create(true, true, "./log/test/", "test-log-async", 2 * 1024 * 1024));
 
     unsigned long start, end;
-
-    cra_log_output_to_file("./log/test", "test-log", 2 * 1024 * 1024);
+    int           n = 1000000;
 
     start = cra_tick_ms();
-    for (int i = 0; i < 1000000; i++)
+    for (int i = 0; i < n; i++)
         cra_log_info("hello log %d!!!", i + 1);
     end = cra_tick_ms();
 
     cra_log_cleanup();
 
-    printf("test_log_to_file_async() takes %lums\n", end - start);
+    printf("test_log_to_file_async() takes %lums\t%.2fmsg/s\n", end - start, n / ((end - start) / 1000.0f));
 #undef CRA_LOG_NAME
 }
 
@@ -210,8 +215,10 @@ void
 test_log_time(void)
 {
 #define CRA_LOG_NAME "TEST-LOG"
-    cra_log_startup(CRA_LOG_LEVEL_TRACE, false, true);
-    cra_log_output_to_file("log/test/", "test-log-localtime", 2 * 1024 * 1024);
+    cra_log_startup(
+      CRA_LOG_LEVEL_TRACE,
+      true,
+      (CraLogTo_i **)cra_logto_file_create(false, true, "log/test", "test-log-localtime", 2 * 1024 * 1024));
 
     cra_log_trace("hello trace");
     cra_log_debug("hello debug");
@@ -224,8 +231,9 @@ test_log_time(void)
 
     cra_msleep(500);
 
-    cra_log_startup(CRA_LOG_LEVEL_TRACE, false, false);
-    cra_log_output_to_file("log/test/", "test-log-utc", 2 * 1024 * 1024);
+    cra_log_startup(CRA_LOG_LEVEL_TRACE,
+                    false,
+                    (CraLogTo_i **)cra_logto_file_create(false, true, "log/test/", "test-log-utc", 2 * 1024 * 1024));
 
     cra_log_trace("hello trace");
     cra_log_debug("hello debug");

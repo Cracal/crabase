@@ -227,7 +227,7 @@ test_ref_inner(void)
 int
 main(void)
 {
-    cra_log_startup(CRA_LOG_LEVEL_TRACE, false, true);
+    cra_log_startup(CRA_LOG_LEVEL_TRACE, true, (CraLogTo_i **)cra_logto_stdout_create(false));
 
     test_refcnt();
     test_refcnt_ptr();
