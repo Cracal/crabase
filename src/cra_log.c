@@ -140,10 +140,10 @@ __cra_log_message(const char   *logname,
     len = snprintf(
       msg, sizeof(msg), s_logger->datetime_fmt, dt.year, dt.mon, dt.day, dt.hour, dt.min, dt.sec, dt.ms, spaces, "");
 
-    // tid logname level
+    // tid level logname
     cra_tid_t   tid = cra_thrd_get_current_tid();
     const char *lv = cra_level_to_str(level);
-    len += snprintf(msg + len, sizeof(msg) - len, "%-5lu %s %s ", tid, logname, lv);
+    len += snprintf(msg + len, sizeof(msg) - len, "%-5lu %s %s ", tid, lv, logname);
     if (len >= sizeof(msg) - 1)
         goto fix_length;
 
