@@ -59,12 +59,12 @@ test_refcnt(void)
     CRA_REFCNT_DEF(int)
     ri;
     *CRA_REFCNT_OBJ(&ri) = 100;
-    cra_refcnt_init(CRA_REFCNT_RC(&ri), (cra_refcnt_uninit_fn)test_int100);
+    cra_refcnt_init(CRA_REFCNT_RC(&ri), (cra_refcnt_release_fn)test_int100);
     assert_always(CRA_REFCNT_RC(&ri)->cnt == 1);
     assert_always(cra_refcnt_unref(CRA_REFCNT_RC(&ri)));
     assert_always(CRA_REFCNT_RC(&ri)->cnt == 0);
 
-    cra_refcnt_init(CRA_REFCNT_RC(&ri), (cra_refcnt_uninit_fn)test_int100);
+    cra_refcnt_init(CRA_REFCNT_RC(&ri), (cra_refcnt_release_fn)test_int100);
     assert_always(CRA_REFCNT_RC(&ri)->cnt == 1);
     cra_refcnt_ref(CRA_REFCNT_RC(&ri));
     assert_always(CRA_REFCNT_RC(&ri)->cnt == 2);
@@ -78,7 +78,7 @@ test_refcnt(void)
     assert_always(CRA_REFCNT_RC(&ri)->cnt == 0);
 
     Stru_rc *rs = cra_alloc(Stru_rc);
-    cra_refcnt_init(CRA_REFCNT_RC(rs), (cra_refcnt_uninit_fn)delete_stru);
+    cra_refcnt_init(CRA_REFCNT_RC(rs), (cra_refcnt_release_fn)delete_stru);
     CRA_REFCNT_OBJ(rs)->i = 200;
     CRA_REFCNT_OBJ(rs)->f = 1.5f;
 
@@ -87,8 +87,7 @@ test_refcnt(void)
 
     cra_refcnt_unref0(CRA_REFCNT_RC(rs));
     assert_always(CRA_REFCNT_RC(rs)->cnt == 1);
-    cra_refcnt_unref_clear((CraRefcnt **)&rs);
-    assert_always(rs == NULL);
+    cra_refcnt_unref0(CRA_REFCNT_RC(rs));
 }
 
 void
@@ -97,7 +96,7 @@ test_refcnt_ptr(void)
     CRA_REFCNT_PTR_DEF(int)(ri);
     int *pi = cra_alloc(int);
     *pi = 100;
-    cra_refcnt_init(CRA_REFCNT_RC(&ri), (cra_refcnt_uninit_fn)test_and_delete_int100_p);
+    cra_refcnt_init(CRA_REFCNT_RC(&ri), (cra_refcnt_release_fn)test_and_delete_int100_p);
     CRA_REFCNT_PTR(&ri) = pi;
     assert_always(CRA_REFCNT_RC(&ri)->cnt == 1);
     cra_refcnt_ref(CRA_REFCNT_RC(&ri));
@@ -115,7 +114,7 @@ test_refcnt_ptr(void)
     Stru     *ps = cra_alloc(Stru);
     ps->i = 200;
     ps->f = 3.5f;
-    cra_refcnt_init(CRA_REFCNT_RC(&rs), (cra_refcnt_uninit_fn)delete_stru_p);
+    cra_refcnt_init(CRA_REFCNT_RC(&rs), (cra_refcnt_release_fn)delete_stru_p);
     CRA_REFCNT_PTR(&rs) = ps;
 
     cra_refcnt_ref(CRA_REFCNT_RC(&rs));
@@ -132,7 +131,7 @@ test_refcnt_ptr(void)
     ps = cra_alloc(Stru);
     ps->i = 400;
     ps->f = 5.5f;
-    cra_refcnt_init(CRA_REFCNT_RC(prs), (cra_refcnt_uninit_fn)delete_stru_p2);
+    cra_refcnt_init(CRA_REFCNT_RC(prs), (cra_refcnt_release_fn)delete_stru_p2);
     CRA_REFCNT_PTR(prs) = ps;
 
     cra_refcnt_ref(CRA_REFCNT_RC(prs));
@@ -140,8 +139,7 @@ test_refcnt_ptr(void)
 
     cra_refcnt_unref0(CRA_REFCNT_RC(prs));
     assert_always(CRA_REFCNT_RC(prs)->cnt == 1);
-    cra_refcnt_unref_clear((CraRefcnt **)&prs);
-    assert_always(prs == NULL);
+    cra_refcnt_unref0(CRA_REFCNT_RC(prs));
 }
 
 static CRA_THRD_FUNC(thread_func)
@@ -158,14 +156,14 @@ test_multithread(void)
     Stru_rc *rs = cra_alloc(Stru_rc);
     CRA_REFCNT_OBJ(rs)->i = 1000;
     CRA_REFCNT_OBJ(rs)->f = 1000.5f;
-    cra_refcnt_init(CRA_REFCNT_RC(rs), (cra_refcnt_uninit_fn)delete_stru);
+    cra_refcnt_init(CRA_REFCNT_RC(rs), (cra_refcnt_release_fn)delete_stru);
 
     cra_thrd_t th;
     cra_refcnt_ref(CRA_REFCNT_RC(rs));
     cra_thrd_create(&th, thread_func, rs);
 
     // cra_msleep(50);
-    cra_refcnt_unref_clear((CraRefcnt **)&rs);
+    cra_refcnt_unref(CRA_REFCNT_RC(rs));
 
     cra_thrd_join(th);
 }

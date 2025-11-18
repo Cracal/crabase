@@ -18,12 +18,12 @@ typedef cra_atomic_int64_t cra_refcnt_t;
 
 typedef struct _CraRefcnt CraRefcnt;
 
-typedef void (*cra_refcnt_uninit_fn)(CraRefcnt *rc);
+typedef void (*cra_refcnt_release_fn)(CraRefcnt *rc);
 
 struct _CraRefcnt
 {
-    cra_refcnt_t         cnt;    // 计数
-    cra_refcnt_uninit_fn uninit; // uninit回调函数
+    cra_refcnt_t          cnt;     // 计数
+    cra_refcnt_release_fn release; // 回调函数
 };
 
 #define CRA_REFCNT_NAME_DEF(_Type, _name) \
@@ -48,7 +48,7 @@ struct _CraRefcnt
 #define CRA_REFCNT_PTR(_rc) ((_rc)->p)
 
 CRA_API void
-cra_refcnt_init(CraRefcnt *ref, cra_refcnt_uninit_fn uninit);
+cra_refcnt_init(CraRefcnt *ref, cra_refcnt_release_fn func);
 
 static inline void
 cra_refcnt_ref(CraRefcnt *ref)
@@ -64,8 +64,5 @@ cra_refcnt_unref0(CraRefcnt *ref)
 {
     cra_refcnt_unref(ref);
 }
-
-CRA_API void
-cra_refcnt_unref_clear(CraRefcnt **refptr);
 
 #endif
