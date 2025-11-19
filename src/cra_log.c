@@ -144,7 +144,7 @@ __cra_log_message(const char   *logname,
     cra_tid_t   tid = cra_thrd_get_current_tid();
     const char *lv = cra_level_to_str(level);
     len += snprintf(msg + len, sizeof(msg) - len, "%-5lu %s %s ", tid, lv, logname);
-    if (len >= sizeof(msg) - 1)
+    if (len >= (int)sizeof(msg) - 1)
         goto fix_length;
 
     // msg
@@ -152,7 +152,7 @@ __cra_log_message(const char   *logname,
     va_start(ap, fmt);
     len += vsnprintf(msg + len, sizeof(msg) - len, fmt, ap);
     va_end(ap);
-    if (len >= sizeof(msg) - 1)
+    if (len >= (int)sizeof(msg) - 1)
         goto fix_length;
 
 #ifdef CRA_LOG_FILE_LINE
@@ -163,7 +163,7 @@ __cra_log_message(const char   *logname,
 #endif
 
     // \n
-    if (len >= sizeof(msg) - 1)
+    if (len >= (int)sizeof(msg) - 1)
     {
     fix_length:
         len = sizeof(msg) - 1;
