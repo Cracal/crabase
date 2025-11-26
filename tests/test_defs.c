@@ -50,7 +50,7 @@ test_dirname_basename(void)
     assert_always(strcmp(".", path) == 0);
     assert_always(strcmp(".", file) == 0);
     printf("%-24s%-18s%-18s\n", "(NULL)", path, file);
-    for (int i = 0; i < CRA_NARRAY(data); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(data); i++)
     {
         memcpy(path1, data[i].full, sizeof(path1));
         memcpy(path2, data[i].full, sizeof(path2));
