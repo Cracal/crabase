@@ -141,6 +141,8 @@ cra_set_last_error(int err)
 #define CRA_CAT(a, b)  _CRA_CAT(a, b)
 #define CRA_UCAT(a, b) CRA_CAT(a, CRA_CAT(_, b))
 
+#define CRA_NARRAY(_array) (sizeof(_array) / sizeof((_array)[0]))
+
 #ifndef offsetof
 #define offsetof(type, member) ((size_t)&((type *)0)->member)
 #endif
@@ -185,5 +187,11 @@ cra_swap_ptr(void **ptr1, void **ptr2)
     *ptr1 = *ptr2;
     *ptr2 = temp;
 }
+
+CRA_API char *
+cra_basename(char *path);
+
+CRA_API char *
+cra_dirname(char *path);
 
 #endif
