@@ -13,10 +13,11 @@
 #ifdef CRA_RANDOM_STR_INIT_HASHCODE
 #include "cra_atomic.h"
 #include <time.h>
+#ifdef CRA_OS_WIN
+#include <wincrypt.h>
+#endif
 
 static cra_atomic_flag s_hash_locker = { 0 };
-#undef LOCK
-#undef UNLOCK
 #define LOCK()   while (cra_atomic_flag_test_and_set(&s_hash_locker))
 #define UNLOCK() cra_atomic_flag_clear(&s_hash_locker)
 
@@ -27,8 +28,32 @@ cra_get_init_hash(void)
     if (hash == -1)
     {
         LOCK();
-        if (hash == -1)
+        while (hash == -1)
         {
+#ifdef CRA_OS_WIN
+            HCRYPTPROV prov;
+            if (!CryptAcquireContext(&prov, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT))
+                goto unsafe;
+            if (!CryptGenRandom(prov, sizeof(hash), (BYTE *)&hash))
+            {
+                CryptReleaseContext(prov, 0);
+                goto unsafe;
+            }
+            CryptReleaseContext(prov, 0);
+#else
+            int fd = open("/dev/urandom", O_RDONLY);
+            if (fd == -1)
+                goto unsafe;
+            if (sizeof(hash) != read(fd, &hash, sizeof(hash)))
+            {
+                close(fd);
+                goto unsafe;
+            }
+            close(fd);
+#endif
+            continue;
+
+        unsafe:
             srand((unsigned int)time(NULL));
             hash = rand();
         }
@@ -37,7 +62,7 @@ cra_get_init_hash(void)
     return hash;
 }
 #else
-#define cra_get_init_hash() 0
+#define cra_get_init_hash() 13747
 #endif
 
 // BKDR hash function
