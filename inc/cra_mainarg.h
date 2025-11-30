@@ -94,6 +94,15 @@ cra_mainarg_get_unbuild(CraMainArg *ma)
     return ma->unbuild;
 }
 
+CRA_API int64_t
+cra_mainarg_get_unbuild_int(CraMainArg *ma, unsigned int index, int64_t default_value);
+
+CRA_API double
+cra_mainarg_get_unbuild_flt(CraMainArg *ma, unsigned int index, double default_value);
+
+CRA_API const char *
+cra_mainarg_get_unbuild_str(CraMainArg *ma, unsigned int index, const char *default_value);
+
 CRA_API void
 cra_mainarg_print_help(CraMainArg *ma);
 

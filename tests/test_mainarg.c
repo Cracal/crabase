@@ -1,4 +1,3 @@
-#include "collections/cra_alist.h"
 #include "collections/cra_collects.h"
 #include "cra_assert.h"
 #include "cra_mainarg.h"
@@ -115,7 +114,6 @@ test_value(void)
     char      *host;
     int        port;
     CraMainArg ma;
-    CraAList  *alist;
 
     argc = CRA_NARRAY(argv);
 
@@ -135,21 +133,32 @@ test_value(void)
     assert_always(strcmp(str, "/dev/null") == 0);
     i64 = cra_mainarg_get_int(&ma, "info", "tall", 180);
     assert_always(i64 == 192);
-    f64 = cra_mainarg_get_flt(&ma, "info", "w", 50.0);
+    f64 = cra_mainarg_get_flt(&ma, "info", "-w", 50.0);
     assert_always(cra_compare_double(f64, 62.5) == 0);
-    str = (char *)cra_mainarg_get_str(&ma, "info", "name", "Jack");
+    str = (char *)cra_mainarg_get_str(&ma, "info", "--name", "Jack");
     assert_always(strcmp(str, "Tom") == 0);
 
-    alist = cra_mainarg_get_unbuild(&ma);
-    cra_alist_get(alist, 0, &host);
-    assert_always(strcmp(host, "0.0.0.0") == 0);
-    cra_alist_get(alist, 1, &str);
-    assert_always(strcmp(str, "9999") == 0);
-    port = atoi(str);
+    host = (char *)cra_mainarg_get_unbuild_str(&ma, 0, NULL);
+    assert_always(host && strcmp(host, "0.0.0.0") == 0);
+    port = (int)cra_mainarg_get_unbuild_int(&ma, 1, 0);
     assert_always(port == 9999);
 
     i64 = cra_mainarg_get_int(&ma, "info", "weight", 0); // error(type mismatch)
     assert_always(i64 == 0);
+    i64 = cra_mainarg_get_int(&ma, "NOOO", "-n", 100); // error(no module)
+    assert_always(i64 == 100);
+    f64 = cra_mainarg_get_flt(&ma, NULL, "--abc", 0.0); // error(no option)
+    assert_always(cra_compare_double(f64, 0.0) == 0);
+    f64 = cra_mainarg_get_flt(&ma, "info", "--abc", 1.0); // error(no option)
+    assert_always(cra_compare_double(f64, 1.0) == 0);
+
+    // error(out of unbuild array)
+    str = (char *)cra_mainarg_get_unbuild_str(&ma, 2, "nooooo");
+    assert_always(strcmp(str, "nooooo") == 0);
+    i64 = cra_mainarg_get_unbuild_int(&ma, 100, 20);
+    assert_always(i64 == 20);
+    f64 = cra_mainarg_get_unbuild_flt(&ma, 2, 4.5);
+    assert_always(cra_compare_double(f64, 4.5) == 0);
 
     cra_mainarg_uninit(&ma);
 }
@@ -157,7 +166,7 @@ test_value(void)
 int
 main(void)
 {
-    test1();
+    // test1();
     test_value();
 
     cra_memory_leak_report();

@@ -10,7 +10,8 @@ typedef struct _CraMainArgItem CraMainArgItem;
 struct _CraMainArgItem
 {
     CraMainArgType_e type;
-    int              refcnt;
+    short            refcnt;
+    bool             assigned;
     char            *longarg;
     char            *arg;
     char            *tip;
@@ -29,6 +30,8 @@ struct _CraMainArgItem
     } val;
 };
 
+static const char *s_valtypes[] = { "two", "i64", "f64", "str", "cmd" };
+
 static CraMainArgItem *
 cra_mainarg_make_item(CraMainArgType_e type, char *op, char *option, char *tip)
 {
@@ -37,6 +40,7 @@ cra_mainarg_make_item(CraMainArgType_e type, char *op, char *option, char *tip)
     item = cra_alloc(CraMainArgItem);
     item->type = type;
     item->refcnt = op && option ? 2 : 1;
+    item->assigned = false;
     item->longarg = option;
     item->arg = op;
     item->tip = tip;
@@ -54,6 +58,10 @@ static CraMainArgItem *
 cra_mainarg_get_item(CraDict *module, char *name)
 {
     CraMainArgItem *item = NULL;
+    if (*name == '-')
+        ++name;
+    if (*name == '-')
+        ++name;
     cra_dict_get(module, &name, &item);
     return item;
 }
@@ -251,18 +259,17 @@ cra_mainarg_parse_args(CraMainArg *ma, int argc, char *argv[])
             continue;
         }
         // get item
-        op += (op[1] == '-' ? 2 : 1);
         if (!module || !(item = cra_mainarg_get_item(module, op)))
         {
             // in default module?
             if (!(item = cra_mainarg_get_item(default_module, op)))
             {
-                bool print_helper = (strcmp("h", op) == 0 || strcmp("help", op) == 0);
+                bool print_helper = (strcmp("-h", op) == 0 || strcmp("--help", op) == 0);
                 if (!print_helper)
                 {
                     fprintf(stderr,
                             "MainArg Error: option(%s) is an invalid option in module(%s).\n\n",
-                            argv[i],
+                            op,
                             module_name ? module_name : "<DEFAULT>");
                 }
                 cra_mainarg_print_help(ma);
@@ -281,7 +288,7 @@ cra_mainarg_parse_args(CraMainArg *ma, int argc, char *argv[])
 
         if ((i + 1) >= argc)
         {
-            fprintf(stderr, "MainArg Error: option(%s) need a value.\n\n", argv[i]);
+            fprintf(stderr, "MainArg Error: option(%s) need a value.\n\n", op);
             cra_mainarg_print_help(ma);
             exit(EXIT_FAILURE);
         }
@@ -313,10 +320,11 @@ cra_mainarg_parse_args(CraMainArg *ma, int argc, char *argv[])
                 assert_always(false);
                 break;
         }
+        item->assigned = true;
         continue;
 
     errorval:
-        fprintf(stderr, "MainArg Error: option(%s) got an error value(`%s`, Error Type).\n\n", argv[i - 1], argv[i]);
+        fprintf(stderr, "MainArg Error: option(%s) need %s type value.\n\n", argv[i - 1], s_valtypes[item->type]);
         cra_mainarg_print_help(ma);
         exit(EXIT_FAILURE);
     }
@@ -325,21 +333,21 @@ cra_mainarg_parse_args(CraMainArg *ma, int argc, char *argv[])
 static CraMainArgItem *
 cra_mainarg_get_val_item(CraMainArg *ma, const char *module_name, const char *name, CraMainArgType_e type)
 {
-    CraDict           *module;
-    CraMainArgItem    *item;
-    static const char *valtypes[] = { "two", "i64", "f64", "str", "cmd" };
+    CraDict        *module;
+    CraMainArgItem *item;
 
     module = cra_mainarg_get_module(ma, (char *)module_name, false);
     if (!module)
         return NULL;
 
     item = cra_mainarg_get_item(module, (char *)name);
-    if (!item)
+    if (!item || !item->assigned)
         return NULL;
     // check type
     if (type != item->type)
     {
-        fprintf(stderr, "MainArg Error: value's type mismatch(%s != %s).\n\n", valtypes[type], valtypes[item->type]);
+        fprintf(
+          stderr, "MainArg Error: value's type mismatch(%s != %s).\n\n", s_valtypes[type], s_valtypes[item->type]);
         return NULL;
     }
     return item;
@@ -378,6 +386,45 @@ cra_mainarg_get_str(CraMainArg *ma, const char *module, const char *name, const 
     CraMainArgItem *item = cra_mainarg_get_val_item(ma, module, name, CRA_MAINARG_TYPE_STR);
     if (item)
         return item->val.str;
+    return default_value;
+}
+
+int64_t
+cra_mainarg_get_unbuild_int(CraMainArg *ma, unsigned int index, int64_t default_value)
+{
+    int64_t ret;
+    char   *str, *end = NULL;
+
+    if (!!(str = (char *)cra_mainarg_get_unbuild_str(ma, index, NULL)))
+    {
+        ret = strtoll(str, &end, 10);
+        if (str != end)
+            return ret;
+    }
+    return default_value;
+}
+
+double
+cra_mainarg_get_unbuild_flt(CraMainArg *ma, unsigned int index, double default_value)
+{
+    double ret;
+    char  *str, *end = NULL;
+
+    if (!!(str = (char *)cra_mainarg_get_unbuild_str(ma, index, NULL)))
+    {
+        ret = strtod(str, &end);
+        if (str != end)
+            return ret;
+    }
+    return default_value;
+}
+
+const char *
+cra_mainarg_get_unbuild_str(CraMainArg *ma, unsigned int index, const char *default_value)
+{
+    const char *ret;
+    if (cra_alist_get(ma->unbuild, index, &ret))
+        return ret;
     return default_value;
 }
 
@@ -480,7 +527,10 @@ cra_mainarg_print_help(CraMainArg *ma)
 
     program = cra_basename(program);
     printf("Usage: %s %s\n\n", program, ma->usage);
-    printf("%s\n\n", ma->introduction);
+    printf("%s\n", ma->introduction);
+    printf("type '%s -h' or '%s --help' to list available options.\n\n", program, program);
+    cra_free(program);
+    program = NULL;
 
     // print defaut module first
     default_module = cra_mainarg_get_module(ma, DEFAULT_MODULE_NAME, false);
