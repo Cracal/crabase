@@ -106,7 +106,7 @@ cra_mainarg_init(CraMainArg *ma, char *program, char *usage, char *introduction,
     assert(introduction);
     assert(linemax > 0);
 
-    ma->program = cra_basename(program); // modified
+    ma->program = cra_basename(program);
     ma->usage = usage;
     ma->introdution = introduction;
     ma->line_max = linemax;
@@ -118,6 +118,8 @@ cra_mainarg_init(CraMainArg *ma, char *program, char *usage, char *introduction,
       char *, CraDict *, ma->modules, false, (cra_hash_fn)cra_hash_string1_p, (cra_compare_fn)cra_compare_string_p);
     cra_alist_init0(char *, ma->unbuild, false);
     cra_mempool_init(ma->items, sizeof(CraMainArgItem), 8);
+
+    cra_mainarg_get_module(ma, NULL, true); // make default module
 }
 
 void
@@ -135,6 +137,7 @@ cra_mainarg_uninit(CraMainArg *ma)
     cra_dealloc(ma->modules);
     cra_dealloc(ma->unbuild);
     cra_dealloc(ma->items);
+    cra_free(ma->program);
 }
 
 static int
@@ -350,8 +353,7 @@ cra_mainarg_parse_args(CraMainArg *ma, int argc, char *argv[])
     CraMainArgItem *item;
     CraDict        *module;
 
-    assert(argc > 1);
-    assert(argv);
+    assert_always(argv);
 
     module = NULL;
     for (int i = 1; i < argc; i++)
