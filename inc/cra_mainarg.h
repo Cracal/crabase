@@ -21,87 +21,135 @@
  *
  */
 
+typedef union
+{
+    bool    two;
+    int64_t i64;
+    double  f64;
+    char   *str;
+} CraMainArgVal;
+
 typedef struct _CraMainArg CraMainArg;
+typedef struct _CraMemPool CraMemPool;
 typedef struct _CraAList   CraAList;
 typedef struct _CraDict    CraDict;
 
-typedef void (*cra_mainarg_fn)(void *user);
-
-typedef enum
-{
-    CRA_MAINARG_TYPE_TWO, // on|off
-    CRA_MAINARG_TYPE_INT, // int64
-    CRA_MAINARG_TYPE_FLT, // float64
-    CRA_MAINARG_TYPE_STR, // char *
-    CRA_MAINARG_TYPE_CMD, // command
-} CraMainArgType_e;
+typedef void (*cra_mainarg_fn)(void *arg);
+typedef bool (*cra_mainarg_fn2)(CraMainArgVal val, void *arg);
 
 struct _CraMainArg
 {
-    int       tipstart;
-    int       line_max;
-    char     *usage;
-    char     *introduction;
-    char     *program; // program's name
-    CraDict  *modules; // option module. Dict<char *, Dict<char *, MainArgItem *> *>
-    CraAList *unbuild; // those options without BUILD. AList<char *>
+    int         tipstart;
+    int         line_max;
+    char       *program;
+    char       *usage;
+    char       *introdution;
+    CraDict    *modules; // Dict<char *, Dict<char *, MainItem *> *>
+    CraAList   *unbuild; // AList<char *>
+    CraMemPool *items;
 };
 
 CRA_API void
-cra_mainarg_init(CraMainArg *ma, char *usage, char *introduction, int linemax);
+cra_mainarg_init(CraMainArg *ma, char *program, char *usage, char *introduction, int linemax);
 
 CRA_API void
 cra_mainarg_uninit(CraMainArg *ma);
 
 CRA_API void
-__cra_mainarg_build_val(CraMainArg      *ma,
-                        char            *module_name,
-                        char            *op,
-                        char            *option,
-                        char            *tip,
-                        CraMainArgType_e type,
-                        cra_mainarg_fn   func,
-                        void            *ptr);
-#define cra_mainarg_build_two(_ma, _module_name, _op, _option, _tip)                                       \
-    __cra_mainarg_build_val(_ma, _module_name, _op, _option, _tip, CRA_MAINARG_TYPE_TWO, NULL, "<on|off>")
-#define cra_mainarg_build_int(_ma, _module_name, _op, _option, _tip, _valtip)                           \
-    __cra_mainarg_build_val(_ma, _module_name, _op, _option, _tip, CRA_MAINARG_TYPE_INT, NULL, _valtip)
-#define cra_mainarg_build_flt(_ma, _module_name, _op, _option, _tip, _valtip)                           \
-    __cra_mainarg_build_val(_ma, _module_name, _op, _option, _tip, CRA_MAINARG_TYPE_FLT, NULL, _valtip)
-#define cra_mainarg_build_str(_ma, _module_name, _op, _option, _tip, _valtip)                           \
-    __cra_mainarg_build_val(_ma, _module_name, _op, _option, _tip, CRA_MAINARG_TYPE_STR, NULL, _valtip)
-#define cra_mainarg_build_cmd(_ma, _module_name, _op, _option, _tip, _fn, _user)                     \
-    __cra_mainarg_build_val(_ma, _module_name, _op, _option, _tip, CRA_MAINARG_TYPE_CMD, _fn, _user)
+cra_mainarg_build_int_check(CraMainArg *ma,
+                            char       *module,
+                            char       *op,
+                            char       *option,
+                            char       *tip,
+                            char       *valtip,
+                            bool        (*check)(int64_t, void *),
+                            void       *arg);
+
+CRA_API void
+cra_mainarg_build_flt_check(CraMainArg *ma,
+                            char       *module,
+                            char       *op,
+                            char       *option,
+                            char       *tip,
+                            char       *valtip,
+                            bool        (*check)(double, void *),
+                            void       *arg);
+
+CRA_API void
+cra_mainarg_build_str_check(CraMainArg *ma,
+                            char       *module,
+                            char       *op,
+                            char       *option,
+                            char       *tip,
+                            char       *valtip,
+                            bool        (*check)(char *, void *),
+                            void       *arg);
+
+CRA_API void
+cra_mainarg_build_cmd(CraMainArg *ma, char *module, char *op, char *option, char *tip, cra_mainarg_fn fn, void *arg);
+
+CRA_API void
+cra_mainarg_build_two(CraMainArg *ma, char *module, char *op, char *option, char *tip);
+
+#define cra_mainarg_build_int(_ma, _module, _op, _option, _tip, _valtip)               \
+    cra_mainarg_build_int_check(_ma, _module, _op, _option, _tip, _valtip, NULL, NULL)
+
+#define cra_mainarg_build_flt(_ma, _module, _op, _option, _tip, _valtip)               \
+    cra_mainarg_build_flt_check(_ma, _module, _op, _option, _tip, _valtip, NULL, NULL)
+
+#define cra_mainarg_build_str(_ma, _module, _op, _option, _tip, _valtip)               \
+    cra_mainarg_build_str_check(_ma, _module, _op, _option, _tip, _valtip, NULL, NULL)
 
 CRA_API void
 cra_mainarg_parse_args(CraMainArg *ma, int argc, char *argv[]);
 
 CRA_API bool
-cra_mainarg_get_two(CraMainArg *ma, const char *module, const char *name, bool default_value);
+cra_mainarg_get_two(CraMainArg *ma, char *module, char *name, bool defaultval);
 
 CRA_API int64_t
-cra_mainarg_get_int(CraMainArg *ma, const char *module, const char *name, int64_t default_value);
+cra_mainarg_get_int(CraMainArg *ma, char *module, char *name, int64_t defaultval);
 
 CRA_API double
-cra_mainarg_get_flt(CraMainArg *ma, const char *module, const char *name, double default_value);
+cra_mainarg_get_flt(CraMainArg *ma, char *module, char *name, double defaultval);
 
-CRA_API const char *
-cra_mainarg_get_str(CraMainArg *ma, const char *module, const char *name, const char *default_value);
+CRA_API char *
+cra_mainarg_get_str(CraMainArg *ma, char *module, char *name, char *defaultval);
 
-static inline CraAList *
-cra_mainarg_get_unbuild(CraMainArg *ma)
-{
-    return ma->unbuild;
-}
+CRA_API size_t
+cra_mainarg_get_unbuild_count(CraMainArg *ma);
 
 CRA_API int64_t
-cra_mainarg_get_unbuild_int(CraMainArg *ma, unsigned int index, int64_t default_value);
+cra_mainarg_get_unbuild_int_check(CraMainArg *ma,
+                                  size_t      index,
+                                  int64_t     defaultval,
+                                  bool        (*check)(int64_t, void *),
+                                  void       *arg);
 
 CRA_API double
-cra_mainarg_get_unbuild_flt(CraMainArg *ma, unsigned int index, double default_value);
+cra_mainarg_get_unbuild_flt_check(CraMainArg *ma,
+                                  size_t      index,
+                                  double      defaultval,
+                                  bool        (*check)(double, void *),
+                                  void       *arg);
 
-CRA_API const char *
-cra_mainarg_get_unbuild_str(CraMainArg *ma, unsigned int index, const char *default_value);
+CRA_API char *
+cra_mainarg_get_unbuild_str_check(CraMainArg *ma,
+                                  size_t      index,
+                                  char       *defaultval,
+                                  bool        (*check)(char *, void *),
+                                  void       *arg);
+
+CRA_API bool
+cra_mainarg_get_unbuild_two(CraMainArg *ma, size_t index, bool defaultval);
+
+#define cra_mainarg_get_unbuild_int(_ma, _index, _defaultval)               \
+    cra_mainarg_get_unbuild_int_check(_ma, _index, _defaultval, NULL, NULL)
+
+#define cra_mainarg_get_unbuild_flt(_ma, _index, _defaultval)               \
+    cra_mainarg_get_unbuild_flt_check(_ma, _index, _defaultval, NULL, NULL)
+
+#define cra_mainarg_get_unbuild_str(_ma, _index, _defaultval)               \
+    cra_mainarg_get_unbuild_str_check(_ma, _index, _defaultval, NULL, NULL)
 
 CRA_API void
 cra_mainarg_print_help(CraMainArg *ma);
