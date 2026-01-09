@@ -37,7 +37,7 @@ cra_json_stringify_begin(CraSerializer *ser, unsigned char *buffer, size_t buffs
 static unsigned char *
 cra_json_stringify_end(CraSerializer *ser, size_t *retbuffsize, CraSerError_e *reterror)
 {
-    assert_always(retbuffsize);
+    assert(retbuffsize);
     assert(ser->index < ser->length);
     if (reterror)
         *reterror = ser->error;
@@ -89,13 +89,13 @@ __cra_json_stringify_bool(CraSerializer *ser, bool val)
     unsigned char *buf;
     if (val)
     {
-        CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, sizeof("true"), false);
+        CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, sizeof("true"));
         ser->index -= sizeof("");
         memcpy(buf, "true", sizeof("true"));
     }
     else
     {
-        CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, sizeof("false"), false);
+        CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, sizeof("false"));
         ser->index -= sizeof("");
         memcpy(buf, "false", sizeof("false"));
     }
@@ -148,7 +148,7 @@ __cra_json_stringify_int(CraSerializer *ser, void *val, const CraTypeMeta *meta)
     }
 
     // write val
-    CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, len + sizeof(""), false);
+    CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, len + sizeof(""));
     ser->index -= sizeof("");
     memcpy(buf, intstr, len);
     buf[len] = '\0';
@@ -209,7 +209,7 @@ __cra_json_stringify_uint(CraSerializer *ser, void *val, const CraTypeMeta *meta
     }
 
     // write val
-    CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, len + sizeof(""), false);
+    CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, len + sizeof(""));
     ser->index -= sizeof("");
     memcpy(buf, intstr, len);
     buf[len] = '\0';
@@ -292,7 +292,7 @@ __cra_json_stringify_float(CraSerializer *ser, void *val, const CraTypeMeta *met
     }
 
     // write val
-    CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, len + sizeof(""), false);
+    CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, len + sizeof(""));
     ser->index -= sizeof("");
     memcpy(buf, dblstr, len);
     buf[len] = '\0';
@@ -435,7 +435,7 @@ __cra_json_stringify_string(CraSerializer *ser, const char *val)
     // 空串
     if (val[0] == '\0')
     {
-        CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, sizeof("\"\""), false);
+        CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, sizeof("\"\""));
         ser->index -= sizeof("");
         memcpy(buf, "\"\"", sizeof("\"\""));
         return true;
@@ -468,7 +468,7 @@ __cra_json_stringify_string(CraSerializer *ser, const char *val)
         }
     }
 
-    CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, needed + sizeof("\"\""), false);
+    CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, needed + sizeof("\"\""));
     ser->index -= sizeof("");
 
     // write string
@@ -546,7 +546,7 @@ __cra_json_parse_string(CraSerializer *ser, char *retval, const CraTypeMeta *met
     unsigned char *buf, *str;
     size_t         len, length, max_length;
 
-    CRA_SERIALIZER_ENOUGH_AND_RETURN(ser, buf, sizeof("\"\""), false);
+    CRA_SERIALIZER_ENOUGH_AND_RETURN(ser, buf, sizeof("\"\""));
     ser->index -= sizeof("\"\"");
     if (*buf != '\"')
     {
@@ -728,7 +728,7 @@ __cra_json_stringify_value(CraSerializer *ser, void *val, const CraTypeMeta *met
         if (!val)
         {
             unsigned char *buf;
-            CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, sizeof("null"), false);
+            CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, sizeof("null"));
             ser->index -= sizeof("");
             memcpy(buf, "null", sizeof("null"));
             return true;
@@ -821,7 +821,7 @@ __cra_json_write_whitespaces(CraSerializer *ser)
     if (ser->format)
     {
         len = ser->nesting + sizeof("\n");
-        CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, len, false);
+        CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, len);
         ser->index -= sizeof("");
         *buf++ = '\n';
         for (uint32_t i = 0; i < ser->nesting; ++i)
@@ -845,7 +845,7 @@ __cra_json_write_ch(CraSerializer *ser, unsigned char ch, unsigned char after_ch
     size_t         len;
     unsigned char *buf;
     len = (ser->format && after_ch != '\0') ? sizeof("Xx") : sizeof("X");
-    CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, len, false);
+    CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, len);
     ser->index -= sizeof("");
     *buf++ = ch;
     if (ser->format && after_ch != '\0')
@@ -916,7 +916,7 @@ __cra_json_stringify_struct(CraSerializer *ser, void *val, const CraTypeMeta *me
 {
     assert(meta->submeta);
 
-    CRA_SER_NESTING_INC_AND_CHECK(ser, false);
+    CRA_SER_NESTING_INC_AND_CHECK(ser);
 
     // write '{'
     if (!__cra_json_write_ch(ser, '{', '\0'))
@@ -966,7 +966,7 @@ __cra_json_parse_struct(CraSerializer *ser, void *retval, const CraTypeMeta *met
 {
     assert(meta->submeta);
 
-    CRA_SER_NESTING_INC_AND_CHECK(ser, false);
+    CRA_SER_NESTING_INC_AND_CHECK(ser);
 
     // check '{'
     if (!__cra_json_check_ch(ser, '{'))
@@ -1065,7 +1065,7 @@ __cra_json_stringify_list(CraSerializer *ser, void *val, void *origin, uint64_t 
     assert(meta->submeta);
     assert(meta->submeta[0].type != 0 && meta->submeta[1].type == 0); // element's meta必须只有一项
 
-    CRA_SER_NESTING_INC_AND_CHECK(ser, false);
+    CRA_SER_NESTING_INC_AND_CHECK(ser);
 
     // write '['
     if (!__cra_json_write_ch(ser, '[', '\0'))
@@ -1148,7 +1148,7 @@ __cra_json_parse_list(CraSerializer *ser, void *retval, uint64_t *outcount, cons
     assert((meta->nsize > 0 && !meta->dzer_i) ||
            (meta->dzer_i && meta->dzer_i->init1 && meta->dzer_i->uninit && meta->dzer_i->append1));
 
-    CRA_SER_NESTING_INC_AND_CHECK(ser, false);
+    CRA_SER_NESTING_INC_AND_CHECK(ser);
 
     // check '['
     if (!__cra_json_check_ch(ser, '['))
@@ -1265,7 +1265,7 @@ __cra_json_stringify_dict_key(CraSerializer *ser, void *key, const CraTypeMeta *
     unsigned char *buf;
     if (meta->type != CRA_TYPE_STRING)
     {
-        CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, sizeof("\"\""), false);
+        CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, sizeof("\"\""));
         ser->index -= sizeof("\"");
         *buf = '\"';
     }
@@ -1273,7 +1273,7 @@ __cra_json_stringify_dict_key(CraSerializer *ser, void *key, const CraTypeMeta *
         return false;
     if (meta->type != CRA_TYPE_STRING)
     {
-        CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, sizeof("\""), false);
+        CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, sizeof("\""));
         ser->index -= sizeof("");
         *buf = '\"';
     }
@@ -1288,7 +1288,7 @@ __cra_json_parse_dict_key(CraSerializer *ser, void *retkey, const CraTypeMeta *m
     // skip '\"'
     if (meta->type != CRA_TYPE_STRING)
     {
-        CRA_SERIALIZER_ENOUGH_AND_RETURN(ser, buf, sizeof("\"\""), false);
+        CRA_SERIALIZER_ENOUGH_AND_RETURN(ser, buf, sizeof("\"\""));
         ser->index -= sizeof("\"");
     }
     if (!__cra_json_parse_value(ser, retkey, meta))
@@ -1296,7 +1296,7 @@ __cra_json_parse_dict_key(CraSerializer *ser, void *retkey, const CraTypeMeta *m
     // skip '\"'
     if (meta->type != CRA_TYPE_STRING)
     {
-        CRA_SERIALIZER_ENOUGH_AND_RETURN(ser, buf, sizeof("\""), false);
+        CRA_SERIALIZER_ENOUGH_AND_RETURN(ser, buf, sizeof("\""));
         ser->index -= sizeof("");
     }
     return true;
@@ -1314,7 +1314,7 @@ __cra_json_stringify_dict(CraSerializer *ser, void *val, const CraTypeMeta *meta
     assert(meta->submeta[0].type != 0 && meta->submeta[1].type != 0 && meta->submeta[2].type == 0);
     assert(meta->szer_i && meta->szer_i->get_count && meta->szer_i->iter_init && meta->szer_i->iter_next2);
 
-    CRA_SER_NESTING_INC_AND_CHECK(ser, false);
+    CRA_SER_NESTING_INC_AND_CHECK(ser);
 
     key_meta = (CraTypeMeta *)meta->submeta;
     val_meta = (CraTypeMeta *)meta->submeta + 1;
@@ -1387,7 +1387,7 @@ __cra_json_parse_dict(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
     assert(meta->submeta[0].type != 0 && meta->submeta[1].type != 0 && meta->submeta[2].type == 0);
     assert(meta->dzer_i && meta->dzer_i->init2 && meta->dzer_i->uninit && meta->dzer_i->append2);
 
-    CRA_SER_NESTING_INC_AND_CHECK(ser, false);
+    CRA_SER_NESTING_INC_AND_CHECK(ser);
 
     key_meta = (CraTypeMeta *)meta->submeta;
     val_meta = (CraTypeMeta *)meta->submeta + 1;

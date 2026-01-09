@@ -16,44 +16,44 @@
 #include <stdint.h>
 
 #define CRA_SER_MAX_NESTING 1000
-#define CRA_SER_NESTING_INC_AND_CHECK(_ser, _failretval)    \
+#define CRA_SER_NESTING_INC_AND_CHECK(_ser)                 \
     do                                                      \
     {                                                       \
         if (++(_ser)->nesting >= CRA_SER_MAX_NESTING)       \
         {                                                   \
             (_ser)->error = CRA_SER_ERROR_TOO_MUCH_NESTING; \
-            return _failretval;                             \
+            return false;                                   \
         }                                                   \
     } while (0)
 #define CRA_SER_NESTING_DEC(_ser) --(_ser)->nesting
 
 #define CRA_SERIALIZER_ENOUGH(_ser, _needed) ((_ser)->index + (_needed) <= (_ser)->length)
 #define CRA_SERIALIZER_GET_BUF(_ser)         ((_ser)->buffer + (_ser)->index)
-#define CRA_SERIALIZER_ENSURE_AND_RETURN(_ser, _buf, _needed, _failretval) \
-    do                                                                     \
-    {                                                                      \
-        if (!CRA_SERIALIZER_ENOUGH(_ser, _needed))                         \
-        {                                                                  \
-            if ((_ser)->noalloc)                                           \
-            {                                                              \
-                (_ser)->error = CRA_SER_ERROR_NOBUF;                       \
-                return _failretval;                                        \
-            }                                                              \
-            cra_serializer_extend_buf(_ser, _needed);                      \
-        }                                                                  \
-        _buf = CRA_SERIALIZER_GET_BUF(_ser);                               \
-        (_ser)->index += (_needed);                                        \
+#define CRA_SERIALIZER_ENSURE_AND_RETURN(_ser, _buf, _needed) \
+    do                                                        \
+    {                                                         \
+        if (!CRA_SERIALIZER_ENOUGH(_ser, _needed))            \
+        {                                                     \
+            if ((_ser)->noalloc)                              \
+            {                                                 \
+                (_ser)->error = CRA_SER_ERROR_NOBUF;          \
+                return false;                                 \
+            }                                                 \
+            cra_serializer_extend_buf(_ser, _needed);         \
+        }                                                     \
+        _buf = CRA_SERIALIZER_GET_BUF(_ser);                  \
+        (_ser)->index += (_needed);                           \
     } while (0)
-#define CRA_SERIALIZER_ENOUGH_AND_RETURN(_ser, _buf, _needed, _failretval) \
-    do                                                                     \
-    {                                                                      \
-        if (!CRA_SERIALIZER_ENOUGH(_ser, _needed))                         \
-        {                                                                  \
-            (_ser)->error = CRA_SER_ERROR_NOBUF;                           \
-            return _failretval;                                            \
-        }                                                                  \
-        _buf = CRA_SERIALIZER_GET_BUF(_ser);                               \
-        (_ser)->index += (_needed);                                        \
+#define CRA_SERIALIZER_ENOUGH_AND_RETURN(_ser, _buf, _needed) \
+    do                                                        \
+    {                                                         \
+        if (!CRA_SERIALIZER_ENOUGH(_ser, _needed))            \
+        {                                                     \
+            (_ser)->error = CRA_SER_ERROR_NOBUF;              \
+            return false;                                     \
+        }                                                     \
+        _buf = CRA_SERIALIZER_GET_BUF(_ser);                  \
+        (_ser)->index += (_needed);                           \
     } while (0)
 
 void

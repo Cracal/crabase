@@ -17,6 +17,7 @@ typedef enum
     CRA_SER_ERROR_SUCCESS = 0,       // must be zero
     CRA_SER_ERROR_NOBUF,             // no more spare buffer
     CRA_SER_ERROR_CODE_MISMATCH,     // code mismatch
+    CRA_SER_ERROR_TOO_MUCH_NESTING,  // too much nesting
     CRA_SER_ERROR_TYPE_MISMATCH,     // type mismatch
     CRA_SER_ERROR_SIZE_MISMATCH,     // value size mismatch
     CRA_SER_ERROR_INVALID_TYPE,      // invalid type, not supported
@@ -26,9 +27,8 @@ typedef enum
     CRA_SER_ERROR_STRING_LENGTH,     // error string length
     CRA_SER_ERROR_BYTES_LENGTH,      // error bytes length
     CRA_SER_ERROR_CHARARR_TOO_SMALL, // sizeof(char[N]) < string length from deserialization
-    CRA_SER_ERROR_TOO_MUCH_NESTING,  // too much nesting
-    CRA_SER_ERROR_LIST_COUNT,        // error list count
     CRA_SER_ERROR_ARRAY_TOO_SMALL,   // array too small. sizeof(T[N]) < element count from deserialization
+    CRA_SER_ERROR_LIST_COUNT,        // error list count
     CRA_SER_ERROR_DICT_COUNT,        // error dict count
     CRA_SER_ERROR_APPEND_FAILED,     // dzer_i.appand failed
     CRA_SER_ERROR_WRITE_KEY_FAILED,  // write json key failed

@@ -30,46 +30,46 @@
 #define CRA_SER_GET_LOW(_byte)         (uint8_t)((_byte) & 0x0f)
 #define CRA_SER_STRUCT_FLAG            0xd
 
-#define CRA_SER_PTR_NULL_AND_RETURN(_val, _is_ptr, _buf, _okretval) \
-    do                                                              \
-    {                                                               \
-        /* is ptr? */                                               \
-        if (_is_ptr)                                                \
-        {                                                           \
-            _val = *(char **)(_val);                                \
-            /* is null? */                                          \
-            if (!(_val))                                            \
-            {                                                       \
-                *(_buf) = CRA_SER_MAKE_TYPE(CRA_TYPE_NULL, 0);      \
-                return _okretval;                                   \
-            }                                                       \
-        }                                                           \
+#define CRA_SER_PTR_NULL_AND_RETURN(_val, _is_ptr, _buf)       \
+    do                                                         \
+    {                                                          \
+        /* is ptr? */                                          \
+        if (_is_ptr)                                           \
+        {                                                      \
+            _val = *(char **)(_val);                           \
+            /* is null? */                                     \
+            if (!(_val))                                       \
+            {                                                  \
+                *(_buf) = CRA_SER_MAKE_TYPE(CRA_TYPE_NULL, 0); \
+                return true;                                   \
+            }                                                  \
+        }                                                      \
     } while (0)
 
-#define CRA_SER_CHECK_TYPE_AND_NULL(_ser, _buf, _TYPE, _retval, _is_ptr, _okretval, _failretval) \
-    do                                                                                           \
-    {                                                                                            \
-        CRA_SERIALIZER_ENOUGH_AND_RETURN(_ser, _buf, 1, false);                                  \
-        /* check type */                                                                         \
-        if (*(_buf) != CRA_SER_MAKE_TYPE(_TYPE, 0))                                              \
-        {                                                                                        \
-            /* is null? */                                                                       \
-            if (*(_buf) == CRA_SER_MAKE_TYPE(CRA_TYPE_NULL, 0))                                  \
-            {                                                                                    \
-                if (_is_ptr)                                                                     \
-                {                                                                                \
-                    *(void **)(_retval) = NULL;                                                  \
-                    return _okretval;                                                            \
-                }                                                                                \
-                else                                                                             \
-                {                                                                                \
-                    (_ser)->error = CRA_SER_ERROR_CANNOT_BE_NULL;                                \
-                    return _failretval;                                                          \
-                }                                                                                \
-            }                                                                                    \
-            (_ser)->error = CRA_SER_ERROR_TYPE_MISMATCH;                                         \
-            return _failretval;                                                                  \
-        }                                                                                        \
+#define CRA_SER_CHECK_TYPE_AND_NULL(_ser, _buf, _meta, _retval)   \
+    do                                                            \
+    {                                                             \
+        CRA_SERIALIZER_ENOUGH_AND_RETURN(_ser, _buf, 1);          \
+        /* check type */                                          \
+        if (*(_buf) != CRA_SER_MAKE_TYPE((_meta)->type, 0))       \
+        {                                                         \
+            /* is null? */                                        \
+            if (*(_buf) == CRA_SER_MAKE_TYPE(CRA_TYPE_NULL, 0))   \
+            {                                                     \
+                if ((_meta)->is_ptr)                              \
+                {                                                 \
+                    *(void **)(_retval) = NULL;                   \
+                    return true;                                  \
+                }                                                 \
+                else                                              \
+                {                                                 \
+                    (_ser)->error = CRA_SER_ERROR_CANNOT_BE_NULL; \
+                    return false;                                 \
+                }                                                 \
+            }                                                     \
+            (_ser)->error = CRA_SER_ERROR_TYPE_MISMATCH;          \
+            return false;                                         \
+        }                                                         \
     } while (0)
 
 bool
@@ -98,7 +98,7 @@ cra_bin_serialize_begin(CraSerializer *ser, unsigned char *buffer, size_t buffsi
 unsigned char *
 cra_bin_serialize_end(CraSerializer *ser, size_t *retbuffsize, CraSerError_e *reterror)
 {
-    assert_always(retbuffsize);
+    assert(retbuffsize);
     assert(ser->index <= ser->length);
     if (reterror)
         *reterror = ser->error;
@@ -154,14 +154,16 @@ cra_bin_deserialize_end(CraSerializer *ser, CraSerError_e *reterror)
     if (reterror)
         *reterror = ser->error;
     cra_ser_release_uninit(&ser->release, !!ser->error);
-    return !ser->error;
+    if (!ser->error)
+        return true;
+    return false;
 }
 
 bool
 cra_bin_serialize_bool(CraSerializer *ser, bool val)
 {
     unsigned char *buf;
-    CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, 1, false);
+    CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, 1);
     *buf = CRA_SER_MAKE_TYPE(CRA_TYPE_BOOL, !!val);
     return true;
 }
@@ -171,7 +173,7 @@ cra_bin_deserialize_bool(CraSerializer *ser, bool *retval)
 {
     assert(retval);
     unsigned char *buf;
-    CRA_SERIALIZER_ENOUGH_AND_RETURN(ser, buf, 1, false);
+    CRA_SERIALIZER_ENOUGH_AND_RETURN(ser, buf, 1);
     if (CRA_SER_GET_TYPE(*buf) == CRA_TYPE_BOOL)
     {
         *retval = CRA_SER_GET_LOW(*buf);
@@ -191,7 +193,7 @@ __cra_bin_serialize_uint(CraSerializer *ser, void *val, size_t size, CraType_e t
 
     assert(size == 1 || size == 2 || size == 4 || size == 8);
 
-    CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, 1 + size, false);
+    CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, 1 + size);
     *buf = CRA_SER_MAKE_TYPE(type, size);
     ++buf;
     switch (size)
@@ -229,7 +231,7 @@ __cra_bin_deserialize_uint(CraSerializer *ser, void *retval, size_t size, CraTyp
     assert(retval);
     assert(size == 1 || size == 2 || size == 4 || size == 8);
 
-    CRA_SERIALIZER_ENOUGH_AND_RETURN(ser, buf, 1 + size, false);
+    CRA_SERIALIZER_ENOUGH_AND_RETURN(ser, buf, 1 + size);
     if (CRA_SER_GET_TYPE(*buf) != type)
     {
         ser->error = CRA_SER_ERROR_TYPE_MISMATCH;
@@ -296,7 +298,7 @@ __cra_bin_serialize_varuint__(CraSerializer *ser, uint64_t val)
     unsigned char *buf;
     while (true)
     {
-        CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, 1, false);
+        CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, 1);
         if (val > 0x7f)
         {
             *buf = (uint8_t)val | 0x80;
@@ -320,7 +322,7 @@ __cra_bin_deserialize_varuint__(CraSerializer *ser, uint64_t *retval)
     *retval = 0;
     while (shift < 64)
     {
-        CRA_SERIALIZER_ENOUGH_AND_RETURN(ser, buf, 1, false);
+        CRA_SERIALIZER_ENOUGH_AND_RETURN(ser, buf, 1);
         if (*buf & 0x80)
         {
             *retval |= (uint64_t)(*buf & 0x7f) << shift;
@@ -343,7 +345,7 @@ __cra_bin_serialize_varuint(CraSerializer *ser, uint64_t val, CraType_e type)
     unsigned char *buf;
 
     // write type
-    CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, 1, false);
+    CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, 1);
     *buf = CRA_SER_MAKE_TYPE(type, 0);
     // write value
     idx = ser->index;
@@ -363,7 +365,7 @@ __cra_bin_deserialize_varuint(CraSerializer *ser, uint64_t *retval, CraType_e ty
     assert(retval);
 
     // read type
-    CRA_SERIALIZER_ENOUGH_AND_RETURN(ser, buf, 1, false);
+    CRA_SERIALIZER_ENOUGH_AND_RETURN(ser, buf, 1);
     // check type
     if (CRA_SER_GET_TYPE(*buf) != type)
     {
@@ -449,7 +451,7 @@ cra_bin_serialize_float(CraSerializer *ser, void *val, size_t size)
 
     assert(size == 4 || size == 8);
 
-    CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, 1 + size, false);
+    CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, 1 + size);
     // write type
     *buf++ = CRA_SER_MAKE_TYPE(CRA_TYPE_FLOAT, size);
     // write value
@@ -488,7 +490,7 @@ cra_bin_deserialize_float(CraSerializer *ser, void *retval, size_t size)
     assert(retval);
     assert(size == 4 || size == 8);
 
-    CRA_SERIALIZER_ENOUGH_AND_RETURN(ser, buf, 1 + size, false);
+    CRA_SERIALIZER_ENOUGH_AND_RETURN(ser, buf, 1 + size);
     // check type
     if (CRA_SER_GET_TYPE(*buf) != CRA_TYPE_FLOAT)
     {
@@ -528,9 +530,9 @@ __cra_bin_serialize_string(CraSerializer *ser, const char *val, const CraTypeMet
     unsigned char *buf;
     size_t         length;
 
-    CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, 1, false);
+    CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, 1);
 
-    CRA_SER_PTR_NULL_AND_RETURN(val, meta->is_ptr, buf, true);
+    CRA_SER_PTR_NULL_AND_RETURN(val, meta->is_ptr, buf);
 
     // write type
     *buf = CRA_SER_MAKE_TYPE(CRA_TYPE_STRING, 0);
@@ -544,7 +546,7 @@ __cra_bin_serialize_string(CraSerializer *ser, const char *val, const CraTypeMet
     // write string
     if (length > 0)
     {
-        CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, length, false);
+        CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, length);
         memcpy(buf, val, length);
     }
     return true;
@@ -558,7 +560,7 @@ __cra_bin_deserialize_string(CraSerializer *ser, char *retval, const CraTypeMeta
 
     assert(retval);
 
-    CRA_SER_CHECK_TYPE_AND_NULL(ser, buf, CRA_TYPE_STRING, retval, meta->is_ptr, true, false);
+    CRA_SER_CHECK_TYPE_AND_NULL(ser, buf, meta, retval);
 
     // read length
     if (!__cra_bin_deserialize_varuint__(ser, &len) || len > ser->length - ser->index)
@@ -613,9 +615,9 @@ __cra_bin_serialize_bytes(CraSerializer *ser, const char *val, uint64_t inlength
 
     origin = val;
 
-    CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, 1, false);
+    CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, 1);
 
-    CRA_SER_PTR_NULL_AND_RETURN(val, meta->is_ptr, buf, true);
+    CRA_SER_PTR_NULL_AND_RETURN(val, meta->is_ptr, buf);
 
     // write type
     *buf = CRA_SER_MAKE_TYPE(CRA_TYPE_BYTES, 0);
@@ -629,7 +631,7 @@ __cra_bin_serialize_bytes(CraSerializer *ser, const char *val, uint64_t inlength
     // write bytes
     if (length > 0)
     {
-        CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, length, false);
+        CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, length);
         memcpy(buf, val, length);
     }
     return true;
@@ -646,7 +648,7 @@ __cra_bin_deserialize_bytes(CraSerializer *ser, char *retval, uint64_t *outlengt
 
     origin = retval;
 
-    CRA_SER_CHECK_TYPE_AND_NULL(ser, buf, CRA_TYPE_BYTES, retval, meta->is_ptr, true, false);
+    CRA_SER_CHECK_TYPE_AND_NULL(ser, buf, meta, retval);
 
     // read length
     if (!__cra_bin_deserialize_varuint__(ser, &len) || len > ser->length - ser->index)
@@ -789,11 +791,11 @@ __cra_bin_serialize_struct(CraSerializer *ser, void *val, const CraTypeMeta *met
     assert(val);
     assert(meta->submeta);
 
-    CRA_SER_NESTING_INC_AND_CHECK(ser, false);
+    CRA_SER_NESTING_INC_AND_CHECK(ser);
 
-    CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, 1, false);
+    CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, 1);
 
-    CRA_SER_PTR_NULL_AND_RETURN(val, meta->is_ptr, buf, true);
+    CRA_SER_PTR_NULL_AND_RETURN(val, meta->is_ptr, buf);
 
     // write type
     *buf = CRA_SER_MAKE_TYPE(CRA_TYPE_STRUCT, 0);
@@ -804,7 +806,7 @@ __cra_bin_serialize_struct(CraSerializer *ser, void *val, const CraTypeMeta *met
             return false;
     }
     // write struct end flag
-    CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, 1, false);
+    CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, 1);
     *buf = CRA_SER_MAKE_TYPE(CRA_TYPE_STRUCT, CRA_SER_STRUCT_FLAG);
 
     CRA_SER_NESTING_DEC(ser);
@@ -822,9 +824,9 @@ __cra_bin_deserialize_struct(CraSerializer *ser, void *retval, const CraTypeMeta
     assert(meta->size >= meta->submeta->size);
     assert(!meta->dzer_i || (meta->dzer_i->init1 && !meta->dzer_i->append1));
 
-    CRA_SER_NESTING_INC_AND_CHECK(ser, false);
+    CRA_SER_NESTING_INC_AND_CHECK(ser);
 
-    CRA_SER_CHECK_TYPE_AND_NULL(ser, buf, CRA_TYPE_STRUCT, retval, meta->is_ptr, true, false);
+    CRA_SER_CHECK_TYPE_AND_NULL(ser, buf, meta, retval);
 
     // alloc
     if (meta->is_ptr)
@@ -882,11 +884,11 @@ __cra_bin_serialize_list(CraSerializer *ser, void *val, uint64_t incount, const 
 
     origin = val;
 
-    CRA_SER_NESTING_INC_AND_CHECK(ser, false);
+    CRA_SER_NESTING_INC_AND_CHECK(ser);
 
-    CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, 1, false);
+    CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, 1);
 
-    CRA_SER_PTR_NULL_AND_RETURN(val, meta->is_ptr, buf, true);
+    CRA_SER_PTR_NULL_AND_RETURN(val, meta->is_ptr, buf);
 
     // write type
     *buf = CRA_SER_MAKE_TYPE(CRA_TYPE_LIST, 0);
@@ -949,9 +951,9 @@ __cra_bin_deserialize_list(CraSerializer *ser, void *retval, uint64_t *outcount,
     assert((meta->nsize > 0 && !meta->dzer_i) ||
            (meta->dzer_i && meta->dzer_i->init1 && meta->dzer_i->uninit && meta->dzer_i->append1));
 
-    CRA_SER_NESTING_INC_AND_CHECK(ser, false);
+    CRA_SER_NESTING_INC_AND_CHECK(ser);
 
-    CRA_SER_CHECK_TYPE_AND_NULL(ser, buf, CRA_TYPE_LIST, retval, meta->is_ptr, true, false);
+    CRA_SER_CHECK_TYPE_AND_NULL(ser, buf, meta, retval);
 
     // read count
     if (!__cra_bin_deserialize_varuint__(ser, &count))
@@ -1036,11 +1038,11 @@ __cra_bin_serialize_dict(CraSerializer *ser, void *val, const CraTypeMeta *meta)
     assert(meta->submeta[0].type != 0 && meta->submeta[1].type != 0 && meta->submeta[2].type == 0);
     assert(meta->szer_i && meta->szer_i->get_count && meta->szer_i->iter_init && meta->szer_i->iter_next2);
 
-    CRA_SER_NESTING_INC_AND_CHECK(ser, false);
+    CRA_SER_NESTING_INC_AND_CHECK(ser);
 
-    CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, 1, false);
+    CRA_SERIALIZER_ENSURE_AND_RETURN(ser, buf, 1);
 
-    CRA_SER_PTR_NULL_AND_RETURN(val, meta->is_ptr, buf, true);
+    CRA_SER_PTR_NULL_AND_RETURN(val, meta->is_ptr, buf);
 
     // write type
     *buf = CRA_SER_MAKE_TYPE(CRA_TYPE_DICT, 0);
@@ -1087,9 +1089,9 @@ __cra_bin_deserialize_dict(CraSerializer *ser, void *retval, const CraTypeMeta *
     assert(meta->submeta[0].type != 0 && meta->submeta[1].type != 0 && meta->submeta[2].type == 0);
     assert(meta->dzer_i && meta->dzer_i->init2 && meta->dzer_i->uninit && meta->dzer_i->append2);
 
-    CRA_SER_NESTING_INC_AND_CHECK(ser, false);
+    CRA_SER_NESTING_INC_AND_CHECK(ser);
 
-    CRA_SER_CHECK_TYPE_AND_NULL(ser, buf, CRA_TYPE_DICT, retval, meta->is_ptr, true, false);
+    CRA_SER_CHECK_TYPE_AND_NULL(ser, buf, meta, retval);
 
     // read count
     if (!__cra_bin_deserialize_varuint__(ser, &count))

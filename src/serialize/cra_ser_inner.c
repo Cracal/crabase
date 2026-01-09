@@ -32,10 +32,10 @@ cra_serializer_extend_buf(CraSerializer *ser, size_t needed)
 void
 cra_ser_release_init(CraSerRelease *release)
 {
-    // release->current = 0;
+    release->current = 0;
     release->n_nodes = CRA_SER_RELEASE_NODES1_MAX;
     // bzero(release->nodes1, sizeof(release->nodes1));
-    // release->nodes2 = NULL;
+    release->nodes2 = NULL;
 }
 
 void
