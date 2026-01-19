@@ -11,7 +11,6 @@
 #ifndef __CRA_ALIST_H__
 #define __CRA_ALIST_H__
 #include "cra_collects.h"
-#include "serialize/cra_serialize.h"
 
 typedef struct _CraAList
 {
@@ -102,12 +101,5 @@ cra_alist_sort(CraAList *list, cra_compare_fn compare);
 
 CRA_API bool
 cra_alist_add_sort(CraAList *list, cra_compare_fn compare, void *val);
-
-// =================
-
-CRA_API const CraSzer_i __g_cra_alist_szer_i;
-CRA_API const CraDzer_i __g_cra_alist_dzer_i;
-#define CRA_ALIST_SZER_I (&__g_cra_alist_szer_i)
-#define CRA_ALIST_DZER_I (&__g_cra_alist_dzer_i)
 
 #endif

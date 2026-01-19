@@ -13,81 +13,49 @@
 #include "cra_malloc.h"
 
 void
-cra_serializer_extend_buf(CraSerializer *ser, size_t needed)
+cra_release_mgr_uninit(CraReleaseMgr *mgr, bool free_ptr)
 {
-    assert(ser);
-    assert(needed > 0);
-    assert(ser->buffer);
-    assert(!ser->noalloc);
-
-    size_t newsize = ser->length << 1;
-    if (newsize - ser->index < needed)
-        newsize += needed;
-    ser->buffer = (unsigned char *)cra_realloc(ser->buffer, newsize);
-    ser->length = newsize;
-}
-
-#define CRA_SER_RELEASE_NODES1_MAX (sizeof(release->nodes1) / sizeof(release->nodes1[0]))
-
-void
-cra_ser_release_init(CraSerRelease *release)
-{
-    release->current = 0;
-    release->n_nodes = CRA_SER_RELEASE_NODES1_MAX;
-    // bzero(release->nodes1, sizeof(release->nodes1));
-    release->nodes2 = NULL;
-}
-
-void
-cra_ser_release_uninit(CraSerRelease *release, bool free_ptr)
-{
-    if (release->current > 0)
+    CraReleaseBlk *blk;
+    ssize_t        nnodes1;
+    if (free_ptr && mgr->count > 0)
     {
-        if (free_ptr)
+        nnodes1 = CRA_NARRAY(mgr->nodes1);
+        for (ssize_t i = mgr->count - 1; i >= 0; --i)
         {
-            CraSerReleaseNode *node;
-            for (size_t i = 0; i < release->current; ++i)
+            blk = i < nnodes1 ? mgr->nodes1 + i : mgr->nodes2 + (i - nnodes1);
+            if (blk->uninit)
+                blk->uninit(blk->is_ptr ? *blk->pptr : blk->pptr);
+            if (blk->is_ptr)
             {
-                if (i < CRA_SER_RELEASE_NODES1_MAX)
-                    node = &release->nodes1[i];
-                else
-                    node = &release->nodes2[i];
-
-                if (node->uninit)
-                    node->uninit(node->ptr);
-                if (node->dealloc)
-                    node->dealloc(node->ptr);
+                cra_free(*blk->pptr);
+                *blk->pptr = NULL;
             }
         }
-        if (release->nodes2)
-            cra_free(release->nodes2);
-        // bzero(release, sizeof(CraSerRelease));
     }
+    if (mgr->nodes2)
+        cra_free(mgr->nodes2);
 }
 
 void
-cra_ser_release_add(CraSerRelease *release, void *ptr, void (*uninit_fn)(void *), void (*dealloc_fn)(void *))
+cra_release_mgr_add(CraReleaseMgr *mgr, void **pptr, bool is_ptr, void (*uninit)(void *))
 {
-    CraSerReleaseNode *node;
-    if (release->current == release->n_nodes)
+    CraReleaseBlk *blk;
+    ssize_t        nnodes1;
+
+    nnodes1 = CRA_NARRAY(mgr->nodes1);
+    if (mgr->count == mgr->size)
     {
-        release->n_nodes <<= 1; // * 2
-        if (release->nodes2 == NULL)
-        {
-            release->nodes2 = (CraSerReleaseNode *)cra_malloc(sizeof(CraSerReleaseNode) *
-                                                              (release->n_nodes - CRA_SER_RELEASE_NODES1_MAX));
-        }
+        if (mgr->nodes2)
+            mgr->nodes2 = cra_realloc(mgr->nodes2, sizeof(CraReleaseBlk) * (mgr->size)); // X: mgr->size + nndoes1
         else
-        {
-            release->nodes2 = (CraSerReleaseNode *)cra_realloc(
-              release->nodes2, sizeof(CraSerReleaseNode) * (release->n_nodes - CRA_SER_RELEASE_NODES1_MAX));
-        }
+            mgr->nodes2 = cra_malloc(sizeof(CraReleaseBlk) * nnodes1);
+        mgr->size += nnodes1;
     }
-    if (release->n_nodes <= CRA_SER_RELEASE_NODES1_MAX)
-        node = &release->nodes1[release->current++];
-    else
-        node = &release->nodes2[release->current++ - CRA_SER_RELEASE_NODES1_MAX];
-    node->ptr = ptr;
-    node->uninit = uninit_fn;
-    node->dealloc = dealloc_fn;
+
+    blk = mgr->count < nnodes1 ? mgr->nodes1 + mgr->count : mgr->nodes2 + (mgr->count - nnodes1);
+    blk->is_ptr = is_ptr;
+    blk->pptr = pptr;
+    blk->uninit = uninit;
+
+    ++mgr->count;
 }

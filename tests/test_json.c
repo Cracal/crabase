@@ -8,537 +8,725 @@
  * @copyright Copyright (c) 2024
  *
  */
-#include "collections/cra_alist.h"
-#include "collections/cra_deque.h"
-#include "collections/cra_dict.h"
-#include "collections/cra_llist.h"
 #include "cra_assert.h"
 #include "cra_malloc.h"
 #include "serialize/cra_json.h"
+#include "serialize/cra_ser_collections.h"
 #include <float.h>
 
-#define FORMAT true
+#define FORMAT false
 
-static void
-test_boolean(void)
+void
+test_bool(void)
 {
-    unsigned char *buf;
-    size_t         bufsize;
-    CraSerError_e  error;
-    bool           b;
-
-    struct BS
+    struct B
     {
-        bool btrue;
-        bool bfalse;
-        bool btrue_not_1;
+        bool b0;
+        bool b1;
     };
-    CRA_TYPE_META_BEGIN(bs_meta)
-    CRA_TYPE_META_MEMBER_BOOL(struct BS, btrue)
-    CRA_TYPE_META_MEMBER_BOOL(struct BS, bfalse)
-    CRA_TYPE_META_MEMBER_BOOL(struct BS, btrue_not_1)
+    CRA_TYPE_META_BEGIN(meta)
+    CRA_TYPE_META_MEMBER_BOOL(struct B, b0, 1)
+    CRA_TYPE_META_MEMBER_BOOL(struct B, b1, 2)
     CRA_TYPE_META_END();
 
-    struct BS bs = { .btrue = true, .bfalse = false, .btrue_not_1 = 2 };
+    size_t   length;
+    char     buffer[100];
+    struct B in, *ib2, out, *rb2;
 
-    bufsize = 5;
-    buf = cra_json_stringify_struct(NULL, &bufsize, &bs, bs_meta, &error, FORMAT);
-    assert_always(buf && error == CRA_SER_ERROR_SUCCESS);
+    in.b0 = false;
+    in.b1 = true;
+    ib2 = &in;
+    CRA_UNUSED_VALUE(ib2);
+    CRA_UNUSED_VALUE(rb2);
+    CRA_UNUSED_VALUE(out);
 
-    printf("%s\n\n", buf);
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    printf("%s\n", buffer);
+    assert_always(cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(in.b0 == out.b0);
+    assert_always(in.b1 == out.b1);
 
-    struct BS rbs, *prbs;
-    b = cra_json_parse_struct(buf, bufsize, &rbs, sizeof(rbs), false, bs_meta, &error);
-    assert_always(b && !error);
-    assert_always(bs.btrue == rbs.btrue);
-    assert_always(bs.bfalse == rbs.bfalse);
-    assert_always(rbs.btrue_not_1 == true);
-    assert_always(b && !error);
-    b = cra_json_parse_struct(buf, bufsize, &prbs, sizeof(*prbs), true, bs_meta, &error);
-    assert_always(b && !error);
-    assert_always(bs.btrue == prbs->btrue);
-    assert_always(bs.bfalse == prbs->bfalse);
-    assert_always(prbs->btrue_not_1 == true);
-    assert_always(b && !error);
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(ib2, true, meta, NULL, NULL)));
+    printf("%s\n", buffer);
+    assert_always(cra_json_parse(buffer, length, CRA_SERI_STRUCT(rb2, true, meta, NULL, NULL)));
+    assert_always(ib2->b0 == rb2->b0);
+    assert_always(ib2->b1 == rb2->b1);
+    cra_free(rb2);
 
-    cra_free(prbs);
-    cra_free(buf);
+    // test error
+
+    // small buffer
+    length = 13;
+    assert_always(!cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+
+    // cannot be null
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    memcpy(buffer + (FORMAT ? 9 : 6), "null ", sizeof("null ") - 1);
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+
+    // error value
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    memcpy(buffer + (FORMAT ? 9 : 6), "False", sizeof("False") - 1);
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+
+    // type mismatch
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    meta[1].type = CRA_TYPE_INT;
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
 }
 
-static void
+void
 test_int(void)
 {
-    unsigned char buf[1024];
-    size_t        bufsize;
-    CraSerError_e error;
-    bool          b;
-
-    struct IS
+    struct I
     {
-        int8_t  i8n;
-        int8_t  i8m;
-        int8_t  i8M;
-        int16_t i16n;
+        int8_t i8n1;
+        int8_t i8n2;
+        int8_t i8m;
+        int8_t i8M;
+
+        int16_t i16n1;
+        int16_t i16n2;
         int16_t i16m;
         int16_t i16M;
-        int32_t i32n;
+
+        int32_t i32n1;
+        int32_t i32n2;
         int32_t i32m;
         int32_t i32M;
-        int64_t i64n;
+
+        int64_t i64n1;
+        int64_t i64n2;
         int64_t i64m;
         int64_t i64M;
     };
-    CRA_TYPE_META_BEGIN(is_meta)
-    CRA_TYPE_META_MEMBER_INT(struct IS, i8n)
-    CRA_TYPE_META_MEMBER_INT(struct IS, i8m)
-    CRA_TYPE_META_MEMBER_INT(struct IS, i8M)
-    CRA_TYPE_META_MEMBER_INT(struct IS, i16n)
-    CRA_TYPE_META_MEMBER_INT(struct IS, i16m)
-    CRA_TYPE_META_MEMBER_INT(struct IS, i16M)
-    CRA_TYPE_META_MEMBER_INT(struct IS, i32n)
-    CRA_TYPE_META_MEMBER_INT(struct IS, i32m)
-    CRA_TYPE_META_MEMBER_INT(struct IS, i32M)
-    CRA_TYPE_META_MEMBER_INT(struct IS, i64n)
-    CRA_TYPE_META_MEMBER_INT(struct IS, i64m)
-    CRA_TYPE_META_MEMBER_INT(struct IS, i64M)
+    CRA_TYPE_META_BEGIN(meta)
+    CRA_TYPE_META_MEMBER_INT(struct I, i8n1, 1)
+    CRA_TYPE_META_MEMBER_INT(struct I, i8n2, 2)
+    CRA_TYPE_META_MEMBER_INT(struct I, i8m, 3)
+    CRA_TYPE_META_MEMBER_INT(struct I, i8M, 4)
+
+    CRA_TYPE_META_MEMBER_INT(struct I, i16n1, 5)
+    CRA_TYPE_META_MEMBER_INT(struct I, i16n2, 6)
+    CRA_TYPE_META_MEMBER_INT(struct I, i16m, 7)
+    CRA_TYPE_META_MEMBER_INT(struct I, i16M, 8)
+
+    CRA_TYPE_META_MEMBER_INT(struct I, i32n1, 9)
+    CRA_TYPE_META_MEMBER_INT(struct I, i32n2, 10)
+    CRA_TYPE_META_MEMBER_INT(struct I, i32m, 11)
+    CRA_TYPE_META_MEMBER_INT(struct I, i32M, 12)
+
+    CRA_TYPE_META_MEMBER_INT(struct I, i64n1, 13)
+    CRA_TYPE_META_MEMBER_INT(struct I, i64n2, 14)
+    CRA_TYPE_META_MEMBER_INT(struct I, i64m, 15)
+    CRA_TYPE_META_MEMBER_INT(struct I, i64M, 16)
     CRA_TYPE_META_END();
 
-    struct IS *is = cra_alloc(struct IS);
-    is->i8n = -8;
-    is->i8m = INT8_MIN;
-    is->i8M = INT8_MAX;
-    is->i16n = -16;
-    is->i16m = INT16_MIN;
-    is->i16M = INT16_MAX;
-    is->i32n = -32;
-    is->i32m = INT32_MIN;
-    is->i32M = INT32_MAX;
-    is->i64n = -64;
-    is->i64m = INT64_MIN;
-    is->i64M = INT64_MAX;
+    char   buffer[1024];
+    size_t length;
 
-    bufsize = sizeof(buf);
-    cra_json_stringify_struct(buf, &bufsize, is, is_meta, &error, FORMAT);
-    assert_always(!error);
+    struct I out;
+    struct I in = {
+        -8,  8,  INT8_MIN,  INT8_MAX,
 
-    printf("%s\n\n", buf);
+        -16, 16, INT16_MIN, INT16_MAX,
 
-    struct IS ris, *pris;
-    b = cra_json_parse_struct(buf, bufsize, &ris, sizeof(ris), false, is_meta, &error);
-    assert_always(b && !error);
-    assert_always(is->i8n == ris.i8n);
-    assert_always(is->i8m == ris.i8m);
-    assert_always(is->i8M == ris.i8M);
-    assert_always(is->i16n == ris.i16n);
-    assert_always(is->i16m == ris.i16m);
-    assert_always(is->i16M == ris.i16M);
-    assert_always(is->i32n == ris.i32n);
-    assert_always(is->i32m == ris.i32m);
-    assert_always(is->i32M == ris.i32M);
-    assert_always(is->i64n == ris.i64n);
-    assert_always(is->i64m == ris.i64m);
-    assert_always(is->i64M == ris.i64M);
-    b = cra_json_parse_struct(buf, bufsize, &pris, sizeof(*pris), true, is_meta, &error);
-    assert_always(b && !error);
-    assert_always(is->i8n == pris->i8n);
-    assert_always(is->i8m == pris->i8m);
-    assert_always(is->i8M == pris->i8M);
-    assert_always(is->i16n == pris->i16n);
-    assert_always(is->i16m == pris->i16m);
-    assert_always(is->i16M == pris->i16M);
-    assert_always(is->i32n == pris->i32n);
-    assert_always(is->i32m == pris->i32m);
-    assert_always(is->i32M == pris->i32M);
-    assert_always(is->i64n == pris->i64n);
-    assert_always(is->i64m == pris->i64m);
-    assert_always(is->i64M == pris->i64M);
+        -32, 32, INT32_MIN, INT32_MAX,
 
-    cra_dealloc(is);
-    cra_free(pris);
+        -64, 64, INT64_MIN, INT64_MAX,
+    };
+
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    printf("%s\n", buffer);
+    assert_always(cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(in.i8n1 == out.i8n1);
+    assert_always(in.i8n2 == out.i8n2);
+    assert_always(in.i8m == out.i8m);
+    assert_always(in.i8M == out.i8M);
+    assert_always(in.i16n1 == out.i16n1);
+    assert_always(in.i16n2 == out.i16n2);
+    assert_always(in.i16m == out.i16m);
+    assert_always(in.i16M == out.i16M);
+    assert_always(in.i32n1 == out.i32n1);
+    assert_always(in.i32n2 == out.i32n2);
+    assert_always(in.i32m == out.i32m);
+    assert_always(in.i32M == out.i32M);
+    assert_always(in.i64n1 == out.i64n1);
+    assert_always(in.i64n2 == out.i64n2);
+#ifdef CRA_JSON_SAFE_INT
+    assert_always(CRA_MIN_SAFE_INT == out.i64m);
+    assert_always(CRA_MAX_SAFE_INT == out.i64M);
+#else
+    assert_always(in.i64m == out.i64m);
+    assert_always(in.i64M == out.i64M);
+#endif
+
+    // test error
+
+    // small buffer
+    length = 93;
+    assert_always(!cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+
+    // cannot be null
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    memcpy(buffer + (FORMAT ? 35 : 26), "null", sizeof("null") - 1);
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+
+    // error value
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    memcpy(buffer + (FORMAT ? 35 : 26), "3a", sizeof("3a") - 1);
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+
+    // type mismatch
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    meta[1].type = CRA_TYPE_STRING;
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
 }
 
-static void
+void
 test_uint(void)
 {
-    unsigned char buf[1024];
-    size_t        bufsize;
-    CraSerError_e error;
-    bool          b;
-
-    struct US
+    struct U
     {
-        uint8_t  u8n;
-        uint8_t  u8M;
+        uint8_t u8n;
+        uint8_t u8m;
+        uint8_t u8M;
+
         uint16_t u16n;
+        uint16_t u16m;
         uint16_t u16M;
+
         uint32_t u32n;
+        uint32_t u32m;
         uint32_t u32M;
+
         uint64_t u64n;
+        uint64_t u64m;
         uint64_t u64M;
     };
-    CRA_TYPE_META_BEGIN(us_meta)
-    CRA_TYPE_META_MEMBER_UINT(struct US, u8n)
-    CRA_TYPE_META_MEMBER_UINT(struct US, u8M)
-    CRA_TYPE_META_MEMBER_UINT(struct US, u16n)
-    CRA_TYPE_META_MEMBER_UINT(struct US, u16M)
-    CRA_TYPE_META_MEMBER_UINT(struct US, u32n)
-    CRA_TYPE_META_MEMBER_UINT(struct US, u32M)
-    CRA_TYPE_META_MEMBER_UINT(struct US, u64n)
-    CRA_TYPE_META_MEMBER_UINT(struct US, u64M)
+    CRA_TYPE_META_BEGIN(meta)
+    CRA_TYPE_META_MEMBER_UINT(struct U, u8n, 1)
+    CRA_TYPE_META_MEMBER_UINT(struct U, u8m, 3)
+    CRA_TYPE_META_MEMBER_UINT(struct U, u8M, 4)
+
+    CRA_TYPE_META_MEMBER_UINT(struct U, u16n, 5)
+    CRA_TYPE_META_MEMBER_UINT(struct U, u16m, 7)
+    CRA_TYPE_META_MEMBER_UINT(struct U, u16M, 8)
+
+    CRA_TYPE_META_MEMBER_UINT(struct U, u32n, 9)
+    CRA_TYPE_META_MEMBER_UINT(struct U, u32m, 11)
+    CRA_TYPE_META_MEMBER_UINT(struct U, u32M, 12)
+
+    CRA_TYPE_META_MEMBER_UINT(struct U, u64n, 13)
+    CRA_TYPE_META_MEMBER_UINT(struct U, u64m, 15)
+    CRA_TYPE_META_MEMBER_UINT(struct U, u64M, 16)
     CRA_TYPE_META_END();
 
-    struct US *us = cra_alloc(struct US);
-    us->u8n = 8;
-    us->u8M = UINT8_MAX;
-    us->u16n = 16;
-    us->u16M = UINT16_MAX;
-    us->u32n = 32;
-    us->u32M = UINT32_MAX;
-    us->u64n = 64;
-    us->u64M = UINT64_MAX;
+    char   buffer[1024];
+    size_t length;
 
-    bufsize = sizeof(buf);
-    cra_json_stringify_struct(buf, &bufsize, us, us_meta, &error, FORMAT);
-    assert_always(!error);
+    struct U out;
+    struct U in = {
+        8,  0, UINT8_MAX,
 
-    printf("%s\n\n", buf);
+        16, 0, UINT16_MAX,
 
-    struct US rus, *prus;
-    b = cra_json_parse_struct(buf, bufsize, &rus, sizeof(rus), false, us_meta, &error);
-    assert_always(b && !error);
-    assert_always(us->u8n == rus.u8n);
-    assert_always(us->u8M == rus.u8M);
-    assert_always(us->u16n == rus.u16n);
-    assert_always(us->u16M == rus.u16M);
-    assert_always(us->u32n == rus.u32n);
-    assert_always(us->u32M == rus.u32M);
-    assert_always(us->u64n == rus.u64n);
-    assert_always(us->u64M == rus.u64M);
-    b = cra_json_parse_struct(buf, bufsize, &prus, sizeof(*prus), true, us_meta, &error);
-    assert_always(b && !error);
-    assert_always(us->u8n == prus->u8n);
-    assert_always(us->u8M == prus->u8M);
-    assert_always(us->u16n == prus->u16n);
-    assert_always(us->u16M == prus->u16M);
-    assert_always(us->u32n == prus->u32n);
-    assert_always(us->u32M == prus->u32M);
-    assert_always(us->u64n == prus->u64n);
-    assert_always(us->u64M == prus->u64M);
+        32, 0, UINT32_MAX,
 
-    cra_dealloc(us);
-    cra_free(prus);
+        64, 0, UINT64_MAX,
+    };
+
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    printf("%s\n", buffer);
+    assert_always(cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(in.u8n == out.u8n);
+    assert_always(in.u8m == out.u8m);
+    assert_always(in.u8M == out.u8M);
+    assert_always(in.u16n == out.u16n);
+    assert_always(in.u16m == out.u16m);
+    assert_always(in.u16M == out.u16M);
+    assert_always(in.u32n == out.u32n);
+    assert_always(in.u32m == out.u32m);
+    assert_always(in.u32M == out.u32M);
+    assert_always(in.u64n == out.u64n);
+    assert_always(in.u64m == out.u64m);
+#ifdef CRA_JSON_SAFE_INT
+    assert_always(CRA_MAX_SAFE_INT == out.u64M);
+#else
+    assert_always(in.u64M == out.u64M);
+#endif
+
+    // test error
+
+    // small buffer
+    length = 50;
+    assert_always(!cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+
+    // cannot be null
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    memcpy(buffer + (FORMAT ? 32 : 23), "null", sizeof("null") - 1);
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+
+    // error value
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    memcpy(buffer + (FORMAT ? 32 : 23), "3a", sizeof("3a") - 1);
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+
+    // type mismatch
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    meta[1].type = CRA_TYPE_STRUCT;
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
 }
 
-static void
+void
 test_varint(void)
 {
-    unsigned char buf[1024];
-    size_t        bufsize;
-    CraSerError_e error;
-    bool          b;
-
-    struct VIS
+    struct I
     {
-        int8_t  i8n;
-        int8_t  i8m;
-        int8_t  i8M;
-        int16_t i16n;
+        int8_t i8n1;
+        int8_t i8n2;
+        int8_t i8m;
+        int8_t i8M;
+
+        int16_t i16n1;
+        int16_t i16n2;
         int16_t i16m;
         int16_t i16M;
-        int32_t i32n;
+
+        int32_t i32n1;
+        int32_t i32n2;
         int32_t i32m;
         int32_t i32M;
-        int64_t i64n;
+
+        int64_t i64n1;
+        int64_t i64n2;
         int64_t i64m;
         int64_t i64M;
     };
-    CRA_TYPE_META_BEGIN(is_meta)
-    CRA_TYPE_META_MEMBER_VARINT(struct VIS, i8n)
-    CRA_TYPE_META_MEMBER_VARINT(struct VIS, i8m)
-    CRA_TYPE_META_MEMBER_VARINT(struct VIS, i8M)
-    CRA_TYPE_META_MEMBER_VARINT(struct VIS, i16n)
-    CRA_TYPE_META_MEMBER_VARINT(struct VIS, i16m)
-    CRA_TYPE_META_MEMBER_VARINT(struct VIS, i16M)
-    CRA_TYPE_META_MEMBER_VARINT(struct VIS, i32n)
-    CRA_TYPE_META_MEMBER_VARINT(struct VIS, i32m)
-    CRA_TYPE_META_MEMBER_VARINT(struct VIS, i32M)
-    CRA_TYPE_META_MEMBER_VARINT(struct VIS, i64n)
-    CRA_TYPE_META_MEMBER_VARINT(struct VIS, i64m)
-    CRA_TYPE_META_MEMBER_VARINT(struct VIS, i64M)
+    CRA_TYPE_META_BEGIN(meta)
+    CRA_TYPE_META_MEMBER_VARINT(struct I, i8n1, 1)
+    CRA_TYPE_META_MEMBER_VARINT(struct I, i8n2, 2)
+    CRA_TYPE_META_MEMBER_VARINT(struct I, i8m, 3)
+    CRA_TYPE_META_MEMBER_VARINT(struct I, i8M, 4)
+
+    CRA_TYPE_META_MEMBER_VARINT(struct I, i16n1, 5)
+    CRA_TYPE_META_MEMBER_VARINT(struct I, i16n2, 6)
+    CRA_TYPE_META_MEMBER_VARINT(struct I, i16m, 7)
+    CRA_TYPE_META_MEMBER_VARINT(struct I, i16M, 8)
+
+    CRA_TYPE_META_MEMBER_VARINT(struct I, i32n1, 9)
+    CRA_TYPE_META_MEMBER_VARINT(struct I, i32n2, 10)
+    CRA_TYPE_META_MEMBER_VARINT(struct I, i32m, 11)
+    CRA_TYPE_META_MEMBER_VARINT(struct I, i32M, 12)
+
+    CRA_TYPE_META_MEMBER_VARINT(struct I, i64n1, 13)
+    CRA_TYPE_META_MEMBER_VARINT(struct I, i64n2, 14)
+    CRA_TYPE_META_MEMBER_VARINT(struct I, i64m, 15)
+    CRA_TYPE_META_MEMBER_VARINT(struct I, i64M, 16)
     CRA_TYPE_META_END();
 
-    struct VIS *is = cra_alloc(struct VIS);
-    is->i8n = -8;
-    is->i8m = INT8_MIN;
-    is->i8M = INT8_MAX;
-    is->i16n = -16;
-    is->i16m = INT16_MIN;
-    is->i16M = INT16_MAX;
-    is->i32n = -32;
-    is->i32m = INT32_MIN;
-    is->i32M = INT32_MAX;
-    is->i64n = -64;
-    is->i64m = INT64_MIN;
-    is->i64M = INT64_MAX;
+    char   buffer[1024];
+    size_t length;
 
-    bufsize = sizeof(buf);
-    cra_json_stringify_struct(buf, &bufsize, is, is_meta, &error, FORMAT);
-    assert_always(!error);
+    struct I out;
+    struct I in = {
+        -8,  8,  INT8_MIN,  INT8_MAX,
 
-    printf("%s\n\n", buf);
+        -16, 16, INT16_MIN, INT16_MAX,
 
-    struct VIS ris, *pris;
-    b = cra_json_parse_struct(buf, bufsize, &ris, sizeof(ris), false, is_meta, &error);
-    assert_always(b && !error);
-    assert_always(is->i8n == ris.i8n);
-    assert_always(is->i8m == ris.i8m);
-    assert_always(is->i8M == ris.i8M);
-    assert_always(is->i16n == ris.i16n);
-    assert_always(is->i16m == ris.i16m);
-    assert_always(is->i16M == ris.i16M);
-    assert_always(is->i32n == ris.i32n);
-    assert_always(is->i32m == ris.i32m);
-    assert_always(is->i32M == ris.i32M);
-    assert_always(is->i64n == ris.i64n);
-    assert_always(is->i64m == ris.i64m);
-    assert_always(is->i64M == ris.i64M);
-    b = cra_json_parse_struct(buf, bufsize, &pris, sizeof(*pris), true, is_meta, &error);
-    assert_always(b && !error);
-    assert_always(is->i8n == pris->i8n);
-    assert_always(is->i8m == pris->i8m);
-    assert_always(is->i8M == pris->i8M);
-    assert_always(is->i16n == pris->i16n);
-    assert_always(is->i16m == pris->i16m);
-    assert_always(is->i16M == pris->i16M);
-    assert_always(is->i32n == pris->i32n);
-    assert_always(is->i32m == pris->i32m);
-    assert_always(is->i32M == pris->i32M);
-    assert_always(is->i64n == pris->i64n);
-    assert_always(is->i64m == pris->i64m);
-    assert_always(is->i64M == pris->i64M);
+        -32, 32, INT32_MIN, INT32_MAX,
 
-    cra_dealloc(is);
-    cra_free(pris);
+        -64, 64, INT64_MIN, INT64_MAX,
+    };
+
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    printf("%s\n", buffer);
+    assert_always(cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(in.i8n1 == out.i8n1);
+    assert_always(in.i8n2 == out.i8n2);
+    assert_always(in.i8m == out.i8m);
+    assert_always(in.i8M == out.i8M);
+    assert_always(in.i16n1 == out.i16n1);
+    assert_always(in.i16n2 == out.i16n2);
+    assert_always(in.i16m == out.i16m);
+    assert_always(in.i16M == out.i16M);
+    assert_always(in.i32n1 == out.i32n1);
+    assert_always(in.i32n2 == out.i32n2);
+    assert_always(in.i32m == out.i32m);
+    assert_always(in.i32M == out.i32M);
+    assert_always(in.i64n1 == out.i64n1);
+    assert_always(in.i64n2 == out.i64n2);
+#ifdef CRA_JSON_SAFE_INT
+    assert_always(CRA_MIN_SAFE_INT == out.i64m);
+    assert_always(CRA_MAX_SAFE_INT == out.i64M);
+#else
+    assert_always(in.i64m == out.i64m);
+    assert_always(in.i64M == out.i64M);
+#endif
+
+    // test error
+
+    // small buffer
+    length = 80;
+    assert_always(!cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+
+    // cannot be null
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    memcpy(buffer + (FORMAT ? 35 : 37), "null", sizeof("null") - 1);
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+
+    // error value
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    memcpy(buffer + (FORMAT ? 35 : 37), "3a", sizeof("3a") - 1);
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+
+    // type mismatch
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    meta[1].type = CRA_TYPE_STRUCT;
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
 }
 
-static void
+void
 test_varuint(void)
 {
-    unsigned char buf[1024];
-    size_t        bufsize;
-    CraSerError_e error;
-    bool          b;
-
-    struct VUS
+    struct U
     {
-        uint8_t  u8n;
-        uint8_t  u8M;
+        uint8_t u8n;
+        uint8_t u8m;
+        uint8_t u8M;
+
         uint16_t u16n;
+        uint16_t u16m;
         uint16_t u16M;
+
         uint32_t u32n;
+        uint32_t u32m;
         uint32_t u32M;
+
         uint64_t u64n;
+        uint64_t u64m;
         uint64_t u64M;
     };
-    CRA_TYPE_META_BEGIN(us_meta)
-    CRA_TYPE_META_MEMBER_VARUINT(struct VUS, u8n)
-    CRA_TYPE_META_MEMBER_VARUINT(struct VUS, u8M)
-    CRA_TYPE_META_MEMBER_VARUINT(struct VUS, u16n)
-    CRA_TYPE_META_MEMBER_VARUINT(struct VUS, u16M)
-    CRA_TYPE_META_MEMBER_VARUINT(struct VUS, u32n)
-    CRA_TYPE_META_MEMBER_VARUINT(struct VUS, u32M)
-    CRA_TYPE_META_MEMBER_VARUINT(struct VUS, u64n)
-    CRA_TYPE_META_MEMBER_VARUINT(struct VUS, u64M)
+    CRA_TYPE_META_BEGIN(meta)
+    CRA_TYPE_META_MEMBER_VARUINT(struct U, u8n, 1)
+    CRA_TYPE_META_MEMBER_VARUINT(struct U, u8m, 3)
+    CRA_TYPE_META_MEMBER_VARUINT(struct U, u8M, 4)
+
+    CRA_TYPE_META_MEMBER_VARUINT(struct U, u16n, 5)
+    CRA_TYPE_META_MEMBER_VARUINT(struct U, u16m, 7)
+    CRA_TYPE_META_MEMBER_VARUINT(struct U, u16M, 8)
+
+    CRA_TYPE_META_MEMBER_VARUINT(struct U, u32n, 9)
+    CRA_TYPE_META_MEMBER_VARUINT(struct U, u32m, 11)
+    CRA_TYPE_META_MEMBER_VARUINT(struct U, u32M, 12)
+
+    CRA_TYPE_META_MEMBER_VARUINT(struct U, u64n, 13)
+    CRA_TYPE_META_MEMBER_VARUINT(struct U, u64m, 15)
+    CRA_TYPE_META_MEMBER_VARUINT(struct U, u64M, 16)
     CRA_TYPE_META_END();
 
-    struct VUS *us = cra_alloc(struct VUS);
-    us->u8n = 8;
-    us->u8M = UINT8_MAX;
-    us->u16n = 16;
-    us->u16M = UINT16_MAX;
-    us->u32n = 32;
-    us->u32M = UINT32_MAX;
-    us->u64n = 64;
-    us->u64M = UINT64_MAX;
+    char   buffer[1024];
+    size_t length;
 
-    bufsize = sizeof(buf);
-    cra_json_stringify_struct(buf, &bufsize, us, us_meta, &error, FORMAT);
-    assert_always(!error);
+    struct U out;
+    struct U in = {
+        8,  0, UINT8_MAX,
 
-    printf("%s\n\n", buf);
+        16, 0, UINT16_MAX,
 
-    struct VUS rus, *prus;
-    b = cra_json_parse_struct(buf, bufsize, &rus, sizeof(rus), false, us_meta, &error);
-    assert_always(b && !error);
-    assert_always(us->u8n == rus.u8n);
-    assert_always(us->u8M == rus.u8M);
-    assert_always(us->u16n == rus.u16n);
-    assert_always(us->u16M == rus.u16M);
-    assert_always(us->u32n == rus.u32n);
-    assert_always(us->u32M == rus.u32M);
-    assert_always(us->u64n == rus.u64n);
-    assert_always(us->u64M == rus.u64M);
-    b = cra_json_parse_struct(buf, bufsize, &prus, sizeof(*prus), true, us_meta, &error);
-    assert_always(b && !error);
-    assert_always(us->u8n == prus->u8n);
-    assert_always(us->u8M == prus->u8M);
-    assert_always(us->u16n == prus->u16n);
-    assert_always(us->u16M == prus->u16M);
-    assert_always(us->u32n == prus->u32n);
-    assert_always(us->u32M == prus->u32M);
-    assert_always(us->u64n == prus->u64n);
-    assert_always(us->u64M == prus->u64M);
+        32, 0, UINT32_MAX,
 
-    cra_dealloc(us);
-    cra_free(prus);
+        64, 0, UINT64_MAX,
+    };
+
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    printf("%s\n", buffer);
+    assert_always(cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(in.u8n == out.u8n);
+    assert_always(in.u8m == out.u8m);
+    assert_always(in.u8M == out.u8M);
+    assert_always(in.u16n == out.u16n);
+    assert_always(in.u16m == out.u16m);
+    assert_always(in.u16M == out.u16M);
+    assert_always(in.u32n == out.u32n);
+    assert_always(in.u32m == out.u32m);
+    assert_always(in.u32M == out.u32M);
+    assert_always(in.u64n == out.u64n);
+    assert_always(in.u64m == out.u64m);
+#ifdef CRA_JSON_SAFE_INT
+    assert_always(CRA_MAX_SAFE_INT == out.u64M);
+#else
+    assert_always(in.u64M == out.u64M);
+#endif
+
+    // test error
+
+    // small buffer
+    length = 50;
+    assert_always(!cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+
+    // cannot be null
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    memcpy(buffer + (FORMAT ? 32 : 23), "null", sizeof("null") - 1);
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+
+    // error value
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    memcpy(buffer + (FORMAT ? 32 : 23), "3a", sizeof("3a") - 1);
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+
+    // type mismatch
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    meta[1].type = CRA_TYPE_STRUCT;
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
 }
 
-static void
+void
 test_float(void)
 {
-    unsigned char buf[1024];
-    size_t        bufsize;
-    CraSerError_e error;
-    bool          b;
-
-    struct FS
+    struct F
     {
-        float  fn;
-        float  fm;
-        float  fM;
-        float  fW;
+        float fn;
+        float fm;
+        float fM;
+        float fW;
+
         double dn;
         double dm;
         double dM;
         double dW;
     };
-    CRA_TYPE_META_BEGIN(fs_meta)
-    CRA_TYPE_META_MEMBER_FLOAT(struct FS, fn)
-    CRA_TYPE_META_MEMBER_FLOAT(struct FS, fm)
-    CRA_TYPE_META_MEMBER_FLOAT(struct FS, fM)
-    CRA_TYPE_META_MEMBER_FLOAT(struct FS, fW)
-    CRA_TYPE_META_MEMBER_FLOAT(struct FS, dn)
-    CRA_TYPE_META_MEMBER_FLOAT(struct FS, dm)
-    CRA_TYPE_META_MEMBER_FLOAT(struct FS, dM)
-    CRA_TYPE_META_MEMBER_FLOAT(struct FS, dW)
+    CRA_TYPE_META_BEGIN(meta)
+    CRA_TYPE_META_MEMBER_FLOAT(struct F, fn, 1)
+    CRA_TYPE_META_MEMBER_FLOAT(struct F, fm, 2)
+    CRA_TYPE_META_MEMBER_FLOAT(struct F, fM, 3)
+    CRA_TYPE_META_MEMBER_FLOAT(struct F, fW, 4)
+    CRA_TYPE_META_MEMBER_FLOAT(struct F, dn, 5)
+    CRA_TYPE_META_MEMBER_FLOAT(struct F, dm, 6)
+    CRA_TYPE_META_MEMBER_FLOAT(struct F, dM, 7)
+    CRA_TYPE_META_MEMBER_FLOAT(struct F, dW, 8)
     CRA_TYPE_META_END();
 
-    struct FS fs = {
-        .fn = -1.5f,
-        .fm = FLT_MIN,
-        .fM = FLT_MAX,
-        .fW = -FLT_MAX,
-        .dn = 60.83,
-        .dm = DBL_MIN,
-        .dM = DBL_MAX,
-        .dW = -DBL_MAX,
+    char   buffer[1024];
+    size_t length;
+
+    struct F out, in = {
+        -1.5f, FLT_MIN, FLT_MAX, -FLT_MAX,
+
+        64.83, DBL_MIN, DBL_MAX, -DBL_MAX,
     };
 
-    bufsize = sizeof(buf);
-    cra_json_stringify_struct(buf, &bufsize, &fs, fs_meta, &error, FORMAT);
-    assert_always(!error);
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    printf("%s\n", buffer);
+    assert_always(cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(cra_compare_float(in.fn, out.fn) == 0);
+    assert_always(cra_compare_float(in.fm, out.fm) == 0);
+    assert_always(cra_compare_float(in.fM, out.fM) == 0);
+    assert_always(cra_compare_float(in.fW, out.fW) == 0);
+    assert_always(cra_compare_double(in.dn, out.dn) == 0);
+    assert_always(cra_compare_double(in.dm, out.dm) == 0);
+    assert_always(cra_compare_double(in.dM, out.dM) == 0);
+    assert_always(cra_compare_double(in.dW, out.dW) == 0);
 
-    printf("%s\n\n", buf);
+    // test error
 
-    struct FS rfs, *prfs;
-    b = cra_json_parse_struct(buf, bufsize, &rfs, sizeof(struct FS), false, fs_meta, &error);
-    assert_always(b && !error);
-    assert_always(cra_compare_float(fs.fn, rfs.fn) == 0);
-    assert_always(cra_compare_float(fs.fm, rfs.fm) == 0);
-    assert_always(cra_compare_float(fs.fM, rfs.fM) == 0);
-    assert_always(cra_compare_float(fs.fW, rfs.fW) == 0);
-    assert_always(cra_compare_double(fs.dn, rfs.dn) == 0);
-    assert_always(cra_compare_double(fs.dm, rfs.dm) == 0);
-    assert_always(cra_compare_double(fs.dM, rfs.dM) == 0);
-    assert_always(cra_compare_double(fs.dW, rfs.dW) == 0);
-    b = cra_json_parse_struct(buf, bufsize, &prfs, sizeof(struct FS), true, fs_meta, &error);
-    assert_always(b && !error);
-    assert_always(cra_compare_float(fs.fn, prfs->fn) == 0);
-    assert_always(cra_compare_float(fs.fm, prfs->fm) == 0);
-    assert_always(cra_compare_float(fs.fM, prfs->fM) == 0);
-    assert_always(cra_compare_float(fs.fW, prfs->fW) == 0);
-    assert_always(cra_compare_double(fs.dn, prfs->dn) == 0);
-    assert_always(cra_compare_double(fs.dm, prfs->dm) == 0);
-    assert_always(cra_compare_double(fs.dM, prfs->dM) == 0);
-    assert_always(cra_compare_double(fs.dW, prfs->dW) == 0);
+    // small buffer
+    length = 50;
+    assert_always(!cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
 
-    cra_free(prfs);
+    // cannot be null
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    memcpy(buffer + (FORMAT ? 22 : 16), "null", sizeof("null") - 1);
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+
+    // error value
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    memcpy(buffer + (FORMAT ? 22 : 16), "3a", sizeof("3a") - 1);
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+
+    // type mismatch
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    meta[1].type = CRA_TYPE_STRUCT;
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
 }
 
-static void
+void
+test_int_float(void)
+{
+    struct I
+    {
+        int64_t  n;
+        int64_t  m;
+        int64_t  M;
+        int64_t  W;
+        uint64_t UM;
+    };
+    CRA_TYPE_META_BEGIN(metai)
+    CRA_TYPE_META_MEMBER_INT(struct I, n, 1)
+    CRA_TYPE_META_MEMBER_INT(struct I, m, 2)
+    CRA_TYPE_META_MEMBER_INT(struct I, M, 3)
+    CRA_TYPE_META_MEMBER_INT(struct I, W, 4)
+    CRA_TYPE_META_MEMBER_UINT(struct I, UM, 5)
+    CRA_TYPE_META_END();
+
+    struct F
+    {
+        double n;
+        double m;
+        double M;
+        double W;
+        double UM;
+    };
+    CRA_TYPE_META_BEGIN(metaf)
+    CRA_TYPE_META_MEMBER_FLOAT(struct I, n, 1)
+    CRA_TYPE_META_MEMBER_FLOAT(struct I, m, 2)
+    CRA_TYPE_META_MEMBER_FLOAT(struct I, M, 3)
+    CRA_TYPE_META_MEMBER_FLOAT(struct I, W, 4)
+    CRA_TYPE_META_MEMBER_FLOAT(struct I, UM, 5)
+    CRA_TYPE_META_END();
+
+    struct I out_i, in_i = { .n = -987, .m = INT64_MIN, .M = INT64_MAX, .W = 20983478, .UM = UINT64_MAX };
+    struct F out_f, in_f = { .n = -1.533, .m = DBL_MIN, .M = DBL_MAX, .W = -DBL_MAX, .UM = 0 };
+
+    char   buffer[1024];
+    size_t length;
+
+    // i -> f
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in_i, false, metai, NULL, NULL)));
+    printf("%s\n", buffer);
+    assert_always(cra_json_parse(buffer, length, CRA_SERI_STRUCT(out_f, false, metaf, NULL, NULL)));
+    assert_always(cra_compare_double((double)in_i.n, out_f.n) == 0);
+    assert_always(cra_compare_double((double)in_i.W, out_f.W) == 0);
+#ifdef CRA_JSON_SAFE_INT
+    assert_always(cra_compare_double((double)CRA_MIN_SAFE_INT, out_f.m) == 0);
+    assert_always(cra_compare_double((double)CRA_MAX_SAFE_INT, out_f.M) == 0);
+    assert_always(cra_compare_double((double)CRA_MAX_SAFE_INT, out_f.UM) == 0);
+#else
+// 不做SAFE_INT检查，double d = (double)i;
+// d甚至可能是NaN或Inf
+#endif
+
+    // f -> i
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in_f, false, metaf, NULL, NULL)));
+    printf("%s\n", buffer);
+    assert_always(cra_json_parse(buffer, length, CRA_SERI_STRUCT(out_i, false, metai, NULL, NULL)));
+    assert_always((int64_t)in_f.n == out_i.n);
+    assert_always(0 == out_i.m);
+    assert_always(0 == out_i.UM);
+#ifdef CRA_JSON_SAFE_INT
+    assert_always(CRA_MAX_SAFE_INT == out_i.M);
+    assert_always(CRA_MIN_SAFE_INT == out_i.W);
+#else
+// 不做SAFE_INT检查，[u]int i = ([u]int)d;
+#endif
+}
+
+void
 test_string(void)
 {
-    unsigned char buf[1024];
-    size_t        bufsize;
-    CraSerError_e error;
-    bool          b;
-
-    struct SS
+    struct S
     {
-        char  anormal[16];
-        char  aempty[100];
-        char *pnormal;
-        char *pempty;
-        char *pnull;
+        char *strp;
+        char  stra[16];
+        char *strnull;
+        char *strpempty;
+        char  straempty[32];
     };
-    CRA_TYPE_META_BEGIN(ss_meta)
-    CRA_TYPE_META_MEMBER_STRING(struct SS, anormal, false)
-    CRA_TYPE_META_MEMBER_STRING(struct SS, aempty, false)
-    CRA_TYPE_META_MEMBER_STRING(struct SS, pnormal, true)
-    CRA_TYPE_META_MEMBER_STRING(struct SS, pempty, true)
-    CRA_TYPE_META_MEMBER_STRING(struct SS, pnull, true)
+    CRA_TYPE_META_BEGIN(meta)
+    CRA_TYPE_META_MEMBER_STRING(struct S, strp, 1, true)
+    CRA_TYPE_META_MEMBER_STRING(struct S, stra, 2, false)
+    CRA_TYPE_META_MEMBER_STRING(struct S, strnull, 3, true)
+    CRA_TYPE_META_MEMBER_STRING(struct S, strpempty, 4, true)
+    CRA_TYPE_META_MEMBER_STRING(struct S, straempty, 5, false)
     CRA_TYPE_META_END();
 
-    struct SS ss = {
-        .anormal = "hello \u4F60\u597D",
-        .aempty = "",
-        .pnormal = "null",
-        .pempty = "",
-        .pnull = NULL,
-    };
+    char   buffer[1024];
+    size_t length;
 
-    bufsize = sizeof(buf);
-    cra_json_stringify_struct(buf, &bufsize, &ss, ss_meta, &error, FORMAT);
-    assert_always(!error);
+    struct S out, in = { "hello pointer", "hello\tarray", NULL, "", "" };
 
-    printf("%s\n\n", buf);
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    printf("%s\n", buffer);
+    assert_always(cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(strcmp(in.strp, out.strp) == 0);
+    assert_always(strcmp(in.stra, out.stra) == 0);
+    assert_always(in.strnull == out.strnull);
+    assert_always(strcmp(in.strpempty, out.strpempty) == 0);
+    assert_always(strcmp(in.straempty, out.straempty) == 0);
+    cra_free(out.strp);
+    cra_free(out.strpempty);
 
-    struct SS rss, *prss;
-    b = cra_json_parse_struct(buf, bufsize, &rss, sizeof(struct SS), false, ss_meta, &error);
-    assert_always(b && !error);
-    assert_always(strcmp(ss.anormal, rss.anormal) == 0);
-    assert_always(strcmp(ss.aempty, rss.aempty) == 0);
-    assert_always(strcmp(ss.pnormal, rss.pnormal) == 0);
-    assert_always(strcmp(ss.pempty, rss.pempty) == 0);
-    assert_always(ss.pnull == rss.pnull && ss.pnull == NULL);
-    b = cra_json_parse_struct(buf, bufsize, &prss, sizeof(struct SS), true, ss_meta, &error);
-    assert_always(b && !error);
-    assert_always(strcmp(ss.anormal, prss->anormal) == 0);
-    assert_always(strcmp(ss.aempty, prss->aempty) == 0);
-    assert_always(strcmp(ss.pnormal, prss->pnormal) == 0);
-    assert_always(strcmp(ss.pempty, prss->pempty) == 0);
-    assert_always(ss.pnull == prss->pnull && ss.pnull == NULL);
+    // test error
 
-    cra_free(rss.pnormal);
-    cra_free(rss.pempty);
-    cra_free(prss->pnormal);
-    cra_free(prss->pempty);
-    cra_free(prss);
+    // small buffer
+    length = 13;
+    assert_always(!cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+
+    // char[N] cannot be null
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    memcpy(buffer + (FORMAT ? 22 : 31), "null", sizeof("null") - 1);
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+
+    // char array too small
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    (meta + 1)->size = 11;
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+
+    // type mismatch
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    meta->type = CRA_TYPE_FLOAT;
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
 }
 
-static void
+void
 test_string_unicode(void)
 {
-    CraSerError_e error;
-
     struct A
     {
         char *emoji;
         char *chinese;
     };
     CRA_TYPE_META_BEGIN(meta_a)
-    CRA_TYPE_META_MEMBER_STRING(struct A, emoji, true)
-    CRA_TYPE_META_MEMBER_STRING(struct A, chinese, true)
+    CRA_TYPE_META_MEMBER_STRING(struct A, emoji, 1, true)
+    CRA_TYPE_META_MEMBER_STRING(struct A, chinese, 2, true)
     CRA_TYPE_META_END();
 
     char json[] = "{"
@@ -548,9 +736,8 @@ test_string_unicode(void)
 
     struct A *a;
 
-    cra_json_parse_struct((unsigned char *)json, sizeof(json), &a, sizeof(struct A), true, meta_a, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-    printf("{\"emoji\": \"%s\", \"chinese\": \"%s\"}\n\n", a->emoji, a->chinese);
+    assert_always(cra_json_parse(json, sizeof(json), CRA_SERI_STRUCT(a, true, meta_a, NULL, NULL)));
+    printf("{\"emoji\": \"%s\", \"chinese\": \"%s\"}\n", a->emoji, a->chinese);
     assert_always(strcmp(a->emoji, "😀/") == 0);
     assert_always(strcmp(a->chinese, "你好，世界") == 0);
     cra_free(a->emoji);
@@ -565,476 +752,780 @@ test_string_unicode(void)
         char chinese[16];
     };
     CRA_TYPE_META_BEGIN(meta_b)
-    CRA_TYPE_META_MEMBER_STRING(struct B, emoji, false)
-    CRA_TYPE_META_MEMBER_STRING(struct B, chinese, false)
+    CRA_TYPE_META_MEMBER_STRING(struct B, emoji, 1, false)
+    CRA_TYPE_META_MEMBER_STRING(struct B, chinese, 2, false)
     CRA_TYPE_META_END();
 
     struct B *b;
 
-    cra_json_parse_struct((unsigned char *)json, sizeof(json), &b, sizeof(struct B), true, meta_b, &error);
-    assert_always(error == CRA_SER_ERROR_SUCCESS);
-    printf("{\"emoji\": \"%s\", \"chinese\": \"%s\"}\n\n", b->emoji, b->chinese);
+    assert_always(cra_json_parse(json, sizeof(json), CRA_SERI_STRUCT(b, true, meta_b, NULL, NULL)));
+    printf("{\"emoji\": \"%s\", \"chinese\": \"%s\"}\n", b->emoji, b->chinese);
     assert_always(strcmp(b->emoji, "😀/") == 0);
     assert_always(strcmp(b->chinese, "你好，世界") == 0);
     cra_free(b);
 }
 
-static void
+void
 test_struct(void)
 {
-    unsigned char buf[1024];
-    size_t        bufsize;
-    CraSerError_e error;
-    bool          b;
-
-    struct AS
+    struct S
     {
-        int    i;
-        double d;
+        int32_t i;
     };
-    CRA_TYPE_META_BEGIN(as_meta)
-    CRA_TYPE_META_MEMBER_INT(struct AS, i)
-    CRA_TYPE_META_MEMBER_FLOAT(struct AS, d)
+    CRA_TYPE_META_BEGIN(smeta)
+    CRA_TYPE_META_MEMBER_INT(struct S, i, 1)
     CRA_TYPE_META_END();
-    struct BS
+    struct SS
     {
-        struct AS  sas;
-        struct AS *oas;
-        struct AS *oasnull;
+        struct S *strup;
+        struct S  strus;
+        struct S *strunull;
     };
-    CRA_TYPE_META_BEGIN(bs_meta)
-    CRA_TYPE_META_MEMBER_STRUCT(struct BS, sas, false, as_meta)
-    CRA_TYPE_META_MEMBER_STRUCT(struct BS, oas, true, as_meta)
-    CRA_TYPE_META_MEMBER_STRUCT(struct BS, oasnull, true, as_meta)
+    CRA_TYPE_META_BEGIN(meta)
+    CRA_TYPE_META_MEMBER_STRUCT(struct SS, strup, 1, true, smeta, NULL, NULL)
+    CRA_TYPE_META_MEMBER_STRUCT(struct SS, strus, 2, false, smeta, NULL, NULL)
+    CRA_TYPE_META_MEMBER_STRUCT(struct SS, strunull, 3, true, smeta, NULL, NULL)
     CRA_TYPE_META_END();
 
-    struct AS as = { 200, -6.8 };
-    struct BS bs = { .sas = { 100, 3.4 }, .oas = &as, .oasnull = NULL };
+    char   buffer[1024];
+    size_t length;
 
-    bufsize = sizeof(buf);
-    cra_json_stringify_struct(buf, &bufsize, &bs, bs_meta, &error, FORMAT);
-    assert_always(!error);
+    struct S   s = { .i = 1000 };
+    struct SS  out, in = { .strup = &s, .strus = { .i = 2000 }, .strunull = NULL };
+    struct SS *po = NULL;
 
-    printf("%s\n\n", buf);
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    printf("%s\n", buffer);
+    assert_always(cra_json_parse(buffer, length, CRA_SERI_STRUCT(po, true, meta, NULL, NULL)));
+    assert_always(po);
+    assert_always(!po->strunull);
+    assert_always(po->strup);
+    assert_always(in.strup->i == po->strup->i);
+    assert_always(in.strus.i == po->strus.i);
+    assert_always(in.strunull == po->strunull);
+    cra_free(po->strup);
+    cra_free(po);
 
-    struct BS rbs, *prbs;
-    b = cra_json_parse_struct(buf, bufsize, &rbs, sizeof(struct BS), false, bs_meta, &error);
-    assert_always(b && !error);
-    assert_always(bs.sas.i == rbs.sas.i);
-    assert_always(cra_compare_double(bs.sas.d, rbs.sas.d) == 0);
-    assert_always(bs.oas->i == rbs.oas->i);
-    assert_always(cra_compare_double(bs.oas->d, rbs.oas->d) == 0);
-    assert_always(bs.oasnull == rbs.oasnull && rbs.oasnull == NULL);
-    b = cra_json_parse_struct(buf, bufsize, &prbs, sizeof(struct BS), true, bs_meta, &error);
-    assert_always(b && !error);
-    assert_always(bs.sas.i == prbs->sas.i);
-    assert_always(cra_compare_double(bs.sas.d, prbs->sas.d) == 0);
-    assert_always(bs.oas->i == prbs->oas->i);
-    assert_always(cra_compare_double(bs.oas->d, prbs->oas->d) == 0);
-    assert_always(bs.oasnull == prbs->oasnull && prbs->oasnull == NULL);
+    // test error
 
-    cra_free(rbs.oas);
-    cra_free(prbs->oas);
-    cra_free(prbs);
+    // small buffer
+    length = 13;
+    assert_always(!cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+
+    // cannot be null
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    memcpy(buffer + (FORMAT ? 40 : 28), "null", sizeof("null") - 1);
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+
+    // type mismatch
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    (meta + 1)->type = CRA_TYPE_STRING;
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
 }
 
+#if 1 // test struct..
+
+struct O
+{
+    uint32_t u;
+    float    f;
+};
+struct N
+{
+    uint32_t  u;
+    int32_t   i;
+    float     f;
+    double    d;
+    bool      b;
+    char     *n;    // null
+    uint64_t  v;    // varuint
+    char     *s;    // string
+    struct O *o;    // struct
+    struct O  a[5]; // array
+    uint32_t  na;
+    CraLList *l; // list<int32_t>
+    CraDict   c; // dict<int32_t, int32_t>
+};
+
+CRA_TYPE_META_BEGIN(metao)
+CRA_TYPE_META_MEMBER_UINT(struct O, u, 1)
+CRA_TYPE_META_MEMBER_FLOAT(struct O, f, 2)
+CRA_TYPE_META_END();
+
+CRA_TYPE_META_BEGIN(metaa)
+CRA_TYPE_META_ELEMENT_STRUCT(struct O, false, metao, NULL, NULL)
+CRA_TYPE_META_END();
+
+CRA_TYPE_META_BEGIN(metal)
+CRA_TYPE_META_ELEMENT_INT(int32_t)
+CRA_TYPE_META_END();
+
+CRA_TYPE_META_BEGIN(metac)
+CRA_TYPE_META_ELEMENT_INT(int32_t)
+CRA_TYPE_META_ELEMENT_INT(int32_t)
+CRA_TYPE_META_END();
+
+CRA_TYPE_META_BEGIN(metan)
+CRA_TYPE_META_MEMBER_INT(struct N, i, 3)
+// old
+CRA_TYPE_META_MEMBER_FLOAT(struct N, f, 2)
+// new
+CRA_TYPE_META_MEMBER_FLOAT(struct N, d, 4)
+CRA_TYPE_META_MEMBER_BOOL(struct N, b, 5)
+CRA_TYPE_META_MEMBER_STRING(struct N, n, 6, true) // null
+CRA_TYPE_META_MEMBER_VARUINT(struct N, v, 7)
+CRA_TYPE_META_MEMBER_STRING(struct N, s, 8, true)
+CRA_TYPE_META_MEMBER_STRUCT(struct N, o, 9, true, metao, NULL, NULL)
+CRA_TYPE_META_MEMBER_ARRAY(struct N, a, 10, false, metaa)
+// CRA_TYPE_META_MEMBER_LIST(struct N, l, 11, true, metal, CRA_LLIST_SZER_I, NULL)
+// CRA_TYPE_META_MEMBER_DICT(struct N, c, 12, false, metac, CRA_DICT_SZER_I, &cargs)
+CRA_TYPE_META_MEMBER_LIST(struct N, l, 11, true, metal, NULL, NULL)
+CRA_TYPE_META_MEMBER_DICT(struct N, c, 12, false, metac, NULL, NULL)
+// old
+CRA_TYPE_META_MEMBER_UINT(struct N, u, 1)
+CRA_TYPE_META_END();
+
 static void
+init_on(void *obj, CraInitArgs *da)
+{
+    if (da->size == sizeof(struct O))
+    {
+        struct O *o = (struct O *)obj;
+        o->u = 200;
+        o->f = 1.0f;
+    }
+    else
+    {
+        struct N *n = (struct N *)obj;
+        n->u = 300;
+        n->i = -48;
+        n->f = 2.5f;
+        n->d = 88.9;
+        n->b = false;
+        n->n = NULL;
+        n->v = 0;
+        n->s = NULL;
+        n->o = NULL;
+        bzero(&n->a, sizeof(n->a));
+        n->na = 0;
+        n->l = NULL;
+        bzero(&n->c, sizeof(n->c));
+    }
+}
+
+// static void
+// uninit_on(void *obj)
+// {
+//     CRA_UNUSED_VALUE(obj);
+// }
+
+const CraInitializable_i oninit_i = { .init = init_on, .uninit = NULL /*uninit_on*/ };
+
+void
+test_struct_xx(void)
+{
+    char   buffer[1024];
+    size_t length;
+
+    CraDictSerArgs cargs = {
+        .hash = (cra_hash_fn)cra_hash_int32_t_p,
+        .compare = (cra_compare_fn)cra_compare_int32_t_p,
+    };
+    metan[10].szer_i = CRA_LLIST_SZER_I;
+    metan[11].szer_i = CRA_DICT_SZER_I;
+    metan[11].arg = &cargs;
+
+    struct O outo, ino = { .u = 4000, .f = 6.7f };
+    struct N outn, inn = { .u = 300,
+                           .i = -30,
+                           .f = 7.7f,
+                           .d = 1002.3,
+                           .b = true,
+                           .n = NULL,
+                           .v = 8000000,
+                           .s = "string",
+                           .o = &ino,
+                           .a[0] = { .f = 0.5f, .u = 100 },
+                           .a[1] = { .f = 3.6f, .u = 300 },
+                           .na = 2,
+                           .l = cra_alloc(CraLList) };
+
+    cra_llist_init0(int32_t, inn.l, false);
+    cra_dict_init0(int32_t, int32_t, &inn.c, false, cargs.hash, cargs.compare);
+    for (int32_t i = 0; i < 20; i++)
+    {
+        cra_llist_append(inn.l, &i);
+        cra_dict_add(&inn.c, &i, &i);
+    }
+
+    // o => n
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(ino, false, metao, &oninit_i, NULL)));
+    printf("%s\n", buffer);
+    assert_always(cra_json_parse(buffer, length, CRA_SERI_STRUCT(outn, false, metan, &oninit_i, NULL)));
+    assert_always(ino.u == outn.u);
+    assert_always(-48 == outn.i);
+    assert_always(cra_compare_float(ino.f, outn.f) == 0);
+    assert_always(cra_compare_double(88.9, outn.d) == 0);
+    assert_always(false == outn.b);
+    assert_always(NULL == outn.n);
+    assert_always(0 == outn.v);
+    assert_always(NULL == outn.s);
+    assert_always(NULL == outn.o);
+    assert_always(0 == outn.na);
+    assert_always(memcmp(&(struct O[CRA_NARRAY(outn.a)]){ 0 }, &outn.a, sizeof(struct O[CRA_NARRAY(outn.a)])) == 0);
+    assert_always(NULL == outn.l);
+    assert_always(memcmp(&(CraDict){ 0 }, &outn.c, sizeof(CraDict)) == 0);
+
+    // n => o
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(inn, false, metan, &oninit_i, NULL)));
+    printf("%s\n", buffer);
+    assert_always(cra_json_parse(buffer, length, CRA_SERI_STRUCT(outo, false, metao, &oninit_i, NULL)));
+    assert_always(inn.u == outo.u);
+    assert_always(cra_compare_float(inn.f, outo.f) == 0);
+
+    cra_dict_uninit(&inn.c);
+    cra_llist_uninit(inn.l);
+    cra_dealloc(inn.l);
+}
+
+#endif
+
+void
+test_array(void)
+{
+    struct A
+    {
+        int32_t   arraya[100];
+        uint64_t *arrayp;
+        char      (*arrsa)[20];
+        char    **arrsp;
+        float     arrayempty[10];
+        float    *arrnull;
+
+        uint16_t narraya;
+        uint16_t narrayp;
+        uint32_t narrsa;
+        uint32_t narrsp;
+        uint32_t narrayempty;
+        uint32_t narrnull;
+    };
+
+    CRA_TYPE_META_BEGIN(metai32)
+    CRA_TYPE_META_ELEMENT_INT(int32_t)
+    CRA_TYPE_META_END();
+    CRA_TYPE_META_BEGIN(metau64)
+    CRA_TYPE_META_ELEMENT_UINT(uint64_t)
+    CRA_TYPE_META_END();
+    CRA_TYPE_META_BEGIN(metasa)
+    CRA_TYPE_META_ELEMENT_STRING(char[20], false)
+    CRA_TYPE_META_END();
+    CRA_TYPE_META_BEGIN(metasp)
+    CRA_TYPE_META_ELEMENT_STRING(char *, true)
+    CRA_TYPE_META_END();
+    CRA_TYPE_META_BEGIN(metaf32)
+    CRA_TYPE_META_ELEMENT_FLOAT(float)
+    CRA_TYPE_META_END();
+
+    CRA_TYPE_META_BEGIN(meta)
+    CRA_TYPE_META_MEMBER_ARRAY(struct A, arraya, 1, false, metai32)
+    CRA_TYPE_META_MEMBER_ARRAY(struct A, arrayp, 2, true, metau64)
+    CRA_TYPE_META_MEMBER_ARRAY(struct A, arrsa, 3, true, metasa)
+    CRA_TYPE_META_MEMBER_ARRAY(struct A, arrsp, 4, true, metasp)
+    CRA_TYPE_META_MEMBER_ARRAY(struct A, arrayempty, 5, false, metaf32)
+    CRA_TYPE_META_MEMBER_ARRAY(struct A, arrnull, 6, true, metaf32)
+    CRA_TYPE_META_END();
+
+    char   buffer[8192];
+    size_t length;
+
+    struct A out, in;
+
+    in.arrayp = (uint64_t *)cra_calloc(50, sizeof(uint64_t));
+    in.arrsa = (char (*)[20])cra_calloc(100, sizeof(in.arrsa[0]));
+    in.arrsp = (char **)cra_calloc(50, sizeof(char *));
+    in.arrnull = NULL;
+    for (int i = 0; i < 100; i++)
+    {
+        in.arraya[i] = 24 + i;
+        snprintf(in.arrsa[i], sizeof(in.arrsa[i]), "hello %d.", i);
+    }
+    for (int i = 0; i < 50; i++)
+    {
+        in.arrayp[i] = (uint64_t)(3.5 * (double)i);
+        in.arrsp[i] = cra_malloc(30);
+        snprintf(in.arrsp[i], 30, "good %d.", i);
+    }
+    in.narraya = 100;
+    in.narrsa = 100;
+    in.narrayp = 50;
+    in.narrsp = 50;
+    in.narrayempty = 0;
+    in.narrnull = 0;
+
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    printf("%s\n", buffer);
+    assert_always(cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(in.narraya == out.narraya);
+    assert_always(in.narrayp == out.narrayp);
+    assert_always(in.narrsa == out.narrsa);
+    assert_always(in.narrsp == out.narrsp);
+    assert_always(0 == out.narrayempty);
+    assert_always(in.arrnull == out.arrnull);
+    assert_always(in.narrnull == out.narrnull);
+    for (int i = 0; i < 100; i++)
+    {
+        assert_always(in.arraya[i] == out.arraya[i]);
+        assert_always(strcmp(in.arrsa[i], out.arrsa[i]) == 0);
+    }
+    for (int i = 0; i < 50; i++)
+    {
+        assert_always(in.arrayp[i] == out.arrayp[i]);
+        assert_always(strcmp(in.arrsp[i], out.arrsp[i]) == 0);
+        cra_free(out.arrsp[i]);
+    }
+    cra_free(out.arrayp);
+    cra_free(out.arrsa);
+    cra_free(out.arrsp);
+
+    // test error
+
+    // small buffer
+    length = 1000;
+    assert_always(!cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+
+    // cannot be null
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    memcpy(buffer + (FORMAT ? 13 : 10), "null", sizeof("null") - 1);
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+
+    // type mismatch
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    (meta + 2)->type = CRA_TYPE_STRUCT;
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    (meta + 2)->type = CRA_TYPE_LIST;
+
+    // array too small
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    meta->size = 396;
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+
+    for (int i = 0; i < 50; i++)
+    {
+        cra_free(in.arrsp[i]);
+    }
+    cra_free(in.arrayp);
+    cra_free(in.arrsa);
+    cra_free(in.arrsp);
+}
+
+void
 test_list(void)
 {
-    unsigned char buf[1024];
-    size_t        bufsize;
-    CraSerError_e error;
-    bool          b;
-
-    struct LS
+    struct L
     {
-        uint32_t  ni32array;
-        int32_t   i32array[10]; // array<int32_t>
-        uint32_t  nbarray;
-        bool     *barray; // array<bool>
-        CraAList  alist;  // list<int32_t>
-        CraLList *llist;  // list<bool>
-        CraDeque *deque;  // deque<uint64_t>
-
-        uint16_t  narrayempty1;
-        uint16_t  narrayempty2;
-        int32_t   arrayempty1[10];
-        int32_t  *arrayempty2;
-        CraAList  alistempty1;
-        CraAList *alistempty2;
-        CraLList  llistempty1;
-        CraLList *llistempty2;
-        CraDeque  dequeempty1;
-        CraDeque *dequeempty2;
-
-        uint32_t  narraynull;
-        int32_t  *arraynull;
+        CraAList  alist;      // List<int32_t>
+        CraLList *llist;      // List<char[20]>
+        CraDeque *deque;      // List<char *>
+        CraAList *alistempty; // List<int32_t>
+        CraLList  llistempty; // List<char[20]>
+        CraDeque  dequeempty; // List<char *>
         CraAList *alistnull;
         CraLList *llistnull;
         CraDeque *dequenull;
     };
 
-    CRA_TYPE_META_BEGIN(i32_meta)
-    CRA_TYPE_META_ITEM_INT(int32_t)
+    CRA_TYPE_META_BEGIN(metai32)
+    CRA_TYPE_META_ELEMENT_INT(int32_t)
     CRA_TYPE_META_END();
-    CRA_TYPE_META_BEGIN(b_meta)
-    CRA_TYPE_META_ITEM_BOOL(bool)
+    CRA_TYPE_META_BEGIN(metasa)
+    CRA_TYPE_META_ELEMENT_STRING(char[20], false)
     CRA_TYPE_META_END();
-    CRA_TYPE_META_BEGIN(u64_meta)
-    CRA_TYPE_META_ITEM_UINT(uint64_t)
-    CRA_TYPE_META_END();
-
-    CRA_TYPE_META_BEGIN(ls_meta)
-    CRA_TYPE_META_MEMBER_ARRAY(struct LS, i32array, false, i32_meta)
-    CRA_TYPE_META_MEMBER_ARRAY(struct LS, barray, true, b_meta)
-    CRA_TYPE_META_MEMBER_LIST(struct LS, alist, false, i32_meta, CRA_ALIST_SZER_I, CRA_ALIST_DZER_I, NULL)
-    CRA_TYPE_META_MEMBER_LIST(struct LS, llist, true, b_meta, CRA_LLIST_SZER_I, CRA_LLIST_DZER_I, NULL)
-    CRA_TYPE_META_MEMBER_LIST(struct LS, deque, true, u64_meta, CRA_DEQUE_SZER_I, CRA_DEQUE_DZER_I, NULL)
-
-    CRA_TYPE_META_MEMBER_ARRAY(struct LS, arrayempty1, false, i32_meta)
-    CRA_TYPE_META_MEMBER_ARRAY(struct LS, arrayempty2, true, i32_meta)
-    CRA_TYPE_META_MEMBER_LIST(struct LS, alistempty1, false, i32_meta, CRA_ALIST_SZER_I, CRA_ALIST_DZER_I, NULL)
-    CRA_TYPE_META_MEMBER_LIST(struct LS, alistempty2, true, i32_meta, CRA_ALIST_SZER_I, CRA_ALIST_DZER_I, NULL)
-    CRA_TYPE_META_MEMBER_LIST(struct LS, llistempty1, false, i32_meta, CRA_LLIST_SZER_I, CRA_LLIST_DZER_I, NULL)
-    CRA_TYPE_META_MEMBER_LIST(struct LS, llistempty2, true, i32_meta, CRA_LLIST_SZER_I, CRA_LLIST_DZER_I, NULL)
-    CRA_TYPE_META_MEMBER_LIST(struct LS, dequeempty1, false, i32_meta, CRA_DEQUE_SZER_I, CRA_DEQUE_DZER_I, NULL)
-    CRA_TYPE_META_MEMBER_LIST(struct LS, dequeempty2, true, i32_meta, CRA_DEQUE_SZER_I, CRA_DEQUE_DZER_I, NULL)
-
-    CRA_TYPE_META_MEMBER_ARRAY(struct LS, arraynull, true, i32_meta)
-    CRA_TYPE_META_MEMBER_LIST(struct LS, alistnull, true, i32_meta, CRA_ALIST_SZER_I, CRA_ALIST_DZER_I, NULL)
-    CRA_TYPE_META_MEMBER_LIST(struct LS, llistnull, true, i32_meta, CRA_LLIST_SZER_I, CRA_LLIST_DZER_I, NULL)
-    CRA_TYPE_META_MEMBER_LIST(struct LS, dequenull, true, i32_meta, CRA_DEQUE_SZER_I, CRA_DEQUE_DZER_I, NULL)
+    CRA_TYPE_META_BEGIN(metasp)
+    CRA_TYPE_META_ELEMENT_STRING(char *, true)
     CRA_TYPE_META_END();
 
-    struct LS ls;
-    ls.ni32array = 8;
-    ls.nbarray = 20;
-    ls.barray = (bool *)cra_malloc(sizeof(ls.barray[0]) * ls.nbarray);
-    ls.llist = cra_alloc(CraLList);
-    ls.deque = cra_alloc(CraDeque);
-    ls.narrayempty1 = 0;
-    ls.narrayempty2 = 0;
-    ls.arrayempty2 = (int32_t *)cra_malloc(sizeof(ls.arrayempty2[0]) * 8);
-    ls.alistempty2 = cra_alloc(CraAList);
-    ls.llistempty2 = cra_alloc(CraLList);
-    ls.dequeempty2 = cra_alloc(CraDeque);
-    cra_alist_init0(int32_t, &ls.alist, false);
-    cra_llist_init0(bool, ls.llist, false);
-    cra_deque_init0(uint64_t, ls.deque, CRA_DEQUE_INFINITE, false);
-    bzero(ls.arrayempty1, sizeof(ls.arrayempty1));
-    bzero(ls.arrayempty2, sizeof(ls.arrayempty2[0]) * 8);
-    cra_alist_init0(int32_t, &ls.alistempty1, false);
-    cra_alist_init0(int32_t, ls.alistempty2, false);
-    cra_llist_init0(int32_t, &ls.llistempty1, false);
-    cra_llist_init0(int32_t, ls.llistempty2, false);
-    cra_deque_init0(int32_t, &ls.dequeempty1, CRA_DEQUE_INFINITE, false);
-    cra_deque_init0(int32_t, ls.dequeempty2, CRA_DEQUE_INFINITE, false);
-    ls.narraynull = 0;
-    ls.arraynull = NULL;
-    ls.alistnull = NULL;
-    ls.llistnull = NULL;
-    ls.dequenull = NULL;
-    for (int i = 0; i < 30; i++)
+    CRA_TYPE_META_BEGIN(meta)
+    CRA_TYPE_META_MEMBER_LIST(struct L, alist, 1, false, metai32, CRA_ALIST_SZER_I, NULL)
+    CRA_TYPE_META_MEMBER_LIST(struct L, llist, 2, true, metasa, CRA_LLIST_SZER_I, NULL)
+    CRA_TYPE_META_MEMBER_LIST(struct L, deque, 3, true, metasp, CRA_DEQUE_SZER_I, NULL)
+    CRA_TYPE_META_MEMBER_LIST(struct L, alistempty, 4, true, metai32, CRA_ALIST_SZER_I, NULL)
+    CRA_TYPE_META_MEMBER_LIST(struct L, llistempty, 5, false, metasa, CRA_LLIST_SZER_I, NULL)
+    CRA_TYPE_META_MEMBER_LIST(struct L, dequeempty, 6, false, metasp, CRA_DEQUE_SZER_I, NULL)
+    CRA_TYPE_META_MEMBER_LIST(struct L, alistnull, 7, true, metai32, CRA_ALIST_SZER_I, NULL)
+    CRA_TYPE_META_MEMBER_LIST(struct L, llistnull, 8, true, metasa, CRA_LLIST_SZER_I, NULL)
+    CRA_TYPE_META_MEMBER_LIST(struct L, dequenull, 9, true, metasp, CRA_DEQUE_SZER_I, NULL)
+    CRA_TYPE_META_END();
+
+    char   buffer[8192];
+    size_t length;
+
+    int32_t  vali1, vali2;
+    char     valsa1[20], valsa2[20];
+    char    *valsp1, *valsp2;
+    struct L out, in;
+    char     s20[20] = "good char array";
+    char    *sp = "hello sp";
+
+    in.alistnull = NULL;
+    in.llistnull = NULL;
+    in.dequenull = NULL;
+    in.llist = cra_alloc(CraLList);
+    in.deque = cra_alloc(CraDeque);
+    in.alistempty = cra_alloc(CraAList);
+    cra_alist_init0(int32_t, &in.alist, false);
+    cra_llist_init0(char[20], in.llist, false);
+    cra_deque_init0(char *, in.deque, CRA_DEQUE_INFINITE, false);
+    cra_alist_init0(int32_t, in.alistempty, false);
+    cra_llist_init0(char[20], &in.llistempty, false);
+    cra_deque_init0(char *, &in.dequeempty, CRA_DEQUE_INFINITE, false);
+    for (int i = 0; i < 100; i++)
     {
-        if ((uint32_t)i < ls.ni32array)
-            ls.i32array[i] = i * 32;
-        if ((uint32_t)i < ls.nbarray)
-            ls.barray[i] = i % 2 == 0;
-        if (i < 15)
-            cra_alist_append(&ls.alist, &(int32_t){ i - 18 });
-        cra_llist_append(ls.llist, &(bool){ i % 7 == 0 });
-        cra_deque_push(ls.deque, &(uint64_t){ i * 80 });
+        cra_alist_append(&in.alist, &i);
+        cra_llist_append(in.llist, &s20);
+        cra_deque_push(in.deque, &sp);
     }
 
-    bufsize = sizeof(buf);
-    cra_json_stringify_struct(buf, &bufsize, &ls, ls_meta, &error, FORMAT);
-    assert_always(!error);
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    printf("%s\n", buffer);
+    assert_always(cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(in.alist.count == out.alist.count);
+    assert_always(in.llist->count == out.llist->count);
+    assert_always(in.deque->count == out.deque->count);
+    assert_always(in.alistempty->count == out.alistempty->count);
+    assert_always(in.llistempty.count == out.llistempty.count);
+    assert_always(in.dequeempty.count == out.dequeempty.count);
+    assert_always(in.alistnull == out.alistnull);
+    assert_always(in.llistnull == out.llistnull);
+    assert_always(in.dequenull == out.dequenull);
+    for (int i = 0; i < 100; i++)
+    {
+        cra_alist_get(&in.alist, i, &vali1);
+        cra_alist_get(&out.alist, i, &vali2);
+        assert_always(vali1 == vali2);
 
-    printf("%s\n\n", buf);
+        cra_llist_get(in.llist, i, &valsa1);
+        cra_llist_get(out.llist, i, &valsa2);
+        assert_always(strcmp(valsa1, valsa2) == 0);
 
-    struct LS rls;
-    b = cra_json_parse_struct(buf, bufsize, &rls, sizeof(struct LS), false, ls_meta, &error);
-    assert_always(b && !error);
-    assert_always(ls.ni32array == rls.ni32array);
-    assert_always(ls.nbarray == rls.nbarray);
-    assert_always(ls.alist.count == rls.alist.count);
-    assert_always(ls.llist->count == rls.llist->count);
-    assert_always(ls.deque->count == rls.deque->count);
-    assert_always(ls.narrayempty1 == rls.narrayempty1);
-    assert_always(ls.narrayempty2 == rls.narrayempty2);
-    assert_always(ls.alistempty1.count == rls.alistempty1.count);
-    assert_always(ls.alistempty2->count == rls.alistempty2->count);
-    assert_always(ls.llistempty1.count == rls.llistempty1.count);
-    assert_always(ls.llistempty2->count == rls.llistempty2->count);
-    assert_always(ls.dequeempty1.count == rls.dequeempty1.count);
-    assert_always(ls.dequeempty2->count == rls.dequeempty2->count);
-    assert_always(ls.narraynull == rls.narraynull);
-    assert_always(ls.arraynull == rls.arraynull);
-    assert_always(ls.alistnull == rls.alistnull);
-    assert_always(ls.llistnull == rls.llistnull);
-    assert_always(ls.dequenull == rls.dequenull);
-    for (uint32_t i = 0; i < ls.ni32array; i++)
-    {
-        assert_always(ls.i32array[i] == rls.i32array[i]);
+        cra_deque_get(in.deque, i, &valsp1);
+        cra_deque_get(out.deque, i, &valsp2);
+        assert_always(strcmp(valsp1, valsp2) == 0);
+        cra_free(valsp2);
     }
-    for (uint32_t i = 0; i < ls.nbarray; i++)
-    {
-        assert_always(ls.barray[i] == rls.barray[i]);
-    }
-    int32_t i321, i322;
-    for (size_t i = 0; i < ls.alist.count; i++)
-    {
-        cra_alist_get(&ls.alist, i, &i321);
-        cra_alist_get(&rls.alist, i, &i322);
-        assert_always(i321 == i322);
-    }
-    bool b1, b2;
-    for (size_t i = 0; i < ls.llist->count; i++)
-    {
-        cra_llist_get(ls.llist, i, &b1);
-        cra_llist_get(rls.llist, i, &b2);
-        assert_always(b1 == b2);
-    }
-    uint64_t u641, u642;
-    for (size_t i = 0; i < ls.deque->count; i++)
-    {
-        cra_deque_get(ls.deque, i, &u641);
-        cra_deque_get(rls.deque, i, &u642);
-        assert_always(u641 == u642);
-    }
+    cra_alist_uninit(&out.alist);
+    cra_llist_uninit(out.llist);
+    cra_deque_uninit(out.deque);
+    cra_alist_uninit(out.alistempty);
+    cra_llist_uninit(&out.llistempty);
+    cra_deque_uninit(&out.dequeempty);
+    cra_dealloc(out.llist);
+    cra_dealloc(out.deque);
+    cra_dealloc(out.alistempty);
 
-    cra_free(ls.barray);
-    cra_free(rls.barray);
-    cra_alist_uninit(&ls.alist);
-    cra_alist_uninit(&rls.alist);
-    cra_llist_uninit(ls.llist);
-    cra_llist_uninit(rls.llist);
-    cra_dealloc(ls.llist);
-    cra_dealloc(rls.llist);
-    cra_deque_uninit(ls.deque);
-    cra_deque_uninit(rls.deque);
-    cra_dealloc(ls.deque);
-    cra_dealloc(rls.deque);
-    cra_free(ls.arrayempty2);
-    cra_free(rls.arrayempty2);
-    cra_alist_uninit(&ls.alistempty1);
-    cra_alist_uninit(&rls.alistempty1);
-    cra_alist_uninit(ls.alistempty2);
-    cra_alist_uninit(rls.alistempty2);
-    cra_dealloc(ls.alistempty2);
-    cra_dealloc(rls.alistempty2);
-    cra_llist_uninit(&ls.llistempty1);
-    cra_llist_uninit(&rls.llistempty1);
-    cra_llist_uninit(ls.llistempty2);
-    cra_llist_uninit(rls.llistempty2);
-    cra_dealloc(ls.llistempty2);
-    cra_dealloc(rls.llistempty2);
-    cra_deque_uninit(&ls.dequeempty1);
-    cra_deque_uninit(&rls.dequeempty1);
-    cra_deque_uninit(ls.dequeempty2);
-    cra_deque_uninit(rls.dequeempty2);
-    cra_dealloc(ls.dequeempty2);
-    cra_dealloc(rls.dequeempty2);
+    // test error
+
+    // small buffer
+    length = 1000;
+    assert_always(!cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+
+    // cannot be null
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    memcpy(buffer + (FORMAT ? 12 : 28), "null", sizeof("null") - 1);
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+
+    // type mismatch
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    (meta + 2)->type = CRA_TYPE_STRUCT;
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+
+    cra_alist_uninit(&in.alist);
+    cra_llist_uninit(in.llist);
+    cra_deque_uninit(in.deque);
+    cra_alist_uninit(in.alistempty);
+    cra_llist_uninit(&in.llistempty);
+    cra_deque_uninit(&in.dequeempty);
+    cra_dealloc(in.llist);
+    cra_dealloc(in.deque);
+    cra_dealloc(in.alistempty);
 }
 
-static void
-test_dict(void)
-{
-    unsigned char buf[1024];
-    size_t        bufsize;
-    CraSerError_e error;
-    bool          b;
+#if 1 // test array list
 
-    struct DS
+static size_t
+get_array_count(void *narray)
+{
+    return (size_t)*(uint32_t *)narray;
+}
+
+static bool
+get_array_val(void *array, size_t index, void *retval)
+{
+    int32_t *arr = (int32_t *)array;
+    *(int32_t *)retval = arr[index];
+    return true;
+}
+
+void
+test_array_list(void)
+{
+    CRA_TYPE_META_BEGIN(metai32)
+    CRA_TYPE_META_ELEMENT_INT(int32_t)
+    CRA_TYPE_META_END();
+
+    int32_t  inarray[30], outarray[30];
+    uint32_t ninarray, noutarray;
+    CraAList inalist, outalist;
+    CraLList inllist, outllist;
+    CraDeque indeque, outdeque;
+
+    ninarray = 30;
+    cra_alist_init0(int32_t, &inalist, false);
+    cra_llist_init0(int32_t, &inllist, false);
+    cra_deque_init0(int32_t, &indeque, CRA_DEQUE_INFINITE, false);
+    for (int32_t i = 0; i < 30; i++)
     {
-        CraDict  dict;       // dict<int32_t, float>
-        CraDict  dictempty1; // dict<float, uint64_t>
-        CraDict *dictempty2; // dict<int32_t, float>
-        CraDict *dictnull;   // dict<int32_t, float>
+        inarray[i] = i;
+        if (i % 2 == 0)
+            cra_alist_append(&inalist, &(int32_t){ i + 4 });
+        if (i % 2 != 0)
+            cra_llist_append(&inllist, &(int32_t){ i * 2 });
+        if (i < 18)
+            cra_deque_push(&indeque, &(int32_t){ i * 8 });
+    }
+
+    CraSeriObject *ins[] = {
+        CRA_SERI_ARRAY(inarray, false, ninarray, metai32),
+        CRA_SERI_LIST(inalist, false, metai32, CRA_ALIST_SZER_I, NULL),
+        CRA_SERI_LIST(inllist, false, metai32, CRA_LLIST_SZER_I, NULL),
+        CRA_SERI_LIST(indeque, false, metai32, CRA_DEQUE_SZER_I, NULL),
+    };
+    CraSeriObject *outs[] = {
+        CRA_SERI_ARRAY(outarray, false, noutarray, metai32),
+        CRA_SERI_LIST(outalist, false, metai32, CRA_ALIST_SZER_I, NULL),
+        CRA_SERI_LIST(outllist, false, metai32, CRA_LLIST_SZER_I, NULL),
+        CRA_SERI_LIST(outdeque, false, metai32, CRA_DEQUE_SZER_I, NULL),
+    };
+    size_t (*getcntfns[])(void *) = {
+        get_array_count,
+        (size_t (*)(void *))cra_alist_get_count,
+        (size_t (*)(void *))cra_llist_get_count,
+        (size_t (*)(void *))cra_deque_get_count,
+    };
+    bool (*getvalfns[])(void *, size_t, void *) = {
+        get_array_val,
+        (bool (*)(void *, size_t, void *))cra_alist_get,
+        (bool (*)(void *, size_t, void *))cra_llist_get,
+        (bool (*)(void *, size_t, void *))cra_deque_get,
+    };
+    void (*uninitfns[])(void *) = {
+        NULL,
+        (void (*)(void *))cra_alist_uninit,
+        (void (*)(void *))cra_llist_uninit,
+        (void (*)(void *))cra_deque_uninit,
     };
 
-    CRA_TYPE_META_BEGIN(i32_f_meta)
-    CRA_TYPE_META_ITEM_INT(int32_t)
-    CRA_TYPE_META_ITEM_FLOAT(float)
-    CRA_TYPE_META_END();
+    char   buffer[4096];
+    size_t length;
 
-    CRA_TYPE_META_BEGIN(f_u64_meta)
-    CRA_TYPE_META_ITEM_FLOAT(float)
-    CRA_TYPE_META_ITEM_INT(uint64_t)
-    CRA_TYPE_META_END();
-
-    const CraDictDzerArg key_i32_fns = {
-        .hash = (cra_hash_fn)cra_hash_int32_t_p,
-        .compare = (cra_compare_fn)cra_compare_int32_t_p,
-    };
-    const CraDictDzerArg key_flt_fns = {
-        .hash = (cra_hash_fn)cra_hash_float_p,
-        .compare = (cra_compare_fn)cra_compare_float_p,
-    };
-
-    CRA_TYPE_META_BEGIN(ds_meta)
-    CRA_TYPE_META_MEMBER_DICT(struct DS, dict, false, i32_f_meta, CRA_DICT_SZER_I, CRA_DICT_DZER_I, &key_i32_fns)
-    CRA_TYPE_META_MEMBER_DICT(struct DS, dictempty1, false, f_u64_meta, CRA_DICT_SZER_I, CRA_DICT_DZER_I, &key_flt_fns)
-    CRA_TYPE_META_MEMBER_DICT(struct DS, dictempty2, true, i32_f_meta, CRA_DICT_SZER_I, CRA_DICT_DZER_I, &key_i32_fns)
-    CRA_TYPE_META_MEMBER_DICT(struct DS, dictnull, true, i32_f_meta, CRA_DICT_SZER_I, CRA_DICT_DZER_I, &key_i32_fns)
-    CRA_TYPE_META_END();
-
-    struct DS ds;
-    cra_dict_init0(int32_t, float, &ds.dict, false, key_i32_fns.hash, key_i32_fns.compare);
-    cra_dict_init0(float, uint64_t, &ds.dictempty1, false, key_flt_fns.hash, key_flt_fns.compare);
-    ds.dictempty2 = cra_alloc(CraDict);
-    cra_dict_init0(int32_t, float, ds.dictempty2, false, key_i32_fns.hash, key_i32_fns.compare);
-    ds.dictnull = NULL;
-    for (int i = 0; i < 40; i++)
+    size_t  n1, n2;
+    int32_t v1, v2;
+    for (size_t i = 0; i < CRA_NARRAY(ins); i++)
     {
-        cra_dict_put0(&ds.dict, &(int32_t){ i }, &(float){ i + 89.5f });
+        length = sizeof(buffer);
+        assert_always(cra_json_stringify(buffer, &length, FORMAT, ins[i]));
+        printf("%s\n", buffer);
+        for (size_t j = 0; j < CRA_NARRAY(outs); j++)
+        {
+            assert_always(cra_json_parse(buffer, length, outs[j]));
+            n1 = getcntfns[i](i == 0 ? ins[i]->meta[1].arg : ins[i]->objptr);
+            n2 = getcntfns[j](j == 0 ? outs[j]->meta[1].arg : outs[j]->objptr);
+            assert_always(n1 == n2);
+            for (size_t k = 0; k < n1; k++)
+            {
+                getvalfns[i](ins[i]->objptr, k, &v1);
+                getvalfns[j](outs[j]->objptr, k, &v2);
+                assert_always(v1 == v2);
+            }
+            if (uninitfns[j])
+                uninitfns[j](outs[j]->objptr);
+        }
+        if (uninitfns[i])
+            uninitfns[i](ins[i]->objptr);
     }
-
-    bufsize = sizeof(buf);
-    cra_json_stringify_struct(buf, &bufsize, &ds, ds_meta, &error, FORMAT);
-    assert_always(!error);
-
-    printf("%s\n\n", buf);
-
-    struct DS rds;
-    b = cra_json_parse_struct(buf, bufsize, &rds, sizeof(struct DS), false, ds_meta, &error);
-    assert_always(b && !error);
-    assert_always(ds.dict.count == rds.dict.count);
-    assert_always(ds.dictempty1.count == rds.dictempty1.count);
-    assert_always(ds.dictempty2->count == rds.dictempty2->count);
-    assert_always(ds.dictnull == rds.dictnull);
-    for (size_t i = 0; i < (size_t)ds.dict.count; i++)
-    {
-        float v1, v2;
-        cra_dict_get(&ds.dict, &i, &v1);
-        cra_dict_get(&rds.dict, &i, &v2);
-        assert_always(cra_compare_float(v1, v2) == 0);
-    }
-
-    cra_dict_uninit(&ds.dict);
-    cra_dict_uninit(&rds.dict);
-    cra_dict_uninit(&ds.dictempty1);
-    cra_dict_uninit(&rds.dictempty1);
-    cra_dict_uninit(ds.dictempty2);
-    cra_dict_uninit(rds.dictempty2);
-    cra_dealloc(ds.dictempty2);
-    cra_dealloc(rds.dictempty2);
-}
-
-#if 1
-
-struct MyOld
-{
-    int   i;
-    char *str;
-};
-CRA_TYPE_META_BEGIN(old_meta)
-CRA_TYPE_META_MEMBER_INT(struct MyOld, i)
-CRA_TYPE_META_MEMBER_STRING(struct MyOld, str, true)
-CRA_TYPE_META_END();
-
-struct MyNew
-{
-    int   i;
-    float f;
-    char *str;
-    char  arr[10];
-};
-CRA_TYPE_META_BEGIN(new_meta)
-CRA_TYPE_META_MEMBER_INT(struct MyNew, i)
-CRA_TYPE_META_MEMBER_STRING(struct MyNew, str, true)
-// JSON由于有键名，所以无所谓meta位置（顺序）
-CRA_TYPE_META_MEMBER_FLOAT(struct MyNew, f)
-CRA_TYPE_META_MEMBER_STRING(struct MyNew, arr, false)
-CRA_TYPE_META_END();
-
-static void
-set_default_val_to_new(void *obj, size_t count, size_t element_size, const void *arg)
-{
-    CRA_UNUSED_VALUE(arg);
-    CRA_UNUSED_VALUE(count);
-    CRA_UNUSED_VALUE(element_size);
-    assert(element_size == sizeof(struct MyNew));
-
-    struct MyNew *n = (struct MyNew *)obj;
-    n->i = 1000;
-    n->f = 78.2f;
-    n->str = NULL;
-    memcpy(n->arr, "OK!", sizeof("OK!"));
-}
-
-static const CraDzer_i my_new_dzer_i = {
-    .init1 = set_default_val_to_new,
-};
-
-static void
-test_old_to_new(void)
-{
-    unsigned char buf[1024];
-    size_t        bufsize;
-    CraSerError_e error;
-    bool          b;
-
-    bufsize = sizeof(buf);
-    struct MyOld o = { .i = 100, .str = "hello world!" };
-    cra_json_stringify_struct(buf, &bufsize, &o, old_meta, &error, FORMAT);
-    assert_always(!error);
-
-    printf("%s\n\n", buf);
-
-    struct MyNew n;
-    b = cra_json_parse_struct_with_dzer_i(buf, bufsize, &n, sizeof(n), false, new_meta, &my_new_dzer_i, NULL, &error);
-    assert_always(b && !error);
-    assert_always(o.i == n.i);
-    assert_always(strcmp(o.str, n.str) == 0);
-    assert_always(cra_compare_float(n.f, 78.2f) == 0); // default value, from `set_default_val_to_new()`
-    assert_always(strcmp(n.arr, "OK!") == 0);          // default value, from `set_default_val_to_new()`
-
-    cra_free(n.str);
-}
-
-static void
-test_new_to_old(void)
-{
-    unsigned char buf[1024];
-    size_t        bufsize;
-    CraSerError_e error;
-    bool          b;
-
-    bufsize = sizeof(buf);
-    struct MyNew n = { .i = 300, .str = "good~~~~", .arr = "ABCE", .f = 128.34f };
-    cra_json_stringify_struct(buf, &bufsize, &n, new_meta, &error, FORMAT);
-    assert_always(!error);
-
-    printf("%s\n\n", buf);
-
-    struct MyOld o;
-    b = cra_json_parse_struct(buf, bufsize, &o, sizeof(o), false, old_meta, &error);
-    assert_always(b && !error);
-    assert_always(o.i == n.i);
-    assert_always(strcmp(o.str, n.str) == 0);
-
-    cra_free(o.str);
 }
 
 #endif
 
+void
+test_dict(void)
+{
+    struct D
+    {
+        CraDict  ds;     // Dict<int32_t, float>
+        CraDict *dp;     // Dict<double, uint8_t>
+        CraDict *dempty; // Dict<int32_t, float>
+        CraDict *dnull;
+    };
+
+    CRA_TYPE_META_BEGIN(metaif)
+    CRA_TYPE_META_ELEMENT_INT(int32_t) // key
+    CRA_TYPE_META_ELEMENT_FLOAT(float) // val
+    CRA_TYPE_META_END();
+    CRA_TYPE_META_BEGIN(metadu)
+    CRA_TYPE_META_ELEMENT_FLOAT(double) // key
+    CRA_TYPE_META_ELEMENT_INT(uint8_t)  // val
+    CRA_TYPE_META_END();
+
+    CraDictSerArgs daif = {
+        .hash = (cra_hash_fn)cra_hash_int32_t_p,
+        .compare = (cra_compare_fn)cra_compare_int32_t_p,
+    };
+    CraDictSerArgs dadu = {
+        .hash = (cra_hash_fn)cra_hash_double_p,
+        .compare = (cra_compare_fn)cra_compare_double_p,
+    };
+
+    CRA_TYPE_META_BEGIN(meta)
+    CRA_TYPE_META_MEMBER_DICT(struct D, ds, 1, false, metaif, CRA_DICT_SZER_I, &daif)
+    CRA_TYPE_META_MEMBER_DICT(struct D, dp, 2, true, metadu, CRA_DICT_SZER_I, &dadu)
+    CRA_TYPE_META_MEMBER_DICT(struct D, dempty, 3, true, metaif, CRA_DICT_SZER_I, &daif)
+    CRA_TYPE_META_MEMBER_DICT(struct D, dnull, 4, true, metadu, CRA_DICT_SZER_I, &dadu)
+    CRA_TYPE_META_END();
+
+    char   buffer[4096];
+    size_t length;
+
+    int32_t     i1, *pi;
+    float       f1, *pf;
+    double      d1, *pd;
+    uint8_t     u1, *pu;
+    struct D    out, in;
+    CraDictIter it;
+
+    in.dnull = NULL;
+    in.dp = cra_alloc(CraDict);
+    in.dempty = cra_alloc(CraDict);
+    cra_dict_init0(int32_t, float, &in.ds, false, daif.hash, daif.compare);
+    cra_dict_init0(double, uint8_t, in.dp, false, dadu.hash, dadu.compare);
+    cra_dict_init0(int32_t, float, in.dempty, false, daif.hash, daif.compare);
+    for (int i = 0; i < 100; i++)
+    {
+        i1 = i * 7;
+        f1 = (float)i * 1.5f;
+        cra_dict_add(&in.ds, &i1, &f1);
+        if (i % 2 == 0)
+        {
+            d1 = (double)i + 3.4;
+            u1 = (uint8_t)i;
+            cra_dict_add(in.dp, &d1, &u1);
+        }
+    }
+
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    printf("%s\n", buffer);
+    assert_always(cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(in.dnull == out.dnull);
+    assert_always(in.ds.count == out.ds.count);
+    assert_always(in.dp->count == out.dp->count);
+    assert_always(in.dempty->count == out.dempty->count);
+    for (cra_dict_iter_init(&in.ds, &it); cra_dict_iter_next(&it, (void **)&pi, (void **)&pf);)
+    {
+        cra_dict_get(&out.ds, pi, &f1);
+        assert_always(cra_compare_float(f1, *pf) == 0);
+    }
+    for (cra_dict_iter_init(in.dp, &it); cra_dict_iter_next(&it, (void **)&pd, (void **)&pu);)
+    {
+        cra_dict_get(out.dp, pd, &u1);
+        assert_always(u1 == *pu);
+    }
+    cra_dict_uninit(&out.ds);
+    cra_dict_uninit(out.dp);
+    cra_dict_uninit(out.dempty);
+    cra_dealloc(out.dp);
+    cra_dealloc(out.dempty);
+
+    // test error
+
+    // small buffer
+    length = 1000;
+    assert_always(!cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+
+    // cannot be null
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    memcpy(buffer + (FORMAT ? 9 : 6), "null", sizeof("null") - 1);
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+
+    // type mismatch
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    (meta + 2)->type = CRA_TYPE_STRING;
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    (meta + 2)->type = CRA_TYPE_DICT;
+
+    // invalid key type
+    length = sizeof(buffer);
+    ((CraTypeMeta *)metadu)->type = CRA_TYPE_BYTES;
+    assert_always(!cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+
+    cra_dict_uninit(&in.ds);
+    cra_dict_uninit(in.dp);
+    cra_dict_uninit(in.dempty);
+    cra_dealloc(in.dp);
+    cra_dealloc(in.dempty);
+}
+
 int
 main(void)
 {
-    test_boolean();
+    printf("========== test bool ==========\n");
+    test_bool();
+    printf("========== test int ==========\n");
     test_int();
+    printf("========== test uint ==========\n");
     test_uint();
+    printf("========== test varint ==========\n");
     test_varint();
+    printf("========== test varuint ==========\n");
     test_varuint();
+    printf("========== test float ==========\n");
     test_float();
+    printf("========== test int float ==========\n");
+    test_int_float();
+    printf("========== test string ==========\n");
     test_string();
+    printf("========== test string unicode ==========\n");
     test_string_unicode();
+    printf("========== test struct ==========\n");
     test_struct();
+    printf("========== test struct xx ==========\n");
+    test_struct_xx();
+    printf("========== test array ==========\n");
+    test_array();
+    printf("========== test list ==========\n");
     test_list();
+    printf("========== test array list ==========\n");
+    test_array_list();
+    printf("========== test dict ==========\n");
     test_dict();
-    test_old_to_new();
-    test_new_to_old();
 
     cra_memory_leak_report();
     return 0;

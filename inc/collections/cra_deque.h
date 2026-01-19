@@ -106,11 +106,4 @@ cra_deque_reverse(CraDeque *deque);
 CRA_API CraDeque *
 cra_deque_clone(CraDeque *deque, cra_deep_copy_val_fn deep_copy_val);
 
-// =================
-
-CRA_API const CraSzer_i __g_cra_deque_szer_i;
-CRA_API const CraDzer_i __g_cra_deque_dzer_i;
-#define CRA_DEQUE_SZER_I (&__g_cra_deque_szer_i)
-#define CRA_DEQUE_DZER_I (&__g_cra_deque_dzer_i)
-
 #endif

@@ -11,7 +11,6 @@
 #ifndef __CRA_LLIST_H__
 #define __CRA_LLIST_H__
 #include "cra_collects.h"
-#include "serialize/cra_serialize.h"
 
 typedef struct _CraLListNode
 {
@@ -130,12 +129,5 @@ cra_llist_unlink_node(CraLList *list, CraLListNode *node);
 
 CRA_API CraLListNode *
 cra_llist_get_node(CraLList *list, size_t index);
-
-// =================
-
-CRA_API const CraSzer_i __g_cra_llist_szer_i;
-CRA_API const CraDzer_i __g_cra_llist_dzer_i;
-#define CRA_LLIST_SZER_I (&__g_cra_llist_szer_i)
-#define CRA_LLIST_DZER_I (&__g_cra_llist_dzer_i)
 
 #endif

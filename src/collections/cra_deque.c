@@ -581,35 +581,3 @@ cra_deque_clone(CraDeque *deque, cra_deep_copy_val_fn deep_copy_val)
     }
     return ret;
 }
-
-// ===============
-
-static void
-cra_deque_szer_iter_init(void *obj, void *it, size_t itsize)
-{
-    CRA_UNUSED_VALUE(itsize);
-    assert(sizeof(CraDequeIter) <= itsize);
-    cra_deque_iter_init((CraDeque *)obj, (CraDequeIter *)it);
-}
-
-static void
-cra_deque_dzer_init(void *obj, size_t count, size_t element_size, const void *arg)
-{
-    assert(obj);
-    assert(element_size > 0);
-    CRA_UNUSED_VALUE(count);
-    CRA_UNUSED_VALUE(arg);
-    cra_deque_init((CraDeque *)obj, element_size, CRA_DEQUE_INFINITE, false);
-}
-
-const CraSzer_i __g_cra_deque_szer_i = {
-    .get_count = (size_t (*)(void *))cra_deque_get_count,
-    .iter_init = cra_deque_szer_iter_init,
-    .iter_next1 = (bool (*)(void *, void **))cra_deque_iter_next,
-};
-
-const CraDzer_i __g_cra_deque_dzer_i = {
-    .init1 = cra_deque_dzer_init,
-    .uninit = (void (*)(void *))cra_deque_uninit,
-    .append1 = (bool (*)(void *, void *))cra_deque_push,
-};

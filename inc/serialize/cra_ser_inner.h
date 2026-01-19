@@ -11,225 +11,219 @@
 #ifndef __CRA_SER_INNER_H__
 #define __CRA_SER_INNER_H__
 #include "cra_assert.h"
+#include "cra_malloc.h"
 #include "cra_serialize.h"
 #include <stdbool.h>
 #include <stdint.h>
 
-#define CRA_SER_MAX_NESTING 1000
-#define CRA_SER_NESTING_INC_AND_CHECK(_ser)                 \
-    do                                                      \
-    {                                                       \
-        if (++(_ser)->nesting >= CRA_SER_MAX_NESTING)       \
-        {                                                   \
-            (_ser)->error = CRA_SER_ERROR_TOO_MUCH_NESTING; \
-            return false;                                   \
-        }                                                   \
-    } while (0)
-#define CRA_SER_NESTING_DEC(_ser) --(_ser)->nesting
+typedef struct _CraSerializer CraSerializer;
+typedef struct _CraRelaseMgr  CraReleaseMgr;
+typedef struct _CraRelaseBlk  CraReleaseBlk;
 
-#define CRA_SERIALIZER_ENOUGH(_ser, _needed) ((_ser)->index + (_needed) <= (_ser)->length)
-#define CRA_SERIALIZER_GET_BUF(_ser)         ((_ser)->buffer + (_ser)->index)
-#define CRA_SERIALIZER_ENSURE_AND_RETURN(_ser, _buf, _needed) \
-    do                                                        \
-    {                                                         \
-        if (!CRA_SERIALIZER_ENOUGH(_ser, _needed))            \
-        {                                                     \
-            if ((_ser)->noalloc)                              \
-            {                                                 \
-                (_ser)->error = CRA_SER_ERROR_NOBUF;          \
-                return false;                                 \
-            }                                                 \
-            cra_serializer_extend_buf(_ser, _needed);         \
-        }                                                     \
-        _buf = CRA_SERIALIZER_GET_BUF(_ser);                  \
-        (_ser)->index += (_needed);                           \
-    } while (0)
-#define CRA_SERIALIZER_ENOUGH_AND_RETURN(_ser, _buf, _needed) \
-    do                                                        \
-    {                                                         \
-        if (!CRA_SERIALIZER_ENOUGH(_ser, _needed))            \
-        {                                                     \
-            (_ser)->error = CRA_SER_ERROR_NOBUF;              \
-            return false;                                     \
-        }                                                     \
-        _buf = CRA_SERIALIZER_GET_BUF(_ser);                  \
-        (_ser)->index += (_needed);                           \
-    } while (0)
-
-void
-cra_serializer_extend_buf(CraSerializer *ser, size_t needed);
-
-void
-cra_ser_release_init(CraSerRelease *release);
-
-void
-cra_ser_release_uninit(CraSerRelease *release, bool free_ptr);
-
-void
-cra_ser_release_add(CraSerRelease *release, void *ptr, void (*uninit_fn)(void *), void (*dealloc_fn)(void *));
-
-static inline int64_t
-__cra_ptr_to_i64(void *val, size_t size)
+struct _CraRelaseBlk
 {
-    int64_t ret = 0;
+    bool   is_ptr;
+    void **pptr;
+    void   (*uninit)(void *);
+};
 
-    assert(size == 1 || size == 2 || size == 4 || size == 8);
+struct _CraRelaseMgr
+{
+    ssize_t        size;
+    ssize_t        count;
+    CraReleaseBlk  nodes1[16];
+    CraReleaseBlk *nodes2;
+};
 
-    switch (size)
+struct _CraSerializer
+{
+    bool           format;
+    uint32_t       nesting;
+    size_t         index;
+    size_t         maxlen;
+    unsigned char *buffer;
+    CraReleaseMgr  release;
+
+    size_t ntemp;
+    void  *temp;
+};
+
+static inline void
+cra_release_mgr_init(CraReleaseMgr *mgr)
+{
+    mgr->size = CRA_NARRAY(mgr->nodes1);
+    mgr->count = 0;
+    mgr->nodes2 = NULL;
+}
+
+void
+cra_release_mgr_uninit(CraReleaseMgr *mgr, bool free_ptr);
+
+void
+cra_release_mgr_add(CraReleaseMgr *mgr, void **pptr, bool is_ptr, void (*uninit)(void *));
+
+#define CRA_SERIALIZER_PRINT_ERROR_(_fmt, ...) fprintf(stderr, "(ERROR): " _fmt "\n", ##__VA_ARGS__)
+#define CRA_SERIALIZER_PRINT_ERROR(_fmt, ...)  fprintf(stderr, CRA_SERIALIZER_NAME "(ERROR): " _fmt "\n", ##__VA_ARGS__)
+
+#define CRA_NAME(_meta)                         ((_meta)->name ? (_meta)->name : "(null)")
+#define CRA_SERIALIZER_GET_BUF(_ser)            ((_ser)->buffer + (_ser)->index)
+#define CRA_SERIALIZER_IS_ENOUGH(_ser, _needed) ((_ser)->index + (_needed) <= (_ser)->maxlen)
+#define CRA_SERIALIZER_GET_REAMAINING(_ser)     ((_ser)->maxlen - (_ser)->index)
+#define CRA_SERIALIZER_ENSURE_(_ser, _buf, _needed, _sub)  \
+    do                                                     \
+    {                                                      \
+        if (!CRA_SERIALIZER_IS_ENOUGH(_ser, _needed))      \
+        {                                                  \
+            CRA_SERIALIZER_PRINT_ERROR("No more buffer."); \
+            return false;                                  \
+        }                                                  \
+        _buf = CRA_SERIALIZER_GET_BUF(_ser);               \
+        (_ser)->index += ((_needed) - (_sub));             \
+    } while (0)
+#define CRA_SERIALIZER_ENSURE(_ser, _buf, _needed) CRA_SERIALIZER_ENSURE_(_ser, _buf, _needed, 0)
+
+#define CRA_SERIALIZER_MAX_NESTING 1000
+#define CRA_SERIALIZER_NESTING_INC_CHECK(_ser)               \
+    do                                                       \
+    {                                                        \
+        if (++(_ser)->nesting > CRA_SERIALIZER_MAX_NESTING)  \
+        {                                                    \
+            CRA_SERIALIZER_PRINT_ERROR("Too much nesting."); \
+            return false;                                    \
+        }                                                    \
+    } while (0)
+#define CRA_SERIALIZER_NESTING_DEC(_ser) --(_ser)->nesting
+
+static inline void
+cra_serializer_init(CraSerializer *ser, unsigned char *buffer, size_t maxlen, bool format)
+{
+    assert(ser);
+    assert(buffer);
+    assert(maxlen > 0);
+
+    ser->format = format;
+    ser->nesting = 0;
+    ser->index = 0;
+    ser->maxlen = maxlen;
+    ser->buffer = buffer;
+    cra_release_mgr_init(&ser->release);
+
+    ser->ntemp = 0;
+    ser->temp = NULL;
+}
+
+static inline void
+cra_serializer_uninit(CraSerializer *ser, bool success)
+{
+    cra_release_mgr_uninit(&ser->release, !success);
+
+    if (ser->temp)
+        cra_free(ser->temp);
+}
+
+static inline void *
+cra_serializer_get_temp(CraSerializer *ser, size_t size)
+{
+    if (ser->ntemp < size)
+    {
+        ser->ntemp = size;
+        ser->temp = !!ser->temp ? cra_realloc(ser->temp, size) : cra_malloc(size);
+    }
+    return ser->temp;
+}
+
+#define cra_serializer_put_temp(_ser, _temp) (void)0
+
+static inline bool
+cra_serializer_p2i(void *ptr, int64_t *retval, const CraTypeMeta *meta)
+{
+    switch (meta->size)
     {
         case sizeof(int8_t):
-            ret = *(int8_t *)val;
-            break;
+            *retval = *(int8_t *)ptr;
+            return true;
         case sizeof(int16_t):
-            ret = *(int16_t *)val;
-            break;
+            *retval = *(int16_t *)ptr;
+            return true;
         case sizeof(int32_t):
-            ret = *(int32_t *)val;
-            break;
+            *retval = *(int32_t *)ptr;
+            return true;
         case sizeof(int64_t):
-            ret = *(int64_t *)val;
-            break;
+            *retval = *(int64_t *)ptr;
+            return true;
         default:
-            assert_always(false && "error integer size.");
-            break;
+            CRA_SERIALIZER_PRINT_ERROR_("Invalid int size: %zu. Name: %s.", meta->size, CRA_NAME(meta));
+            return false;
     }
-    return ret;
 }
 
-static inline void
-__cra_i64_to_ptr(int64_t i, void *retval, size_t size)
+static inline bool
+cra_serializer_i2p(int64_t val, void *ptr, const CraTypeMeta *meta)
 {
-    assert(retval);
-    assert(size == 1 || size == 2 || size == 4 || size == 8);
-
-    switch (size)
+    switch (meta->size)
     {
         case sizeof(int8_t):
-            *(int8_t *)retval = (int8_t)i;
-            break;
+            *(int8_t *)ptr = (int8_t)val;
+            return true;
         case sizeof(int16_t):
-            *(int16_t *)retval = (int16_t)i;
-            break;
+            *(int16_t *)ptr = (int16_t)val;
+            return true;
         case sizeof(int32_t):
-            *(int32_t *)retval = (int32_t)i;
-            break;
+            *(int32_t *)ptr = (int32_t)val;
+            return true;
         case sizeof(int64_t):
-            *(int64_t *)retval = i;
-            break;
+            *(int64_t *)ptr = (int64_t)val;
+            return true;
         default:
-            assert_always(false && "error integer size.");
-            break;
+            CRA_SERIALIZER_PRINT_ERROR_("Invalid int size: %zu. Name: %s.", meta->size, CRA_NAME(meta));
+            return false;
     }
 }
 
-static inline uint64_t
-__cra_ptr_to_u64(void *val, size_t size)
+static inline bool
+cra_serializer_p2u(void *ptr, uint64_t *retval, const CraTypeMeta *meta)
 {
-    uint64_t ret = 0;
-
-    assert(size == 1 || size == 2 || size == 4 || size == 8);
-
-    switch (size)
+    switch (meta->size)
     {
         case sizeof(uint8_t):
-            ret = *(uint8_t *)val;
-            break;
+            *retval = *(uint8_t *)ptr;
+            return true;
         case sizeof(uint16_t):
-            ret = *(uint16_t *)val;
-            break;
+            *retval = *(uint16_t *)ptr;
+            return true;
         case sizeof(uint32_t):
-            ret = *(uint32_t *)val;
-            break;
+            *retval = *(uint32_t *)ptr;
+            return true;
         case sizeof(uint64_t):
-            ret = *(uint64_t *)val;
-            break;
+            *retval = *(uint64_t *)ptr;
+            return true;
         default:
-            assert_always(false && "error integer size.");
-            break;
-    }
-    return ret;
-}
-
-static inline void
-__cra_u64_to_ptr(uint64_t u, void *retval, size_t size)
-{
-    assert(retval);
-    assert(size == 1 || size == 2 || size == 4 || size == 8);
-
-    switch (size)
-    {
-        case sizeof(uint8_t):
-            *(uint8_t *)retval = (uint8_t)u;
-            break;
-        case sizeof(uint16_t):
-            *(uint16_t *)retval = (uint16_t)u;
-            break;
-        case sizeof(uint32_t):
-            *(uint32_t *)retval = (uint32_t)u;
-            break;
-        case sizeof(uint64_t):
-            *(uint64_t *)retval = u;
-            break;
-        default:
-            assert_always(false && "error integer size.");
-            break;
+            CRA_SERIALIZER_PRINT_ERROR_("Invalid uint size: %zu. Name: %s.", meta->size, CRA_NAME(meta));
+            return false;
     }
 }
 
-static inline uint64_t
-__cra_get_n(void *n_start, void *obj, const CraTypeMeta *meta, uint64_t in_n)
+static inline bool
+cra_serializer_u2p(uint64_t val, void *ptr, const CraTypeMeta *meta)
 {
-#define _N ((char *)n_start + meta->noffset - meta->offset)
-    switch (meta->nsize)
+    switch (meta->size)
     {
-        case 0:
-            if (meta->szer_i && meta->szer_i->get_count)
-                return meta->szer_i->get_count(obj);
-            else
-                return in_n;
         case sizeof(uint8_t):
-            return *(uint8_t *)_N;
+            *(uint8_t *)ptr = (uint8_t)val;
+            return true;
         case sizeof(uint16_t):
-            return *(uint16_t *)_N;
+            *(uint16_t *)ptr = (uint16_t)val;
+            return true;
         case sizeof(uint32_t):
-            return *(uint32_t *)_N;
+            *(uint32_t *)ptr = (uint32_t)val;
+            return true;
         case sizeof(uint64_t):
-            return *(uint64_t *)_N;
-
+            *(uint64_t *)ptr = (uint64_t)val;
+            return true;
         default:
-            assert_always(false && "error N size.");
-            return 0;
+            CRA_SERIALIZER_PRINT_ERROR_("Invalid uint size: %zu. Name: %s.", meta->size, CRA_NAME(meta));
+            return false;
     }
-#undef _N
-}
-
-static inline void
-__cra_set_n(void *n_start, const CraTypeMeta *meta, uint64_t n, uint64_t *out_n)
-{
-#define _N ((char *)n_start + meta->noffset - meta->offset)
-    switch (meta->nsize)
-    {
-        case 0:
-            assert(out_n);
-            *out_n = n;
-            break;
-        case sizeof(uint8_t):
-            *(uint8_t *)_N = (uint8_t)n;
-            break;
-        case sizeof(uint16_t):
-            *(uint16_t *)_N = (uint16_t)n;
-            break;
-        case sizeof(uint32_t):
-            *(uint32_t *)_N = (uint32_t)n;
-            break;
-        case sizeof(uint64_t):
-            *(uint64_t *)_N = n;
-            break;
-
-        default:
-            assert_always(false && "error N size.");
-    }
-#undef _N
 }
 
 #endif

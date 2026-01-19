@@ -11,7 +11,6 @@
 #ifndef __CRA_DICT_H__
 #define __CRA_DICT_H__
 #include "cra_collects.h"
-#include "serialize/cra_serialize.h"
 
 typedef struct _CraDictEntry CraDictEntry;
 
@@ -100,18 +99,5 @@ cra_dict_get_ptr(CraDict *dict, void *key, void **retvalptr);
 
 CRA_API CraDict *
 cra_dict_clone(CraDict *dict, cra_deep_copy_val_fn deep_copy_key, cra_deep_copy_val_fn deep_copy_val);
-
-// =========
-
-typedef struct
-{
-    cra_hash_fn    hash;
-    cra_compare_fn compare;
-} CraDictDzerArg;
-
-CRA_API const CraSzer_i __g_cra_dict_szer_i;
-CRA_API const CraDzer_i __g_cra_dict_dzer_i;
-#define CRA_DICT_SZER_I (&__g_cra_dict_szer_i)
-#define CRA_DICT_DZER_I (&__g_cra_dict_dzer_i)
 
 #endif
