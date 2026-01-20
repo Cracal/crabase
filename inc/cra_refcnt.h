@@ -47,8 +47,12 @@ struct _CraRefcnt
 #define CRA_REFCNT_OBJ(_rc) (&(_rc)->o)
 #define CRA_REFCNT_PTR(_rc) ((_rc)->p)
 
-CRA_API void
-cra_refcnt_init(CraRefcnt *ref, cra_refcnt_release_fn func);
+static inline void
+cra_refcnt_init(CraRefcnt *ref, cra_refcnt_release_fn func)
+{
+    ref->cnt = 1;
+    ref->release = func;
+}
 
 static inline void
 cra_refcnt_ref(CraRefcnt *ref)
@@ -56,8 +60,17 @@ cra_refcnt_ref(CraRefcnt *ref)
     __CRA_REFCNT_INC(&ref->cnt);
 }
 
-CRA_API bool
-cra_refcnt_unref(CraRefcnt *ref);
+static inline bool
+cra_refcnt_unref(CraRefcnt *ref)
+{
+    if (__CRA_REFCNT_DEC(&ref->cnt) == 1)
+    {
+        if (ref->release)
+            ref->release(ref);
+        return true;
+    }
+    return false;
+}
 
 static inline void
 cra_refcnt_unref0(CraRefcnt *ref)
