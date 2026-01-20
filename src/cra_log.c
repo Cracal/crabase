@@ -18,21 +18,13 @@
 #include "threads/cra_thread.h"
 #include <stdarg.h>
 
-#define CRA_LOG_DATETIME_FMT_UTC   "%04d-%02d-%02dT%02d:%02d:%02d.%dZ%*s"
-#define CRA_LOG_DATETIME_FMT_LOCAL "%04d-%02d-%02dT%02d:%02d:%02d.%d%*s"
-
 typedef struct
 {
-    bool initialized;
-    bool with_utc;
-
+    short         timezoneoffset;
+    bool          initialized;
+    bool          with_utc;
     CraLogLevel_e level;
-
-    const char *datetime_fmt;
-
-    void (*gettime)(CraDateTime *dt);
-
-    CraLogTo_i **logto;
+    CraLogTo_i  **logto;
 
 } CraLogger;
 
@@ -62,13 +54,14 @@ cra_log_startup(CraLogLevel_e level, bool with_localtime, CraLogTo_i **logto)
     s_logger->with_utc = !with_localtime;
     if (with_localtime)
     {
-        s_logger->gettime = cra_datetime_now_localtime;
-        s_logger->datetime_fmt = CRA_LOG_DATETIME_FMT_LOCAL;
+        CraDateTime utc, local;
+        cra_datetime_now_utc(&utc);
+        cra_datetime_now_localtime(&local);
+        s_logger->timezoneoffset = (short)(local.hour - utc.hour);
     }
     else
     {
-        s_logger->gettime = cra_datetime_now_utc;
-        s_logger->datetime_fmt = CRA_LOG_DATETIME_FMT_UTC;
+        s_logger->timezoneoffset = 0;
     }
     s_logger->logto = logto;
 }
@@ -134,11 +127,43 @@ __cra_log_message(const char   *logname,
         return;
 
     // time
+    int         spaces;
     CraDateTime dt;
-    s_logger->gettime(&dt);
-    int spaces = dt.ms >= 100 ? 1 : (dt.ms >= 10 ? 2 : 3);
-    len = snprintf(
-      msg, sizeof(msg), s_logger->datetime_fmt, dt.year, dt.mon, dt.day, dt.hour, dt.min, dt.sec, dt.ms, spaces, "");
+    if (s_logger->with_utc)
+    {
+        cra_datetime_now_utc(&dt);
+        spaces = dt.ms >= 100 ? 1 : (dt.ms >= 10 ? 2 : 3);
+        len = snprintf(msg,
+                       sizeof(msg),
+                       "%04d-%02d-%02dT%02d:%02d:%02d.%dZ%*.s",
+                       dt.year,
+                       dt.mon,
+                       dt.day,
+                       dt.hour,
+                       dt.min,
+                       dt.sec,
+                       dt.ms,
+                       spaces,
+                       "");
+    }
+    else
+    {
+        cra_datetime_now_localtime(&dt);
+        spaces = dt.ms >= 100 ? 1 : (dt.ms >= 10 ? 2 : 3);
+        len = snprintf(msg,
+                       sizeof(msg),
+                       "%04d-%02d-%02dT%02d:%02d:%02d.%d%+03hd:00%*.s",
+                       dt.year,
+                       dt.mon,
+                       dt.day,
+                       dt.hour,
+                       dt.min,
+                       dt.sec,
+                       dt.ms,
+                       s_logger->timezoneoffset,
+                       spaces,
+                       "");
+    }
 
     // tid level logname
     cra_tid_t   tid = cra_thrd_get_current_tid();
@@ -202,7 +227,7 @@ struct _CraLogAsync
 
     CraLogBuffer *current;
     CraLogBuffer *backup;
-    CraLList     *buffers;
+    CraLList     *buffers; // LList<CraLogBuffer *>
 
     CraLogTo_i                 **logto;
     cra_log_async_write2logto_fn write;

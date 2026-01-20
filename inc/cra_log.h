@@ -118,7 +118,7 @@ cra_log_async_destory(CraLogAsync **pobj);
 CRA_API void
 cra_log_async_write(CraLogAsync *obj, const char *msg, int len);
 
-// buffers = &[{len1, buf1}, {len2, buf2}, ..., {0}]
+// buffers = [{len1, buf1}, {len2, buf2}, ..., {0}]
 CRA_API void
 cra_log_async_write_array(CraLogAsync *obj, const CraLogAsyncBuffer buffers[]);
 
