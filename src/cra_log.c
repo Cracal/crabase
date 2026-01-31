@@ -14,7 +14,7 @@
 #include "cra_malloc.h"
 #include "cra_time.h"
 #include "threads/cra_cdl.h"
-#include "threads/cra_locker.h"
+#include "threads/cra_lock.h"
 #include "threads/cra_thread.h"
 #include <stdarg.h>
 
@@ -25,7 +25,6 @@ typedef struct
     bool          with_utc;
     CraLogLevel_e level;
     CraLogTo_i  **logto;
-
 } CraLogger;
 
 static CraLogger *s_logger = NULL;

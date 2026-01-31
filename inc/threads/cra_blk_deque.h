@@ -11,7 +11,7 @@
 #ifndef __CRA_BLK_DEQUE_H__
 #define __CRA_BLK_DEQUE_H__
 #include "collections/cra_deque.h"
-#include "threads/cra_locker.h"
+#include "threads/cra_lock.h"
 
 #define CRA_BLK_DEQUE_INFINITE CRA_DEQUE_INFINITE
 

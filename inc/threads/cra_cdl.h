@@ -10,7 +10,7 @@
  */
 #ifndef __CRA_CDL_H__
 #define __CRA_CDL_H__
-#include "cra_locker.h"
+#include "cra_lock.h"
 
 typedef struct _CraCDL
 {

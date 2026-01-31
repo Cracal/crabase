@@ -12,7 +12,7 @@
 #define __CRA_THPOOL_H__
 #include "cra_atomic.h"
 #include "cra_blk_deque.h"
-#include "cra_locker.h"
+#include "cra_lock.h"
 #include "cra_thread.h"
 
 typedef enum _CraThrdPoolDiscardPolicy_e

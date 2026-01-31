@@ -1,5 +1,5 @@
 /**
- * @file cra_locker.h
+ * @file cra_lock.h
  * @author Cracal
  * @brief 互斥锁和条件变量
  * @version 0.1 0.2
@@ -8,8 +8,8 @@
  * @copyright Copyright (c) 2021
  *
  */
-#ifndef __CRA_LOCKER_H__
-#define __CRA_LOCKER_H__
+#ifndef __CRA_LOCK_H__
+#define __CRA_LOCK_H__
 #include "cra_defs.h"
 
 #if !defined(__STDC_NO_THREADS__) && !(defined(CRA_COMPILER_MSVC) || defined(CRA_COMPILER_MINGW))
