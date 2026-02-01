@@ -1609,7 +1609,9 @@ test_deserialize_failed(void)
     length = sizeof(buffer);
     assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
     printf("%s\n", buffer);
-    // assert_always(!cra_json_parse(buffer, length - 1, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    buffer[length - 2] = ']';
+    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    buffer[length - 2] = '}';
     assert_always(cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
 
     assert_always(out.stru && out.stru->str);

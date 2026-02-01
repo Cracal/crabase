@@ -1,14 +1,15 @@
 /**
- * @file cra_ser-inner.c
+ * @file cra_serialize.c
  * @author Cracal
- * @brief inner
+ * @brief serializer
  * @version 0.1
  * @date 2024-10-09
  *
  * @copyright Copyright (c) 2024
  *
  */
-#include "serialize/cra_ser_inner.h"
+#define __CRA_SER_INNER
+#include "serialize/cra_serialize.h"
 #include "cra_assert.h"
 #include "cra_malloc.h"
 

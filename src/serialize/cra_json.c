@@ -8,9 +8,10 @@
  * @copyright Copyright (c) 2024
  *
  */
+#define __CRA_SER_INNER
 #include "serialize/cra_json.h"
 #include "cra_assert.h"
-#include "serialize/cra_ser_inner.h"
+#include "serialize/cra_serialize.h"
 #include <float.h>
 #include <math.h>
 
