@@ -21,7 +21,9 @@ typedef struct _CraTypeMeta        CraTypeMeta;
 struct _CraInitializable_i
 {
     void (*init)(void *obj, CraInitArgs *arg);
-    void (*uninit)(void *obj);
+    // `dont_free_ptr_member`永远是`true`。仅作为一个醒目的提示，
+    // 告知在实现uninit函数时不要对指针类型进行free操作。
+    void (*uninit)(void *obj, bool dont_free_ptr_member);
 };
 
 struct _CraSerializable_i
@@ -187,21 +189,19 @@ struct _CraSeriObject
       __CRA_TYPE_META_ELEMENT_(                                                                   \
         true, false, CRA_TYPE_UINT, sizeof(_narray_var), NULL, { NULL }, (void *)&(_narray_var)),
 // struct
-#define CRA_TYPE_META_ELEMENT_STRUCT(_type, _is_ptr, _member_meta, _init_i, _arg)                     \
-    __CRA_TYPE_META_ELEMENT(                                                                          \
-      _is_ptr, CRA_TYPE_STRUCT, __CRA_SF##_is_ptr(_type), _member_meta, { .init_i = _init_i }, _arg),
+#define CRA_TYPE_META_ELEMENT_STRUCT(_type, _is_ptr, _member_meta, _init_i, _arg)                                \
+    __CRA_TYPE_META_ELEMENT(_is_ptr, CRA_TYPE_STRUCT, sizeof(_type), _member_meta, { .init_i = _init_i }, _arg),
 // c array
 #define CRA_TYPE_META_ELEMENT_ARRAY(_type, _is_ptr, _narray_var, _element_meta)                    \
     __CRA_TYPE_META_ELEMENT(_is_ptr, CRA_TYPE_LIST, sizeof(_type), _element_meta, { NULL }, NULL), \
       __CRA_TYPE_META_ELEMENT_(                                                                    \
         true, false, CRA_TYPE_UINT, sizeof(_narray_var), NULL, { NULL }, (void *)&(_narray_var)),
 // list
-#define CRA_TYPE_META_ELEMENT_LIST(_type, _is_ptr, _element_meta, _szer_i, _arg)                     \
-    __CRA_TYPE_META_ELEMENT(                                                                         \
-      _is_ptr, CRA_TYPE_LIST, __CRA_SF##_is_ptr(_type), _element_meta, { .szer_i = _szer_i }, _arg),
+#define CRA_TYPE_META_ELEMENT_LIST(_type, _is_ptr, _element_meta, _szer_i, _arg)                                \
+    __CRA_TYPE_META_ELEMENT(_is_ptr, CRA_TYPE_LIST, sizeof(_type), _element_meta, { .szer_i = _szer_i }, _arg),
 // dict
-#define CRA_TYPE_META_ELEMENT_DICT(_type, _is_ptr, _kv_meta, _szer_i, _arg)                                           \
-    __CRA_TYPE_META_ELEMENT(_is_ptr, CRA_TYPE_DICT, __CRA_SF##_is_ptr(_type), _kv_meta, { .szer_i = _szer_i }, _arg),
+#define CRA_TYPE_META_ELEMENT_DICT(_type, _is_ptr, _kv_meta, _szer_i, _arg)                                \
+    __CRA_TYPE_META_ELEMENT(_is_ptr, CRA_TYPE_DICT, sizeof(_type), _kv_meta, { .szer_i = _szer_i }, _arg),
 
 // make object with meta
 

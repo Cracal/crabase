@@ -1405,6 +1405,205 @@ test_dict(void)
     cra_dealloc(in.dempty);
 }
 
+#if 1 // test deserialize failed
+struct A
+{
+    char *str;
+};
+CRA_TYPE_META_BEGIN(metasa)
+CRA_TYPE_META_MEMBER_STRING(struct A, str, 1, true)
+CRA_TYPE_META_END();
+
+void
+a_uninit(void *obj, bool dont_free_ptr)
+{
+    // 只有在反序列化失败时才会调用
+    // 并且不要在这里free
+    struct A *a = (struct A *)obj;
+    if (!dont_free_ptr && a->str)
+        cra_free(a->str); // don't call it
+}
+
+CraInitializable_i a_init_i = { .init = NULL, .uninit = a_uninit };
+
+void
+test_deserialize_failed(void)
+{
+    CRA_TYPE_META_BEGIN(metastr_elem)
+    CRA_TYPE_META_ELEMENT_STRING(char *, true)
+    CRA_TYPE_META_END();
+
+    CRA_TYPE_META_BEGIN(metasa_elem)
+    CRA_TYPE_META_ELEMENT_STRUCT(struct A, true, metasa, &a_init_i, NULL)
+    CRA_TYPE_META_END();
+
+    CRA_TYPE_META_BEGIN(metasa_kv)
+    CRA_TYPE_META_ELEMENT_STRING(char *, true)
+    CRA_TYPE_META_ELEMENT_STRUCT(struct A, true, metasa, &a_init_i, NULL)
+    CRA_TYPE_META_END();
+
+    CraDictSerArgs dict_arg = {
+        .hash = (cra_hash_fn)cra_hash_string1_p,
+        .compare = (cra_compare_fn)cra_compare_string_p,
+    };
+
+    struct B
+    {
+        struct A *stru;
+        char    **array;
+        uint32_t  narray;
+        CraAList *alist; // List<struct A *>
+        CraLList *llist; // List<struct A *>
+        CraDeque *deque; // List<struct A *>
+        CraDict  *dict;  // Dict<char *, struct A *>
+    };
+    CRA_TYPE_META_BEGIN(meta)
+    CRA_TYPE_META_MEMBER_STRUCT(struct B, stru, 1, true, metasa, &a_init_i, NULL)
+    CRA_TYPE_META_MEMBER_ARRAY(struct B, array, 2, true, metastr_elem)
+    CRA_TYPE_META_MEMBER_LIST(struct B, alist, 3, true, metasa_elem, CRA_ALIST_SZER_I, NULL)
+    CRA_TYPE_META_MEMBER_LIST(struct B, llist, 4, true, metasa_elem, CRA_LLIST_SZER_I, NULL)
+    CRA_TYPE_META_MEMBER_LIST(struct B, deque, 5, true, metasa_elem, CRA_DEQUE_SZER_I, NULL)
+    CRA_TYPE_META_MEMBER_DICT(struct B, dict, 6, true, metasa_kv, CRA_DICT_SZER_I, &dict_arg)
+    CRA_TYPE_META_END();
+
+    struct B in, out;
+
+    in.stru = cra_alloc(struct A);
+    in.array = (char **)cra_calloc(3, sizeof(char *));
+    in.alist = cra_alloc(CraAList);
+    in.llist = cra_alloc(CraLList);
+    in.deque = cra_alloc(CraDeque);
+    in.dict = cra_alloc(CraDict);
+    in.narray = 3;
+    cra_alist_init0(struct A *, in.alist, false);
+    cra_llist_init0(struct A *, in.llist, false);
+    cra_deque_init0(struct A *, in.deque, CRA_DEQUE_INFINITE, false);
+    cra_dict_init0(char *, struct A *, in.dict, false, dict_arg.hash, dict_arg.compare);
+
+    char     *str;
+    struct A *a;
+
+    in.stru->str = (char *)cra_malloc(20);
+    memcpy(in.stru->str, "struct.", sizeof("struct."));
+
+    for (int i = 0; i < (int)in.narray; i++)
+    {
+        str = (char *)cra_malloc(20);
+        snprintf(str, 20, "array %d.", i);
+        in.array[i] = str;
+
+        a = cra_alloc(struct A);
+        a->str = (char *)cra_malloc(20);
+        snprintf(a->str, 20, "alist  %d.", i);
+        cra_alist_append(in.alist, &a);
+
+        a = cra_alloc(struct A);
+        a->str = (char *)cra_malloc(20);
+        snprintf(a->str, 20, "llist   %d.", i);
+        cra_llist_append(in.llist, &a);
+
+        a = cra_alloc(struct A);
+        a->str = (char *)cra_malloc(30);
+        snprintf(a->str, 30, "deque    %d.", i);
+        cra_deque_push(in.deque, &a);
+
+        str = (char *)cra_malloc(30);
+        a = cra_alloc(struct A);
+        a->str = (char *)cra_malloc(30);
+        snprintf(str, 30, "dict key     %d.", i);
+        snprintf(a->str, 30, "dict val %d.", i);
+        cra_dict_add(in.dict, &str, &a);
+    }
+
+    unsigned char buffer[8192];
+    size_t        length;
+
+    length = sizeof(buffer);
+    assert_always(cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_deserialize(buffer, length - 1, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+
+    assert_always(out.stru && out.stru->str);
+    assert_always(strcmp(in.stru->str, out.stru->str) == 0);
+    assert_always(in.narray == out.narray);
+    assert_always(in.alist->count == out.alist->count);
+    assert_always(in.llist->count == out.llist->count);
+    assert_always(in.deque->count == out.deque->count);
+    assert_always(in.dict->count == out.dict->count);
+
+    struct A *val1, *val2;
+    for (int i = 0; i < (int)in.narray; i++)
+    {
+        assert_always(strcmp(in.array[i], out.array[i]) == 0);
+        cra_free(in.array[i]);
+        cra_free(out.array[i]);
+
+        cra_alist_get(in.alist, i, &val1);
+        cra_alist_get(out.alist, i, &val2);
+        assert_always(strcmp(val1->str, val2->str) == 0);
+        cra_free(val1->str);
+        cra_free(val2->str);
+        cra_free(val1);
+        cra_free(val2);
+
+        cra_llist_get(in.llist, i, &val1);
+        cra_llist_get(out.llist, i, &val2);
+        assert_always(strcmp(val1->str, val2->str) == 0);
+        cra_free(val1->str);
+        cra_free(val2->str);
+        cra_free(val1);
+        cra_free(val2);
+
+        cra_deque_get(in.deque, i, &val1);
+        cra_deque_get(out.deque, i, &val2);
+        assert_always(strcmp(val1->str, val2->str) == 0);
+        cra_free(val1->str);
+        cra_free(val2->str);
+        cra_free(val1);
+        cra_free(val2);
+    }
+
+    char       *key;
+    char      **pkey;
+    struct A  **pval;
+    CraDictIter it;
+    for (cra_dict_iter_init(in.dict, &it); cra_dict_iter_next(&it, (void **)&pkey, (void **)&pval);)
+    {
+        cra_dict_pop(out.dict, pkey, &key, &val1);
+        assert_always(strcmp(val1->str, (*pval)->str) == 0);
+        cra_free(*pkey);
+        cra_free(key);
+        cra_free((*pval)->str);
+        cra_free(val1->str);
+        cra_free(*pval);
+        cra_free(val1);
+    }
+    cra_free(in.stru->str);
+    cra_free(out.stru->str);
+    cra_free(in.stru);
+    cra_free(out.stru);
+    cra_free(in.array);
+    cra_free(out.array);
+    cra_alist_uninit(in.alist);
+    cra_alist_uninit(out.alist);
+    cra_llist_uninit(in.llist);
+    cra_llist_uninit(out.llist);
+    cra_deque_uninit(in.deque);
+    cra_deque_uninit(out.deque);
+    cra_dict_uninit(in.dict);
+    cra_dict_uninit(out.dict);
+    cra_dealloc(in.alist);
+    cra_dealloc(out.alist);
+    cra_dealloc(in.llist);
+    cra_dealloc(out.llist);
+    cra_dealloc(in.deque);
+    cra_dealloc(out.deque);
+    cra_dealloc(in.dict);
+    cra_dealloc(out.dict);
+}
+
+#endif
+
 int
 main(void)
 {
@@ -1436,6 +1635,8 @@ main(void)
     test_array_list();
     printf("========== test dict ==========\n");
     test_dict();
+    printf("========== test deserialize failed ==========\n");
+    test_deserialize_failed();
 
     cra_memory_leak_report();
     return 0;

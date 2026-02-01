@@ -22,15 +22,15 @@ typedef struct _CraRelaseBlk  CraReleaseBlk;
 
 struct _CraRelaseBlk
 {
-    bool   is_ptr;
-    void **pptr;
-    void   (*uninit)(void *);
+    void              *ptr;
+    const CraTypeMeta *meta;
 };
 
+// 有uninit函数的对象（struct/array/list/dict）Mgr不记录其字段/元素
 struct _CraRelaseMgr
 {
-    ssize_t        size;
-    ssize_t        count;
+    size_t         size;
+    size_t         count;
     CraReleaseBlk  nodes1[16];
     CraReleaseBlk *nodes2;
 };
@@ -43,9 +43,6 @@ struct _CraSerializer
     size_t         maxlen;
     unsigned char *buffer;
     CraReleaseMgr  release;
-
-    size_t ntemp;
-    void  *temp;
 };
 
 static inline void
@@ -60,7 +57,7 @@ void
 cra_release_mgr_uninit(CraReleaseMgr *mgr, bool free_ptr);
 
 void
-cra_release_mgr_add(CraReleaseMgr *mgr, void **pptr, bool is_ptr, void (*uninit)(void *));
+cra_release_mgr_add(CraReleaseMgr *mgr, void *ptr, const CraTypeMeta *meta);
 
 #define CRA_SERIALIZER_PRINT_ERROR_(_fmt, ...) fprintf(stderr, "(ERROR): " _fmt "\n", ##__VA_ARGS__)
 #define CRA_SERIALIZER_PRINT_ERROR(_fmt, ...)  fprintf(stderr, CRA_SERIALIZER_NAME "(ERROR): " _fmt "\n", ##__VA_ARGS__)
@@ -107,32 +104,13 @@ cra_serializer_init(CraSerializer *ser, unsigned char *buffer, size_t maxlen, bo
     ser->maxlen = maxlen;
     ser->buffer = buffer;
     cra_release_mgr_init(&ser->release);
-
-    ser->ntemp = 0;
-    ser->temp = NULL;
 }
 
 static inline void
 cra_serializer_uninit(CraSerializer *ser, bool success)
 {
     cra_release_mgr_uninit(&ser->release, !success);
-
-    if (ser->temp)
-        cra_free(ser->temp);
 }
-
-static inline void *
-cra_serializer_get_temp(CraSerializer *ser, size_t size)
-{
-    if (ser->ntemp < size)
-    {
-        ser->ntemp = size;
-        ser->temp = !!ser->temp ? cra_realloc(ser->temp, size) : cra_malloc(size);
-    }
-    return ser->temp;
-}
-
-#define cra_serializer_put_temp(_ser, _temp) (void)0
 
 static inline bool
 cra_serializer_p2i(void *ptr, int64_t *retval, const CraTypeMeta *meta)

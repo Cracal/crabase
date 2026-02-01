@@ -253,10 +253,9 @@ cra_json_read_string(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
     len = (size_t)(str - buf) - length;
     if (meta->is_ptr)
     {
-        cra_release_mgr_add(&ser->release, retval, true, NULL);
-
         max_length = len + sizeof("");
         str = *(unsigned char **)retval = (unsigned char *)cra_malloc(max_length);
+        cra_release_mgr_add(&ser->release, str, meta);
     }
     else
     {
@@ -1086,7 +1085,6 @@ cra_json_read_struct(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
     int                res;
     bool               ret;
     char              *stru;
-    void              *temp;
     const CraTypeMeta *m, *last;
 
     assert(meta->submeta && meta->submeta->is_not_end);
@@ -1099,15 +1097,16 @@ cra_json_read_struct(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
         return false;
     }
 
-    void (*uninit)(void *) = meta->init_i ? meta->init_i->uninit : NULL;
-    if (meta->is_ptr || uninit)
-        cra_release_mgr_add(&ser->release, (void **)retval, meta->is_ptr, uninit);
+    void (*uninit)(void *, bool) = meta->init_i ? meta->init_i->uninit : NULL;
 
     // alloc
     if (meta->is_ptr)
         stru = *(char **)retval = (char *)cra_malloc(meta->size);
     else
         stru = (char *)retval;
+
+    if (meta->is_ptr || uninit)
+        cra_release_mgr_add(&ser->release, stru, meta);
 
     // init
     if (meta->init_i && meta->init_i->init)
@@ -1124,9 +1123,9 @@ cra_json_read_struct(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 
     // check empty
     if (cra_json_check_ch(ser, '}'))
-        goto end2;
+        goto end;
 
-    temp = cra_serializer_get_temp(ser, CRA_MAX_JSON_KEY_LENGTH);
+    char temp[CRA_MAX_JSON_KEY_LENGTH];
     for (m = meta->submeta;;)
     {
         last = m;
@@ -1135,7 +1134,7 @@ cra_json_read_struct(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
         {
             CRA_SERIALIZER_PRINT_ERROR(
               "Read JSON key failed. Struct: %s." CRA_STRFMT, CRA_NAME(meta), CRA_STRARG(CRA_SERIALIZER_GET_BUF(ser)));
-            goto end;
+            break;
         }
         // check ':'
         if (!(ret = cra_json_check_ch(ser, ':')))
@@ -1143,7 +1142,7 @@ cra_json_read_struct(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
             CRA_SERIALIZER_PRINT_ERROR("Invalid JSON K-V pair. Struct: %s. expect `:`." CRA_STRFMT,
                                        CRA_NAME(meta),
                                        CRA_STRARG(CRA_SERIALIZER_GET_BUF(ser)));
-            goto end;
+            break;
         }
         // skip white
         cra_json_skip_whitespaces(ser);
@@ -1185,8 +1184,7 @@ cra_json_read_struct(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
             }
         }
 
-        res = cra_json_is_finish(ser, '}');
-        if (res != 1)
+        if ((res = cra_json_is_finish(ser, '}')) != 1)
         {
             if (res == -1)
                 ret = false;
@@ -1195,8 +1193,6 @@ cra_json_read_struct(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
     }
 
 end:
-    cra_serializer_put_temp(ser, temp);
-end2:
     CRA_SERIALIZER_NESTING_DEC(ser);
 
     return ret;
@@ -1306,7 +1302,6 @@ cra_json_read_array(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
         maxcnt = 8;
         size = maxcnt * slot;
         arr = (char *)cra_malloc(size);
-        cra_release_mgr_add(&ser->release, (void **)retval, true, NULL);
     }
     else
     {
@@ -1332,7 +1327,7 @@ cra_json_read_array(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
                 CRA_SERIALIZER_PRINT_ERROR(
                   "The array[%zu] is too small(< %zu). Name: %s.", maxcnt, count + 1, CRA_NAME(meta));
                 ret = false;
-                goto end;
+                break;
             }
             maxcnt *= 2;
             arr = (char *)cra_realloc(arr, maxcnt * slot);
@@ -1361,7 +1356,10 @@ cra_json_read_array(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 
 end:
     if (meta->is_ptr)
+    {
+        cra_release_mgr_add(&ser->release, arr, meta);
         *(void **)retval = (void *)arr;
+    }
     if (ret)
         ret = cra_serializer_u2p(count, pcount, metacnt);
     return ret;
@@ -1434,15 +1432,14 @@ cra_json_read_list(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 {
     int      res;
     bool     ret;
-    char    *list;
     size_t   slot;
+    char    *list;
     uint64_t count;
-    void    *element;
 
     assert(meta->szer_i);
     assert(meta->submeta);
     assert(meta->submeta->is_not_end);
-    assert(meta->szer_i->append && meta->szer_i->init_i.init);
+    assert(meta->szer_i->append && meta->init_i->init);
 
     CRA_SERIALIZER_NESTING_INC_CHECK(ser);
 
@@ -1454,30 +1451,36 @@ cra_json_read_list(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
         return false;
     }
 
-    if (meta->is_ptr || meta->szer_i->init_i.uninit)
-        cra_release_mgr_add(&ser->release, (void **)retval, meta->is_ptr, meta->szer_i->init_i.uninit);
-
     slot = meta->submeta->is_ptr ? sizeof(void *) : meta->submeta->size;
 
+    // alloc
     if (meta->is_ptr)
-    {
-        // alloc
-        list = (char *)cra_malloc(meta->size);
-    }
+        list = *(char **)retval = (char *)cra_malloc(meta->size);
     else
-    {
         list = (char *)retval;
-    }
+
+    if (meta->is_ptr || meta->init_i->uninit)
+        cra_release_mgr_add(&ser->release, list, meta);
+
     // init
     CraInitArgs da = { .size = meta->size, .length = 8, .val1size = slot, .val2size = 0, .arg = meta->arg };
     meta->init_i->init(list, &da);
 
     // check empty
-    if ((ret = cra_json_check_ch(ser, ']')))
-        goto end2;
+    if (cra_json_check_ch(ser, ']'))
+    {
+        CRA_SERIALIZER_NESTING_DEC(ser);
+        return true;
+    }
+
+#ifdef __STDC_NO_VLA__
+    char *element = (char *)cra_malloc(slot);
+#else
+    char element[slot];
+#endif
 
     // read elements
-    element = cra_serializer_get_temp(ser, slot);
+    ret = false;
     for (count = 0; CRA_SERIALIZER_IS_ENOUGH(ser, sizeof("X")); ++count)
     {
         cra_json_skip_whitespaces(ser);
@@ -1488,14 +1491,14 @@ cra_json_read_list(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
             CRA_SERIALIZER_PRINT_ERROR("Read list elements failed. Name: %s." CRA_STRFMT,
                                        CRA_NAME(meta),
                                        CRA_STRARG(CRA_SERIALIZER_GET_BUF(ser)));
-            goto end;
+            break;
         }
 
         // append
         if (!(ret = meta->szer_i->append(list, element, NULL)))
         {
             CRA_SERIALIZER_PRINT_ERROR("Append list elements failed. Name: %s.", CRA_NAME(meta));
-            goto end;
+            break;
         }
 
         res = cra_json_is_finish(ser, ']');
@@ -1507,13 +1510,10 @@ cra_json_read_list(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
         }
     }
 
-end:
-    cra_serializer_put_temp(ser, element);
-end2:
+#ifdef __STDC_NO_VLA__
+    cra_free(element);
+#endif
     CRA_SERIALIZER_NESTING_DEC(ser);
-
-    if (meta->is_ptr)
-        *(char **)retval = list;
     return ret;
 }
 
@@ -1600,31 +1600,35 @@ cra_json_read_dict(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 {
     int                res;
     bool               ret;
-    void              *key, *value;
+    char              *dict;
     size_t             key_size, val_size;
     const CraTypeMeta *keymeta, *valmeta;
 
     assert(meta->submeta);
     assert(meta->submeta->is_not_end);
     assert((meta->submeta + 1)->is_not_end);
-    assert(meta->szer_i && meta->szer_i->append && meta->szer_i->init_i.init);
+    assert(meta->szer_i && meta->szer_i->append && meta->init_i->init);
 
     CRA_SERIALIZER_NESTING_INC_CHECK(ser);
 
     // check '{'
     if (!(ret = cra_json_check_ch(ser, '{')))
-        goto end2;
+        return false;
 
     keymeta = meta->submeta;
     valmeta = meta->submeta + 1;
     key_size = keymeta->is_ptr ? sizeof(void *) : keymeta->size;
     val_size = valmeta->is_ptr ? sizeof(void *) : valmeta->size;
 
-    if (meta->is_ptr || meta->szer_i->init_i.uninit)
-        cra_release_mgr_add(&ser->release, (void **)retval, meta->is_ptr, meta->szer_i->init_i.uninit);
     // alloc
     if (meta->is_ptr)
-        retval = *(void **)retval = cra_malloc(meta->size);
+        dict = *(char **)retval = (char *)cra_malloc(meta->size);
+    else
+        dict = (char *)retval;
+
+    if (meta->is_ptr || meta->init_i->uninit)
+        cra_release_mgr_add(&ser->release, dict, meta);
+
     // init
     CraInitArgs da = {
         .size = meta->size,
@@ -1633,17 +1637,24 @@ cra_json_read_dict(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
         .val2size = val_size,
         .arg = meta->arg,
     };
-    meta->szer_i->init_i.init(retval, &da);
-
-    ret = true;
+    meta->init_i->init(dict, &da);
 
     // check empty
     if (cra_json_check_ch(ser, '}'))
-        goto end2;
+    {
+        CRA_SERIALIZER_NESTING_DEC(ser);
+        return true;
+    }
+
+#ifdef __STDC_NO_VLA__
+    char *key = cra_malloc(key_size + val_size);
+#else
+    char key[key_size + val_size];
+#endif
+    char *value = key + key_size;
 
     // read elements
-    key = cra_serializer_get_temp(ser, key_size + val_size);
-    value = (void *)((char *)key + key_size);
+    ret = false;
     while (true)
     {
         // read key
@@ -1651,7 +1662,7 @@ cra_json_read_dict(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
         {
             CRA_SERIALIZER_PRINT_ERROR(
               "Read JSON key failed. Name: %s." CRA_STRFMT, CRA_NAME(meta), CRA_STRARG(CRA_SERIALIZER_GET_BUF(ser)));
-            goto end;
+            break;
         }
         // check ':'
         if (!(ret = cra_json_check_ch(ser, ':')))
@@ -1659,7 +1670,7 @@ cra_json_read_dict(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
             CRA_SERIALIZER_PRINT_ERROR("Invalid JSON K-V pair. Name: %s. expect `:`." CRA_STRFMT,
                                        CRA_NAME(meta),
                                        CRA_STRARG(CRA_SERIALIZER_GET_BUF(ser)));
-            goto end;
+            break;
         }
         // skip white
         cra_json_skip_whitespaces(ser);
@@ -1668,14 +1679,14 @@ cra_json_read_dict(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
         {
             CRA_SERIALIZER_PRINT_ERROR(
               "Read JSON value failed. Name: %s." CRA_STRFMT, CRA_NAME(meta), CRA_STRARG(CRA_SERIALIZER_GET_BUF(ser)));
-            goto end;
+            break;
         }
 
         // append
-        if (!(ret = meta->szer_i->append(retval, key, value)))
+        if (!(ret = meta->szer_i->append(dict, key, value)))
         {
             CRA_SERIALIZER_PRINT_ERROR("Append dict K-V pair failed. Name: %s.", CRA_NAME(meta));
-            goto end;
+            break;
         }
 
         res = cra_json_is_finish(ser, '}');
@@ -1687,9 +1698,9 @@ cra_json_read_dict(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
         }
     }
 
-end:
-    cra_serializer_put_temp(ser, temp);
-end2:
+#ifdef __STDC_NO_VLA__
+    cra_free(key);
+#endif
     CRA_SERIALIZER_NESTING_DEC(ser);
 
     return ret;

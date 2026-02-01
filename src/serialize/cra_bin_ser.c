@@ -298,8 +298,8 @@ __cra_bin_read_string(CraSerializer *ser, void *retval, uint64_t *retlen, const 
     if (meta->is_ptr)
     {
         // alloc
-        cra_release_mgr_add(&ser->release, (void **)retval, true, NULL);
         retval = *(void **)retval = cra_malloc(len + 1);
+        cra_release_mgr_add(&ser->release, retval, meta);
     }
     else
     {
@@ -682,15 +682,16 @@ cra_bin_read_struct(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 
     CRA_SERIALIZER_NESTING_INC_CHECK(ser);
 
-    void (*uninit)(void *) = meta->init_i ? meta->init_i->uninit : NULL;
-    if (meta->is_ptr || uninit)
-        cra_release_mgr_add(&ser->release, (void **)retval, meta->is_ptr, uninit);
+    void (*uninit)(void *, bool) = meta->init_i ? meta->init_i->uninit : NULL;
 
     // alloc
     if (meta->is_ptr)
         stru = *(char **)retval = (char *)cra_malloc(meta->size);
     else
         stru = (char *)retval;
+
+    if (meta->is_ptr || uninit)
+        cra_release_mgr_add(&ser->release, stru, meta);
 
     // init
     if (meta->init_i && meta->init_i->init)
@@ -839,8 +840,8 @@ cra_bin_read_array(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
     if (meta->is_ptr)
     {
         size = (count > 0 ? count : 1) * slot;
-        arr = (char *)cra_malloc(size);
-        cra_release_mgr_add(&ser->release, (void **)retval, true, NULL);
+        arr = *(char **)retval = (char *)cra_malloc(size);
+        cra_release_mgr_add(&ser->release, arr, meta);
     }
     else
     {
@@ -864,13 +865,10 @@ cra_bin_read_array(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
         if (!(ret = cra_bin_read_value(ser, arr + i * slot, meta->submeta)))
         {
             CRA_SERIALIZER_PRINT_ERROR("Read array elements failed. Name: %s.", CRA_NAME(meta));
-            goto end;
+            break;
         }
     }
 
-end:
-    if (meta->is_ptr)
-        *(char **)retval = arr;
     if (ret)
         ret = cra_serializer_u2p(count, pcount, metacnt);
     return ret;
@@ -927,12 +925,11 @@ cra_bin_read_list(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
     char    *list;
     size_t   slot;
     uint64_t count;
-    void    *element;
 
     assert(meta->szer_i);
     assert(meta->submeta);
     assert(meta->submeta->is_not_end);
-    assert(meta->szer_i->append && meta->szer_i->init_i.init);
+    assert(meta->szer_i->append && meta->init_i->init);
 
     CRA_SERIALIZER_NESTING_INC_CHECK(ser);
 
@@ -943,27 +940,29 @@ cra_bin_read_list(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
         return false;
     }
 
-    if (meta->is_ptr || meta->szer_i->init_i.uninit)
-        cra_release_mgr_add(&ser->release, (void **)retval, meta->is_ptr, meta->szer_i->init_i.uninit);
-
     slot = meta->submeta->is_ptr ? sizeof(void *) : meta->submeta->size;
 
+    // alloc
     if (meta->is_ptr)
-    {
-        // alloc
-        list = (char *)cra_malloc(meta->size);
-    }
+        list = *(char **)retval = (char *)cra_malloc(meta->size);
     else
-    {
         list = (char *)retval;
-    }
+
+    if (meta->is_ptr || meta->init_i->uninit)
+        cra_release_mgr_add(&ser->release, list, meta);
+
     // init
     CraInitArgs da = { .size = meta->size, .length = count, .val1size = slot, .val2size = 0, .arg = meta->arg };
-    meta->szer_i->init_i.init(list, &da);
+    meta->init_i->init(list, &da);
+
+#ifdef __STDC_NO_VLA__
+    char *element = (char *)cra_malloc(slot);
+#else
+    char element[slot];
+#endif
 
     // read elements
     ret = true;
-    element = cra_serializer_get_temp(ser, slot);
     for (uint64_t i = 0; i < count; ++i)
     {
         // read element
@@ -980,18 +979,20 @@ cra_bin_read_list(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
             break;
         }
     }
-    cra_serializer_put_temp(ser, element);
+
+#ifdef __STDC_NO_VLA__
+    cra_free(element);
+#endif
 
     CRA_SERIALIZER_NESTING_DEC(ser);
 
-    if (meta->is_ptr)
-        *(char **)retval = list;
     return ret;
 }
 
 static bool
 cra_bin_write_dict(CraSerializer *ser, void *val, const CraTypeMeta *meta)
 {
+    char    *dict;
     uint64_t i = 0;
     uint64_t count = 0;
     char     it[64] = { 0 };
@@ -1010,10 +1011,10 @@ cra_bin_write_dict(CraSerializer *ser, void *val, const CraTypeMeta *meta)
         return false;
     }
 
-    val = meta->is_ptr ? *(void **)val : val;
+    dict = meta->is_ptr ? *(char **)val : (char *)val;
 
     // init it & get count
-    meta->szer_i->iter_init(val, &count, it, sizeof(it));
+    meta->szer_i->iter_init(dict, &count, it, sizeof(it));
 
     // write count
     if (!__cra_bin_write_varuint(ser, count))
@@ -1047,15 +1048,16 @@ cra_bin_write_dict(CraSerializer *ser, void *val, const CraTypeMeta *meta)
 static bool
 cra_bin_read_dict(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 {
+    bool               ret;
+    char              *dict;
     uint64_t           count;
-    void              *key, *value;
     size_t             key_size, val_size;
     const CraTypeMeta *keymeta, *valmeta;
 
     assert(meta->submeta);
     assert(meta->submeta->is_not_end);
     assert((meta->submeta + 1)->is_not_end);
-    assert(meta->szer_i && meta->szer_i->append && meta->szer_i->init_i.init);
+    assert(meta->szer_i && meta->szer_i->append && meta->init_i->init);
 
     CRA_SERIALIZER_NESTING_INC_CHECK(ser);
 
@@ -1077,11 +1079,15 @@ cra_bin_read_dict(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
     key_size = keymeta->is_ptr ? sizeof(void *) : keymeta->size;
     val_size = valmeta->is_ptr ? sizeof(void *) : valmeta->size;
 
-    if (meta->is_ptr || meta->szer_i->init_i.uninit)
-        cra_release_mgr_add(&ser->release, (void **)retval, meta->is_ptr, meta->szer_i->init_i.uninit);
     // alloc
     if (meta->is_ptr)
-        retval = *(void **)retval = cra_malloc(meta->size);
+        dict = *(char **)retval = (char *)cra_malloc(meta->size);
+    else
+        dict = (char *)retval;
+
+    if (meta->is_ptr || meta->init_i->uninit)
+        cra_release_mgr_add(&ser->release, dict, meta);
+
     // init
     CraInitArgs da = {
         .size = meta->size,
@@ -1090,41 +1096,46 @@ cra_bin_read_dict(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
         .val2size = val_size,
         .arg = meta->arg,
     };
-    meta->szer_i->init_i.init(retval, &da);
+    meta->init_i->init(dict, &da);
+
+#ifdef __STDC_NO_VLA__
+    char *key = (char *)cra_malloc(ser, key_size + val_size);
+#else
+    char key[key_size + val_size];
+#endif
+    char *value = key + key_size;
 
     // read elements
-    key = cra_serializer_get_temp(ser, key_size + val_size);
-    value = (void *)((char *)key + key_size);
+    ret = true;
     for (uint64_t i = 0; i < count; ++i)
     {
         // read key
-        if (!cra_bin_read_value(ser, key, keymeta))
+        if (!(ret = cra_bin_read_value(ser, key, keymeta)))
         {
             CRA_SERIALIZER_PRINT_ERROR("Read dict key failed. Name: %s.", CRA_NAME(meta));
-            goto fail;
+            break;
         }
         // read value
-        if (!cra_bin_read_value(ser, value, valmeta))
+        if (!(ret = cra_bin_read_value(ser, value, valmeta)))
         {
             CRA_SERIALIZER_PRINT_ERROR("Read dict value failed. Name: %s.", CRA_NAME(meta));
-            goto fail;
+            break;
         }
 
-        if (!meta->szer_i->append(retval, key, value))
+        if (!(ret = meta->szer_i->append(dict, key, value)))
         {
             CRA_SERIALIZER_PRINT_ERROR("Append dict K-V pair failed. Name: %s.", CRA_NAME(meta));
-            goto fail;
+            break;
         }
     }
-    cra_serializer_put_temp(ser, key);
+
+#ifdef __STDC_NO_VLA__
+    cra_free(key);
+#endif
 
     CRA_SERIALIZER_NESTING_DEC(ser);
 
-    return true;
-
-fail:
-    cra_serializer_put_temp(ser, key);
-    return false;
+    return ret;
 }
 
 bool

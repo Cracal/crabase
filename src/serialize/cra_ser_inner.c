@@ -16,20 +16,17 @@ void
 cra_release_mgr_uninit(CraReleaseMgr *mgr, bool free_ptr)
 {
     CraReleaseBlk *blk;
-    ssize_t        nnodes1;
+    size_t         nnodes1;
     if (free_ptr && mgr->count > 0)
     {
         nnodes1 = CRA_NARRAY(mgr->nodes1);
-        for (ssize_t i = mgr->count - 1; i >= 0; --i)
+        for (size_t i = 0; i < mgr->count; ++i)
         {
             blk = i < nnodes1 ? mgr->nodes1 + i : mgr->nodes2 + (i - nnodes1);
-            if (blk->uninit)
-                blk->uninit(blk->is_ptr ? *blk->pptr : blk->pptr);
-            if (blk->is_ptr)
-            {
-                cra_free(*blk->pptr);
-                *blk->pptr = NULL;
-            }
+            if (blk->meta->init_i && blk->meta->init_i->uninit)
+                blk->meta->init_i->uninit(blk->ptr, blk->meta);
+            if (blk->meta->is_ptr)
+                cra_free(blk->ptr);
         }
     }
     if (mgr->nodes2)
@@ -37,10 +34,13 @@ cra_release_mgr_uninit(CraReleaseMgr *mgr, bool free_ptr)
 }
 
 void
-cra_release_mgr_add(CraReleaseMgr *mgr, void **pptr, bool is_ptr, void (*uninit)(void *))
+cra_release_mgr_add(CraReleaseMgr *mgr, void *ptr, const CraTypeMeta *meta)
 {
     CraReleaseBlk *blk;
-    ssize_t        nnodes1;
+    size_t         nnodes1;
+
+    assert(ptr);
+    assert(meta);
 
     nnodes1 = CRA_NARRAY(mgr->nodes1);
     if (mgr->count == mgr->size)
@@ -53,9 +53,8 @@ cra_release_mgr_add(CraReleaseMgr *mgr, void **pptr, bool is_ptr, void (*uninit)
     }
 
     blk = mgr->count < nnodes1 ? mgr->nodes1 + mgr->count : mgr->nodes2 + (mgr->count - nnodes1);
-    blk->is_ptr = is_ptr;
-    blk->pptr = pptr;
-    blk->uninit = uninit;
+    blk->meta = meta;
+    blk->ptr = ptr;
 
     ++mgr->count;
 }
