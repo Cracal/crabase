@@ -1040,7 +1040,7 @@ cra_bin_read_dict(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
     meta->init_i->init(dict, &da);
 
 #ifdef __STDC_NO_VLA__
-    char *key = (char *)cra_malloc(ser, key_size + val_size);
+    char *key = (char *)cra_malloc(key_size + val_size);
 #else
     char key[key_size + val_size];
 #endif

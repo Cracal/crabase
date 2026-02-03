@@ -1304,7 +1304,7 @@ cra_json_read_array(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
                 ret = false;
                 break;
             }
-            maxcnt *= 1.5;
+            maxcnt = maxcnt + (maxcnt >> 1); // * 1.5
             arr = (char *)cra_realloc(arr, maxcnt * slot);
         }
 
@@ -1622,6 +1622,9 @@ cra_json_read_dict(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
         // check ':'
         if (!(ret = cra_json_check_ch(ser, ':')))
         {
+#ifdef __STDC_NO_VLA__
+            cra_free(key);
+#endif
             ch = ':';
             goto invalid_value;
         }
