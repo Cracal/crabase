@@ -49,23 +49,34 @@ test_bool(void)
     cra_free(rb2);
 
     // test error
+    CraSerErr err;
 
     // small buffer
     length = 3;
-    assert_always(!cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
 
     // cannot be null
     length = sizeof(buffer);
-    assert_always(cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     buffer[3] = ((unsigned char)CRA_TYPE_NULL) << 4;
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_CANNOT_BE_NULL);
+    printf("%s\n", err.msg);
 
     // type mismatch
     length = sizeof(buffer);
-    assert_always(cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     buffer[5] = ((unsigned char)CRA_TYPE_INT) << 4;
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_TYPE_MISMATCH);
+    printf("%s\n", err.msg);
 }
 
 void
@@ -150,29 +161,43 @@ test_int(void)
     assert_always(in.i64M == out.i64M);
 
     // test error
+    CraSerErr err;
 
     // small buffer
     length = 93;
-    assert_always(!cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
 
     // cannot be null
     length = sizeof(buffer);
-    assert_always(cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     buffer[3] = ((unsigned char)CRA_TYPE_NULL) << 4;
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_CANNOT_BE_NULL);
+    printf("%s\n", err.msg);
 
     // type mismatch
     length = sizeof(buffer);
-    assert_always(cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     buffer[6] = ((unsigned char)CRA_TYPE_FLOAT) << 4;
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_TYPE_MISMATCH);
+    printf("%s\n", err.msg);
 
     // size mismatch
     length = sizeof(buffer);
-    assert_always(cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     buffer[9] = 34;
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_SIZE_MISMATCH);
+    printf("%s\n", err.msg);
 }
 
 void
@@ -245,29 +270,43 @@ test_uint(void)
     assert_always(in.u64M == out.u64M);
 
     // test error
+    CraSerErr err;
 
     // small buffer
     length = 70;
-    assert_always(!cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
 
     // cannot be null
     length = sizeof(buffer);
-    assert_always(cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     buffer[3] = ((unsigned char)CRA_TYPE_NULL) << 4;
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_CANNOT_BE_NULL);
+    printf("%s\n", err.msg);
 
     // type mismatch
     length = sizeof(buffer);
-    assert_always(cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     buffer[6] = ((unsigned char)CRA_TYPE_INT) << 4;
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_TYPE_MISMATCH);
+    printf("%s\n", err.msg);
 
     // size mismatch
     length = sizeof(buffer);
-    assert_always(cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     buffer[6] = 52;
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_SIZE_MISMATCH);
+    printf("%s\n", err.msg);
 }
 
 void
@@ -352,23 +391,44 @@ test_varint(void)
     assert_always(in.i64M == out.i64M);
 
     // test error
+    CraSerErr err;
 
     // small buffer
     length = 80;
-    assert_always(!cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
 
     // cannot be null
     length = sizeof(buffer);
-    assert_always(cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     buffer[3] = ((unsigned char)CRA_TYPE_NULL) << 4;
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_CANNOT_BE_NULL);
+    printf("%s\n", err.msg);
 
     // type mismatch
     length = sizeof(buffer);
-    assert_always(cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     buffer[6] = ((unsigned char)CRA_TYPE_FLOAT) << 4;
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_TYPE_MISMATCH);
+    printf("%s\n", err.msg);
+
+    // invalid value
+    length = sizeof(buffer);
+    assert_always(cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
+    buffer[70] = 255;
+    buffer[71] = 1;
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_INVALID_VAL);
+    printf("%s\n", err.msg);
 }
 
 void
@@ -441,23 +501,44 @@ test_varuint(void)
     assert_always(in.u64M == out.u64M);
 
     // test error
+    CraSerErr err;
 
     // small buffer
     length = 50;
-    assert_always(!cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
 
     // cannot be null
     length = sizeof(buffer);
-    assert_always(cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     buffer[3] = ((unsigned char)CRA_TYPE_NULL) << 4;
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_CANNOT_BE_NULL);
+    printf("%s\n", err.msg);
 
     // type mismatch
     length = sizeof(buffer);
-    assert_always(cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     buffer[6] = ((unsigned char)CRA_TYPE_VARINT) << 4;
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_TYPE_MISMATCH);
+    printf("%s\n", err.msg);
+
+    // invalid value
+    length = sizeof(buffer);
+    assert_always(cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
+    buffer[length - 1] = 255;
+    buffer[length++] = 0;
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_INVALID_VAL);
+    printf("%s\n", err.msg);
 }
 
 void
@@ -508,29 +589,43 @@ test_float(void)
     assert_always(cra_compare_double(in.dW, out.dW) == 0);
 
     // test error
+    CraSerErr err;
 
     // small buffer
     length = 50;
-    assert_always(!cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
 
     // cannot be null
     length = sizeof(buffer);
-    assert_always(cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     buffer[3] = ((unsigned char)CRA_TYPE_NULL) << 4;
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_CANNOT_BE_NULL);
+    printf("%s\n", err.msg);
 
     // type mismatch
     length = sizeof(buffer);
-    assert_always(cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     buffer[9] = ((unsigned char)CRA_TYPE_BOOL) << 4;
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_TYPE_MISMATCH);
+    printf("%s\n", err.msg);
 
     // size mismatch
     length = sizeof(buffer);
-    assert_always(cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     buffer[15] = 104;
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_SIZE_MISMATCH);
+    printf("%s\n", err.msg);
 }
 
 void
@@ -569,29 +664,43 @@ test_string(void)
     cra_free(out.strpempty);
 
     // test error
+    CraSerErr err;
 
     // small buffer
     length = 13;
-    assert_always(!cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
 
-    // char[N] cannot be null
+    // cannot be null
     length = sizeof(buffer);
-    assert_always(cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     buffer[19] = ((unsigned char)CRA_TYPE_NULL) << 4;
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_CANNOT_BE_NULL);
+    printf("%s\n", err.msg);
 
     // type mismatch
     length = sizeof(buffer);
-    assert_always(cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     buffer[19] = ((unsigned char)CRA_TYPE_BOOL) << 4;
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_TYPE_MISMATCH);
+    printf("%s\n", err.msg);
 
     // char array too small
     length = sizeof(buffer);
-    assert_always(cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     ((CraTypeMeta *)meta + 1)->size = 11;
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_TOO_SMALL);
+    printf("%s\n", err.msg);
 }
 
 void
@@ -653,29 +762,43 @@ test_bytes(void)
     cra_free(out.bytpempty);
 
     // test error
+    CraSerErr err;
 
     // small buffer
     length = 13;
-    assert_always(!cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
 
-    // char[N] cannot be null
+    // cannot be null
     length = sizeof(buffer);
-    assert_always(cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     buffer[19] = ((unsigned char)CRA_TYPE_NULL) << 4;
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_CANNOT_BE_NULL);
+    printf("%s\n", err.msg);
 
     // type mismatch
     length = sizeof(buffer);
-    assert_always(cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     buffer[19] = ((unsigned char)CRA_TYPE_STRING) << 4;
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_TYPE_MISMATCH);
+    printf("%s\n", err.msg);
 
     // char array too small
     length = sizeof(buffer);
-    assert_always(cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     ((CraTypeMeta *)meta + 2)->size = 10;
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_TOO_SMALL);
+    printf("%s\n", err.msg);
 }
 
 void
@@ -720,23 +843,34 @@ test_struct(void)
     cra_free(po);
 
     // test error
+    CraSerErr err;
 
     // small buffer
     length = 13;
-    assert_always(!cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
 
     // cannot be null
     length = sizeof(buffer);
-    assert_always(cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     buffer[12] = ((unsigned char)CRA_TYPE_NULL) << 4;
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_CANNOT_BE_NULL);
+    printf("%s\n", err.msg);
 
     // type mismatch
     length = sizeof(buffer);
-    assert_always(cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     buffer[3] = ((unsigned char)CRA_TYPE_STRING) << 4;
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_TYPE_MISMATCH);
+    printf("%s\n", err.msg);
 }
 
 #if 1 // test struct id
@@ -1012,29 +1146,43 @@ test_array(void)
     cra_free(out.arrsp);
 
     // test error
+    CraSerErr err;
 
     // small buffer
     length = 1000;
-    assert_always(!cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
 
     // cannot be null
     length = sizeof(buffer);
-    assert_always(cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     buffer[3] = ((unsigned char)CRA_TYPE_NULL) << 4;
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_CANNOT_BE_NULL);
+    printf("%s\n", err.msg);
 
     // type mismatch
     length = sizeof(buffer);
-    assert_always(cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     buffer[3] = ((unsigned char)CRA_TYPE_STRING) << 4;
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_TYPE_MISMATCH);
+    printf("%s\n", err.msg);
 
     // array too small
     length = sizeof(buffer);
-    assert_always(cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     ((CraTypeMeta *)meta)->size = 396;
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_TOO_SMALL);
+    printf("%s\n", err.msg);
 
     for (int i = 0; i < 50; i++)
     {
@@ -1150,23 +1298,34 @@ test_list(void)
     cra_dealloc(out.alistempty);
 
     // test error
+    CraSerErr err;
 
     // small buffer
     length = 1000;
-    assert_always(!cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
 
     // cannot be null
     length = sizeof(buffer);
-    assert_always(cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     buffer[3] = ((unsigned char)CRA_TYPE_NULL) << 4;
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_CANNOT_BE_NULL);
+    printf("%s\n", err.msg);
 
     // type mismatch
     length = sizeof(buffer);
-    assert_always(cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     buffer[3] = ((unsigned char)CRA_TYPE_STRING) << 4;
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_TYPE_MISMATCH);
+    printf("%s\n", err.msg);
 
     cra_alist_uninit(&in.alist);
     cra_llist_uninit(in.llist);
@@ -1374,29 +1533,44 @@ test_dict(void)
     cra_dealloc(out.dempty);
 
     // test error
+    CraSerErr err;
 
     // small buffer
     length = 1000;
-    assert_always(!cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
 
     // cannot be null
     length = sizeof(buffer);
-    assert_always(cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     buffer[3] = ((unsigned char)CRA_TYPE_NULL) << 4;
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_CANNOT_BE_NULL);
+    printf("%s\n", err.msg);
 
     // type mismatch
     length = sizeof(buffer);
-    assert_always(cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     buffer[3] = ((unsigned char)CRA_TYPE_STRING) << 4;
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_TYPE_MISMATCH);
+    printf("%s\n", err.msg);
 
     // invalid key type
     length = sizeof(buffer);
     ((CraTypeMeta *)metadu)->type = CRA_TYPE_BYTES;
-    assert_always(!cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
-    assert_always(!cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_bin_serialize_err(buffer, &length, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_CANNOT_BE_KEY);
+    printf("%s\n", err.msg);
+    assert_always(!cra_bin_deserialize_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_CANNOT_BE_KEY);
+    printf("%s\n", err.msg);
 
     cra_dict_uninit(&in.ds);
     cra_dict_uninit(in.dp);

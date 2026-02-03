@@ -14,7 +14,7 @@
 #include "serialize/cra_ser_collections.h"
 #include <float.h>
 
-#define FORMAT true
+#define FORMAT false
 
 void
 test_bool(void)
@@ -56,29 +56,43 @@ test_bool(void)
     cra_free(rb2);
 
     // test error
+    CraSerErr err;
 
     // small buffer
     length = 13;
-    assert_always(!cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
 
     // cannot be null
     length = sizeof(buffer);
-    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     memcpy(buffer + (FORMAT ? 9 : 6), "null ", sizeof("null ") - 1);
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_CANNOT_BE_NULL);
+    printf("%s\n", err.msg);
 
     // error value
     length = sizeof(buffer);
-    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     memcpy(buffer + (FORMAT ? 9 : 6), "False", sizeof("False") - 1);
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_INVALID_VAL);
+    printf("%s\n", err.msg);
 
     // type mismatch
     length = sizeof(buffer);
-    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     meta[1].type = CRA_TYPE_INT;
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_TYPE_MISMATCH);
+    printf("%s\n", err.msg);
 }
 
 void
@@ -169,29 +183,43 @@ test_int(void)
 #endif
 
     // test error
+    CraSerErr err;
 
     // small buffer
     length = 93;
-    assert_always(!cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
 
     // cannot be null
     length = sizeof(buffer);
-    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     memcpy(buffer + (FORMAT ? 35 : 26), "null", sizeof("null") - 1);
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_CANNOT_BE_NULL);
+    printf("%s\n", err.msg);
 
     // error value
     length = sizeof(buffer);
-    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     memcpy(buffer + (FORMAT ? 35 : 26), "3a", sizeof("3a") - 1);
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_INVALID_VAL);
+    printf("%s\n", err.msg);
 
     // type mismatch
     length = sizeof(buffer);
-    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     meta[1].type = CRA_TYPE_STRING;
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_TYPE_MISMATCH);
+    printf("%s\n", err.msg);
 }
 
 void
@@ -269,29 +297,43 @@ test_uint(void)
 #endif
 
     // test error
+    CraSerErr err;
 
     // small buffer
     length = 50;
-    assert_always(!cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
 
     // cannot be null
     length = sizeof(buffer);
-    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     memcpy(buffer + (FORMAT ? 32 : 23), "null", sizeof("null") - 1);
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_CANNOT_BE_NULL);
+    printf("%s\n", err.msg);
 
     // error value
     length = sizeof(buffer);
-    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
-    memcpy(buffer + (FORMAT ? 32 : 23), "3a", sizeof("3a") - 1);
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
+    memcpy(buffer + (FORMAT ? 32 : 23), "a3", sizeof("a3") - 1);
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_INVALID_VAL);
+    printf("%s\n", err.msg);
 
     // type mismatch
     length = sizeof(buffer);
-    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     meta[1].type = CRA_TYPE_STRUCT;
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_TYPE_MISMATCH);
+    printf("%s\n", err.msg);
 }
 
 void
@@ -382,29 +424,43 @@ test_varint(void)
 #endif
 
     // test error
+    CraSerErr err;
 
     // small buffer
     length = 80;
-    assert_always(!cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
 
     // cannot be null
     length = sizeof(buffer);
-    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     memcpy(buffer + (FORMAT ? 35 : 37), "null", sizeof("null") - 1);
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_CANNOT_BE_NULL);
+    printf("%s\n", err.msg);
 
     // error value
     length = sizeof(buffer);
-    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     memcpy(buffer + (FORMAT ? 35 : 37), "3a", sizeof("3a") - 1);
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_INVALID_VAL);
+    printf("%s\n", err.msg);
 
     // type mismatch
     length = sizeof(buffer);
-    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     meta[1].type = CRA_TYPE_STRUCT;
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_TYPE_MISMATCH);
+    printf("%s\n", err.msg);
 }
 
 void
@@ -482,29 +538,43 @@ test_varuint(void)
 #endif
 
     // test error
+    CraSerErr err;
 
     // small buffer
     length = 50;
-    assert_always(!cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
 
     // cannot be null
     length = sizeof(buffer);
-    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     memcpy(buffer + (FORMAT ? 32 : 23), "null", sizeof("null") - 1);
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_CANNOT_BE_NULL);
+    printf("%s\n", err.msg);
 
     // error value
     length = sizeof(buffer);
-    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     memcpy(buffer + (FORMAT ? 32 : 23), "3a", sizeof("3a") - 1);
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_INVALID_VAL);
+    printf("%s\n", err.msg);
 
     // type mismatch
     length = sizeof(buffer);
-    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     meta[1].type = CRA_TYPE_STRUCT;
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_TYPE_MISMATCH);
+    printf("%s\n", err.msg);
 }
 
 void
@@ -556,29 +626,43 @@ test_float(void)
     assert_always(cra_compare_double(in.dW, out.dW) == 0);
 
     // test error
+    CraSerErr err;
 
     // small buffer
     length = 50;
-    assert_always(!cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
 
     // cannot be null
     length = sizeof(buffer);
-    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     memcpy(buffer + (FORMAT ? 22 : 16), "null", sizeof("null") - 1);
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_CANNOT_BE_NULL);
+    printf("%s\n", err.msg);
 
     // error value
     length = sizeof(buffer);
-    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     memcpy(buffer + (FORMAT ? 22 : 16), "3a", sizeof("3a") - 1);
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_INVALID_VAL);
+    printf("%s\n", err.msg);
 
     // type mismatch
     length = sizeof(buffer);
-    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     meta[1].type = CRA_TYPE_STRUCT;
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_TYPE_MISMATCH);
+    printf("%s\n", err.msg);
 }
 
 void
@@ -691,29 +775,52 @@ test_string(void)
     cra_free(out.strpempty);
 
     // test error
+    CraSerErr err;
 
     // small buffer
     length = 13;
-    assert_always(!cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
 
     // char[N] cannot be null
     length = sizeof(buffer);
-    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
-    memcpy(buffer + (FORMAT ? 22 : 31), "null", sizeof("null") - 1);
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
+    memcpy(buffer + (FORMAT ? 37 : 31), "null", sizeof("null") - 1);
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_CANNOT_BE_NULL);
+    printf("%s\n", err.msg);
+
+    // error value
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
+    memcpy(buffer + (FORMAT ? 25 : 22), "X", sizeof("X") - 1);
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_INVALID_VAL);
+    printf("%s\n", err.msg);
 
     // char array too small
     length = sizeof(buffer);
-    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     (meta + 1)->size = 11;
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_TOO_SMALL);
+    printf("%s\n", err.msg);
 
     // type mismatch
     length = sizeof(buffer);
-    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     meta->type = CRA_TYPE_FLOAT;
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_TYPE_MISMATCH);
+    printf("%s\n", err.msg);
 }
 
 void
@@ -729,10 +836,10 @@ test_string_unicode(void)
     CRA_TYPE_META_MEMBER_STRING(struct A, chinese, 2, true)
     CRA_TYPE_META_END();
 
-    char json[] = "{"
-                  "\"emoji\":\"\\uD83D\\uDE00\\/\","
-                  "\"chinese\": \"\\u4f60\\u597d，\\u4e16\\u754c\""
-                  "}";
+    char json[] = "\t   \n\t\n{ \t \n"
+                  "\"emoji\"\t \n  :  \n\t \"\\uD83D\\uDE00\\/\" \t\r\n ,\r\n"
+                  "\"chinese\"    : \"\\u4f60\\u597d，\\u4e16\\u754c\"   "
+                  "}\t  \n";
 
     struct A *a;
 
@@ -808,23 +915,43 @@ test_struct(void)
     cra_free(po);
 
     // test error
+    CraSerErr err;
 
     // small buffer
     length = 13;
-    assert_always(!cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
+
+    // error value
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
+    memcpy(buffer + (FORMAT ? 47 : 19), " ", sizeof(" ") - 1);
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_INVALID_VAL);
+    printf("%s\n", err.msg);
 
     // cannot be null
     length = sizeof(buffer);
-    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     memcpy(buffer + (FORMAT ? 40 : 28), "null", sizeof("null") - 1);
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_CANNOT_BE_NULL);
+    printf("%s\n", err.msg);
 
     // type mismatch
     length = sizeof(buffer);
-    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     (meta + 1)->type = CRA_TYPE_STRING;
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_TYPE_MISMATCH);
+    printf("%s\n", err.msg);
 }
 
 #if 1 // test struct..
@@ -1095,30 +1222,53 @@ test_array(void)
     cra_free(out.arrsp);
 
     // test error
+    CraSerErr err;
 
     // small buffer
     length = 1000;
-    assert_always(!cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
+
+    // error value
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
+    memcpy(buffer + (FORMAT ? 19 : 334), "!", sizeof("!") - 1);
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_INVALID_VAL);
+    printf("%s\n", err.msg);
 
     // cannot be null
     length = sizeof(buffer);
-    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     memcpy(buffer + (FORMAT ? 13 : 10), "null", sizeof("null") - 1);
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_CANNOT_BE_NULL);
+    printf("%s\n", err.msg);
 
     // type mismatch
     length = sizeof(buffer);
-    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     (meta + 2)->type = CRA_TYPE_STRUCT;
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_TYPE_MISMATCH);
+    printf("%s\n", err.msg);
     (meta + 2)->type = CRA_TYPE_LIST;
 
     // array too small
     length = sizeof(buffer);
-    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     meta->size = 396;
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_TOO_SMALL);
+    printf("%s\n", err.msg);
 
     for (int i = 0; i < 50; i++)
     {
@@ -1235,23 +1385,43 @@ test_list(void)
     cra_dealloc(out.alistempty);
 
     // test error
+    CraSerErr err;
 
     // small buffer
     length = 1000;
-    assert_always(!cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
+
+    // error value
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
+    memcpy(buffer + (FORMAT ? 22 : 299), "!", sizeof("!") - 1);
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_INVALID_VAL);
+    printf("%s\n", err.msg);
 
     // cannot be null
     length = sizeof(buffer);
-    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     memcpy(buffer + (FORMAT ? 12 : 28), "null", sizeof("null") - 1);
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_CANNOT_BE_NULL);
+    printf("%s\n", err.msg);
 
     // type mismatch
     length = sizeof(buffer);
-    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     (meta + 2)->type = CRA_TYPE_STRUCT;
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_TYPE_MISMATCH);
+    printf("%s\n", err.msg);
 
     cra_alist_uninit(&in.alist);
     cra_llist_uninit(in.llist);
@@ -1461,30 +1631,54 @@ test_dict(void)
     cra_dealloc(out.dempty);
 
     // test error
+    CraSerErr err;
 
     // small buffer
     length = 1000;
-    assert_always(!cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_NOBUF);
+    printf("%s\n", err.msg);
+
+    // error value
+    length = sizeof(buffer);
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
+    memcpy(buffer + (FORMAT ? 19 : 1016), "!", sizeof("!") - 1);
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_INVALID_VAL);
+    printf("%s\n", err.msg);
 
     // cannot be null
     length = sizeof(buffer);
-    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     memcpy(buffer + (FORMAT ? 9 : 6), "null", sizeof("null") - 1);
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_CANNOT_BE_NULL);
+    printf("%s\n", err.msg);
 
     // type mismatch
     length = sizeof(buffer);
-    assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
+    assert_always(cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(!err.err);
     (meta + 2)->type = CRA_TYPE_STRING;
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_TYPE_MISMATCH);
+    printf("%s\n", err.msg);
     (meta + 2)->type = CRA_TYPE_DICT;
 
     // invalid key type
     length = sizeof(buffer);
-    ((CraTypeMeta *)metadu)->type = CRA_TYPE_BYTES;
-    assert_always(!cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
-    assert_always(!cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
+    ((CraTypeMeta *)metadu)->type = CRA_TYPE_STRUCT;
+    assert_always(!cra_json_stringify_err(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_CANNOT_BE_KEY);
+    printf("%s\n", err.msg);
+    assert_always(!cra_json_parse_err(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL), &err));
+    assert_always(err.err == CRA_SER_ERR_CANNOT_BE_KEY);
+    printf("%s\n", err.msg);
 
     cra_dict_uninit(&in.ds);
     cra_dict_uninit(in.dp);

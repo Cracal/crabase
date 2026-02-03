@@ -48,7 +48,7 @@ const CraSerializable_i cra_g_alist_szer_i = {
     .init_i.uninit = cra_alist_szer_uninit,
     .iter_init = cra_alist_szer_iter_init,
     .iter_next = cra_alist_szer_iter_next,
-    .append = cra_alist_szer_append,
+    .add = cra_alist_szer_append,
 };
 
 #endif // end alist
@@ -99,7 +99,7 @@ const CraSerializable_i cra_g_llist_szer_i = {
     .init_i.uninit = cra_llist_szer_uninit,
     .iter_init = cra_llist_szer_iter_init,
     .iter_next = cra_llist_szer_iter_next,
-    .append = cra_llist_szer_append,
+    .add = cra_llist_szer_append,
 };
 
 #endif // end llist
@@ -150,7 +150,7 @@ const CraSerializable_i cra_g_deque_szer_i = {
     .init_i.uninit = cra_deque_szer_uninit,
     .iter_init = cra_deque_szer_iter_init,
     .iter_next = cra_deque_szer_iter_next,
-    .append = cra_deque_szer_append,
+    .add = cra_deque_szer_append,
 };
 
 #endif // end deque
@@ -204,7 +204,7 @@ const CraSerializable_i cra_g_dict_szer_i = {
     .init_i.uninit = cra_dict_szer_uninit,
     .iter_init = cra_dict_szer_iter_init,
     .iter_next = cra_dict_szer_iter_next,
-    .append = cra_dict_szer_append,
+    .add = cra_dict_szer_append,
 };
 
 #endif // end dict

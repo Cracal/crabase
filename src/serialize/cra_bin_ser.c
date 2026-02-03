@@ -9,11 +9,11 @@
  *
  */
 #define __CRA_SER_INNER
+#define __CRA_BUFFER_UNSIGNED
 #include "serialize/cra_bin_ser.h"
-#include "cra_assert.h"
 #include "cra_endian.h"
+#include "cra_malloc.h"
 #include "serialize/cra_serialize.h"
-#include <math.h>
 
 #if CRA_IS_BIG_ENDIAN
 #define CRA_SER_SWAP16 CRA_BSWAP_UINT16
@@ -24,8 +24,6 @@
 #define CRA_SER_SWAP32(x) (x)
 #define CRA_SER_SWAP64(x) (x)
 #endif
-
-#define CRA_SERIALIZER_NAME "BinSer"
 
 #define CRA_BIN_MAKE_TYPE(_TYPE, _low) (((unsigned char)(_TYPE) << 4) | ((unsigned char)(_low) & 0x0f))
 #define CRA_BIN_GET_TYPE(_buf)         ((CraType_e)((*(_buf)) >> 4))
@@ -55,9 +53,7 @@ cra_bin_write_uint(CraSerializer *ser, void *val, const CraTypeMeta *meta)
             return true;
 
         default:
-            CRA_SERIALIZER_PRINT_ERROR(
-              "Invalid [u]int size: %zu. correct: 1, 2, 4, 8. Name: %s.", meta->size, CRA_NAME(meta));
-            return false;
+            assert_always(false);
     }
 }
 
@@ -68,11 +64,7 @@ cra_bin_read_uint(CraSerializer *ser, void *retval, const CraTypeMeta *meta, siz
 
     assert(meta->size == 1 || meta->size == 2 || meta->size == 4 || meta->size == 8);
 
-    if (sizefrombuf != meta->size)
-    {
-        CRA_SERIALIZER_PRINT_ERROR("Size mismatch. %zu != %zu. Name: %s.", sizefrombuf, meta->size, CRA_NAME(meta));
-        return false;
-    }
+    CRA_SERIALIZER_CHECK_SIZE(ser, meta, sizefrombuf);
 
     CRA_SERIALIZER_ENSURE(ser, buf, meta->size);
     switch (meta->size)
@@ -91,9 +83,7 @@ cra_bin_read_uint(CraSerializer *ser, void *retval, const CraTypeMeta *meta, siz
             return true;
 
         default:
-            CRA_SERIALIZER_PRINT_ERROR(
-              "Invalid [u]int size: %zu. correct: 1, 2, 4, 8. Name: %s.", meta->size, CRA_NAME(meta));
-            return false;
+            assert_always(false);
     }
 }
 
@@ -150,8 +140,7 @@ cra_bin_write_varint(CraSerializer *ser, void *val, const CraTypeMeta *meta)
     int64_t  i64;
     uint64_t u64;
 
-    if (!cra_serializer_p2i(val, &i64, meta))
-        return false;
+    cra_serializer_p2i(val, &i64, meta);
     u64 = cra_bin_zigzag_i2u(i64);
     return __cra_bin_write_varuint(ser, u64);
 }
@@ -162,13 +151,15 @@ cra_bin_read_varint(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
     int64_t  i64;
     uint64_t u64;
 
-    if (!__cra_bin_read_varuint(ser, &u64))
+    if (__cra_bin_read_varuint(ser, &u64))
     {
-        CRA_SERIALIZER_PRINT_ERROR("Read varint failed: Invalid number. Name: %s.", CRA_NAME(meta));
-        return false;
+        i64 = cra_bin_zigzag_u2i(u64);
+        cra_serializer_i2p(i64, retval, meta);
+        return true;
     }
-    i64 = cra_bin_zigzag_u2i(u64);
-    return cra_serializer_i2p(i64, retval, meta);
+    if (!ser->error.err)
+        CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_INVALID_VAL, "invalid varint value");
+    return false;
 }
 
 static inline bool
@@ -176,8 +167,7 @@ cra_bin_write_varuint(CraSerializer *ser, void *val, const CraTypeMeta *meta)
 {
     uint64_t u64;
 
-    if (!cra_serializer_p2u(val, &u64, meta))
-        return false;
+    cra_serializer_p2u(val, &u64, meta);
     return __cra_bin_write_varuint(ser, u64);
 }
 
@@ -186,12 +176,14 @@ cra_bin_read_varuint(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 {
     uint64_t u64;
 
-    if (!__cra_bin_read_varuint(ser, &u64))
+    if (__cra_bin_read_varuint(ser, &u64))
     {
-        CRA_SERIALIZER_PRINT_ERROR("Read varuint failed: Invalid number. Name: %s.", CRA_NAME(meta));
-        return false;
+        cra_serializer_u2p(u64, retval, meta);
+        return true;
     }
-    return cra_serializer_u2p(u64, retval, meta);
+    if (!ser->error.err)
+        CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_INVALID_VAL, "invalid varuint value");
+    return false;
 }
 
 static bool
@@ -221,8 +213,7 @@ cra_bin_write_float(CraSerializer *ser, void *val, const CraTypeMeta *meta)
             return true;
 
         default:
-            CRA_SERIALIZER_PRINT_ERROR("Invalid float size: %zu. correct: 4, 8. Name: %s.", meta->size, CRA_NAME(meta));
-            return false;
+            assert_always(false);
     }
 }
 
@@ -240,11 +231,7 @@ cra_bin_read_float(CraSerializer *ser, void *retval, const CraTypeMeta *meta, si
 
     assert(meta->size == 4 || meta->size == 8);
 
-    if (sizefrombuf != meta->size)
-    {
-        CRA_SERIALIZER_PRINT_ERROR("Size mismatch. %zu != %zu. Name: %s.", sizefrombuf, meta->size, CRA_NAME(meta));
-        return false;
-    }
+    CRA_SERIALIZER_CHECK_SIZE(ser, meta, sizefrombuf);
 
     CRA_SERIALIZER_ENSURE(ser, buf, meta->size);
     switch (meta->size)
@@ -259,8 +246,7 @@ cra_bin_read_float(CraSerializer *ser, void *retval, const CraTypeMeta *meta, si
             return true;
 
         default:
-            CRA_SERIALIZER_PRINT_ERROR("Invalid float size: %zu. correct: 4, 8. Name: %s.", meta->size, CRA_NAME(meta));
-            return false;
+            assert_always(false);
     }
 }
 
@@ -270,8 +256,11 @@ __cra_bin_write_string(CraSerializer *ser, void *str, uint64_t len, const CraTyp
     // write length
     if (!__cra_bin_write_varuint(ser, len))
     {
-        CRA_SERIALIZER_PRINT_ERROR(
-          "Write %s length failed. Name: %s.", meta->type == CRA_TYPE_STRING ? "string" : "bytes", CRA_NAME(meta));
+        CRA_SERIALIZER_ERROR(ser,
+                             meta,
+                             CRA_SER_ERR_LENGTH,
+                             "failed to write %s length",
+                             meta->type == CRA_TYPE_STRING ? "string" : "bytes");
         return false;
     }
     // write string
@@ -291,8 +280,11 @@ __cra_bin_read_string(CraSerializer *ser, void *retval, uint64_t *retlen, const 
     // read length
     if (!__cra_bin_read_varuint(ser, &len))
     {
-        CRA_SERIALIZER_PRINT_ERROR(
-          "Read %s length failed. Name: %s.", meta->type == CRA_TYPE_STRING ? "string" : "bytes", CRA_NAME(meta));
+        CRA_SERIALIZER_ERROR(ser,
+                             meta,
+                             CRA_SER_ERR_LENGTH,
+                             "failed to read %s length",
+                             meta->type == CRA_TYPE_STRING ? "string" : "bytes");
         return false;
     }
 
@@ -308,11 +300,13 @@ __cra_bin_read_string(CraSerializer *ser, void *retval, uint64_t *retlen, const 
         uint64_t l = len + (meta->type == CRA_TYPE_STRING ? 1 : 0);
         if (meta->size < l)
         {
-            CRA_SERIALIZER_PRINT_ERROR("The buffer of %s is too small. %zu < %zu. Name: %s.",
-                                       meta->type == CRA_TYPE_STRING ? "string" : "bytes",
-                                       meta->size,
-                                       l,
-                                       CRA_NAME(meta));
+            CRA_SERIALIZER_ERROR(ser,
+                                 meta,
+                                 CRA_SER_ERR_TOO_SMALL,
+                                 "%s size too small(%zu < %zu)",
+                                 meta->type == CRA_TYPE_STRING ? "string" : "bytes",
+                                 meta->size,
+                                 l);
             return false;
         }
     }
@@ -351,27 +345,22 @@ cra_bin_read_string(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 static inline bool
 cra_bin_write_bytes(CraSerializer *ser, void *val, const CraTypeMeta *meta)
 {
-    unsigned char     *bytes;
+    void              *bytes;
     uint64_t           length;
     void              *plength;
     const CraTypeMeta *meta_len;
 
     // check length variant
     meta_len = meta + 1;
-    if (!meta_len->is_len || meta_len->type != CRA_TYPE_UINT)
-    {
-        CRA_SERIALIZER_PRINT_ERROR("You must set a LENGTH VARIANT(type: UINT) for the BYTES. Name: %s.",
-                                   CRA_NAME(meta));
-        return false;
-    }
+    assert(meta_len->is_len && meta_len->type == CRA_TYPE_UINT);
 
     // get length
     plength = !meta_len->arg ? (void *)((char *)val - meta->offset + meta_len->offset) : meta_len->arg;
-    if (!cra_serializer_p2u(plength, &length, meta_len))
-        return false;
+    assert(plength);
+    cra_serializer_p2u(plength, &length, meta_len);
 
     // write
-    bytes = meta->is_ptr ? *(unsigned char **)val : (unsigned char *)val;
+    bytes = meta->is_ptr ? *(void **)val : val;
     return __cra_bin_write_string(ser, bytes, length, meta);
 }
 
@@ -384,19 +373,18 @@ cra_bin_read_bytes(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 
     // check length variant
     meta_len = meta + 1;
-    if (!meta_len->is_len || meta_len->type != CRA_TYPE_UINT)
-    {
-        CRA_SERIALIZER_PRINT_ERROR("You must set a LENGTH VARIANT(type: UINT) for the BYTES. Name: %s.",
-                                   CRA_NAME(meta));
-        return false;
-    }
+    assert(meta_len->is_len && meta_len->type == CRA_TYPE_UINT);
 
     // get length ptr
     plength = !meta_len->arg ? (void *)((char *)retval - meta->offset + meta_len->offset) : meta_len->arg;
+    assert(plength);
 
     // read bytes
     if (__cra_bin_read_string(ser, retval, &length, meta))
-        return cra_serializer_u2p(length, plength, meta_len);
+    {
+        cra_serializer_u2p(length, plength, meta_len);
+        return true;
+    }
     return false;
 }
 
@@ -424,6 +412,7 @@ cra_bin_write_value(CraSerializer *ser, void *val, const CraTypeMeta *meta)
 
     assert(val);
     assert(meta);
+    assert(meta->name);
     assert(meta->is_not_end);
 
     CRA_SERIALIZER_ENSURE(ser, buf, 1);
@@ -431,11 +420,7 @@ cra_bin_write_value(CraSerializer *ser, void *val, const CraTypeMeta *meta)
     // null?
     if (meta->is_ptr && !(*(void **)val))
     {
-        if (meta->type <= CRA_TYPE_FLOAT)
-        {
-            CRA_SERIALIZER_PRINT_ERROR("Cannot be null. Name: %s.", CRA_NAME(meta));
-            return false;
-        }
+        CRA_SERIALIZER_CHECK_NULL(ser, meta);
         *buf = CRA_BIN_MAKE_TYPE(CRA_TYPE_NULL, 0);
         return true;
     }
@@ -473,9 +458,7 @@ cra_bin_write_value(CraSerializer *ser, void *val, const CraTypeMeta *meta)
             return cra_bin_write_dict(ser, val, meta);
 
         default:
-            CRA_SERIALIZER_PRINT_ERROR(
-              "Invalid type: %d. Please check your meta data. Name: %s.", meta->type, CRA_NAME(meta));
-            return false;
+            assert_always(false);
     }
 }
 
@@ -486,6 +469,7 @@ cra_bin_read_value(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 
     assert(retval);
     assert(meta);
+    assert(meta->name);
     assert(meta->is_not_end);
 
     CRA_SERIALIZER_ENSURE(ser, buf, 1);
@@ -493,22 +477,13 @@ cra_bin_read_value(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
     // check null
     if (CRA_BIN_GET_TYPE(buf) == CRA_TYPE_NULL)
     {
-        if (!meta->is_ptr || meta->type <= CRA_TYPE_FLOAT)
-        {
-            CRA_SERIALIZER_PRINT_ERROR("Cannot be null. Name: %s.", CRA_NAME(meta));
-            return false;
-        }
+        CRA_SERIALIZER_CHECK_NULL(ser, meta);
         *(void **)retval = NULL;
         return true;
     }
 
     // check type
-    if (CRA_BIN_GET_TYPE(buf) != meta->type)
-    {
-        CRA_SERIALIZER_PRINT_ERROR(
-          "Type mismatch. %d != %d. Name: %s.", CRA_BIN_GET_TYPE(buf), meta->type, CRA_NAME(meta));
-        return false;
-    }
+    CRA_SERIALIZER_CHECK_TYPE(ser, meta, CRA_BIN_GET_TYPE(buf));
 
     switch (meta->type)
     {
@@ -539,9 +514,7 @@ cra_bin_read_value(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
             return cra_bin_read_dict(ser, retval, meta);
 
         default:
-            CRA_SERIALIZER_PRINT_ERROR(
-              "Invalid type: %d. Please check your meta data. Name: %s.", meta->type, CRA_NAME(meta));
-            return false;
+            assert_always(false);
     }
 }
 
@@ -549,8 +522,8 @@ static bool
 cra_bin_write_struct(CraSerializer *ser, void *val, const CraTypeMeta *meta)
 {
     unsigned char     *buf, *numbuf;
+    int                nfields;
     char              *stru;
-    int                num;
     const CraTypeMeta *m;
 
     assert(meta->submeta && meta->submeta->is_not_end); // at least 1 member
@@ -561,30 +534,25 @@ cra_bin_write_struct(CraSerializer *ser, void *val, const CraTypeMeta *meta)
     CRA_SERIALIZER_ENSURE(ser, numbuf, 1);
     // write members
     stru = meta->is_ptr ? *(char **)val : (char *)val;
-    for (num = 0, m = meta->submeta; m->is_not_end; ++m)
+    for (nfields = 0, m = meta->submeta; m->is_not_end; ++m)
     {
         if (m->is_len)
             continue;
+
+        ++nfields;
+
+        assert(nfields <= UINT8_MAX);
+        assert(meta->size > m->offset);
 
         // write id
         CRA_SERIALIZER_ENSURE(ser, buf, 1);
         *buf = m->id;
         // write member
         if (!cra_bin_write_value(ser, stru + m->offset, m))
-        {
-            CRA_SERIALIZER_PRINT_ERROR("Write struct's member failed. Name: %s, id: %d.", CRA_NAME(m), m->id);
             return false;
-        }
-        // check members' count
-        if (++num > UINT8_MAX)
-        {
-            CRA_SERIALIZER_PRINT_ERROR("A struct can have at most %d members.", UINT8_MAX);
-            return false;
-        }
-        assert(meta->size > m->offset);
     }
     // write num of members
-    *numbuf = (unsigned char)num;
+    *numbuf = (unsigned char)nfields;
 
     CRA_SERIALIZER_NESTING_DEC(ser);
 
@@ -592,7 +560,7 @@ cra_bin_write_struct(CraSerializer *ser, void *val, const CraTypeMeta *meta)
 }
 
 static bool
-cra_bin_skip_one_member(CraSerializer *ser)
+cra_bin_skip_member(CraSerializer *ser)
 {
     size_t         len;
     uint64_t       u64;
@@ -635,7 +603,7 @@ cra_bin_skip_one_member(CraSerializer *ser)
                 // skip id
                 CRA_SERIALIZER_ENSURE(ser, buf, 1);
                 // skip member
-                if (!cra_bin_skip_one_member(ser))
+                if (!cra_bin_skip_member(ser))
                     return false;
             }
             break;
@@ -646,7 +614,7 @@ cra_bin_skip_one_member(CraSerializer *ser)
             for (uint64_t i = 0; i < u64; ++i)
             {
                 // skip element
-                if (!cra_bin_skip_one_member(ser))
+                if (!cra_bin_skip_member(ser))
                     return false;
             }
             break;
@@ -657,10 +625,10 @@ cra_bin_skip_one_member(CraSerializer *ser)
             for (uint64_t i = 0; i < u64; ++i)
             {
                 // skip key
-                if (!cra_bin_skip_one_member(ser))
+                if (!cra_bin_skip_member(ser))
                     return false;
                 // skip val
-                if (!cra_bin_skip_one_member(ser))
+                if (!cra_bin_skip_member(ser))
                     return false;
             }
             break;
@@ -676,8 +644,8 @@ cra_bin_read_struct(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 {
     unsigned char     *buf;
     char              *stru;
-    uint8_t            num, id;
     const CraTypeMeta *m, *last;
+    uint8_t            nfields, id;
 
     assert(meta->submeta && meta->submeta->is_not_end); // at least 1 member
 
@@ -707,10 +675,10 @@ cra_bin_read_struct(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 
     // read num of members
     CRA_SERIALIZER_ENSURE(ser, buf, 1);
-    num = *buf;
+    nfields = *buf;
     // read members
     m = meta->submeta;
-    for (uint8_t i = 0; i < num; ++i)
+    for (uint8_t i = 0; i < nfields; ++i)
     {
         // read id
         CRA_SERIALIZER_ENSURE(ser, buf, 1);
@@ -729,11 +697,7 @@ cra_bin_read_struct(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
             {
                 // read member
                 if (!cra_bin_read_value(ser, stru + m->offset, m))
-                {
-                    CRA_SERIALIZER_PRINT_ERROR(
-                      "Read struct's member failed. Member: %s, id: {buf: %d, meta: %d}.", CRA_NAME(m), id, m->id);
                     return false;
-                }
 
                 if (!(++m)->is_not_end)
                     m = meta->submeta;
@@ -746,9 +710,13 @@ cra_bin_read_struct(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
             // skip this member
             if (m == last)
             {
-                if (!cra_bin_skip_one_member(ser))
+                if (!cra_bin_skip_member(ser))
                 {
-                    CRA_SERIALIZER_PRINT_ERROR("Skip value failed. id: %d, type: %d.", id, CRA_BIN_GET_TYPE(buf + 1));
+                    CRA_SERIALIZER_ERROR1(ser,
+                                          ser->error.err,
+                                          "failed to skip the member. id: %d, type: %d",
+                                          id,
+                                          CRA_BIN_GET_TYPE(buf + 1));
                     return false;
                 }
                 break;
@@ -770,8 +738,8 @@ cra_bin_write_array(CraSerializer *ser, void *val, const CraTypeMeta *meta)
     void              *pcount;
     const CraTypeMeta *metacnt;
 
-    assert(meta->submeta);
     assert(!meta->szer_i);
+    assert(meta->submeta);
     assert(meta->submeta->is_not_end);
     assert((meta + 1)->is_len && (meta + 1)->type == CRA_TYPE_UINT);
 
@@ -782,18 +750,15 @@ cra_bin_write_array(CraSerializer *ser, void *val, const CraTypeMeta *meta)
     arr = meta->is_ptr ? *(char **)val : (char *)val;
     slot = meta->submeta->is_ptr ? sizeof(void *) : meta->submeta->size;
     pcount = !metacnt->arg ? (void *)((char *)val - meta->offset + metacnt->offset) : metacnt->arg;
+    assert(pcount);
 
     // get count
-    if (!cra_serializer_p2u(pcount, &count, metacnt))
-    {
-        CRA_SERIALIZER_PRINT_ERROR("Get array count failed. Name: %s.", CRA_NAME(meta));
-        return false;
-    }
+    cra_serializer_p2u(pcount, &count, metacnt);
 
     // write count
     if (!__cra_bin_write_varuint(ser, count))
     {
-        CRA_SERIALIZER_PRINT_ERROR("Write array count failed. Name: %s.", CRA_NAME(meta));
+        CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_LENGTH, "failed to write array count");
         return false;
     }
 
@@ -801,10 +766,7 @@ cra_bin_write_array(CraSerializer *ser, void *val, const CraTypeMeta *meta)
     for (uint64_t i = 0; i < count; ++i)
     {
         if (!cra_bin_write_value(ser, arr + (i * slot), meta->submeta))
-        {
-            CRA_SERIALIZER_PRINT_ERROR("Write array elements failed. Name: %s.", CRA_NAME(meta));
             return false;
-        }
     }
 
     return true;
@@ -821,20 +783,22 @@ cra_bin_read_array(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
     void              *pcount;
     const CraTypeMeta *metacnt;
 
-    assert(meta->submeta);
     assert(!meta->szer_i);
+    assert(meta->submeta);
     assert(meta->submeta->is_not_end);
+    assert((meta + 1)->is_len && (meta + 1)->type == CRA_TYPE_UINT);
 
     CRA_SERIALIZER_NESTING_INC_CHECK(ser);
 
     metacnt = meta + 1;
     slot = meta->submeta->is_ptr ? sizeof(void *) : meta->submeta->size;
     pcount = !metacnt->arg ? (void *)((char *)retval - meta->offset + metacnt->offset) : metacnt->arg;
+    assert(pcount);
 
     // read count
     if (!__cra_bin_read_varuint(ser, &count))
     {
-        CRA_SERIALIZER_PRINT_ERROR("Read array count failed. Name: %s.", CRA_NAME(meta));
+        CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_LENGTH, "failed to read array count");
         return false;
     }
 
@@ -849,8 +813,8 @@ cra_bin_read_array(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
         // enough?
         if (meta->size / slot < count)
         {
-            CRA_SERIALIZER_PRINT_ERROR(
-              "The array[%zu] is too small(< %zu). Name: %s.", meta->size / slot, count, CRA_NAME(meta));
+            CRA_SERIALIZER_ERROR(
+              ser, meta, CRA_SER_ERR_TOO_SMALL, "array size too small(%zu < %zu)", meta->size / slot, count);
             return false;
         }
         size = meta->size;
@@ -864,14 +828,10 @@ cra_bin_read_array(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
     {
         // read element
         if (!(ret = cra_bin_read_value(ser, arr + i * slot, meta->submeta)))
-        {
-            CRA_SERIALIZER_PRINT_ERROR("Read array elements failed. Name: %s.", CRA_NAME(meta));
             break;
-        }
     }
 
-    if (ret)
-        ret = cra_serializer_u2p(count, pcount, metacnt);
+    cra_serializer_u2p(count, pcount, metacnt);
     return ret;
 }
 
@@ -898,7 +858,7 @@ cra_bin_write_list(CraSerializer *ser, void *val, const CraTypeMeta *meta)
     // write count
     if (!__cra_bin_write_varuint(ser, count))
     {
-        CRA_SERIALIZER_PRINT_ERROR("Write list count failed. Name: %s.", CRA_NAME(meta));
+        CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_LENGTH, "failed to write list count");
         return false;
     }
 
@@ -906,10 +866,7 @@ cra_bin_write_list(CraSerializer *ser, void *val, const CraTypeMeta *meta)
     for (i = 0; meta->szer_i->iter_next(it, (void **)&value, NULL); ++i)
     {
         if (!cra_bin_write_value(ser, value, meta->submeta))
-        {
-            CRA_SERIALIZER_PRINT_ERROR("Write list elements failed. Name: %s.", CRA_NAME(meta));
             return false;
-        }
     }
 
     assert(i == count);
@@ -930,14 +887,14 @@ cra_bin_read_list(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
     assert(meta->szer_i);
     assert(meta->submeta);
     assert(meta->submeta->is_not_end);
-    assert(meta->szer_i->append && meta->init_i->init);
+    assert(meta->szer_i->add && meta->init_i->init);
 
     CRA_SERIALIZER_NESTING_INC_CHECK(ser);
 
     // read count
     if (!__cra_bin_read_varuint(ser, &count))
     {
-        CRA_SERIALIZER_PRINT_ERROR("Read list count failed. Name: %s.", CRA_NAME(meta));
+        CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_LENGTH, "failed to read list count");
         return false;
     }
 
@@ -968,15 +925,12 @@ cra_bin_read_list(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
     {
         // read element
         if (!(ret = cra_bin_read_value(ser, element, meta->submeta)))
-        {
-            CRA_SERIALIZER_PRINT_ERROR("Read list elements failed. Name: %s.", CRA_NAME(meta));
             break;
-        }
 
         // append
-        if (!(ret = meta->szer_i->append(list, element, NULL)))
+        if (!(ret = meta->szer_i->add(list, element, NULL)))
         {
-            CRA_SERIALIZER_PRINT_ERROR("Append list elements failed. Name: %s.", CRA_NAME(meta));
+            CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_ADD_FAILED, "failed to add a list element");
             break;
         }
     }
@@ -984,9 +938,7 @@ cra_bin_read_list(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 #ifdef __STDC_NO_VLA__
     cra_free(element);
 #endif
-
     CRA_SERIALIZER_NESTING_DEC(ser);
-
     return ret;
 }
 
@@ -1006,11 +958,8 @@ cra_bin_write_dict(CraSerializer *ser, void *val, const CraTypeMeta *meta)
 
     CRA_SERIALIZER_NESTING_INC_CHECK(ser);
 
-    if (meta->submeta->type >= CRA_TYPE_BYTES)
-    {
-        CRA_SERIALIZER_PRINT_ERROR("This type(%d) cannot be a key. Name: %s.", meta->submeta->type, CRA_NAME(meta));
-        return false;
-    }
+    // check key
+    CRA_SERIALIZER_CHECK_KEY(ser, meta->submeta);
 
     dict = meta->is_ptr ? *(char **)val : (char *)val;
 
@@ -1020,7 +969,7 @@ cra_bin_write_dict(CraSerializer *ser, void *val, const CraTypeMeta *meta)
     // write count
     if (!__cra_bin_write_varuint(ser, count))
     {
-        CRA_SERIALIZER_PRINT_ERROR("Write dict count failed. Name: %s.", CRA_NAME(meta));
+        CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_LENGTH, "failed to write dict count");
         return false;
     }
 
@@ -1028,15 +977,9 @@ cra_bin_write_dict(CraSerializer *ser, void *val, const CraTypeMeta *meta)
     for (i = 0; meta->szer_i->iter_next(it, (void **)&key, (void **)&value); ++i)
     {
         if (!cra_bin_write_value(ser, key, meta->submeta))
-        {
-            CRA_SERIALIZER_PRINT_ERROR("Write dict key failed. Name: %s.", CRA_NAME(meta));
             return false;
-        }
         if (!cra_bin_write_value(ser, value, meta->submeta + 1))
-        {
-            CRA_SERIALIZER_PRINT_ERROR("Write dict value failed. Name: %s.", CRA_NAME(meta));
             return false;
-        }
     }
 
     assert(i == count);
@@ -1058,20 +1001,17 @@ cra_bin_read_dict(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
     assert(meta->submeta);
     assert(meta->submeta->is_not_end);
     assert((meta->submeta + 1)->is_not_end);
-    assert(meta->szer_i && meta->szer_i->append && meta->init_i->init);
+    assert(meta->szer_i && meta->szer_i->add && meta->init_i->init);
 
     CRA_SERIALIZER_NESTING_INC_CHECK(ser);
 
-    if (meta->submeta->type >= CRA_TYPE_BYTES)
-    {
-        CRA_SERIALIZER_PRINT_ERROR("This type(%d) cannot be a key. Name: %s.", meta->submeta->type, CRA_NAME(meta));
-        return false;
-    }
+    // check key
+    CRA_SERIALIZER_CHECK_KEY(ser, meta->submeta);
 
     // read count
     if (!__cra_bin_read_varuint(ser, &count))
     {
-        CRA_SERIALIZER_PRINT_ERROR("Read dict count failed. Name: %s.", CRA_NAME(meta));
+        CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_LENGTH, "failed to read dict count");
         return false;
     }
 
@@ -1112,20 +1052,14 @@ cra_bin_read_dict(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
     {
         // read key
         if (!(ret = cra_bin_read_value(ser, key, keymeta)))
-        {
-            CRA_SERIALIZER_PRINT_ERROR("Read dict key failed. Name: %s.", CRA_NAME(meta));
             break;
-        }
         // read value
         if (!(ret = cra_bin_read_value(ser, value, valmeta)))
-        {
-            CRA_SERIALIZER_PRINT_ERROR("Read dict value failed. Name: %s.", CRA_NAME(meta));
             break;
-        }
 
-        if (!(ret = meta->szer_i->append(dict, key, value)))
+        if (!(ret = meta->szer_i->add(dict, key, value)))
         {
-            CRA_SERIALIZER_PRINT_ERROR("Append dict K-V pair failed. Name: %s.", CRA_NAME(meta));
+            CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_ADD_FAILED, "failed to insert a key-value pair into dict");
             break;
         }
     }
@@ -1140,7 +1074,7 @@ cra_bin_read_dict(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 }
 
 bool
-cra_bin_serialize(unsigned char *buf, size_t *len, CraSeriObject *obj)
+cra_bin_serialize_err(unsigned char *buf, size_t *len, CraSeriObject *obj, CraSerErr *err)
 {
     bool          ret;
     CraSerializer ser;
@@ -1152,13 +1086,14 @@ cra_bin_serialize(unsigned char *buf, size_t *len, CraSeriObject *obj)
 
     cra_serializer_init(&ser, buf, *len, false);
     ret = cra_bin_write_value(&ser, obj->objptr, obj->meta);
-    *len = ser.index;
+    cra_serializer_check_err(ser, err, ret);
     cra_serializer_uninit(&ser, ret);
+    *len = ser.index;
     return ret;
 }
 
 bool
-cra_bin_deserialize(unsigned char *buf, size_t len, CraSeriObject *retobj)
+cra_bin_deserialize_err(unsigned char *buf, size_t len, CraSeriObject *retobj, CraSerErr *err)
 {
     assert(buf);
     assert(len > 0);
@@ -1170,14 +1105,15 @@ cra_bin_deserialize(unsigned char *buf, size_t len, CraSeriObject *retobj)
 
     cra_serializer_init(&ser, buf, len, false);
     ret = cra_bin_read_value(&ser, retobj->objptr, retobj->meta);
+    cra_serializer_check_err(ser, err, ret);
     cra_serializer_uninit(&ser, ret);
     return ret;
 }
 
 void
-cra_bin_write_len(unsigned char *buf, uint64_t len, size_t size)
+cra_bin_write_len(unsigned char *buf, uint64_t len, size_t len_size)
 {
-    switch (size)
+    switch (len_size)
     {
         case 1:
             *buf = (unsigned char)len;
@@ -1193,16 +1129,14 @@ cra_bin_write_len(unsigned char *buf, uint64_t len, size_t size)
             break;
 
         default:
-            CRA_SERIALIZER_PRINT_ERROR("Invalid length size: %zu.", size);
-            exit(EXIT_FAILURE);
-            break;
+            assert_always(false);
     }
 }
 
 uint64_t
-cra_bin_read_len(unsigned char *buf, size_t size)
+cra_bin_read_len(unsigned char *buf, size_t len_size)
 {
-    switch (size)
+    switch (len_size)
     {
         case 1:
             return *(uint8_t *)buf;
@@ -1214,8 +1148,6 @@ cra_bin_read_len(unsigned char *buf, size_t size)
             return CRA_SER_SWAP64(*(uint64_t *)buf);
 
         default:
-            CRA_SERIALIZER_PRINT_ERROR("Invalid length size: %zu.", size);
-            exit(EXIT_FAILURE);
-            break;
+            assert_always(false);
     }
 }
