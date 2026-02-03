@@ -151,7 +151,7 @@ test_flag(void)
 
     printf("test cra_atomic_flag.\n");
 
-    cra_atomic_flag flag = CRA_ATOMIC_FLAG_INIT;
+    cra_atomic_flag_t flag = CRA_ATOMIC_FLAG_INIT;
     assert_always(*(bool *)&flag == false);
 
     b = cra_atomic_flag_test_and_set(&flag);

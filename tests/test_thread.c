@@ -37,7 +37,7 @@ test_thread(void)
 
 #endif // end test thread
 
-#if 1 // test locker
+#if 1 // test lock
 
 static cra_cond_t  s_cond;
 static cra_mutex_t s_mutex;
@@ -48,13 +48,13 @@ static CRA_THRD_FUNC(thrd_locker_func)
     CRA_UNUSED_VALUE(arg);
 
     cra_mutex_lock(&s_mutex);
-    printf("test-locker-thread: get s_val: %d\n", s_val);
+    printf("test-lock-thread: get s_val: %d\n", s_val);
     cra_mutex_unlock(&s_mutex);
 
     cra_msleep(500);
 
     s_val = 200;
-    printf("test-locker-thread: set s_val: %d\n", s_val);
+    printf("test-lock-thread: set s_val: %d\n", s_val);
     cra_cond_signal(&s_cond);
 
     return (cra_thrd_ret_t){ 0 };
@@ -70,13 +70,13 @@ test_locker(void)
     cra_thrd_create(&thr, thrd_locker_func, NULL);
 
     cra_mutex_lock(&s_mutex);
-    printf("test-locker-main: get s_val: %d\n", s_val);
+    printf("test-lock-main: get s_val: %d\n", s_val);
     s_val = 100;
-    printf("test-locker-main: set s_val: %d\n", s_val);
+    printf("test-lock-main: set s_val: %d\n", s_val);
     cra_mutex_unlock(&s_mutex);
 
     cra_cond_wait(&s_cond, &s_mutex);
-    printf("test-locker-main: get s_val: %d\n", s_val);
+    printf("test-lock-main: get s_val: %d\n", s_val);
 
     cra_thrd_join(thr);
 
@@ -84,7 +84,7 @@ test_locker(void)
     cra_cond_destroy(&s_cond);
 }
 
-#endif // end test locker
+#endif // end test lock
 
 #if 1 // test mutex
 

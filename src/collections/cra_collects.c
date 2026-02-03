@@ -17,9 +17,9 @@
 #include <wincrypt.h>
 #endif
 
-static cra_atomic_flag s_hash_locker = { 0 };
-#define LOCK()   while (cra_atomic_flag_test_and_set(&s_hash_locker))
-#define UNLOCK() cra_atomic_flag_clear(&s_hash_locker)
+static cra_atomic_flag_t s_hash_lock = { 0 };
+#define LOCK()   while (cra_atomic_flag_test_and_set(&s_hash_lock))
+#define UNLOCK() cra_atomic_flag_clear(&s_hash_lock)
 
 static cra_hash_t
 cra_get_init_hash(void)

@@ -2,8 +2,8 @@
 #include "cra_assert.h"
 #include "cra_malloc.h"
 
-#define CRA_MEMPOOL_LOCK   while (cra_atomic_flag_test_and_set(&pool->locker))
-#define CRA_MEMPOOL_UNLOCK cra_atomic_flag_clear(&pool->locker)
+#define CRA_MEMPOOL_LOCK   while (cra_atomic_flag_test_and_set(&pool->lock))
+#define CRA_MEMPOOL_UNLOCK cra_atomic_flag_clear(&pool->lock)
 
 void
 cra_mempool_init(CraMemPool *pool, size_t itemsize, unsigned int count)
@@ -14,7 +14,7 @@ cra_mempool_init(CraMemPool *pool, size_t itemsize, unsigned int count)
     assert(itemsize > 0);
     assert(count > 0);
 
-    CRA_MEMPOOL_UNLOCK; // init locker
+    CRA_MEMPOOL_UNLOCK; // init lock
     pool->count = count;
     pool->itemsize = itemsize;
     pool->memory = (unsigned char *)cra_malloc(itemsize * count);

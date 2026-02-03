@@ -152,9 +152,9 @@ cra_atomic_compare_and_set64(cra_atomic_int64_t *p, int64_t cmp_val, int64_t set
     return atomic_compare_exchange_strong(p, &(typeof(cmp_val)){ cmp_val }, set_val);
 }
 
-typedef atomic_flag cra_atomic_flag;
+typedef atomic_flag cra_atomic_flag_t;
 
-// cra_atomic_flag flag = {false}
+// cra_atomic_flag_t flag = {false}
 #define CRA_ATOMIC_FLAG_INIT ATOMIC_FLAG_INIT
 
 /**
@@ -165,14 +165,14 @@ typedef atomic_flag cra_atomic_flag;
  * @return false: flag原来是false，但现在已经更新为true
  */
 static inline bool
-cra_atomic_flag_test_and_set(cra_atomic_flag *p)
+cra_atomic_flag_test_and_set(cra_atomic_flag_t *p)
 {
     return atomic_flag_test_and_set(p);
 }
 
 // *p = false
 static inline void
-cra_atomic_flag_clear(cra_atomic_flag *p)
+cra_atomic_flag_clear(cra_atomic_flag_t *p)
 {
     atomic_flag_clear(p);
 }
@@ -327,7 +327,7 @@ cra_atomic_compare_and_set64(cra_atomic_int64_t *p, int64_t cmp_val, int64_t set
 typedef struct
 {
     volatile short _val;
-} cra_atomic_flag;
+} cra_atomic_flag_t;
 
 /**
  * @brief (*p == false) ? (*p = true, false) : true
@@ -336,14 +336,14 @@ typedef struct
  * @return false: flag原来是false，但现在已经更新为true
  */
 static inline bool
-cra_atomic_flag_test_and_set(cra_atomic_flag *p)
+cra_atomic_flag_test_and_set(cra_atomic_flag_t *p)
 {
     return InterlockedCompareExchange16(&p->_val, 1, 0);
 }
 
 // *p = false
 static inline void
-cra_atomic_flag_clear(cra_atomic_flag *p)
+cra_atomic_flag_clear(cra_atomic_flag_t *p)
 {
     InterlockedExchange16(&p->_val, 0);
 }
@@ -480,7 +480,7 @@ cra_atomic_compare_and_set64(cra_atomic_int64_t *p, int64_t cmp_val, int64_t set
 typedef struct
 {
     volatile bool _val;
-} cra_atomic_flag;
+} cra_atomic_flag_t;
 
 /**
  * @brief (*p == false) ? (*p = true, false) : true
@@ -489,14 +489,14 @@ typedef struct
  * @return false: flag原来是false，但现在已经更新为true
  */
 static inline bool
-cra_atomic_flag_test_and_set(cra_atomic_flag *p)
+cra_atomic_flag_test_and_set(cra_atomic_flag_t *p)
 {
     return !__sync_bool_compare_and_swap(&p->_val, 0, 1);
 }
 
 // *p = false
 static inline void
-cra_atomic_flag_clear(cra_atomic_flag *p)
+cra_atomic_flag_clear(cra_atomic_flag_t *p)
 {
     __sync_bool_compare_and_swap(&p->_val, p->_val, 0);
 }
@@ -515,7 +515,7 @@ cra_atomic_load64(cra_atomic_int64_t *p)
     return *p;
 }
 
-// cra_atomic_flag flag = {false}
+// cra_atomic_flag_t flag = {false}
 #define CRA_ATOMIC_FLAG_INIT { 0 }
 
 #endif

@@ -15,11 +15,11 @@
 
 typedef struct _CraMemPool
 {
-    cra_atomic_flag locker;
-    unsigned int    count;
-    size_t          itemsize;
-    unsigned char  *memory;
-    CraDeque        stack; // CraDeque<void *>
+    cra_atomic_flag_t lock;
+    unsigned int      count;
+    size_t            itemsize;
+    unsigned char    *memory;
+    CraDeque          stack; // CraDeque<void *>
 } CraMemPool;
 
 CRA_API void

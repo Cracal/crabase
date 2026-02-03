@@ -82,7 +82,7 @@ typedef struct _CraMallocBlkNode
 } CraMallocBlkNode;
 
 static CraMallocBlkNode *__s_malloc_memblk_head = NULL;
-static cra_atomic_flag   __s_malloc_memblk_lock = CRA_ATOMIC_FLAG_INIT;
+static cra_atomic_flag_t __s_malloc_memblk_lock = CRA_ATOMIC_FLAG_INIT;
 #define CRA_MALLOC_LOCK()   while (cra_atomic_flag_test_and_set(&__s_malloc_memblk_lock))
 #define CRA_MALLOC_UNLOCK() cra_atomic_flag_clear(&__s_malloc_memblk_lock)
 
