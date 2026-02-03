@@ -126,9 +126,9 @@ cra_log_async_write_array(CraLogAsync *obj, const CraLogAsyncBuffer buffers[]);
 
 #if 1 // log to stdout
 
-typedef struct _CraLogToStdoutSync CraLogToStdoutSync;
+typedef struct _CraLogToStdout CraLogToStdout;
 
-CRA_API CraLogToStdoutSync *
+CRA_API CraLogToStdout *
 cra_logto_stdout_create(bool async);
 
 #endif // end log to stdout

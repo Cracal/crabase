@@ -454,7 +454,7 @@ cra_log_async_destory(CraLogAsync **pobj)
 
 #if 1 // log to stdout
 
-struct _CraLogToStdoutSync
+struct _CraLogToStdout
 {
     CRA_LOGTO_HEAD;
     CraLogAsync *async;
@@ -497,7 +497,7 @@ cra_get_color_fmt(CraLogLevel_e level)
 static void
 cra_logto_stdout_append(CraLogTo_i **self, const char *msg, int msglen, CraLogLevel_e level)
 {
-    CraLogToStdoutSync *obj = (CraLogToStdoutSync *)self;
+    CraLogToStdout *obj = (CraLogToStdout *)self;
     assert(obj->is_working);
     const char *color = cra_get_color_fmt(level);
     if (obj->async)
@@ -526,7 +526,7 @@ cra_logto_stdout_write(CraLogTo_i **self, const char *content, size_t len)
 static void
 cra_logto_stdout_destroy(CraLogTo_i **self)
 {
-    CraLogToStdoutSync *obj = (CraLogToStdoutSync *)self;
+    CraLogToStdout *obj = (CraLogToStdout *)self;
     assert(obj->is_working);
     obj->is_working = false;
     if (obj->async)
@@ -534,13 +534,13 @@ cra_logto_stdout_destroy(CraLogTo_i **self)
     cra_dealloc(self);
 }
 
-CraLogToStdoutSync *
+CraLogToStdout *
 cra_logto_stdout_create(bool async)
 {
-    CraLogToStdoutSync *obj = cra_alloc(CraLogToStdoutSync);
-    static CraLogTo_i   s_i = {
-          .destroy = cra_logto_stdout_destroy,
-          .append = cra_logto_stdout_append,
+    CraLogToStdout   *obj = cra_alloc(CraLogToStdout);
+    static CraLogTo_i s_i = {
+        .destroy = cra_logto_stdout_destroy,
+        .append = cra_logto_stdout_append,
     };
     CRA_LOGTO_I(obj) = &s_i;
     obj->is_working = true;
