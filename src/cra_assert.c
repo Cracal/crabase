@@ -3,7 +3,7 @@
 static void
 cra_assert_default_func(const char *condition, const char *fname, const char *file, int line)
 {
-    printf("assert failed: `%s`, %s:%d:%s\n", condition, file, line, fname);
+    fprintf(stderr, "assert failed: `%s`, %s:%d:%s\n", condition, file, line, fname);
 #if defined(CRA_COMPILER_GNUC)
     __builtin_trap();
 #elif defined(CRA_COMPILER_MSVC)
