@@ -8,19 +8,14 @@ test_help(void)
 {
     CraMainArg ma;
 
-    char             *program_name = "test_help";
-    CraMainArgElement options[] = {
-        CRA_MAINARG_ELEMENT_SET("-a", "--apple", "<number>", "Set number of apple", cra_mainarg_stoi, NULL),
-        CRA_MAINARG_ELEMENT_SET("-b", "--banana", NULL, "With banana", NULL, NULL),
-        CRA_MAINARG_ELEMENT_SET("-c",
-                                NULL,
-                                "<cherry type>",
-                                "Set cherry type",
-                                cra_mainarg_stos_in_array,
-                                ((char *[]){ "type1", "type2", NULL })),
-        CRA_MAINARG_ELEMENT_SET(NULL, "--dog", "<on|off>", "Dog", cra_mainarg_stob, NULL),
-        CRA_MAINARG_ELEMENT_END(),
-    };
+    char program_name[] = "test_help";
+    CRA_MAINARG_ELEMENT_BEGIN(options)
+    CRA_MAINARG_ELEMENT_SET("-a", "--apple", "<number>", "Set number of apple", cra_mainarg_stoi, NULL)
+    CRA_MAINARG_ELEMENT_SET("-b", "--banana", NULL, "With banana", NULL, NULL)
+    CRA_MAINARG_ELEMENT_SET(
+      "-c", NULL, "<cherry type>", "Set cherry type", cra_mainarg_stos_in_array, ((char *[]){ "type1", "type2", NULL }))
+    CRA_MAINARG_ELEMENT_SET(NULL, "--dog", "<on|off>", "Dog", cra_mainarg_stob, NULL)
+    CRA_MAINARG_ELEMENT_END();
 
     cra_mainarg_init(&ma, program_name, "A test help program.", "[options]", options);
 
@@ -34,29 +29,28 @@ test_error_options(void)
 {
     CraMainArg ma;
 
-    char             *program_name = "/path/to/test_error_optiosn";
-    CraMainArgElement options[] = {
-        // both NULL
-        // CRA_MAINARG_ELEMENT_SET(NULL, NULL, "valtip", "Option tip", cra_mainarg_stob, NULL),
-        // `op` != "-a"
-        // CRA_MAINARG_ELEMENT_SET("a", NULL, "<val>", "Tip", cra_mainarg_stob, NULL),
-        // `option` != "--apple"
-        // CRA_MAINARG_ELEMENT_SET("-a", "-apple", "<val>", "Tip", cra_mainarg_stob, NULL),
-        // `option` != "--apple"
-        // CRA_MAINARG_ELEMENT_SET("-a", "apple", "<val>", "Tip", cra_mainarg_stob, NULL),
-        // len(option) < 4
-        // CRA_MAINARG_ELEMENT_SET("-a", "--a", "<val>", "Tip", cra_mainarg_stob, NULL),
-        // repeat addition
-        // CRA_MAINARG_ELEMENT_SET("-a", NULL, "<val>", "Tip", cra_mainarg_stob, NULL),
-        // CRA_MAINARG_ELEMENT_SET("-a", NULL, "<val>", "Tip", cra_mainarg_stob, NULL),
-        // no option tip
-        // CRA_MAINARG_ELEMENT_SET("-a", "--apple", "<val>", NULL, cra_mainarg_stob, NULL),
-        // `val` != NULL && `valtip` == NULL
-        // CRA_MAINARG_ELEMENT_SET(NULL, "--apple", NULL, "Tip", cra_mainarg_stob, NULL),
-        // no val option, no need a value
-        CRA_MAINARG_ELEMENT_SET("-a", "--apple", "<valtip>", "Tip", NULL, NULL),
-        CRA_MAINARG_ELEMENT_END(),
-    };
+    char program_name[] = "/path/to/test_error_optiosn";
+    CRA_MAINARG_ELEMENT_BEGIN(options)
+    // // both NULL
+    // CRA_MAINARG_ELEMENT_SET(NULL, NULL, "valtip", "Option tip", cra_mainarg_stob, NULL)
+    // // `op` != "-a"
+    // CRA_MAINARG_ELEMENT_SET("a", NULL, "<val>", "Tip", cra_mainarg_stob, NULL)
+    // // `option` != "--apple"
+    // CRA_MAINARG_ELEMENT_SET("-a", "-apple", "<val>", "Tip", cra_mainarg_stob, NULL)
+    // // `option` != "--apple"
+    // CRA_MAINARG_ELEMENT_SET("-a", "apple", "<val>", "Tip", cra_mainarg_stob, NULL)
+    // // len(option) < 4
+    // CRA_MAINARG_ELEMENT_SET("-a", "--a", "<val>", "Tip", cra_mainarg_stob, NULL)
+    // // repeat addition
+    // CRA_MAINARG_ELEMENT_SET("-a", NULL, "<val>", "Tip", cra_mainarg_stob, NULL)
+    // CRA_MAINARG_ELEMENT_SET("-a", NULL, "<val>", "Tip", cra_mainarg_stob, NULL)
+    // // no option tip
+    // CRA_MAINARG_ELEMENT_SET("-a", "--apple", "<val>", NULL, cra_mainarg_stob, NULL)
+    // // `val` != NULL && `valtip` == NULL
+    // CRA_MAINARG_ELEMENT_SET(NULL, "--apple", NULL, "Tip", cra_mainarg_stob, NULL)
+    // no val option, no need a value
+    CRA_MAINARG_ELEMENT_SET("-a", "--apple", "<valtip>", "Tip", NULL, NULL)
+    CRA_MAINARG_ELEMENT_END();
 
     cra_mainarg_init(&ma, program_name, "A test error options program.", "[options]", options);
 
@@ -68,22 +62,20 @@ test_error_args(void)
 {
     CraMainArg ma;
 
-    CraMainArgElement options[] = {
-        CRA_MAINARG_ELEMENT_VAL(
-          "-b", "--bool", "<bool>", "Set boolean", cra_mainarg_stob_values, ((char *[]){ "yes", "no" })),
-        CRA_MAINARG_ELEMENT_VAL(
-          "-i", NULL, "<num>", "Set integer", cra_mainarg_stoi_in_range, ((int64_t[]){ 100, 501 })),
-        CRA_MAINARG_ELEMENT_VAL(
-          NULL, "--float", "<num>", "Set double", cra_mainarg_stof_in_range, ((double[]){ 2.5, 63.8 })),
-        CRA_MAINARG_ELEMENT_VAL("-s",
-                                "--string",
-                                "<str>",
-                                "Set string",
-                                cra_mainarg_stos_in_array,
-                                ((char *[]){ "str1", "string2", "str3", NULL })),
-        CRA_MAINARG_ELEMENT_BOL("-c", "--command", "Call a function"),
-        CRA_MAINARG_ELEMENT_END(),
-    };
+    CRA_MAINARG_ELEMENT_BEGIN(options)
+    CRA_MAINARG_ELEMENT_VAL(
+      "-b", "--bool", "<yes|no>", "Set boolean", cra_mainarg_stob_values, ((char *[]){ "yes", "no" }))
+    CRA_MAINARG_ELEMENT_VAL("-i", NULL, "<num>", "Set integer", cra_mainarg_stoi_in_range, ((int64_t[]){ 100, 501 }))
+    CRA_MAINARG_ELEMENT_VAL(
+      NULL, "--float", "<num>", "Set double", cra_mainarg_stof_in_range, ((double[]){ 2.5, 63.8 }))
+    CRA_MAINARG_ELEMENT_VAL("-s",
+                            "--string",
+                            "<str>",
+                            "Set string",
+                            cra_mainarg_stos_in_array,
+                            ((char *[]){ "str1", "string2", "str3", NULL }))
+    CRA_MAINARG_ELEMENT_BOL("-c", "--command", "Call a function")
+    CRA_MAINARG_ELEMENT_END();
 
     char *argv[] = {
         "test_error_args",
@@ -113,27 +105,22 @@ test_get_val(void)
 {
     CraMainArg ma;
 
-    CraMainArgElement options[] = {
-        CRA_MAINARG_ELEMENT_BOL("-4", NULL, "Use IPv4 only"),
-        CRA_MAINARG_ELEMENT_BOL("-6", NULL, "Use IPv6 only"),
-        CRA_MAINARG_ELEMENT_BOL("-l", "--listen", "Bind and listen for incoming connections"),
-        CRA_MAINARG_ELEMENT_VAL("-o", "--output", "<filename>", "Dump session data to a file", cra_mainarg_stos, NULL),
-        CRA_MAINARG_ELEMENT_VAL(
-          "-d", "--delay", "<time>", "Wait between read/writes", cra_mainarg_stof_in_range, ((double[]){ 1.0, 60.0 })),
-        CRA_MAINARG_ELEMENT_VAL("-n",
-                                NULL,
-                                "<num>",
-                                "Set max number of incoming connections",
-                                cra_mainarg_stoi_in_range,
-                                ((int64_t[]){ 1, 1024 })),
-        CRA_MAINARG_ELEMENT_VAL("-C",
-                                "--crlf",
-                                "<yes|no>",
-                                "Use CRLF for EOL sequence",
-                                cra_mainarg_stob_values,
-                                ((char *[]){ "yes", "no" })),
-        CRA_MAINARG_ELEMENT_END(),
-    };
+    CRA_MAINARG_ELEMENT_BEGIN(options)
+    CRA_MAINARG_ELEMENT_BOL("-4", NULL, "Use IPv4 only")
+    CRA_MAINARG_ELEMENT_BOL("-6", NULL, "Use IPv6 only")
+    CRA_MAINARG_ELEMENT_BOL("-l", "--listen", "Bind and listen for incoming connections")
+    CRA_MAINARG_ELEMENT_VAL("-o", "--output", "<filename>", "Dump session data to a file", cra_mainarg_stos, NULL)
+    CRA_MAINARG_ELEMENT_VAL(
+      "-d", "--delay", "<time>", "Wait between read/writes", cra_mainarg_stof_in_range, ((double[]){ 1.0, 60.0 }))
+    CRA_MAINARG_ELEMENT_VAL("-n",
+                            NULL,
+                            "<num>",
+                            "Set max number of incoming connections",
+                            cra_mainarg_stoi_in_range,
+                            ((int64_t[]){ 1, 1024 }))
+    CRA_MAINARG_ELEMENT_VAL(
+      "-C", "--crlf", "<yes|no>", "Use CRLF for EOL sequence", cra_mainarg_stob_values, ((char *[]){ "yes", "no" }))
+    CRA_MAINARG_ELEMENT_END();
 
     char *argv[] = {
         "test_get_val",
@@ -189,13 +176,13 @@ test_get_val(void)
 
     // not option
 
-    i = cra_mainarg_get_notop_count(&ma);
+    i = cra_mainarg_get_pos_args_count(&ma);
     assert_always(i == 2);
 
-    s = cra_mainarg_get_notop_s(&ma, 0, "localhost", cra_mainarg_stos, NULL);
+    s = cra_mainarg_get_pos_args_s(&ma, 0, "localhost", cra_mainarg_stos, NULL);
     assert_always(strcmp(s, "0.0.0.0") == 0);
 
-    i = (int)cra_mainarg_get_notop_i(&ma, 1, 9999, cra_mainarg_stoi_in_range, ((int64_t[]){ 1025, 65536 }));
+    i = (int)cra_mainarg_get_pos_args_i(&ma, 1, 9999, cra_mainarg_stoi_in_range, ((int64_t[]){ 1025, 65536 }));
     assert_always(i == 8888);
 
     cra_mainarg_uninit(&ma);

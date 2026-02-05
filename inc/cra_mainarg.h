@@ -38,26 +38,27 @@ struct _CraMainArgElement
     void          *arg;
 };
 
+#define CRA_MAINARG_ELEMENT_BEGIN(_name) CraMainArgElement _name[] = {
+#define CRA_MAINARG_ELEMENT_END() {0}}
 #define CRA_MAINARG_ELEMENT_SET(_op, _option, _valtip, _optip, _func, _arg) \
-    { _op, _option, _valtip, _optip, _func, _arg }
+    { _op, _option, _valtip, _optip, _func, _arg },
 #define CRA_MAINARG_ELEMENT_BOL(_op, _option, _optip) CRA_MAINARG_ELEMENT_SET(_op, _option, NULL, _optip, NULL, NULL)
 #define CRA_MAINARG_ELEMENT_VAL(_op, _option, _valtip, _optip, _func, _arg) \
     CRA_MAINARG_ELEMENT_SET(_op, _option, _valtip, _optip, _func, _arg)
-#define CRA_MAINARG_ELEMENT_END() { NULL }
 
 struct _CraMainArg
 {
     int         tipstart;
-    char       *introduction;
+    const char *introduction;
     char       *program;
-    char       *usage;
-    CraDict    *items; // Dict<char *, Item *>
-    CraAList   *notop; // AList<char *>
-    CraMemPool *pool;  // MemPool<Item>
+    const char *usage;
+    CraDict    *items;    // Dict<char *, Item *>
+    CraMemPool *pool;     // MemPool<Item>
+    CraAList   *pos_args; // AList<char *>
 };
 
 CRA_API void
-cra_mainarg_init(CraMainArg *ma, char *program, char *intro, char *usage, CraMainArgElement options[]);
+cra_mainarg_init(CraMainArg *ma, char *program, const char *intro, const char *usage, CraMainArgElement options[]);
 
 CRA_API void
 cra_mainarg_uninit(CraMainArg *ma);
@@ -77,18 +78,18 @@ cra_mainarg_get_val(CraMainArg *ma, char *option, CraMainArgVal_u default_val);
     cra_mainarg_get_val(_ma, _option, (CraMainArgVal_u){ .s = _default_val }).s
 
 CRA_API int
-cra_mainarg_get_notop_count(CraMainArg *ma);
+cra_mainarg_get_pos_args_count(CraMainArg *ma);
 
 CRA_API CraMainArgVal_u
-cra_mainarg_get_notop_val(CraMainArg *ma, int index, CraMainArgVal_u default_val, cra_mainarg_fn func, void *arg);
-#define cra_mainarg_get_notop_b(_ma, _index, _default_val, _func, _arg)                           \
-    cra_mainarg_get_notop_val(_ma, _index, (CraMainArgVal_u){ .b = _default_val }, _func, _arg).b
-#define cra_mainarg_get_notop_i(_ma, _index, _default_val, _func, _arg)                           \
-    cra_mainarg_get_notop_val(_ma, _index, (CraMainArgVal_u){ .i = _default_val }, _func, _arg).i
-#define cra_mainarg_get_notop_f(_ma, _index, _default_val, _func, _arg)                           \
-    cra_mainarg_get_notop_val(_ma, _index, (CraMainArgVal_u){ .f = _default_val }, _func, _arg).f
-#define cra_mainarg_get_notop_s(_ma, _index, _default_val, _func, _arg)                           \
-    cra_mainarg_get_notop_val(_ma, _index, (CraMainArgVal_u){ .s = _default_val }, _func, _arg).s
+cra_mainarg_get_pos_args_val(CraMainArg *ma, int index, CraMainArgVal_u default_val, cra_mainarg_fn func, void *arg);
+#define cra_mainarg_get_pos_args_b(_ma, _index, _default_val, _func, _arg)                           \
+    cra_mainarg_get_pos_args_val(_ma, _index, (CraMainArgVal_u){ .b = _default_val }, _func, _arg).b
+#define cra_mainarg_get_pos_args_i(_ma, _index, _default_val, _func, _arg)                           \
+    cra_mainarg_get_pos_args_val(_ma, _index, (CraMainArgVal_u){ .i = _default_val }, _func, _arg).i
+#define cra_mainarg_get_pos_args_f(_ma, _index, _default_val, _func, _arg)                           \
+    cra_mainarg_get_pos_args_val(_ma, _index, (CraMainArgVal_u){ .f = _default_val }, _func, _arg).f
+#define cra_mainarg_get_pos_args_s(_ma, _index, _default_val, _func, _arg)                           \
+    cra_mainarg_get_pos_args_val(_ma, _index, (CraMainArgVal_u){ .s = _default_val }, _func, _arg).s
 
 CRA_API void
 cra_mainarg_print_help(CraMainArg *ma);
