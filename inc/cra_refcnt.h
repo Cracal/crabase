@@ -18,7 +18,7 @@ typedef cra_atomic_int64_t cra_refcnt_t;
 
 typedef struct _CraRefcnt CraRefcnt;
 
-typedef void (*cra_refcnt_release_fn)(CraRefcnt *rc);
+typedef void (*cra_refcnt_release_fn)(CraRefcnt *ref);
 
 struct _CraRefcnt
 {
@@ -77,5 +77,8 @@ cra_refcnt_unref0(CraRefcnt *ref)
 {
     cra_refcnt_unref(ref);
 }
+
+#undef __CRA_REFCNT_INC
+#undef __CRA_REFCNT_DEC
 
 #endif
