@@ -117,10 +117,10 @@ struct _CraSeriObject
 #define __CRA_SFFALSE          __CRA_SFfalse
 #define __CRA_SFFalse          __CRA_SFfalse
 
-#define CRA_TYPE_META_DECL(_var)        CraTypeMeta _var[]
-#define CRA_TYPE_META_DECL_CONST(_var)  const CRA_TYPE_META_DECL
-#define CRA_TYPE_META_BEGIN(_var)       CRA_TYPE_META_DECL(_var) = {
-#define CRA_TYPE_META_BEGIN_CONST(_var) const CRA_TYPE_META_BEGIN(_var)
+#define CRA_TYPE_META_DECL(_meta_name)        CraTypeMeta _meta_name[]
+#define CRA_TYPE_META_DECL_CONST(_meta_name)  const CRA_TYPE_META_DECL
+#define CRA_TYPE_META_BEGIN(_meta_name)       CRA_TYPE_META_DECL(_meta_name) = {
+#define CRA_TYPE_META_BEGIN_CONST(_meta_name) const CRA_TYPE_META_BEGIN(_meta_name)
 #define CRA_TYPE_META_END() {0}}
 
 // member meta
@@ -207,10 +207,10 @@ struct _CraSeriObject
 #define CRA_TYPE_META_ELEMENT_STRING(_type, _is_ptr)                                                      \
     __CRA_TYPE_META_ELEMENT(_is_ptr, CRA_TYPE_STRING, "<<STRING>>", sizeof(_type), NULL, { NULL }, NULL),
 // bytes
-#define CRA_TYPE_META_ELEMENT_BYTES(_type, _is_ptr, _narray_var)                                                      \
+#define CRA_TYPE_META_ELEMENT_BYTES(_type, _is_ptr, _length_var)                                                      \
     __CRA_TYPE_META_ELEMENT(_is_ptr, CRA_TYPE_BYTES, "<<BYTES>>", sizeof(_type), NULL, { NULL }, NULL),               \
       __CRA_TYPE_META_ELEMENT_(                                                                                       \
-        true, false, CRA_TYPE_UINT, "<<BYTES_LENGTH>>", sizeof(_narray_var), NULL, { NULL }, (void *)&(_narray_var)),
+        true, false, CRA_TYPE_UINT, "<<BYTES_LENGTH>>", sizeof(_length_var), NULL, { NULL }, (void *)&(_length_var)),
 // struct
 #define CRA_TYPE_META_ELEMENT_STRUCT(_type, _is_ptr, _member_meta, _init_i, _arg)                        \
     __CRA_TYPE_META_ELEMENT(                                                                             \

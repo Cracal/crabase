@@ -22,9 +22,9 @@
  * list/c array: [T:4,P:4][C:N]<E>     -- 1 + (1 ~ 10) + N bytes
  * dict:         [T:4,P:4][C:N]<KV>    -- 1 + (1 ~ 10) + N bytes
  *
- * T: type,   V: value,  S: size, L: length
- * C: count   M: member, K: key,  P: padding(ignore)
- * E: element F: flag, I: id
+ * T: type,    V: value,  S: size, L: length
+ * C: count,   M: member, K: key,  P: padding(ignore)
+ * E: element, I: id
  *
  */
 #ifndef __CRA_BIN_SER_H__
