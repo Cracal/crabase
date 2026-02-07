@@ -49,11 +49,14 @@ __cra_alist_set_and_pop_old__(CraAList *list, size_t index, void *newval, void *
 static inline void
 __cra_alist_init_size(CraAList *list, size_t element_size, size_t init_capacity, bool zero_memory)
 {
-    assert(!!list && element_size > 0);
+    assert(!!list);
+    assert(element_size > 0);
+    assert(init_capacity > 0);
+
     list->zero_memory = zero_memory;
     list->count = 0;
     list->ele_size = element_size;
-    list->capacity = init_capacity == 0 ? 8 : init_capacity;
+    list->capacity = init_capacity;
     list->array = (unsigned char *)cra_malloc(element_size * list->capacity);
     if (zero_memory)
         bzero(list->array, element_size * list->capacity);
@@ -128,7 +131,8 @@ cra_alist_insert(CraAList *list, size_t index, void *val)
         return false;
     if (list->count >= list->capacity)
     {
-        if (!cra_alist_resize(list, list->capacity + (list->capacity >> 1)))
+        size_t newsize = list->capacity > 1 ? (list->capacity + (list->capacity >> 1)) : 2;
+        if (!cra_alist_resize(list, newsize))
             return false;
     }
     size_t move_count = list->count - index;
