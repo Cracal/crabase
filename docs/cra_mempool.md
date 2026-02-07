@@ -37,7 +37,8 @@ void *
 cra_mempool_alloc(CraMemPool *pool);
 ```
 
-获取一个空闲对象
+获取一个空闲对象  
+如果该对象是首次被获取，那么它的内容是0
 
 ## dealloc
 
@@ -46,4 +47,5 @@ void
 cra_mempool_dealloc(CraMemPool *pool, void *ptr);
 ```
 
-归还一个对象
+归还一个对象  
+如果在调用该函数前没有`bzero(ptr)`，那么下次`alloc`到该对象时，它的内容将不为0

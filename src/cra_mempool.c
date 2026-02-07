@@ -8,7 +8,8 @@ cra_mempool_make_block(CraMemPool *pool)
     char *block;
     char *item;
 
-    block = (char *)cra_malloc(pool->item_size * pool->items_per_block);
+    // alloc & zero memory
+    block = (char *)cra_calloc(pool->items_per_block, pool->item_size);
     cra_alist_append(&pool->blocks, &block);
     for (size_t j = 0; j < pool->items_per_block; ++j)
     {
