@@ -160,7 +160,7 @@ cra_mainarg_init(CraMainArg *ma, char *program, const char *intro, const char *u
                         (cra_hash_fn)cra_hash_string1_p,
                         (cra_compare_fn)cra_compare_string_p);
     cra_alist_init0(char *, ma->pos_args, false);
-    cra_mempool_init(ma->pool, sizeof(CraMainArgItem), nitem);
+    cra_mempool_init(ma->pool, sizeof(CraMainArgItem), nitem, 1);
 
     cra_mainarg_build(ma, options, nitem);
 }
@@ -170,7 +170,7 @@ cra_mainarg_uninit(CraMainArg *ma)
 {
     cra_dict_uninit(ma->items);
     cra_alist_uninit(ma->pos_args);
-    cra_mempool_uninit(ma->pool);
+    cra_mempool_uninit_no_check(ma->pool);
     cra_dealloc(ma->items);
     cra_dealloc(ma->pool);
     cra_dealloc(ma->pos_args);

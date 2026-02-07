@@ -10,23 +10,25 @@
  */
 #ifndef __CRA_MEMPOOL_H__
 #define __CRA_MEMPOOL_H__
-#include "collections/cra_deque.h"
-#include "cra_atomic.h"
+#include "collections/cra_alist.h"
 
 typedef struct _CraMemPool
 {
-    cra_atomic_flag_t lock;
-    unsigned int      count;
-    size_t            itemsize;
-    unsigned char    *memory;
-    CraDeque          stack; // CraDeque<void *>
+    size_t   item_size;
+    size_t   items_per_block;
+    CraAList blocks; // AList<BLOCK *>
+    CraAList stack;  // AList<ITEM *>
 } CraMemPool;
 
 CRA_API void
-cra_mempool_init(CraMemPool *pool, size_t itemsize, unsigned int count);
+cra_mempool_init(CraMemPool *pool, size_t item_size, size_t items_per_block, size_t init_block);
 
 CRA_API void
 cra_mempool_uninit(CraMemPool *pool);
+
+// no check for in-use items is performed
+CRA_API void
+cra_mempool_uninit_no_check(CraMemPool *pool);
 
 CRA_API void *
 cra_mempool_alloc(CraMemPool *pool);
