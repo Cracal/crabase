@@ -12,7 +12,7 @@
 #define __CRA_ATOMIC_H__
 #include "cra_defs.h"
 
-#if !defined(__STDC_NO_ATOMICS__)
+#ifndef __STDC_NO_ATOMICS__
 #include <stdatomic.h>
 
 typedef _Atomic int32_t cra_atomic_int32_t;
@@ -42,110 +42,70 @@ cra_atomic_store64(cra_atomic_int64_t *p, int64_t v)
     atomic_store(p, v);
 }
 
-/**
- * @brief *p += n
- * @return 原来的值（没有加上n的旧值）
- */
+// o = *p; *p += v; return o;
 static inline int32_t
 cra_atomic_add32(cra_atomic_int32_t *p, int32_t v)
 {
     return atomic_fetch_add(p, v);
 }
 
-/**
- * @brief *p += n
- * @return 原来的值（没有加上n的旧值）
- */
+// o = *p; *p += v; return o;
 static inline int64_t
 cra_atomic_add64(cra_atomic_int64_t *p, int64_t v)
 {
     return atomic_fetch_add(p, v);
 }
 
-/**
- * @brief *p -= n
- *
- * @return 原来的值（没有减去n的旧值）
- */
+// o = *p; *p -= v; return o;
 static inline int32_t
 cra_atomic_sub32(cra_atomic_int32_t *p, int32_t v)
 {
     return atomic_fetch_sub(p, v);
 }
 
-/**
- * @brief *p -= n
- *
- * @return 原来的值（没有减去n的旧值）
- */
+// o = *p; *p -= v; return o;
 static inline int64_t
 cra_atomic_sub64(cra_atomic_int64_t *p, int64_t v)
 {
     return atomic_fetch_sub(p, v);
 }
 
-/**
- * @brief (*p)++
- *
- * @return 原来的值（没有加1的旧值）
- */
+// return (*)++;
 static inline int32_t
 cra_atomic_inc32(cra_atomic_int32_t *p)
 {
     return atomic_fetch_add(p, 1);
 }
 
-/**
- * @brief (*p)++
- *
- * @return 原来的值（没有加1的旧值）
- */
+// return (*)++;
 static inline int64_t
 cra_atomic_inc64(cra_atomic_int64_t *p)
 {
     return atomic_fetch_add(p, 1);
 }
 
-/**
- * @brief (*p)--
- *
- * @return 原来的值（没有减1的旧值）
- */
+// return (*)--;
 static inline int32_t
 cra_atomic_dec32(cra_atomic_int32_t *p)
 {
     return atomic_fetch_sub(p, 1);
 }
 
-/**
- * @brief (*p)--
- *
- * @return 原来的值（没有减1的旧值）
- */
+// return (*)--;
 static inline int64_t
 cra_atomic_dec64(cra_atomic_int64_t *p)
 {
     return atomic_fetch_sub(p, 1);
 }
 
-/**
- * @brief (*p == cmp_val) ? (*p = set_val, true) : false
- *
- * @return true:  更新*p的值成功
- * @return false: 更新*p的值失败
- */
+// return (*p == cmp_val) ? (*p = set_val, true) : false
 static inline bool
 cra_atomic_compare_and_set32(cra_atomic_int32_t *p, int32_t cmp_val, int32_t set_val)
 {
     return atomic_compare_exchange_strong(p, &(typeof(cmp_val)){ cmp_val }, set_val);
 }
 
-/**
- * @brief (*p == cmp_val) ? (*p = set_val, true) : false
- *
- * @return true:  更新*p的值成功
- * @return false: 更新*p的值失败
- */
+// return (*p == cmp_val) ? (*p = set_val, true) : false
 static inline bool
 cra_atomic_compare_and_set64(cra_atomic_int64_t *p, int64_t cmp_val, int64_t set_val)
 {
@@ -154,16 +114,9 @@ cra_atomic_compare_and_set64(cra_atomic_int64_t *p, int64_t cmp_val, int64_t set
 
 typedef atomic_flag cra_atomic_flag_t;
 
-// cra_atomic_flag_t flag = {false}
 #define CRA_ATOMIC_FLAG_INIT ATOMIC_FLAG_INIT
 
-/**
- * @brief (*p == false) ? (*p = true, false) : true
- *
- * @return 旧值
- * @return true:  flag已经是true了
- * @return false: flag原来是false，但现在已经更新为true
- */
+// return (*p == false) ? (*p = true, false) : true
 static inline bool
 cra_atomic_flag_test_and_set(cra_atomic_flag_t *p)
 {
@@ -196,11 +149,7 @@ cra_atomic_store64(cra_atomic_int64_t *p, int64_t v)
     InterlockedExchange64(p, v);
 }
 
-/**
- * @brief *p += n
- *
- * @return 原来的值（没有加上n的旧值）
- */
+// o = *p; *p += v; return o;
 static inline int32_t
 cra_atomic_add32(cra_atomic_int32_t *p, int32_t v)
 {
@@ -209,11 +158,7 @@ cra_atomic_add32(cra_atomic_int32_t *p, int32_t v)
     return ret;
 }
 
-/**
- * @brief *p += n
- *
- * @return 原来的值（没有加上n的旧值）
- */
+// o = *p; *p += v; return o;
 static inline int64_t
 cra_atomic_add64(cra_atomic_int64_t *p, int64_t v)
 {
@@ -222,11 +167,7 @@ cra_atomic_add64(cra_atomic_int64_t *p, int64_t v)
     return ret;
 }
 
-/**
- * @brief *p -= n
- *
- * @return 原来的值（没有减去n的旧值）
- */
+// o = *p; *p -= v; return o;
 static inline int32_t
 cra_atomic_sub32(cra_atomic_int32_t *p, int32_t v)
 {
@@ -235,11 +176,7 @@ cra_atomic_sub32(cra_atomic_int32_t *p, int32_t v)
     return ret;
 }
 
-/**
- * @brief *p -= n
- *
- * @return 原来的值（没有减去n的旧值）
- */
+// o = *p; *p -= v; return o;
 static inline int64_t
 cra_atomic_sub64(cra_atomic_int64_t *p, int64_t v)
 {
@@ -248,11 +185,7 @@ cra_atomic_sub64(cra_atomic_int64_t *p, int64_t v)
     return ret;
 }
 
-/**
- * @brief (*p)++
- *
- * @return 原来的值（没有加1的旧值）
- */
+// return (*)++;
 static inline int32_t
 cra_atomic_inc32(cra_atomic_int32_t *p)
 {
@@ -261,11 +194,7 @@ cra_atomic_inc32(cra_atomic_int32_t *p)
     return ret;
 }
 
-/**
- * @brief (*p)++
- *
- * @return 原来的值（没有加1的旧值）
- */
+// return (*)++;
 static inline int64_t
 cra_atomic_inc64(cra_atomic_int64_t *p)
 {
@@ -274,11 +203,7 @@ cra_atomic_inc64(cra_atomic_int64_t *p)
     return ret;
 }
 
-/**
- * @brief (*p)--
- *
- * @return 原来的值（没有减1的旧值）
- */
+// return (*)--;
 static inline int32_t
 cra_atomic_dec32(cra_atomic_int32_t *p)
 {
@@ -287,11 +212,7 @@ cra_atomic_dec32(cra_atomic_int32_t *p)
     return ret;
 }
 
-/**
- * @brief (*p)--
- *
- * @return 原来的值（没有减1的旧值）
- */
+// return (*)--;
 static inline int64_t
 cra_atomic_dec64(cra_atomic_int64_t *p)
 {
@@ -300,52 +221,34 @@ cra_atomic_dec64(cra_atomic_int64_t *p)
     return ret;
 }
 
-/**
- * @brief (*p == cmp_val) ? (*p = set_val, true) : false
- *
- * @return true:  更新*p的值成功
- * @return false: 更新*p的值失败
- */
+// return (*p == cmp_val) ? (*p = set_val, true) : false
 static inline bool
 cra_atomic_compare_and_set32(cra_atomic_int32_t *p, int32_t cmp_val, int32_t set_val)
 {
     return InterlockedCompareExchange(p, set_val, cmp_val) == cmp_val;
 }
 
-/**
- * @brief (*p == cmp_val) ? (*p = set_val, true) : false
- *
- * @return true:  更新*p的值成功
- * @return false: 更新*p的值失败
- */
+// return (*p == cmp_val) ? (*p = set_val, true) : false
 static inline bool
 cra_atomic_compare_and_set64(cra_atomic_int64_t *p, int64_t cmp_val, int64_t set_val)
 {
     return InterlockedCompareExchange64(p, set_val, cmp_val) == cmp_val;
 }
 
-typedef struct
-{
-    volatile short _val;
-} cra_atomic_flag_t;
+typedef LONG cra_atomic_flag_t;
 
-/**
- * @brief (*p == false) ? (*p = true, false) : true
- *
- * @return true:  flag已经是true了
- * @return false: flag原来是false，但现在已经更新为true
- */
+// return (*p == false) ? (*p = true, false) : true
 static inline bool
 cra_atomic_flag_test_and_set(cra_atomic_flag_t *p)
 {
-    return InterlockedCompareExchange16(&p->_val, 1, 0);
+    return InterlockedExchange(p, 1) == 1;
 }
 
 // *p = false
 static inline void
 cra_atomic_flag_clear(cra_atomic_flag_t *p)
 {
-    InterlockedExchange16(&p->_val, 0);
+    InterlockedExchange(p, 0);
 }
 
 #elif defined(CRA_COMPILER_GNUC)
@@ -365,140 +268,90 @@ cra_atomic_store64(cra_atomic_int64_t *p, int64_t v)
     *p = v;
 }
 
-/**
- * @brief *p += n
- *
- * @return 原来的值（没有加上n的旧值）
- */
+// o = *p; *p += v; return o;
 static inline int32_t
 cra_atomic_add32(cra_atomic_int32_t *p, int32_t v)
 {
     return __sync_fetch_and_add(p, v);
 }
 
-/**
- * @brief *p += n
- *
- * @return 原来的值（没有加上n的旧值）
- */
+// o = *p; *p += v; return o;
 static inline int64_t
 cra_atomic_add64(cra_atomic_int64_t *p, int64_t v)
 {
     return __sync_fetch_and_add(p, v);
 }
 
-/**
- * @brief *p -= n
- *
- * @return 原来的值（没有减去n的旧值）
- */
+// o = *p; *p -= v; return o;
 static inline int32_t
 cra_atomic_sub32(cra_atomic_int32_t *p, int32_t v)
 {
     return __sync_fetch_and_sub(p, v);
 }
 
-/**
- * @brief *p -= n
- *
- * @return 原来的值（没有减去n的旧值）
- */
+// o = *p; *p -= v; return o;
 static inline int64_t
 cra_atomic_sub64(cra_atomic_int64_t *p, int64_t v)
 {
     return __sync_fetch_and_sub(p, v);
 }
 
-/**
- * @brief (*p)++
- *
- * @return 原来的值（没有加1的旧值）
- */
+// return (*)++;
 static inline int32_t
 cra_atomic_inc32(cra_atomic_int32_t *p)
 {
     return cra_atomic_add32(p, 1);
 }
 
-/**
- * @brief (*p)++
- *
- * @return 原来的值（没有加1的旧值）
- */
+// return (*)++;
 static inline int64_t
 cra_atomic_inc64(cra_atomic_int64_t *p)
 {
     return cra_atomic_add64(p, 1);
 }
 
-/**
- * @brief (*p)--
- *
- * @return 原来的值（没有减1的旧值）
- */
+// return (*)--;
 static inline int32_t
 cra_atomic_dec32(cra_atomic_int32_t *p)
 {
     return cra_atomic_sub32(p, 1);
 }
 
-/**
- * @brief (*p)--
- *
- * @return 原来的值（没有减1的旧值）
- */
+// return (*)--;
 static inline int64_t
 cra_atomic_dec64(cra_atomic_int64_t *p)
 {
     return cra_atomic_sub64(p, 1);
 }
 
-/**
- * @brief (*p == cmp_val) ? (*p = set_val, true) : false
- *
- * @return true:  更新*p的值成功
- * @return false: 更新*p的值失败
- */
+// return (*p == cmp_val) ? (*p = set_val, true) : false
 static inline bool
 cra_atomic_compare_and_set32(cra_atomic_int32_t *p, int32_t cmp_val, int32_t set_val)
 {
     return __sync_val_compare_and_swap(p, cmp_val, set_val) == cmp_val;
 }
 
-/**
- * @brief (*p == cmp_val) ? (*p = set_val, true) : false
- *
- * @return true:  更新*p的值成功
- * @return false: 更新*p的值失败
- */
+// return (*p == cmp_val) ? (*p = set_val, true) : false
 static inline bool
 cra_atomic_compare_and_set64(cra_atomic_int64_t *p, int64_t cmp_val, int64_t set_val)
 {
     return __sync_val_compare_and_swap(p, cmp_val, set_val) == cmp_val;
 }
 
-typedef struct
-{
-    volatile bool _val;
-} cra_atomic_flag_t;
+typedef int cra_atomic_flag_t;
 
-/**
- * @brief (*p == false) ? (*p = true, false) : true
- *
- * @return true:  flag已经是true了
- * @return false: flag原来是false，但现在已经更新为true
- */
+// return (*p == false) ? (*p = true, false) : true
 static inline bool
 cra_atomic_flag_test_and_set(cra_atomic_flag_t *p)
 {
-    return !__sync_bool_compare_and_swap(&p->_val, 0, 1);
+    return __sync_lock_test_and_set(p, 1) != 0;
 }
 
 // *p = false
 static inline void
 cra_atomic_flag_clear(cra_atomic_flag_t *p)
 {
-    __sync_bool_compare_and_swap(&p->_val, p->_val, 0);
+    __sync_lock_release(p);
 }
 
 #endif
@@ -515,8 +368,7 @@ cra_atomic_load64(cra_atomic_int64_t *p)
     return *p;
 }
 
-// cra_atomic_flag_t flag = {false}
-#define CRA_ATOMIC_FLAG_INIT { 0 }
+#define CRA_ATOMIC_FLAG_INIT 0
 
 #endif
 

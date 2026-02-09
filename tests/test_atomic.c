@@ -127,19 +127,22 @@ test_compare_and_set(void)
     cra_atomic_int32_t ia32;
     cra_atomic_int64_t ia64;
 
-    i32 = 64, ia32 = 64;
-    b = cra_atomic_compare_and_set32(&ia32, i32, 1000);
-    assert_always(b && ia32 == 1000);
-    i32 = 100, ia32 = 200;
-    b = cra_atomic_compare_and_set32(&ia32, i32, 1000);
-    assert_always(!b && ia32 == 200);
+    for (int i = 0; i < 100000; i++)
+    {
+        i32 = 64, ia32 = 64;
+        b = cra_atomic_compare_and_set32(&ia32, i32, 1000);
+        assert_always(b && ia32 == 1000);
+        i32 = 100, ia32 = 200;
+        b = cra_atomic_compare_and_set32(&ia32, i32, 1000);
+        assert_always(!b && ia32 == 200);
 
-    i64 = 64, ia64 = 64;
-    b = cra_atomic_compare_and_set64(&ia64, i64, 1000);
-    assert_always(b && ia64 == 1000);
-    i64 = 100, ia64 = 200;
-    b = cra_atomic_compare_and_set64(&ia64, i64, 1000);
-    assert_always(!b && ia64 == 200);
+        i64 = 64, ia64 = 64;
+        b = cra_atomic_compare_and_set64(&ia64, i64, 1000);
+        assert_always(b && ia64 == 1000);
+        i64 = 100, ia64 = 200;
+        b = cra_atomic_compare_and_set64(&ia64, i64, 1000);
+        assert_always(!b && ia64 == 200);
+    }
 
     printf("test compare_and_set done.\n");
 }
@@ -147,43 +150,47 @@ test_compare_and_set(void)
 void
 test_flag(void)
 {
-    bool b;
-
     printf("test cra_atomic_flag.\n");
 
     cra_atomic_flag_t flag = CRA_ATOMIC_FLAG_INIT;
-    assert_always(*(bool *)&flag == false);
 
-    b = cra_atomic_flag_test_and_set(&flag);
-    assert_always(!b && *(bool *)&flag == true);
-
-    b = cra_atomic_flag_test_and_set(&flag);
-    assert_always(b && *(bool *)&flag == true);
-
+    assert_always(!cra_atomic_flag_test_and_set(&flag));
+    assert_always(cra_atomic_flag_test_and_set(&flag));
+    assert_always(cra_atomic_flag_test_and_set(&flag));
+    assert_always(cra_atomic_flag_test_and_set(&flag));
     cra_atomic_flag_clear(&flag);
-    assert_always(!(*(bool *)&flag));
+    assert_always(!cra_atomic_flag_test_and_set(&flag));
 
     printf("test cra_atomic_flag done.\n");
 }
 
-#define NUM 100
-cra_thrd_t         th[NUM];
+#define N_THREAD 10
+#define N_TIMES  10000
+cra_thrd_t         th[N_THREAD];
 cra_atomic_int32_t ia32;
 cra_atomic_int64_t ia64;
+cra_atomic_flag_t  flag;
+int64_t            i64;
 
 CRA_THRD_FUNC(test_add_thr_fn)
 {
     CRA_UNUSED_VALUE(arg);
-    cra_atomic_add32(&ia32, 10);
-    cra_atomic_add64(&ia64, 100);
+    for (int i = 0; i < N_TIMES; i++)
+    {
+        cra_atomic_add32(&ia32, 10);
+        cra_atomic_add64(&ia64, 100);
+    }
     return (cra_thrd_ret_t){ 0 };
 }
 
 CRA_THRD_FUNC(test_sub_thr_fn)
 {
     CRA_UNUSED_VALUE(arg);
-    cra_atomic_sub32(&ia32, 10);
-    cra_atomic_sub64(&ia64, 100);
+    for (int i = 0; i < N_TIMES; i++)
+    {
+        cra_atomic_sub32(&ia32, 10);
+        cra_atomic_sub64(&ia64, 100);
+    }
     return (cra_thrd_ret_t){ 0 };
 }
 
@@ -193,19 +200,19 @@ test_add_and_sub_thr(void)
     ia32 = 0;
     ia64 = 0;
 
-    for (int i = 0; i < NUM; i++)
+    for (int i = 0; i < N_THREAD; i++)
         cra_thrd_create(&th[i], test_add_thr_fn, NULL);
 
-    for (int i = 0; i < NUM; i++)
+    for (int i = 0; i < N_THREAD; i++)
         cra_thrd_join(th[i]);
 
-    assert_always(ia32 == 1000);
-    assert_always(ia64 == 10000);
+    assert_always(ia32 == 10 * N_THREAD * N_TIMES);
+    assert_always(ia64 == 100 * N_THREAD * N_TIMES);
 
-    for (int i = 0; i < NUM; i++)
+    for (int i = 0; i < N_THREAD; i++)
         cra_thrd_create(&th[i], test_sub_thr_fn, NULL);
 
-    for (int i = 0; i < NUM; i++)
+    for (int i = 0; i < N_THREAD; i++)
         cra_thrd_join(th[i]);
 
     assert_always(ia32 == 0);
@@ -215,16 +222,22 @@ test_add_and_sub_thr(void)
 CRA_THRD_FUNC(test_inc_thr_fn)
 {
     CRA_UNUSED_VALUE(arg);
-    cra_atomic_inc32(&ia32);
-    cra_atomic_inc64(&ia64);
+    for (int i = 0; i < N_TIMES; i++)
+    {
+        cra_atomic_inc32(&ia32);
+        cra_atomic_inc64(&ia64);
+    }
     return (cra_thrd_ret_t){ 0 };
 }
 
 CRA_THRD_FUNC(test_dec_thr_fn)
 {
     CRA_UNUSED_VALUE(arg);
-    cra_atomic_dec32(&ia32);
-    cra_atomic_dec64(&ia64);
+    for (int i = 0; i < N_TIMES; i++)
+    {
+        cra_atomic_dec32(&ia32);
+        cra_atomic_dec64(&ia64);
+    }
     return (cra_thrd_ret_t){ 0 };
 }
 
@@ -234,23 +247,51 @@ test_inc_and_dec_thr(void)
     ia32 = 10;
     ia64 = 10000;
 
-    for (int i = 0; i < 100; i++)
+    for (int i = 0; i < N_THREAD; i++)
         cra_thrd_create(&th[i], test_inc_thr_fn, NULL);
 
-    for (int i = 0; i < NUM; i++)
+    for (int i = 0; i < N_THREAD; i++)
         cra_thrd_join(th[i]);
 
-    assert_always(ia32 == 110);
-    assert_always(ia64 == 10100);
+    assert_always(ia32 == 10 + N_THREAD * N_TIMES);
+    assert_always(ia64 == 10000 + N_THREAD * N_TIMES);
 
-    for (int i = 0; i < 100; i++)
+    for (int i = 0; i < N_THREAD; i++)
         cra_thrd_create(&th[i], test_dec_thr_fn, NULL);
 
-    for (int i = 0; i < NUM; i++)
+    for (int i = 0; i < N_THREAD; i++)
         cra_thrd_join(th[i]);
 
     assert_always(ia32 == 10);
     assert_always(ia64 == 10000);
+}
+
+CRA_THRD_FUNC(test_flag_thr_fn)
+{
+    CRA_UNUSED_VALUE(arg);
+    for (int i = 0; i < N_TIMES; i++)
+    {
+        while (cra_atomic_flag_test_and_set(&flag))
+            ;
+        i64++;
+        cra_atomic_flag_clear(&flag);
+    }
+    return (cra_thrd_ret_t){ 0 };
+}
+
+void
+test_flag_thr(void)
+{
+    i64 = 0;
+    cra_atomic_flag_clear(&flag);
+
+    for (int i = 0; i < N_THREAD; i++)
+        cra_thrd_create(&th[i], test_flag_thr_fn, NULL);
+
+    for (int i = 0; i < N_THREAD; i++)
+        cra_thrd_join(th[i]);
+
+    assert_always(i64 == N_THREAD * N_TIMES);
 }
 
 int
@@ -264,5 +305,6 @@ main(void)
 
     test_add_and_sub_thr();
     test_inc_and_dec_thr();
+    test_flag_thr();
     return 0;
 }
