@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.22.0)
 
-remove_definitions(-DCRA_BUILD_DLL)
-
 set(LIBS ${PROJECT_NAME} mem_detect_config)
 
 add_executable(test_atomic test_atomic.c)

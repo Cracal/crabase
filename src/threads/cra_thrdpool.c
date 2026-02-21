@@ -57,8 +57,17 @@ cra_thrdpool_init(CraThrdPool *pool, int threads, size_t task_max)
     pool->idle_threads = threads;
     pool->threadcnt = 0;
     pool->task_max = task_max;
-    cra_blkdeque_init0(CraThrdPoolTask, &pool->task_que, task_max, false);
+    if (!cra_blkdeque_init0(CraThrdPoolTask, &pool->task_que, task_max, false))
+    {
+        fprintf(stderr, "Thread pool %p create task queue failed.\n", (void *)pool);
+        exit(EXIT_FAILURE);
+    }
     pool->threads = (CraThrdPoolWorker *)cra_malloc(sizeof(CraThrdPoolWorker) * threads);
+    if (!pool->threads)
+    {
+        fprintf(stderr, "Thread pool %p malloc threads failed.\n", (void *)pool);
+        exit(EXIT_FAILURE);
+    }
 
 #if 1 // create threads
     CraCDL cdl;
@@ -69,24 +78,25 @@ cra_thrdpool_init(CraThrdPool *pool, int threads, size_t task_max)
         pool->threads[i].pool = pool;
         pool->threads[i].cdl = &cdl;
         if (!cra_thrd_create(&pool->threads[i].thrd, __cra_thrdpool_worker, &pool->threads[i]))
-            goto error_ret;
+        {
+            fprintf(stderr, "Thread pool %p create thread %d failed.\n", (void *)pool, i);
+            cra_cdl_uninit(&cdl);
+            cra_thrdpool_uninit(pool);
+            exit(EXIT_FAILURE);
+        }
     }
 
     cra_cdl_wait(&cdl);
     cra_cdl_uninit(&cdl);
 #endif // end create threads
-
-    return;
-
-error_ret:
-    cra_cdl_uninit(&cdl);
-    cra_thrdpool_uninit(pool);
-    assert_always(false); // !!!
 }
 
 void
 cra_thrdpool_uninit(CraThrdPool *pool)
 {
+    assert(pool);
+    assert(pool->threads);
+
     pool->handle_exist_task = false;
     if (pool->is_running)
         cra_thrdpool_wait(pool);

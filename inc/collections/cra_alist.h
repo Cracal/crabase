@@ -35,10 +35,10 @@ cra_alist_iter_init(CraAList *list, CraAListIter *it);
 CRA_API bool
 cra_alist_iter_next(CraAListIter *it, void **retvalptr);
 
-CRA_API void
+CRA_API bool
 cra_alist_init_size(CraAList *list, size_t element_size, size_t init_capacity, bool zero_memory);
 
-CRA_API void
+CRA_API bool
 cra_alist_init(CraAList *list, size_t element_size, bool zero_memory);
 
 #define cra_alist_init_size0(_TVal, _list, _init_capacity, _zero_memory)    \
@@ -90,13 +90,13 @@ cra_alist_get(CraAList *list, size_t index, void *retval);
 CRA_API bool
 cra_alist_get_ptr(CraAList *list, size_t index, void **retvalptr);
 
-CRA_API void
+CRA_API bool
 cra_alist_reverse(CraAList *list);
 
 CRA_API CraAList *
 cra_alist_clone(CraAList *list, cra_deep_copy_val_fn deep_copy_val);
 
-CRA_API void
+CRA_API bool
 cra_alist_sort(CraAList *list, cra_compare_fn compare);
 
 CRA_API bool

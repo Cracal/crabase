@@ -44,7 +44,7 @@ cra_dict_iter_init(CraDict *dict, CraDictIter *it);
 CRA_API bool
 cra_dict_iter_next(CraDictIter *it, void **retkeyptr, void **retvalptr);
 
-CRA_API void
+CRA_API bool
 cra_dict_init_size(CraDict       *dict,
                    size_t         key_size,
                    size_t         val_size,
@@ -53,7 +53,7 @@ cra_dict_init_size(CraDict       *dict,
                    cra_hash_fn    hash_key,
                    cra_compare_fn compare_key);
 
-CRA_API void
+CRA_API bool
 cra_dict_init(CraDict       *dict,
               size_t         key_size,
               size_t         val_size,

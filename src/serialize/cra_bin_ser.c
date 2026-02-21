@@ -292,7 +292,8 @@ __cra_bin_read_string(CraSerializer *ser, void *retval, uint64_t *retlen, const 
     {
         // alloc
         retval = *(void **)retval = cra_malloc(len + 1);
-        cra_release_mgr_add(&ser->release, retval, meta);
+        CRA_SEIALIZER_CHECK_MEMORY(ser, meta, retval);
+        CRA_SERIALIZER_RELEASE_MGR_ADD_CHECK(ser, meta, retval);
     }
     else
     {
@@ -655,18 +656,27 @@ cra_bin_read_struct(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 
     // alloc
     if (meta->is_ptr)
+    {
         stru = *(char **)retval = (char *)cra_malloc(meta->size);
+        CRA_SEIALIZER_CHECK_MEMORY(ser, meta, stru);
+    }
     else
+    {
         stru = (char *)retval;
+    }
 
     if (meta->is_ptr || uninit)
-        cra_release_mgr_add(&ser->release, stru, meta);
+        CRA_SERIALIZER_RELEASE_MGR_ADD_CHECK(ser, meta, stru);
 
     // init
     if (meta->init_i && meta->init_i->init)
     {
         CraInitArgs da = { .size = meta->size, .length = 0, .val1size = 0, .val2size = 0, .arg = meta->arg };
-        meta->init_i->init(stru, &da);
+        if (!meta->init_i->init(stru, &da))
+        {
+            CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_INIT_FAILED, "failed to init struct");
+            return false;
+        }
     }
     else
     {
@@ -806,7 +816,8 @@ cra_bin_read_array(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
     {
         size = (count > 0 ? count : 1) * slot;
         arr = *(char **)retval = (char *)cra_malloc(size);
-        cra_release_mgr_add(&ser->release, arr, meta);
+        CRA_SEIALIZER_CHECK_MEMORY(ser, meta, arr);
+        CRA_SERIALIZER_RELEASE_MGR_ADD_CHECK(ser, meta, arr);
     }
     else
     {
@@ -902,19 +913,29 @@ cra_bin_read_list(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 
     // alloc
     if (meta->is_ptr)
+    {
         list = *(char **)retval = (char *)cra_malloc(meta->size);
+        CRA_SEIALIZER_CHECK_MEMORY(ser, meta, list);
+    }
     else
+    {
         list = (char *)retval;
+    }
 
     if (meta->is_ptr || meta->init_i->uninit)
-        cra_release_mgr_add(&ser->release, list, meta);
+        CRA_SERIALIZER_RELEASE_MGR_ADD_CHECK(ser, meta, list);
 
     // init
     CraInitArgs da = { .size = meta->size, .length = count, .val1size = slot, .val2size = 0, .arg = meta->arg };
-    meta->init_i->init(list, &da);
+    if (!meta->init_i->init(list, &da))
+    {
+        CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_INIT_FAILED, "failed to init list");
+        return false;
+    }
 
 #ifdef __STDC_NO_VLA__
     char *element = (char *)cra_malloc(slot);
+    CRA_SEIALIZER_CHECK_MEMORY(ser, meta, element);
 #else
     char element[slot];
 #endif
@@ -1022,12 +1043,19 @@ cra_bin_read_dict(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 
     // alloc
     if (meta->is_ptr)
+    {
         dict = *(char **)retval = (char *)cra_malloc(meta->size);
+        CRA_SEIALIZER_CHECK_MEMORY(ser, meta, dict);
+    }
     else
+    {
         dict = (char *)retval;
+    }
 
     if (meta->is_ptr || meta->init_i->uninit)
-        cra_release_mgr_add(&ser->release, dict, meta);
+    {
+        CRA_SERIALIZER_RELEASE_MGR_ADD_CHECK(ser, meta, dict);
+    }
 
     // init
     CraInitArgs da = {
@@ -1037,10 +1065,15 @@ cra_bin_read_dict(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
         .val2size = val_size,
         .arg = meta->arg,
     };
-    meta->init_i->init(dict, &da);
+    if (!meta->init_i->init(dict, &da))
+    {
+        CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_INIT_FAILED, "failed to init dict");
+        return false;
+    }
 
 #ifdef __STDC_NO_VLA__
     char *key = (char *)cra_malloc(key_size + val_size);
+    CRA_SEIALIZER_CHECK_MEMORY(ser, meta, key);
 #else
     char key[key_size + val_size];
 #endif

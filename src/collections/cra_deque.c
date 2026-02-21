@@ -21,6 +21,9 @@
 void
 cra_deque_iter_init(CraDeque *deque, CraDequeIter *it)
 {
+    assert(it);
+    assert(deque);
+
     it->index = deque->left_idx;
     it->curr = deque->count > 0 ? deque->list.head : NULL;
     it->deque = deque;
@@ -30,6 +33,10 @@ bool
 cra_deque_iter_next(CraDequeIter *it, void **retvalptr)
 {
     size_t end;
+
+    assert(it);
+    assert(it->deque);
+
     if (it->curr)
     {
         if (retvalptr)
@@ -49,20 +56,36 @@ cra_deque_iter_next(CraDequeIter *it, void **retvalptr)
     return false;
 }
 
-void
+bool
 cra_deque_init(CraDeque *deque, size_t element_size, size_t que_max, bool zero_memory)
 {
+    CraLListNode *node;
+
     assert(!!deque && element_size > 0);
 
-    cra_llist_init(&deque->list, element_size * CRA_DEQUE_ELE_COUNT, zero_memory);
-    CraLListNode *node = cra_llist_get_free_node(&deque->list);
-    cra_llist_insert_node(&deque->list, 0, node);
+    if (!cra_llist_init(&deque->list, element_size * CRA_DEQUE_ELE_COUNT, zero_memory))
+        return false;
+
+    node = cra_llist_get_free_node(&deque->list);
+    if (!node)
+    {
+        cra_llist_uninit(&deque->list);
+        return false;
+    }
+
+    if (!cra_llist_insert_node(&deque->list, 0, node))
+    {
+        cra_llist_put_free_node(&deque->list, node);
+        cra_llist_uninit(&deque->list);
+        return false;
+    }
 
     deque->ele_size = element_size;
     deque->que_max = que_max;
     deque->zero_memory = zero_memory;
     deque->count = 0;
     CRA_DEQUE_EMPTY_INDEX;
+    return true;
 }
 
 void
@@ -568,12 +591,19 @@ cra_deque_clone(CraDeque *deque, cra_deep_copy_val_fn deep_copy_val)
     void        *valptr, *val;
 
     ret = cra_alloc(CraDeque);
-    cra_deque_init(ret, deque->ele_size, deque->que_max, deque->zero_memory);
+    if (!ret)
+        return NULL;
+    if (!cra_deque_init(ret, deque->ele_size, deque->que_max, deque->zero_memory))
+    {
+        cra_dealloc(ret);
+        return NULL;
+    }
 
     for (cra_deque_iter_init(deque, &it); cra_deque_iter_next(&it, &valptr);)
     {
         if (deep_copy_val)
         {
+            // FIXME: val == NULL?
             deep_copy_val(valptr, &val);
             valptr = &val;
         }

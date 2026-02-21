@@ -10,17 +10,18 @@
  */
 #ifndef __CRA_MALLOC_H__
 #define __CRA_MALLOC_H__
+#include "cra_assert.h"
 #include "cra_defs.h"
 
 #if defined(CRA_COMPILER_GNUC)
-#define ATTR_MALLOC __attribute__((malloc, returns_nonnull, alloc_size(1), warn_unused_result))
-#define ATTR_CALLOC __attribute__((malloc, returns_nonnull, alloc_size(1, 2), warn_unused_result))
-#define ATTR_REALLO __attribute__((returns_nonnull, nonnull(1), alloc_size(2), warn_unused_result))
+#define ATTR_MALLOC __attribute__((malloc, alloc_size(1), warn_unused_result))
+#define ATTR_CALLOC __attribute__((malloc, alloc_size(1, 2), warn_unused_result))
+#define ATTR_REALLO __attribute__((nonnull(1), alloc_size(2), warn_unused_result))
 #define ATTR_FREEEE __attribute__((nonnull(1)))
 #elif defined(CRA_COMPILER_MSVC)
-#define ATTR_MALLOC _Ret_notnull_ _Check_return_ _CRTALLOCATOR
-#define ATTR_CALLOC _Ret_notnull_ _Check_return_ _CRTALLOCATOR
-#define ATTR_REALLO _Ret_notnull_ _Check_return_ _CRTALLOCATOR
+#define ATTR_MALLOC _Check_return_ _CRTALLOCATOR
+#define ATTR_CALLOC _Check_return_ _CRTALLOCATOR
+#define ATTR_REALLO _Check_return_ _CRTALLOCATOR
 #define ATTR_FREEEE
 #else
 #define ATTR_MALLOC
@@ -29,17 +30,62 @@
 #define ATTR_FREEEE
 #endif
 
-CRA_API ATTR_MALLOC void *
-__cra_malloc(size_t size);
+CRA_API void *(*__cra_malloc_fn__)(size_t size);
+CRA_API void *(*__cra_calloc_fn__)(size_t num, size_t size);
+CRA_API void *(*__cra_reallo_fn__)(void *oldptr, size_t newsize);
+CRA_API void  (*__cra_freeee_fn__)(void *ptr);
 
-CRA_API ATTR_CALLOC void *
-__cra_calloc(size_t num, size_t size);
+static inline ATTR_MALLOC void *
+__cra_malloc(size_t size)
+{
+    assert(size > 0);
+    if (__cra_malloc_fn__ == NULL)
+        __cra_malloc_fn__ = malloc;
+    return __cra_malloc_fn__(size);
+}
 
-CRA_API ATTR_REALLO void *
-__cra_realloc(void *oldptr, size_t newsize);
+static inline ATTR_CALLOC void *
+__cra_calloc(size_t num, size_t size)
+{
+    assert(num > 0 && size > 0);
+    if (__cra_calloc_fn__ == NULL)
+        __cra_calloc_fn__ = calloc;
+    return __cra_calloc_fn__(num, size);
+}
+static inline ATTR_REALLO void *
+__cra_realloc(void *oldptr, size_t newsize)
+{
+    assert(newsize > 0);
+#ifdef CRA_COMPILER_MSVC
+    assert(oldptr != NULL);
+#endif
+    if (__cra_reallo_fn__ == NULL)
+        __cra_reallo_fn__ = realloc;
+    return __cra_reallo_fn__(oldptr, newsize);
+}
+static inline ATTR_FREEEE void
+__cra_free(void *ptr)
+{
+#ifdef CRA_COMPILER_MSVC
+    assert(ptr != NULL);
+#endif
+    if (__cra_freeee_fn__ == NULL)
+        __cra_freeee_fn__ = free;
+    __cra_freeee_fn__(ptr);
+}
 
-CRA_API ATTR_FREEEE void
-__cra_free(void *ptr);
+static inline void
+cra_set_allocator(void *(*malloc_fn)(size_t),
+                  void *(*calloc_fn)(size_t, size_t),
+                  void *(*realloc_fn)(void *, size_t),
+                  void  (*free_fn)(void *))
+{
+    assert(malloc_fn != NULL && calloc_fn != NULL && realloc_fn != NULL && free_fn != NULL);
+    __cra_malloc_fn__ = malloc_fn;
+    __cra_calloc_fn__ = calloc_fn;
+    __cra_reallo_fn__ = realloc_fn;
+    __cra_freeee_fn__ = free_fn;
+}
 
 #undef ATTR_MALLOC
 #undef ATTR_CALLOC
@@ -83,8 +129,5 @@ __cra_memory_leak_report(void);
 
 #define cra_alloc(_Type) (_Type *)cra_malloc(sizeof(_Type))
 #define cra_dealloc      cra_free
-
-CRA_API void
-cra_set_malloc_failed_cb(void (*cb)(const char *fname, size_t size));
 
 #endif

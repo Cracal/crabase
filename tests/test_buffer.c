@@ -18,11 +18,13 @@ test_new_delete(void)
     CraBuffer *buf;
 
     // buf = cra_alloc(CraBuffer);
+    // assert_always(buf == NULL);
     // cra_buffer_init(NULL, 10);
     // cra_buffer_init(buf, 0);
 
     buf = cra_alloc(CraBuffer);
-    cra_buffer_init(buf, 1024);
+    assert_always(buf != NULL);
+    assert_always(cra_buffer_init(buf, 1024));
     cra_buffer_uninit(buf);
     cra_dealloc(buf);
 }
@@ -31,14 +33,15 @@ static void
 test_append(void)
 {
     CraBuffer *buf = cra_alloc(CraBuffer);
-    cra_buffer_init(buf, 10);
+    assert_always(buf != NULL);
+    assert_always(cra_buffer_init(buf, 10));
     assert_always(cra_buffer_writable(buf) == cra_buffer_size(buf));
 
-    cra_buffer_append(buf, "hello", sizeof("hello"));
+    assert_always(cra_buffer_append(buf, "hello", sizeof("hello")));
     assert_always(cra_buffer_readable(buf) == sizeof("hello"));
     assert_always(cra_buffer_writable(buf) == cra_buffer_size(buf) - sizeof("hello"));
 
-    cra_buffer_append(buf, "world", sizeof("world"));
+    assert_always(cra_buffer_append(buf, "world", sizeof("world")));
     assert_always(cra_buffer_readable(buf) == sizeof("hello") + sizeof("world"));
     assert_always(cra_buffer_writable(buf) == cra_buffer_size(buf) - (sizeof("hello") + sizeof("world")));
 
@@ -46,7 +49,7 @@ test_append(void)
     char buff[100];
     assert_always(cra_buffer_retrieve(buf, buff, sizeof("hello")) == sizeof("hello"));
     assert_always(strcmp(buff, "hello") == 0);
-    cra_buffer_append(buf, "after", sizeof("after"));
+    assert_always(cra_buffer_append(buf, "after", sizeof("after")));
     assert_always(cra_buffer_readable(buf) == sizeof("after") + sizeof("world"));
     assert_always(cra_buffer_writable(buf) == cra_buffer_size(buf) - (sizeof("after") + sizeof("world")));
 
@@ -58,17 +61,18 @@ static void
 test_expand(void)
 {
     CraBuffer *buffer = cra_alloc(CraBuffer);
-    cra_buffer_init(buffer, 10);
+    assert_always(buffer != NULL);
+    assert_always(cra_buffer_init(buffer, 10));
 
-    cra_buffer_append(buffer, "123456789", 9);
+    assert_always(cra_buffer_append(buffer, "123456789", 9));
     assert_always(cra_buffer_size(buffer) == 10);
     assert_always(cra_buffer_readable(buffer) == 9);
 
-    cra_buffer_append(buffer, "A", 1);
+    assert_always(cra_buffer_append(buffer, "A", 1));
     assert_always(cra_buffer_size(buffer) == 10);
     assert_always(cra_buffer_readable(buffer) == 10);
 
-    cra_buffer_append(buffer, "B", 1); // expand
+    assert_always(cra_buffer_append(buffer, "B", 1)); // expand
     assert_always(cra_buffer_size(buffer) > 10);
     assert_always(cra_buffer_readable(buffer) == 11);
 
@@ -126,11 +130,11 @@ test_retrieve(void)
     CraBuffer buf;
     char      buff[100];
 
-    cra_buffer_init(&buf, 10);
+    assert_always(cra_buffer_init(&buf, 10));
 
     assert_always(cra_buffer_retrieve(&buf, buff, 10) == 0);
 
-    cra_buffer_append(&buf, "hello world", sizeof("hello world"));
+    assert_always(cra_buffer_append(&buf, "hello world", sizeof("hello world")));
     assert_always(cra_buffer_readable(&buf) == sizeof("hello world"));
 
     size_t len = cra_buffer_retrieve(&buf, buff, sizeof("hello") - 1);
@@ -151,7 +155,8 @@ static void
 test_append_retrieve_size(void)
 {
     CraBuffer *buf = cra_alloc(CraBuffer);
-    cra_buffer_init(buf, 100);
+    assert_always(buf != NULL);
+    assert_always(cra_buffer_init(buf, 100) == true);
     assert_always(cra_buffer_readable(buf) == 0);
     assert_always(cra_buffer_writable(buf) == cra_buffer_size(buf));
 

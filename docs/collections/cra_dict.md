@@ -5,7 +5,7 @@
 ## init
 
 ```c
-void
+bool
 cra_dict_init_size(CraDict       *dict,
                    size_t         key_size,
                    size_t         val_size,
@@ -13,7 +13,7 @@ cra_dict_init_size(CraDict       *dict,
                    bool           zero_memory,
                    cra_hash_fn    hash_key,
                    cra_compare_fn compare_key);
-void
+bool
 cra_dict_init(CraDict       *dict,
               size_t         key_size,
               size_t         val_size,
@@ -34,6 +34,8 @@ cra_dict_init(CraDict       *dict,
 - `zero_memory` 没有有效元素的地方是否清零
 - `hash_key` key的hash函数
 - `compare_key` key的比较函数
+
+成功返回**true**，失败返回**false**
 
 ## uninit
 
@@ -77,6 +79,7 @@ cra_dict_add(CraDict *dict, void *key, void *val);
 - `retoldkey` 如果**put**的**key**已存在，则`retoldkey`返回旧key。可为**NULL**
 - `retoldval` 如果**put**的**key**已存在，则`retoldval`返回旧val。可为**NULL**
 
+成功返回**true**，失败返回**false**。内存分配失败时返回**false**  
 **add**时如果**key**已存在，则该**entry**不会被添加，并返回**false**
 
 ## remove

@@ -32,7 +32,7 @@ typedef struct _CraBlkDeque
     cra_mutex_t        mutex;
 } CraBlkDeque;
 
-CRA_API void
+CRA_API bool
 cra_blkdeque_init(CraBlkDeque *que, size_t element_size, size_t que_max, bool zero_memory);
 #define cra_blkdeque_init0(_TVal, _que, _que_max, _zero_memory)    \
     cra_blkdeque_init(_que, sizeof(_TVal), _que_max, _zero_memory)

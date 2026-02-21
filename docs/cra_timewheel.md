@@ -5,7 +5,7 @@
 ## init
 
 ```c
-void
+bool
 cra_timewheel_init(CraTimewheel *wheel, uint32_t tick_ms, uint32_t wheel_size);
 ```
 
@@ -13,6 +13,8 @@ cra_timewheel_init(CraTimewheel *wheel, uint32_t tick_ms, uint32_t wheel_size);
 
 - `tick_ms` 最小时间间隔
 - `wheel_size` 每层时间轮的槽数
+
+成功返回**true**，失败返回**false**
 
 ## uninit
 
@@ -30,7 +32,8 @@ bool
 cra_timewheel_add(CraTimewheel *wheel, CraTimer_base *timer);
 ```
 
-添加定时器[timer](#cratimer_base)
+添加定时器[timer](#cratimer_base)  
+成功返回**true**，失败返回**false**
 
 ## tick
 

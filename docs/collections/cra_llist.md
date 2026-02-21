@@ -8,9 +8,9 @@
 ## init
 
 ```c
-void
+bool
 cra_llist_init_size(CraLList *list, size_t element_size, size_t init_spare_node, bool zero_memory);
-void
+bool
 cra_llist_init(CraLList *list, size_t element_size, bool zero_memory);
 #define cra_llist_init_size0(TVal, list, init_spare_node, zero_memory)
 #define cra_llist_init0(TVal, list, zero_memory)
@@ -22,6 +22,8 @@ cra_llist_init(CraLList *list, size_t element_size, bool zero_memory);
 - `TVal` 元素类型
 - `init_spare_node` 预先分配的结节个数
 - `zero_memory` 没有有效元素的地方是否清零
+
+成功返回**true**，失败返回**false**
 
 ## uninit
 

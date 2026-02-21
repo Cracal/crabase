@@ -49,7 +49,7 @@ test_timewheel(void)
     MyTimer       t2;
     CraTimewheel  wheel;
 
-    cra_timewheel_init(&wheel, 50, 20);
+    assert_always(cra_timewheel_init(&wheel, 50, 20));
 
     cra_timer_base_init(&t1, CRA_TIMER_INFINITE, 1000, on_timeout1, NULL);
     cra_timer_base_init((CraTimer_base *)&t2, 2, 5000, on_timeout2, NULL);
@@ -119,8 +119,8 @@ test_timewheel2(void)
     CRA_REFCNT_OBJ(t)->end = "hello world";
 
     CraTimewheel *wheel = cra_alloc(CraTimewheel);
-    cra_timewheel_init(wheel, 50, 25);
-    cra_timewheel_add(wheel, &CRA_REFCNT_OBJ(t)->base);
+    assert_always(cra_timewheel_init(wheel, 50, 25));
+    assert_always(cra_timewheel_add(wheel, &CRA_REFCNT_OBJ(t)->base));
 
     flag = true;
     while (flag)
@@ -147,9 +147,9 @@ test_timeout_less_than_tick(void)
     cra_timer_base_init(&timer, 3, 8, on_timeout1, stop_timewheel);
 
     CraTimewheel wheel;
-    cra_timewheel_init(&wheel, 1000, 64);
+    assert_always(cra_timewheel_init(&wheel, 1000, 64));
 
-    cra_timewheel_add(&wheel, &timer);
+    assert_always(cra_timewheel_add(&wheel, &timer));
 
     flag = true;
     while (flag)
@@ -175,7 +175,7 @@ test_timer_clear(void)
     CraTimewheel  *wheel;
 
     wheel = cra_alloc(CraTimewheel);
-    cra_timewheel_init(wheel, 50, 20);
+    assert_always(cra_timewheel_init(wheel, 50, 20));
 
     t1 = cra_alloc(CraTimer_base);
     t2 = cra_alloc(CraTimer_base);
@@ -188,11 +188,11 @@ test_timer_clear(void)
     cra_timer_base_init(t4, CRA_TIMER_INFINITE, 3000, on_timeout1, on_remove);
     cra_timer_base_init(stop, 1, 10000, stop_timewheel, on_remove);
 
-    cra_timewheel_add(wheel, t1);
-    cra_timewheel_add(wheel, t2);
-    cra_timewheel_add(wheel, t3);
-    cra_timewheel_add(wheel, t4);
-    cra_timewheel_add(wheel, stop);
+    assert_always(cra_timewheel_add(wheel, t1));
+    assert_always(cra_timewheel_add(wheel, t2));
+    assert_always(cra_timewheel_add(wheel, t3));
+    assert_always(cra_timewheel_add(wheel, t4));
+    assert_always(cra_timewheel_add(wheel, stop));
 
     flag = true;
     while (flag)
@@ -228,12 +228,12 @@ test_timer_cancel_self(void)
     CraTimewheel  timewheel;
     CraTimer_base timer1, timer2;
 
-    cra_timewheel_init(&timewheel, 50, 20);
+    assert_always(cra_timewheel_init(&timewheel, 50, 20));
     cra_timer_base_init(&timer1, CRA_TIMER_INFINITE, 1000, on_timeout_cancel_self, NULL);
     cra_timer_base_init(&timer2, 1, 7000, stop_timewheel, NULL);
 
-    cra_timewheel_add(&timewheel, &timer1);
-    cra_timewheel_add(&timewheel, &timer2);
+    assert_always(cra_timewheel_add(&timewheel, &timer1));
+    assert_always(cra_timewheel_add(&timewheel, &timer2));
 
     flag = true;
     while (flag)

@@ -17,6 +17,8 @@
 static inline bool
 __cra_alist_pop__(CraAList *list, size_t index, void *retval)
 {
+    assert(list);
+
     if (index >= list->count)
         return false;
 
@@ -38,6 +40,9 @@ __cra_alist_pop__(CraAList *list, size_t index, void *retval)
 static inline bool
 __cra_alist_set_and_pop_old__(CraAList *list, size_t index, void *newval, void *retoldval)
 {
+    assert(list);
+    assert(newval);
+
     if (index >= list->count)
         return false;
     if (retoldval)
@@ -46,25 +51,33 @@ __cra_alist_set_and_pop_old__(CraAList *list, size_t index, void *newval, void *
     return true;
 }
 
-static inline void
+static inline bool
 __cra_alist_init_size(CraAList *list, size_t element_size, size_t init_capacity, bool zero_memory)
 {
-    assert(!!list);
+    assert(list);
     assert(element_size > 0);
     assert(init_capacity > 0);
+
+    list->array = (unsigned char *)cra_malloc(element_size * init_capacity);
+    if (!list->array)
+        return false;
 
     list->zero_memory = zero_memory;
     list->count = 0;
     list->ele_size = element_size;
     list->capacity = init_capacity;
-    list->array = (unsigned char *)cra_malloc(element_size * list->capacity);
     if (zero_memory)
         bzero(list->array, element_size * list->capacity);
+    return true;
 }
 
 void
 cra_alist_iter_init(CraAList *list, CraAListIter *it)
 {
+    assert(it);
+    assert(list);
+    assert(list->array);
+
     it->index = 0;
     it->list = list;
 }
@@ -72,6 +85,10 @@ cra_alist_iter_init(CraAList *list, CraAListIter *it)
 bool
 cra_alist_iter_next(CraAListIter *it, void **retvalptr)
 {
+    assert(it);
+    assert(it->list);
+    assert(it->list->array);
+
     if (it->index < it->list->count)
     {
         if (retvalptr)
@@ -81,16 +98,16 @@ cra_alist_iter_next(CraAListIter *it, void **retvalptr)
     return false;
 }
 
-void
+bool
 cra_alist_init_size(CraAList *list, size_t element_size, size_t init_capacity, bool zero_memory)
 {
-    __cra_alist_init_size(list, element_size, init_capacity, zero_memory);
+    return __cra_alist_init_size(list, element_size, init_capacity, zero_memory);
 }
 
-void
+bool
 cra_alist_init(CraAList *list, size_t element_size, bool zero_memory)
 {
-    __cra_alist_init_size(list, element_size, CRA_ALIST_INIT_CAPACITY, zero_memory);
+    return __cra_alist_init_size(list, element_size, CRA_ALIST_INIT_CAPACITY, zero_memory);
 }
 
 void
@@ -104,6 +121,8 @@ cra_alist_uninit(CraAList *list)
 void
 cra_alist_clear(CraAList *list)
 {
+    assert(list);
+    assert(list->array);
     if (list->zero_memory)
         bzero(list->array, list->ele_size * list->count);
     list->count = 0;
@@ -113,10 +132,16 @@ bool
 cra_alist_resize(CraAList *list, size_t new_capacity)
 {
     unsigned char *newarr;
+
+    assert(list);
+    assert(list->array);
+
     // 新容量必须大于alist存有的元素个数
     if (new_capacity < list->count)
         return false;
     newarr = (unsigned char *)cra_realloc(list->array, new_capacity * list->ele_size);
+    if (!newarr)
+        return false;
     if (list->zero_memory && new_capacity > list->capacity)
         bzero(newarr + list->capacity * list->ele_size, (new_capacity - list->capacity) * list->ele_size);
     list->array = newarr;
@@ -127,6 +152,10 @@ cra_alist_resize(CraAList *list, size_t new_capacity)
 bool
 cra_alist_insert(CraAList *list, size_t index, void *val)
 {
+    assert(val);
+    assert(list);
+    assert(list->array);
+
     if (index > list->count)
         return false;
     if (list->count >= list->capacity)
@@ -160,15 +189,19 @@ cra_alist_remove_match(CraAList *list, cra_match_fn match, void *arg)
 {
     size_t remove_count = 0;
 
+    assert(list);
+    assert(list->array);
     assert(match != NULL);
 
     for (size_t i = 0; i < list->count;)
     {
         if (match(_CRA_ALIST_VALUE_PTR(list, i), arg))
         {
-            __cra_alist_pop__(list, i, NULL);
-            remove_count++;
-            continue;
+            if (__cra_alist_pop__(list, i, NULL))
+            {
+                ++remove_count;
+                continue;
+            }
         }
         i++;
     }
@@ -190,6 +223,10 @@ cra_alist_set_and_pop_old(CraAList *list, size_t index, void *newval, void *reto
 bool
 cra_alist_get(CraAList *list, size_t index, void *retval)
 {
+    assert(list);
+    assert(retval);
+    assert(list->array);
+
     if (index >= list->count)
         return false;
     memcpy(retval, _CRA_ALIST_VALUE_PTR(list, index), list->ele_size);
@@ -199,20 +236,29 @@ cra_alist_get(CraAList *list, size_t index, void *retval)
 bool
 cra_alist_get_ptr(CraAList *list, size_t index, void **retvalptr)
 {
+    assert(list);
+    assert(retvalptr);
+    assert(list->array);
+
     if (index >= list->count)
         return false;
     *retvalptr = _CRA_ALIST_VALUE_PTR(list, index);
     return true;
 }
 
-void
+bool
 cra_alist_reverse(CraAList *list)
 {
     size_t         middle;
     unsigned char *val1, *val2;
 
+    assert(list);
+    assert(list->array);
+
 #ifdef CRA_COMPILER_MSVC
     unsigned char *temp = (unsigned char *)cra_malloc(list->ele_size);
+    if (!temp)
+        return false;
 #else
     unsigned char temp[list->ele_size];
 #endif
@@ -230,19 +276,29 @@ cra_alist_reverse(CraAList *list)
 #ifdef CRA_COMPILER_MSVC
     cra_free(temp);
 #endif
+    return true;
 }
 
 CraAList *
 cra_alist_clone(CraAList *list, cra_deep_copy_val_fn deep_copy_val)
 {
+    assert(list);
+    assert(list->array);
+
     CraAList *ret = cra_alloc(CraAList);
-    cra_alist_init_size(ret, list->ele_size, list->count, list->zero_memory);
+
+    if (!cra_alist_init_size(ret, list->ele_size, list->count, list->zero_memory))
+    {
+        cra_dealloc(ret);
+        return NULL;
+    }
 
     ret->count = list->count;
     if (!!deep_copy_val)
     {
         for (size_t i = 0; i < list->count; i++)
         {
+            // FIXME: 如果deep_copy_val内申请内存失败会如何？
             deep_copy_val(_CRA_ALIST_VALUE_PTR(list, i), _CRA_ALIST_VALUE_PTR(ret, i));
         }
     }
@@ -253,13 +309,15 @@ cra_alist_clone(CraAList *list, cra_deep_copy_val_fn deep_copy_val)
     return ret;
 }
 
-static size_t
-cra_alist_partition(CraAList *list, cra_compare_fn compare, size_t begin, size_t end)
+static bool
+cra_alist_partition(CraAList *list, cra_compare_fn compare, size_t begin, size_t end, size_t *middle)
 {
     size_t left, right;
 
 #ifdef CRA_COMPILER_MSVC
     unsigned char *temp = (unsigned char *)cra_malloc(list->ele_size);
+    if (!temp)
+        return false;
 #else
     unsigned char temp[list->ele_size];
 #endif
@@ -291,25 +349,33 @@ cra_alist_partition(CraAList *list, cra_compare_fn compare, size_t begin, size_t
     cra_free(temp);
 #endif
 
-    return left;
+    *middle = left;
+    return true;
 }
 
-static void
+static bool
 cra_alist_quick_sort(CraAList *list, cra_compare_fn compare, size_t begin, size_t end)
 {
-    size_t middle = cra_alist_partition(list, compare, begin, end);
+    size_t middle;
+
+    if (!cra_alist_partition(list, compare, begin, end, &middle))
+        return false;
     if (middle > 0 && middle - 1 > begin)
         cra_alist_quick_sort(list, compare, begin, middle - 1);
     if (middle < end && middle + 1 < end)
         cra_alist_quick_sort(list, compare, middle + 1, end);
+    return true;
 }
 
-void
+bool
 cra_alist_sort(CraAList *list, cra_compare_fn compare)
 {
-    assert(compare != NULL);
+    assert(list);
+    assert(compare);
+    assert(list->array);
     if (list->count > 1) // count(array) >= 2
-        cra_alist_quick_sort(list, compare, 0, list->count - 1);
+        return cra_alist_quick_sort(list, compare, 0, list->count - 1);
+    return true;
 }
 
 static size_t
@@ -350,7 +416,10 @@ cra_alist_add_sort(CraAList *list, cra_compare_fn compare, void *val)
 {
     size_t index;
 
-    assert(compare != NULL);
+    assert(val);
+    assert(list);
+    assert(compare);
+    assert(list->array);
 
     index = list->count == 0 ? 0 : cra_alist_binary_seach(list, compare, val);
     return cra_alist_insert(list, index, val);

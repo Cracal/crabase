@@ -20,7 +20,7 @@ typedef struct _CraBuffer
     unsigned char *buffer;
 } CraBuffer;
 
-CRA_API void
+CRA_API bool
 cra_buffer_init(CraBuffer *buffer, size_t init_size);
 
 CRA_API void
@@ -36,7 +36,7 @@ cra_buffer_uninit(CraBuffer *buffer);
 CRA_API size_t
 cra_buffer_resize(CraBuffer *buffer, size_t new_size);
 
-CRA_API void
+CRA_API bool
 cra_buffer_append(CraBuffer *buffer, const void *data, size_t len);
 
 CRA_API size_t

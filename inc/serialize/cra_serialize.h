@@ -21,7 +21,7 @@ typedef struct _CraSerErr          CraSerErr;
 
 struct _CraInitializable_i
 {
-    void (*init)(void *obj, CraInitArgs *arg);
+    bool (*init)(void *obj, CraInitArgs *arg);
     // `dont_free_ptr_member`永远是`true`。仅作为一个醒目的提示，
     // 告知在实现uninit函数时不要对指针类型进行free操作。
     void (*uninit)(void *obj, bool dont_free_ptr_member);
@@ -50,10 +50,12 @@ typedef enum
 {
     CRA_SER_ERR_OK = 0,
     CRA_SER_ERR_NOBUF,
+    CRA_SER_ERR_ALLOC,
     CRA_SER_ERR_LENGTH,
     CRA_SER_ERR_NESTING,
     CRA_SER_ERR_TOO_SMALL,
     CRA_SER_ERR_ADD_FAILED,
+    CRA_SER_ERR_INIT_FAILED,
     CRA_SER_ERR_INVALID_VAL,
     CRA_SER_ERR_SIZE_MISMATCH,
     CRA_SER_ERR_TYPE_MISMATCH,
@@ -312,7 +314,7 @@ cra_release_mgr_init(CraReleaseMgr *mgr)
 void
 cra_release_mgr_uninit(CraReleaseMgr *mgr, bool free_ptr);
 
-void
+bool
 cra_release_mgr_add(CraReleaseMgr *mgr, void *ptr, const CraTypeMeta *meta);
 
 #define __CRA_SERIALIZER_ERROR(_ser, _name_fmt, _ERR, _fmt, ...) \
@@ -375,6 +377,25 @@ cra_release_mgr_add(CraReleaseMgr *mgr, void *ptr, const CraTypeMeta *meta);
               _ser, _meta, CRA_SER_ERR_CANNOT_BE_KEY, "this type(%d) cannot be a key", (_meta)->type); \
             return false;                                                                              \
         }                                                                                              \
+    } while (0)
+#define CRA_SEIALIZER_CHECK_MEMORY(_ser, _meta, _ptr)                                        \
+    do                                                                                       \
+    {                                                                                        \
+        if (!(_ptr))                                                                         \
+        {                                                                                    \
+            CRA_SERIALIZER_ERROR(_ser, _meta, CRA_SER_ERR_ALLOC, "Allocate memory failed."); \
+            return false;                                                                    \
+        }                                                                                    \
+    } while (0)
+#define CRA_SERIALIZER_RELEASE_MGR_ADD_CHECK(_ser, _meta, _ptr)                                     \
+    do                                                                                              \
+    {                                                                                               \
+        if (!cra_release_mgr_add(&(_ser)->release, _ptr, _meta))                                    \
+        {                                                                                           \
+            CRA_SERIALIZER_ERROR(_ser, _meta, CRA_SER_ERR_ALLOC, "Add to release manager failed."); \
+            cra_free(_ptr);                                                                         \
+            return false;                                                                           \
+        }                                                                                           \
     } while (0)
 
 #define CRA_NAME(_meta)                         ((_meta)->name ? (_meta)->name : "(null)")

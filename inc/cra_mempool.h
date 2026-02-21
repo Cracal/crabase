@@ -20,7 +20,7 @@ typedef struct _CraMemPool
     CraAList stack;  // AList<ITEM *>
 } CraMemPool;
 
-CRA_API void
+CRA_API bool
 cra_mempool_init(CraMemPool *pool, size_t item_size, size_t items_per_block, size_t init_block);
 
 CRA_API void

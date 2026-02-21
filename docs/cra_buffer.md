@@ -5,12 +5,13 @@ buffer
 ## init
 
 ```c
-void
+bool
 cra_buffer_init(CraBuffer *buffer, size_t init_size);
 ```
 
 将`buffer`初始化成大小为`init_size`的值  
-`init_size`必须大于0
+`init_size`必须大于0  
+成功返回**true**，buffer内存申请失败返回**false**
 
 ## uninit
 
@@ -70,16 +71,18 @@ cra_buffer_resize(CraBuffer *buffer, size_t new_size);
 
 重新设置`buffer`的大小，返回`buffer`最新的大小，这个大小可能不等于`new_size`  
 `new_size`小于**readable**时，`buffer`的大小是**readable**而不是`new_size`  
-`new_size`等于0时，`buffer`大小不变
+`new_size`等于0时，`buffer`大小不变  
+成功返回**新的buffer大小**，失败返回**0**
 
 ## append
 
 ```c
-void
+bool
 cra_buffer_append(CraBuffer *buffer, const void *data, size_t len);
 ```
 
-向`buffer`追加长度为`len`的数据（from `data`）
+向`buffer`追加长度为`len`的数据（from `data`）  
+成功返回**true**，失败返回**false**
 
 ## append size
 

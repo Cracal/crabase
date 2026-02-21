@@ -1,6 +1,5 @@
 #include "serialize/cra_ser_collections.h"
 #include "cra_assert.h"
-#include "cra_malloc.h"
 
 #if 1 // alist
 
@@ -30,10 +29,12 @@ cra_alist_szer_append(void *obj, void *val1, void *val2)
     return cra_alist_append((CraAList *)obj, val1);
 }
 
-static void
+static bool
 cra_alist_szer_init(void *obj, CraInitArgs *da)
 {
-    cra_alist_init_size((CraAList *)obj, da->val1size, da->length, true);
+    if (da->length == 0)
+        da->length = CRA_ALIST_INIT_CAPACITY;
+    return cra_alist_init_size((CraAList *)obj, da->val1size, da->length, true);
 }
 
 static void
@@ -81,10 +82,10 @@ cra_llist_szer_append(void *obj, void *val1, void *val2)
     return cra_llist_append((CraLList *)obj, val1);
 }
 
-static void
+static bool
 cra_llist_szer_init(void *obj, CraInitArgs *da)
 {
-    cra_llist_init_size((CraLList *)obj, da->val1size, da->length, true);
+    return cra_llist_init_size((CraLList *)obj, da->val1size, da->length, true);
 }
 
 static void
@@ -132,10 +133,10 @@ cra_deque_szer_append(void *obj, void *val1, void *val2)
     return cra_deque_push((CraDeque *)obj, val1);
 }
 
-static void
+static bool
 cra_deque_szer_init(void *obj, CraInitArgs *da)
 {
-    cra_deque_init((CraDeque *)obj, da->val1size, CRA_DEQUE_INFINITE, true);
+    return cra_deque_init((CraDeque *)obj, da->val1size, CRA_DEQUE_INFINITE, true);
 }
 
 static void
@@ -180,7 +181,7 @@ cra_dict_szer_append(void *obj, void *val1, void *val2)
     return cra_dict_add((CraDict *)obj, val1, val2);
 }
 
-static void
+static bool
 cra_dict_szer_init(void *obj, CraInitArgs *da)
 {
     CraDictSerArgs *arg = (CraDictSerArgs *)da->arg;
@@ -188,8 +189,9 @@ cra_dict_szer_init(void *obj, CraInitArgs *da)
     assert(arg);
     assert(arg->hash);
     assert(arg->compare);
-
-    cra_dict_init((CraDict *)obj, da->val1size, da->val2size, true, arg->hash, arg->compare);
+    if (da->length == 0)
+        da->length = CRA_DICT_INIT_CAPACITY;
+    return cra_dict_init_size((CraDict *)obj, da->val1size, da->val2size, da->length, true, arg->hash, arg->compare);
 }
 
 static void

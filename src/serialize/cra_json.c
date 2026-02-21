@@ -251,7 +251,8 @@ cra_json_read_string(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
     {
         max_length = len + sizeof("");
         str = *(char **)retval = (char *)cra_malloc(max_length);
-        cra_release_mgr_add(&ser->release, str, meta);
+        CRA_SEIALIZER_CHECK_MEMORY(ser, meta, str);
+        CRA_SERIALIZER_RELEASE_MGR_ADD_CHECK(ser, meta, str);
     }
     else
     {
@@ -1091,18 +1092,27 @@ cra_json_read_struct(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 
     // alloc
     if (meta->is_ptr)
+    {
         stru = *(char **)retval = (char *)cra_malloc(meta->size);
+        CRA_SEIALIZER_CHECK_MEMORY(ser, meta, stru);
+    }
     else
+    {
         stru = (char *)retval;
+    }
 
     if (meta->is_ptr || uninit)
-        cra_release_mgr_add(&ser->release, stru, meta);
+        CRA_SERIALIZER_RELEASE_MGR_ADD_CHECK(ser, meta, stru);
 
     // init
     if (meta->init_i && meta->init_i->init)
     {
         CraInitArgs da = { .size = meta->size, .length = 0, .val1size = 0, .val2size = 0, .arg = meta->arg };
-        meta->init_i->init(stru, &da);
+        if (!meta->init_i->init(stru, &da))
+        {
+            CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_INIT_FAILED, "failed to init struct");
+            return false;
+        }
     }
     else
     {
@@ -1277,6 +1287,7 @@ cra_json_read_array(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
         maxcnt = 8;
         size = maxcnt * slot;
         arr = (char *)cra_malloc(size);
+        CRA_SEIALIZER_CHECK_MEMORY(ser, meta, arr);
     }
     else
     {
@@ -1305,7 +1316,14 @@ cra_json_read_array(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
                 break;
             }
             maxcnt = maxcnt + (maxcnt >> 1); // * 1.5
-            arr = (char *)cra_realloc(arr, maxcnt * slot);
+            char *newarr = (char *)cra_realloc(arr, maxcnt * slot);
+            if (!newarr)
+            {
+                cra_free(arr);
+                CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_ALLOC, "realloc array memory failed");
+                return false;
+            }
+            arr = newarr;
         }
 
         cra_json_skip_whitespaces(ser);
@@ -1327,7 +1345,7 @@ cra_json_read_array(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 end:
     if (meta->is_ptr)
     {
-        cra_release_mgr_add(&ser->release, arr, meta);
+        CRA_SERIALIZER_RELEASE_MGR_ADD_CHECK(ser, meta, arr);
         *(void **)retval = (void *)arr;
     }
     cra_serializer_u2p(index, pcount, metacnt);
@@ -1418,16 +1436,25 @@ cra_json_read_list(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 
     // alloc
     if (meta->is_ptr)
+    {
         list = *(char **)retval = (char *)cra_malloc(meta->size);
+        CRA_SEIALIZER_CHECK_MEMORY(ser, meta, list);
+    }
     else
+    {
         list = (char *)retval;
+    }
 
     if (meta->is_ptr || meta->init_i->uninit)
-        cra_release_mgr_add(&ser->release, list, meta);
+        CRA_SERIALIZER_RELEASE_MGR_ADD_CHECK(ser, meta, list);
 
     // init
     CraInitArgs da = { .size = meta->size, .length = 8, .val1size = slot, .val2size = 0, .arg = meta->arg };
-    meta->init_i->init(list, &da);
+    if (!meta->init_i->init(list, &da))
+    {
+        CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_INIT_FAILED, "failed to init list");
+        return false;
+    }
 
     // check empty
     if (cra_json_check_ch(ser, ']'))
@@ -1438,6 +1465,7 @@ cra_json_read_list(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 
 #ifdef __STDC_NO_VLA__
     char *element = (char *)cra_malloc(slot);
+    CRA_SEIALIZER_CHECK_MEMORY(ser, meta, element);
 #else
     char element[slot];
 #endif
@@ -1580,12 +1608,17 @@ cra_json_read_dict(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 
     // alloc
     if (meta->is_ptr)
+    {
         dict = *(char **)retval = (char *)cra_malloc(meta->size);
+        CRA_SEIALIZER_CHECK_MEMORY(ser, meta, dict);
+    }
     else
+    {
         dict = (char *)retval;
+    }
 
     if (meta->is_ptr || meta->init_i->uninit)
-        cra_release_mgr_add(&ser->release, dict, meta);
+        CRA_SERIALIZER_RELEASE_MGR_ADD_CHECK(ser, meta, dict);
 
     // init
     CraInitArgs da = {
@@ -1595,7 +1628,11 @@ cra_json_read_dict(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
         .val2size = val_size,
         .arg = meta->arg,
     };
-    meta->init_i->init(dict, &da);
+    if (!meta->init_i->init(dict, &da))
+    {
+        CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_INIT_FAILED, "failed to init dict");
+        return false;
+    }
 
     // check empty
     if (cra_json_check_ch(ser, '}'))
@@ -1605,7 +1642,8 @@ cra_json_read_dict(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
     }
 
 #ifdef __STDC_NO_VLA__
-    char *key = cra_malloc(key_size + val_size);
+    char *key = (char *)cra_malloc(key_size + val_size);
+    CRA_SEIALIZER_CHECK_MEMORY(ser, meta, key);
 #else
     char key[key_size + val_size];
 #endif

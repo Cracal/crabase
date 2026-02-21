@@ -36,6 +36,11 @@ static void
 cra_mainarg_get_count(CraMainArgElement elements[], int *noption, int *nitem)
 {
     CraMainArgElement *elem;
+
+    assert(elements);
+    assert(noption);
+    assert(nitem);
+
     *noption = *nitem = 0;
     for (elem = elements; memcmp(elem, &(CraMainArgElement){ NULL }, sizeof(CraMainArgElement)) != 0; ++elem)
     {
@@ -47,6 +52,7 @@ cra_mainarg_get_count(CraMainArgElement elements[], int *noption, int *nitem)
 static inline char *
 cra_mainarg_clear_op(char *op)
 {
+    assert(op);
     if (*op == '-')
         ++op;
     if (*op == '-')
@@ -57,6 +63,9 @@ cra_mainarg_clear_op(char *op)
 static void
 cra_mainarg_add_item(CraMainArg *ma, CraMainArgItem *item)
 {
+    assert(ma);
+    assert(item);
+
     char              *name;
     int                tipstart = 2;
     CraMainArgElement *elem = item->element;
@@ -104,6 +113,11 @@ cra_mainarg_build(CraMainArg *ma, CraMainArgElement elements[], int nitems)
     int                i;
     CraMainArgItem    *item;
     CraMainArgElement *elem;
+
+    assert(ma);
+    assert(elements);
+    assert(nitems > 0);
+
     for (i = 0, elem = elements; i < nitems; ++i, ++elem)
     {
 #define CRA_OPTIONS_FMT "Option '%s%s%s' "
@@ -123,6 +137,8 @@ cra_mainarg_build(CraMainArg *ma, CraMainArgElement elements[], int nitems)
 #undef CRA_OPTIONS_ARG
 
         item = (CraMainArgItem *)cra_mempool_alloc(ma->pool);
+        if (item == NULL)
+            PRINT_ERROR_EXIT("Failed to allocate memory for CraMainArgItem.");
         item->element = elem;
         item->val.i = 0;
         item->assigned = false;
@@ -133,11 +149,13 @@ cra_mainarg_build(CraMainArg *ma, CraMainArgElement elements[], int nitems)
 void
 cra_mainarg_init(CraMainArg *ma, char *program, const char *intro, const char *usage, CraMainArgElement options[])
 {
-    assert(program);
-    assert(intro);
-    assert(options);
-
     int noption, nitem;
+
+    assert(ma);
+    assert(intro);
+    assert(usage);
+    assert(program);
+    assert(options);
 
     ma->tipstart = 0;
     ma->program = cra_basename(program);
@@ -147,20 +165,28 @@ cra_mainarg_init(CraMainArg *ma, char *program, const char *intro, const char *u
     ma->pool = cra_alloc(CraMemPool);
     ma->pos_args = cra_alloc(CraAList);
 
+    if (!ma->items || !ma->pool || !ma->pos_args)
+        PRINT_ERROR_EXIT("Failed to allocate memory for CraMainArg.");
+
     cra_mainarg_get_count(options, &noption, &nitem);
 
     if (noption == 0 || nitem == 0)
         PRINT_ERROR_EXIT("The option array 'options' cannot be empty.");
 
-    cra_dict_init_size0(char *,
-                        CraMainArgItem *,
-                        ma->items,
-                        noption,
-                        false,
-                        (cra_hash_fn)cra_hash_string1_p,
-                        (cra_compare_fn)cra_compare_string_p);
-    cra_alist_init0(char *, ma->pos_args, false);
-    cra_mempool_init(ma->pool, sizeof(CraMainArgItem), nitem, 1);
+    if (!cra_dict_init_size0(char *,
+                             CraMainArgItem *,
+                             ma->items,
+                             noption,
+                             false,
+                             (cra_hash_fn)cra_hash_string1_p,
+                             (cra_compare_fn)cra_compare_string_p))
+    {
+        PRINT_ERROR_EXIT("Failed to initialize items.");
+    }
+    if (!cra_alist_init0(char *, ma->pos_args, false))
+        PRINT_ERROR_EXIT("Failed to initialize pos_args.");
+    if (!cra_mempool_init(ma->pool, sizeof(CraMainArgItem), nitem, 1))
+        PRINT_ERROR_EXIT("Failed to initialize memory pool for CraMainArgItem.");
 
     cra_mainarg_build(ma, options, nitem);
 }
@@ -168,6 +194,7 @@ cra_mainarg_init(CraMainArg *ma, char *program, const char *intro, const char *u
 void
 cra_mainarg_uninit(CraMainArg *ma)
 {
+    assert(ma);
     cra_dict_uninit(ma->items);
     cra_alist_uninit(ma->pos_args);
     cra_mempool_uninit_no_check(ma->pool);
@@ -182,6 +209,10 @@ cra_mainarg_parse_args(CraMainArg *ma, int argc, char *argv[])
     char           *option;
     char           *opval;
     CraMainArgItem *item;
+
+    assert(ma);
+    assert(argv);
+    assert(argc > 0);
 
     for (int i = 1; i < argc; ++i)
     {
@@ -221,10 +252,11 @@ cra_mainarg_parse_args(CraMainArg *ma, int argc, char *argv[])
 CraMainArgVal_u
 cra_mainarg_get_val(CraMainArg *ma, char *option, CraMainArgVal_u default_val)
 {
-    assert(option);
-
     char           *name;
     CraMainArgItem *item;
+
+    assert(ma);
+    assert(option);
 
     name = cra_mainarg_clear_op(option);
     if (!cra_dict_get(ma->items, &name, &item))
@@ -238,17 +270,19 @@ cra_mainarg_get_val(CraMainArg *ma, char *option, CraMainArgVal_u default_val)
 int
 cra_mainarg_get_pos_args_count(CraMainArg *ma)
 {
+    assert(ma);
     return (int)cra_alist_get_count(ma->pos_args);
 }
 
 CraMainArgVal_u
 cra_mainarg_get_pos_args_val(CraMainArg *ma, int index, CraMainArgVal_u default_val, cra_mainarg_fn func, void *arg)
 {
-    assert(index >= 0);
-    assert(func);
-
     char           *str;
     CraMainArgVal_u val;
+
+    assert(ma);
+    assert(func);
+    assert(index >= 0);
 
     if (!cra_alist_get(ma->pos_args, index, &str))
         return default_val;
@@ -266,6 +300,8 @@ cra_mainarg_print_help(CraMainArg *ma)
     CraMainArgElement *elem;
     CraMainArgItem    *last;
     CraMainArgItem   **pitem;
+
+    assert(ma);
 
     printf("%s\n", ma->introduction);
     printf("Usage: %s %s\n\n", ma->program, ma->usage);
@@ -295,6 +331,8 @@ cra_mainarg_print_help(CraMainArg *ma)
 bool
 cra_mainarg_stob(CraMainArgVal_u *retval, const char *opval, void *_)
 {
+    assert(retval);
+    assert(opval);
     assert(!_);
     CRA_UNUSED_VALUE(_);
     return cra_mainarg_stob_values(retval, opval, (char *[]){ "on", "off" });
@@ -374,6 +412,8 @@ cra_mainarg_stob_values(CraMainArgVal_u *retval, const char *opval, void *values
 bool
 cra_mainarg_stoi_in_range(CraMainArgVal_u *retval, const char *opval, void *range)
 {
+    assert(retval);
+    assert(opval);
     assert(range);
 
     int64_t *ints = (int64_t *)range;
@@ -387,6 +427,8 @@ cra_mainarg_stoi_in_range(CraMainArgVal_u *retval, const char *opval, void *rang
 bool
 cra_mainarg_stof_in_range(CraMainArgVal_u *retval, const char *opval, void *range)
 {
+    assert(retval);
+    assert(opval);
     assert(range);
 
     double *dbls = (double *)range;

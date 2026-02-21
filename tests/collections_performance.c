@@ -23,7 +23,7 @@ test_alist_performance(int sizes[])
     int           val, *valptr;
     unsigned long start_ms, end_ms;
 
-    cra_alist_init_size0(int, &list, sizes[0], false);
+    assert_always(cra_alist_init_size0(int, &list, sizes[0], false));
     srand((unsigned int)time(NULL));
 
     printf("\n=========================================================\n\n");
@@ -126,7 +126,7 @@ test_llist_performance(int sizes[])
     int           val, *valptr;
     unsigned long start_ms, end_ms;
 
-    cra_llist_init0(int, &list, false);
+    assert_always(cra_llist_init0(int, &list, false));
     srand((unsigned int)time(NULL));
 
     printf("\n=========================================================\n\n");
@@ -333,7 +333,8 @@ test_dict_performance(int sizes[])
     size_t        val, *valptr;
     unsigned long start_ms, end_ms;
 
-    cra_dict_init0(int, size_t, &dict, false, (cra_hash_fn)cra_hash_int_p, (cra_compare_fn)cra_compare_int_p);
+    assert_always(
+      cra_dict_init0(int, size_t, &dict, false, (cra_hash_fn)cra_hash_int_p, (cra_compare_fn)cra_compare_int_p));
     srand((unsigned int)time(NULL));
 
     printf("\n=========================================================\n\n");

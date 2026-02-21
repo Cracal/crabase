@@ -34,7 +34,7 @@ cra_release_mgr_uninit(CraReleaseMgr *mgr, bool free_ptr)
         cra_free(mgr->nodes2);
 }
 
-void
+bool
 cra_release_mgr_add(CraReleaseMgr *mgr, void *ptr, const CraTypeMeta *meta)
 {
     CraReleaseBlk *blk;
@@ -47,9 +47,19 @@ cra_release_mgr_add(CraReleaseMgr *mgr, void *ptr, const CraTypeMeta *meta)
     if (mgr->count == mgr->size)
     {
         if (mgr->nodes2)
-            mgr->nodes2 = cra_realloc(mgr->nodes2, sizeof(CraReleaseBlk) * (mgr->size)); // X: mgr->size + nndoes1
+        {
+            CraReleaseBlk *new_nodes2 =
+              (CraReleaseBlk *)cra_realloc(mgr->nodes2, sizeof(CraReleaseBlk) * (mgr->size)); // X: mgr->size + nndoes1
+            if (!new_nodes2)
+                return false;
+            mgr->nodes2 = new_nodes2;
+        }
         else
+        {
             mgr->nodes2 = cra_malloc(sizeof(CraReleaseBlk) * nnodes1);
+            if (!mgr->nodes2)
+                return false;
+        }
         mgr->size += nnodes1;
     }
 
@@ -58,4 +68,5 @@ cra_release_mgr_add(CraReleaseMgr *mgr, void *ptr, const CraTypeMeta *meta)
     blk->ptr = ptr;
 
     ++mgr->count;
+    return true;
 }

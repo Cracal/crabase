@@ -58,6 +58,7 @@ release_myobject(CraRefcnt *ref)
 }
 
 struct MyObject *obj = cra_alloc(struct MyObject);
+assert(obj != NULL);
 
 // init
 cra_refcnt_init(&obj->ref, release_myobject);
@@ -118,8 +119,11 @@ main(void)
 {
     // def
     CRA_REFCNT_DEF(struct A) *a1 = cra_malloc(sizeof(CRA_REFCNT_DEF(struct A)));
+    assert(a1 != NULL);
     CRA_REFCNT_PTR_DEF(struct A) *a2 = cra_malloc(sizeof(CRA_REFCNT_PTR_DEF(struct A)));
+    assert(a2 != NULL);
     CRA_REFCNT_PTR(a2) = cra_alloc(struct A);
+    assert(CRA_REFCNT_PTR(a2) != NULL);
 
     // init
     CRA_REFCNT_OBJ(a1)->i = 100;

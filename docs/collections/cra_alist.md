@@ -7,9 +7,9 @@
 ## init
 
 ```c
-void
+bool
 cra_alist_init_size(CraAList *list, size_t element_size, size_t init_capacity, bool zero_memory);
-void
+bool
 cra_alist_init(CraAList *list, size_t element_size, bool zero_memory);
 #define cra_alist_init_size0(TVal, list, init_capacity, zero_memory)
 #define cra_alist_init0(TVal, list, zero_memory)
@@ -21,6 +21,8 @@ cra_alist_init(CraAList *list, size_t element_size, bool zero_memory);
 - `TVal` 元素类型
 - `init_capacity` 初始容量。默认是**CRA_ALIST_INIT_CAPACITY**
 - `zero_memory` 没有有效元素的地方是否清零
+
+返回值：成功返回**true**，失败返回**false**
 
 ## uninit
 
@@ -57,8 +59,7 @@ cra_alist_resize(CraAList *list, size_t new_capacity);
 ```
 
 重新设置数组大小  
-`new_capacity`小于当前元素个数时返回**false**，  
-否则将数组容量设为`new_capacity`并反回**true**
+成功返回**true**，失败返回**false**
 
 ## add
 
@@ -130,11 +131,13 @@ cra_alist_get_ptr(CraAList *list, size_t index, void **retvalptr);
 ## reverse
 
 ```c
-void
+bool
 cra_alist_reverse(CraAList *list);
 ```
 
-翻转数组
+翻转数组  
+成功返回**true**，失败返回**false**  
+只有`MSVC`才会因为内存分配失败而返回**false**
 
 ## clone
 
@@ -150,13 +153,16 @@ cra_alist_clone(CraAList *list, cra_deep_copy_val_fn deep_copy_val);
 ## sort
 
 ```c
-void
+bool
 cra_alist_sort(CraAList *list, cra_compare_fn compare);
 ```
 
 对数组进行排序
 
 - `compare` 比较函数
+
+成功返回**true**，失败返回**false**  
+只有`MSVC`才会因为内存分配失败而返回**false**
 
 ## add sort
 

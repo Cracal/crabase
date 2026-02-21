@@ -8,7 +8,7 @@
 ## init
 
 ```c
-void
+bool
 cra_deque_init(CraDeque *deque, size_t element_size, size_t que_max, bool zero_memory);
 #define cra_deque_init0(TVal, deque, que_max, zero_memory)
 ```
@@ -19,6 +19,8 @@ cra_deque_init(CraDeque *deque, size_t element_size, size_t que_max, bool zero_m
 - `TVal` 元素类型
 - `que_max` 队列最大容量。可传入**CRA_DEQUE_INFINITE**
 - `zero_memory` 没有有效元素的地方是否清零
+
+成功返回**true**，失败返回**false**
 
 ## uninit
 

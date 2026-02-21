@@ -37,7 +37,7 @@ __cra_llist_get_free_node(CraLList *list)
     else
     {
         node = __cra_llist_create_node(list->ele_size);
-        if (list->zero_memory)
+        if (node && list->zero_memory)
             bzero(node->val, list->ele_size);
     }
     return node;
@@ -186,6 +186,8 @@ __cra_llist_pop__(CraLList *list, size_t index, void *retval)
 void
 cra_llist_iter_init(CraLList *list, CraLListIter *it)
 {
+    assert(it);
+    assert(list);
     it->curr = list->head;
     it->head = list->head;
 }
@@ -193,6 +195,8 @@ cra_llist_iter_init(CraLList *list, CraLListIter *it)
 bool
 cra_llist_iter_next(CraLListIter *it, void **retvalptr)
 {
+    assert(it);
+
     if (it->curr)
     {
         if (retvalptr)
@@ -205,21 +209,25 @@ cra_llist_iter_next(CraLListIter *it, void **retvalptr)
     return false;
 }
 
-void
+bool
 cra_llist_init_size(CraLList *list, size_t element_size, size_t init_spare_node, bool zero_memory)
 {
     __cra_llist_init(list, element_size, zero_memory);
     for (size_t i = 0; i < init_spare_node; ++i)
     {
         CraLListNode *node = cra_llist_create_node(element_size);
+        if (!node)
+            return false;
         __cra_llist_add_free_node(list, node);
     }
+    return true;
 }
 
-void
+bool
 cra_llist_init(CraLList *list, size_t element_size, bool zero_memory)
 {
     __cra_llist_init(list, element_size, zero_memory);
+    return true;
 }
 
 void
@@ -251,6 +259,9 @@ cra_llist_insert(CraLList *list, size_t index, void *val)
         return false;
 
     node = __cra_llist_get_free_node(list);
+    if (!node)
+        return false;
+
     memcpy(node->val, val, list->ele_size);
     __cra_llist_insert_node(list, index, node);
     return true;
@@ -365,15 +376,26 @@ cra_llist_clone(CraLList *list, cra_deep_copy_val_fn deep_copy_val)
     CraLListNode *curr, *node;
 
     ret = cra_alloc(CraLList);
-    cra_llist_init(ret, list->ele_size, list->zero_memory);
+    if (!ret)
+        return NULL;
+
+    if (!cra_llist_init(ret, list->ele_size, list->zero_memory))
+    {
+        cra_dealloc(ret);
+        return NULL;
+    }
 
     if (!list->head)
         return ret;
 
+    // FIXME: 新结点或新值创建失败导致克隆出的链表不完整
     curr = list->head;
     do
     {
         node = __cra_llist_get_free_node(ret);
+        if (!node)
+            break;
+
         // link node
         __cra_llist_insert_node(ret, ret->count, node);
 

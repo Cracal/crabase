@@ -147,6 +147,7 @@ struct MyLogTo *mylogto_new(void)
     };
 
     struct MyLogTo *obj = cra_alloc(struct MyLogTo);
+    assert(obj != NULL);
     obj->i = &si;
     // others
     return obj;

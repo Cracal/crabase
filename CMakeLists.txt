@@ -33,7 +33,6 @@ target_compile_definitions(mem_detect_config INTERFACE
 )
 
 add_definitions(-DCRA_LOG_FILE_LINE)
-add_definitions(-DCRA_BUILD_DLL)
 add_definitions(-DCRA_RANDOM_STR_INIT_HASHCODE)
 add_definitions(-DCRA_JSON_SAFE_INT)
 
@@ -48,6 +47,7 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/tests)
 
 add_library(${PROJECT_NAME} SHARED ${SRC})
 target_link_libraries(${PROJECT_NAME} PRIVATE mem_detect_config)
+target_compile_definitions(${PROJECT_NAME} PRIVATE CRA_BUILD_DLL)
 
 include(CTest)
 enable_testing()

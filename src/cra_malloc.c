@@ -9,76 +9,22 @@
  *
  */
 #include "cra_malloc.h"
-#include "cra_assert.h"
 #include "cra_atomic.h"
 
-static void
-__cra_malloc_failed_default(const char *fname, size_t size)
-{
-    int err = cra_get_last_error();
-    fprintf(stderr, "allocate failed. error: %d, function: %s, size: %zu.\n", err, fname, size);
-    exit(-1);
-}
+void *(*__cra_malloc_fn__)(size_t size) = NULL;
+void *(*__cra_calloc_fn__)(size_t num, size_t size) = NULL;
+void *(*__cra_reallo_fn__)(void *oldptr, size_t newsize) = NULL;
+void  (*__cra_freeee_fn__)(void *ptr) = NULL;
 
-static void (*s_cra_malloc_failed_cb)(const char *fname, size_t size) = __cra_malloc_failed_default;
-
-void
-cra_set_malloc_failed_cb(void (*cb)(const char *fname, size_t size))
-{
-    assert(cb != NULL);
-    s_cra_malloc_failed_cb = cb;
-}
-
-void *
-__cra_malloc(size_t size)
-{
-    assert(size > 0);
-    void *ptr = malloc(size);
-    if (!ptr)
-        s_cra_malloc_failed_cb("malloc", size);
-    return ptr;
-}
-
-void *
-__cra_calloc(size_t num, size_t size)
-{
-    assert(num > 0 && size > 0);
-    void *ptr = calloc(num, size);
-    if (!ptr)
-        s_cra_malloc_failed_cb("calloc", num * size);
-    return ptr;
-}
-
-void *
-__cra_realloc(void *oldptr, size_t newsize)
-{
-#ifdef CRA_COMPILER_GNUC
-    assert(newsize > 0);
-#else
-    assert(oldptr != NULL && newsize > 0);
-#endif
-    void *newptr = realloc(oldptr, newsize);
-    if (!newptr)
-        s_cra_malloc_failed_cb("malloc", newsize);
-    return newptr;
-}
-
-void
-__cra_free(void *ptr)
-{
-#ifndef CRA_COMPILER_GNUC
-    assert(ptr != NULL);
-#endif
-    free(ptr);
-}
+// ===========================================
 
 typedef struct _CraMallocBlkNode
 {
     int                       line;
     char                     *file;
     size_t                    size;
-    void                     *block;
     struct _CraMallocBlkNode *next;
+    char                      block[];
 } CraMallocBlkNode;
 
 static CraMallocBlkNode *__s_malloc_memblk_head = NULL;
@@ -87,13 +33,11 @@ static cra_atomic_flag_t __s_malloc_memblk_lock = CRA_ATOMIC_FLAG_INIT;
 #define CRA_MALLOC_UNLOCK() cra_atomic_flag_clear(&__s_malloc_memblk_lock)
 
 static inline void
-__cra_malloc_set_block(void *ptr, size_t size, char *file, int line)
+__cra_malloc_set_block(CraMallocBlkNode *node, size_t size, char *file, int line)
 {
-    CraMallocBlkNode *node = (CraMallocBlkNode *)__cra_malloc(sizeof(CraMallocBlkNode));
     node->line = line;
     node->file = file;
     node->size = size;
-    node->block = ptr;
 
     CRA_MALLOC_LOCK();
     node->next = __s_malloc_memblk_head;
@@ -104,39 +48,56 @@ __cra_malloc_set_block(void *ptr, size_t size, char *file, int line)
 void *
 __cra_malloc_dbg(size_t size, char *file, int line)
 {
-    void *ptr = __cra_malloc(size);
-    __cra_malloc_set_block(ptr, size, file, line);
-    return ptr;
+    CraMallocBlkNode *node = (CraMallocBlkNode *)__cra_malloc(sizeof(CraMallocBlkNode) + size);
+    if (node != NULL)
+    {
+        __cra_malloc_set_block(node, size, file, line);
+        return node->block;
+    }
+    return NULL;
 }
 
 void *
 __cra_calloc_dbg(size_t num, size_t size, char *file, int line)
 {
-    void *ptr = __cra_calloc(num, size);
-    __cra_malloc_set_block(ptr, num * size, file, line);
+    void *ptr = __cra_malloc_dbg(num * size, file, line);
+    if (ptr != NULL)
+        bzero(ptr, num * size);
     return ptr;
 }
 
 void *
 __cra_realloc_dbg(void *ptr, size_t newsize, char *file, int line)
 {
-    void *newptr = __cra_realloc(ptr, newsize);
+    CraMallocBlkNode *curr;
+    CraMallocBlkNode *last;
+    CraMallocBlkNode *node;
+
+    CRA_UNUSED_VALUE(file);
+    CRA_UNUSED_VALUE(line);
 
     CRA_MALLOC_LOCK();
-    CraMallocBlkNode *curr = __s_malloc_memblk_head;
-    for (; curr != NULL; curr = curr->next)
+    for (last = NULL, curr = __s_malloc_memblk_head; curr != NULL; last = curr, curr = curr->next)
     {
         if (curr->block == ptr)
-        {
-            curr->size = newsize;
-            curr->block = newptr;
             break;
-        }
     }
     CRA_MALLOC_UNLOCK();
-    if (curr == NULL)
-        __cra_malloc_set_block(newptr, newsize, file, line);
-    return newptr;
+
+    if (curr != NULL)
+    {
+        node = (CraMallocBlkNode *)__cra_realloc(curr, sizeof(CraMallocBlkNode) + newsize);
+        if (node != NULL)
+        {
+            node->size = newsize;
+            if (last != NULL)
+                last->next = node;
+            else
+                __s_malloc_memblk_head = node;
+            return node->block;
+        }
+    }
+    return NULL;
 }
 
 void
@@ -156,18 +117,18 @@ __cra_free_dbg(void *ptr)
             else
                 last->next = curr->next;
 
-            __cra_free(curr->block);
             __cra_free(curr);
-            break;
+
+            CRA_MALLOC_UNLOCK();
+            return;
         }
         last = curr;
         curr = curr->next;
     }
     CRA_MALLOC_UNLOCK();
 
-    // ptr不是通过`cra_malloc()`和`cra_realloc()`申请的内存
-    if (curr == NULL)
-        __cra_free(ptr);
+    fprintf(stderr, "__cra_free_dbg() failed. ptr: 0x%zx is not malloced.\n", (size_t)ptr);
+    exit(EXIT_FAILURE);
 }
 
 void

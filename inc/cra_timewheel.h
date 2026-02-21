@@ -99,7 +99,7 @@ struct _CraTimewheel
     CraTimewheel *upper_wheel;
 };
 
-CRA_API void
+CRA_API bool
 cra_timewheel_init(CraTimewheel *wheel, uint32_t tick_ms, uint32_t wheel_size);
 
 CRA_API void

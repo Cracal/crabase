@@ -13,7 +13,7 @@ test_mempool(void)
     // cra_mempool_init(&pool, 0, 1);
     // cra_mempool_init(&pool, 1, 0);
 
-    cra_mempool_init(&pool, sizeof(int), 4, 1);
+    assert_always(cra_mempool_init(&pool, sizeof(int), 4, 1));
 
     pi1 = (int *)cra_mempool_alloc(&pool);
     assert_always(pi1 != NULL);
@@ -54,7 +54,9 @@ test_mempool(void)
     cra_mempool_dealloc(&pool, pi7);
 
     pi1 = (int *)cra_mempool_alloc(&pool);
+    assert_always(pi1 != NULL);
     pi2 = (int *)cra_mempool_alloc(&pool);
+    assert_always(pi2 != NULL);
     *pi1 = 100;
     *pi2 = 200;
     assert_always(*pi1 == 100);
@@ -62,6 +64,7 @@ test_mempool(void)
 
     cra_mempool_dealloc(&pool, pi1);
     pi3 = (int *)cra_mempool_alloc(&pool);
+    assert_always(pi3 != NULL);
     *pi3 = 300;
     assert_always(*pi3 == 300);
 

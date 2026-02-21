@@ -5,7 +5,7 @@
 ## init
 
 ```c
-void
+bool
 cra_mempool_init(CraMemPool *pool, size_t item_size, size_t items_per_block, size_t init_block);
 ```
 
@@ -14,6 +14,11 @@ cra_mempool_init(CraMemPool *pool, size_t item_size, size_t items_per_block, siz
 - `item_size` 对象大小
 - `items_per_block` 池中每块内存可以存多少个对象
 - `init_block` 初始内存块数量
+
+返回值：
+
+- `true` 初始化成功
+- `false` 初始化失败, 内存分配失败
 
 ## uninit
 
@@ -38,7 +43,8 @@ cra_mempool_alloc(CraMemPool *pool);
 ```
 
 获取一个空闲对象  
-如果该对象是首次被获取，那么它的内容是0
+如果该对象是首次被alloc，那么这块内存是被清空的（`bzero`）,否则它的内容是上次`dealloc`时的内容。  
+如果内存池没有空闲对象，那么会尝试创建新的内存块。如果失败，那么返回`NULL`。
 
 ## dealloc
 

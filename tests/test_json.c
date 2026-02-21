@@ -1016,7 +1016,7 @@ CRA_TYPE_META_MEMBER_DICT(struct N, c, 12, false, metac, NULL, NULL)
 CRA_TYPE_META_MEMBER_UINT(struct N, u, 1)
 CRA_TYPE_META_END();
 
-static void
+static bool
 init_on(void *obj, CraInitArgs *da)
 {
     if (da->size == sizeof(struct O))
@@ -1042,6 +1042,7 @@ init_on(void *obj, CraInitArgs *da)
         n->l = NULL;
         bzero(&n->c, sizeof(n->c));
     }
+    return true;
 }
 
 // static void
