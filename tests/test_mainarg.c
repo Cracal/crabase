@@ -10,11 +10,12 @@ test_help(void)
 
     char program_name[] = "test_help";
     CRA_MAINARG_ELEMENT_BEGIN(options)
-    CRA_MAINARG_ELEMENT_SET("-a", "--apple", "<number>", "Set number of apple", cra_mainarg_stoi, NULL)
-    CRA_MAINARG_ELEMENT_SET("-b", "--banana", NULL, "With banana", NULL, NULL)
-    CRA_MAINARG_ELEMENT_SET(
-      "-c", NULL, "<cherry type>", "Set cherry type", cra_mainarg_stos_in_array, ((char *[]){ "type1", "type2", NULL }))
-    CRA_MAINARG_ELEMENT_SET(NULL, "--dog", "<on|off>", "Dog", cra_mainarg_stob, NULL)
+    CRA_MAINARG_ELEMENT_BOL("-a", "--apple", "Apple")
+    CRA_MAINARG_ELEMENT_BOL("-b", NULL, "Banana")
+    CRA_MAINARG_ELEMENT_BOL(NULL, "--cherry", "Cherry")
+    CRA_MAINARG_ELEMENT_VAL("-d", "--dog", "<number>", "Number of Dogs", cra_mainarg_stoi, NULL)
+    CRA_MAINARG_ELEMENT_VAL("-e", NULL, "<number>", "Number of Eggs", cra_mainarg_stoi, NULL)
+    CRA_MAINARG_ELEMENT_VAL(NULL, "--fig", "<number>", "Number of Figs", cra_mainarg_stoi, NULL)
     CRA_MAINARG_ELEMENT_END();
 
     cra_mainarg_init(&ma, program_name, "A test help program.", "[options]", options);

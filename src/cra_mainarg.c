@@ -5,6 +5,8 @@
 #include "cra_malloc.h"
 #include "cra_mempool.h"
 
+#define HELP_OPTION_LENGTH (sizeof("-h, --help") - 1)
+
 #define ERROR_BEGIN            "%s(ERROR): "
 #define ERROR_ENDT             " Use '-h' or '--help' for help.\n"
 #define ERROR_END              "\n\n"
@@ -95,10 +97,9 @@ cra_mainarg_add_item(CraMainArg *ma, CraMainArgItem *item)
             name -= 2;
             goto add_error;
         }
-        tipstart += len;
+        tipstart = tipstart + 2 + len;
     }
-    // __[-X][,_][--X..X][_len(valtip)]
-    tipstart += (elem->option ? 2 : 0) + (elem->valtip ? (int)strlen(elem->valtip) + 1 : 0) + 2;
+    tipstart += (elem->valtip ? (int)strlen(elem->valtip) + 1 : 0);
     if (tipstart > ma->tipstart)
         ma->tipstart = tipstart;
     return;
@@ -157,7 +158,7 @@ cra_mainarg_init(CraMainArg *ma, char *program, const char *intro, const char *u
     assert(program);
     assert(options);
 
-    ma->tipstart = 0;
+    ma->tipstart = (int)HELP_OPTION_LENGTH;
     ma->program = cra_basename(program);
     ma->introduction = intro;
     ma->usage = usage;
@@ -308,7 +309,7 @@ cra_mainarg_print_help(CraMainArg *ma)
 
     last = NULL;
     printf("Options:\n");
-    printf("  -h, --help  %*.sShow options\n", ma->tipstart - 12, "");
+    printf("  -h, --help  %*.sShow options\n", ma->tipstart - (int)HELP_OPTION_LENGTH, "");
     for (cra_dict_iter_init(ma->items, &it); cra_dict_iter_next(&it, NULL, (void **)&pitem);)
     {
         if (*pitem == last)
@@ -316,13 +317,14 @@ cra_mainarg_print_help(CraMainArg *ma)
 
         last = *pitem;
         elem = (*pitem)->element;
-        // __[-X][,_][--X..X][_len(valtip)]__len(optip)
-        l = printf("  %s%s%s %s",
+        //   [-X][, ][--X..X][ len(valtip)]  len(optip)
+        l = printf("  %s%s%s",
                    elem->op ? elem->op : "  ",
                    elem->option ? (elem->op ? ", " : "  ") : "",
-                   elem->option ? elem->option : "",
-                   elem->valtip ? elem->valtip : "");
-        printf("  %*.s%s\n", ma->tipstart - l, "", elem->optip);
+                   elem->option ? elem->option : "");
+        if (elem->valtip)
+            l += printf(" %s", elem->valtip);
+        printf("  %*.s%s\n", ma->tipstart - (l - 2), "", elem->optip);
     }
 }
 
