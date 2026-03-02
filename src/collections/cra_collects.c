@@ -15,6 +15,10 @@
 #include <time.h>
 #ifdef CRA_OS_WIN
 #include <wincrypt.h>
+#else
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #endif
 
 static cra_atomic_flag_t s_hash_lock = { 0 };
@@ -44,7 +48,7 @@ cra_get_init_hash(void)
             int fd = open("/dev/urandom", O_RDONLY);
             if (fd == -1)
                 goto unsafe;
-            if (sizeof(hash) != read(fd, &hash, sizeof(hash)))
+            if (sizeof(hash) != read(fd, (void *)&hash, sizeof(hash)))
             {
                 close(fd);
                 goto unsafe;

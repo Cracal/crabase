@@ -136,7 +136,7 @@ cra_logto_stdout_create(bool async);
 #if 1 // log to file
 
 // default: 260 bytes
-#define CRA_LOG_FILENAME_MAX MAX_PATH
+#define CRA_LOG_FILENAME_MAX 260
 
 typedef struct _CraLogToFile CraLogToFile;
 
