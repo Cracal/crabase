@@ -12,7 +12,7 @@ bool:         [T:4,V:4]             -- 1 byte
 [u]int16:     [T:4,S:4][V:16]       -- 1 + 2 bytes
 [u]int32:     [T:4,S:4][V:32]       -- 1 + 4 bytes
 [u]int64:     [T:4,S:4][V:64]       -- 1 + 8 bytes
-var[u]int:    [T:4,S:4][V:N]        -- 1 + (1 ~ 10) bytes
+var[u]int:    [T:4,P:4][V:N]        -- 1 + (1 ~ 10) bytes
 float:        [T:4,S:4][V:32]       -- 1 + 4 bytes
 double:       [T:4,S:4][V:64]       -- 1 + 8 bytes
 string:       [T:4,P:4][L:N][V]     -- 1 + (1 ~ 10) + N bytes

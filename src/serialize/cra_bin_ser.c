@@ -25,6 +25,28 @@
 #define CRA_SER_SWAP64(x) (x)
 #endif
 
+#define CRA_BIN_MAX_STRING_LENGTH       INT32_MAX
+#define CRA_BIN_MAX_BYTES_LENGTH        INT32_MAX
+#define CRA_BIN_MAX_STRUCT_MEMBER_COUNT UINT8_MAX
+#define CRA_BIN_MAX_LIST_COUNT          INT32_MAX
+#define CRA_BIN_MAX_DICT_COUNT          INT32_MAX
+
+#define CRA_BIN_CHECK_LENGTH(_ser, _meta, _name, _len, _max)                   \
+    do                                                                         \
+    {                                                                          \
+        if ((uint64_t)(_len) > (uint64_t)(_max))                               \
+        {                                                                      \
+            CRA_SERIALIZER_ERROR(_ser,                                         \
+                                 _meta,                                        \
+                                 CRA_SER_ERR_LENGTH,                           \
+                                 "%s must be between 0 and %zu. but got %zu.", \
+                                 _name,                                        \
+                                 (uint64_t)_max,                               \
+                                 (uint64_t)_len);                              \
+            return false;                                                      \
+        }                                                                      \
+    } while (0)
+
 #define CRA_BIN_MAKE_TYPE(_TYPE, _low) (((unsigned char)(_TYPE) << 4) | ((unsigned char)(_low) & 0x0f))
 #define CRA_BIN_GET_TYPE(_buf)         ((CraType_e)((*(_buf)) >> 4))
 #define CRA_BIN_GET_LOW(_buf)          ((size_t)(*(_buf) & 0x0f))
@@ -92,20 +114,15 @@ __cra_bin_write_varuint(CraSerializer *ser, uint64_t val)
 {
     unsigned char *buf;
 
-    while (true)
+    while (val > 0x7f)
     {
         CRA_SERIALIZER_ENSURE(ser, buf, 1);
-        if (val > 0x7f)
-        {
-            *buf = (unsigned char)val | 0x80;
-            val >>= 7;
-        }
-        else
-        {
-            *buf = (unsigned char)val;
-            return true;
-        }
+        *buf = (unsigned char)val | 0x80;
+        val >>= 7;
     }
+    CRA_SERIALIZER_ENSURE(ser, buf, 1);
+    *buf = (unsigned char)val;
+    return true;
 }
 
 static bool
@@ -253,6 +270,11 @@ cra_bin_read_float(CraSerializer *ser, void *retval, const CraTypeMeta *meta, si
 static bool
 __cra_bin_write_string(CraSerializer *ser, void *str, uint64_t len, const CraTypeMeta *meta)
 {
+    // check length
+    if (meta->type == CRA_TYPE_STRING)
+        CRA_BIN_CHECK_LENGTH(ser, meta, "String length", len, CRA_BIN_MAX_STRING_LENGTH);
+    else
+        CRA_BIN_CHECK_LENGTH(ser, meta, "Bytes length", len, CRA_BIN_MAX_BYTES_LENGTH);
     // write length
     if (!__cra_bin_write_varuint(ser, len))
     {
@@ -287,6 +309,11 @@ __cra_bin_read_string(CraSerializer *ser, void *retval, uint64_t *retlen, const 
                              meta->type == CRA_TYPE_STRING ? "string" : "bytes");
         return false;
     }
+    // check length
+    if (meta->type == CRA_TYPE_STRING)
+        CRA_BIN_CHECK_LENGTH(ser, meta, "String length", len, CRA_BIN_MAX_STRING_LENGTH);
+    else
+        CRA_BIN_CHECK_LENGTH(ser, meta, "Bytes length", len, CRA_BIN_MAX_BYTES_LENGTH);
 
     if (meta->is_ptr)
     {
@@ -542,7 +569,7 @@ cra_bin_write_struct(CraSerializer *ser, void *val, const CraTypeMeta *meta)
 
         ++nfields;
 
-        assert(nfields <= UINT8_MAX);
+        assert(nfields <= CRA_BIN_MAX_STRUCT_MEMBER_COUNT);
         assert(meta->size > m->offset);
 
         // write id
@@ -552,6 +579,8 @@ cra_bin_write_struct(CraSerializer *ser, void *val, const CraTypeMeta *meta)
         if (!cra_bin_write_value(ser, stru + m->offset, m))
             return false;
     }
+    // check num of members
+    // CRA_BIN_CHECK_LENGTH(ser, meta, "Struct member count", nfields, CRA_BIN_MAX_STRUCT_MEMBER_COUNT);
     // write num of members
     *numbuf = (unsigned char)nfields;
 
@@ -686,6 +715,9 @@ cra_bin_read_struct(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
     // read num of members
     CRA_SERIALIZER_ENSURE(ser, buf, 1);
     nfields = *buf;
+    // check num of members
+    // CRA_BIN_CHECK_LENGTH(ser, meta, "Struct member count", nfields, CRA_BIN_MAX_STRUCT_MEMBER_COUNT);
+
     // read members
     m = meta->submeta;
     for (uint8_t i = 0; i < nfields; ++i)
@@ -764,6 +796,8 @@ cra_bin_write_array(CraSerializer *ser, void *val, const CraTypeMeta *meta)
 
     // get count
     cra_serializer_p2u(pcount, &count, metacnt);
+    // check count
+    CRA_BIN_CHECK_LENGTH(ser, meta, "Array count", count, CRA_BIN_MAX_LIST_COUNT);
 
     // write count
     if (!__cra_bin_write_varuint(ser, count))
@@ -811,6 +845,8 @@ cra_bin_read_array(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
         CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_LENGTH, "failed to read array count");
         return false;
     }
+    // check count
+    CRA_BIN_CHECK_LENGTH(ser, meta, "Array count", count, CRA_BIN_MAX_LIST_COUNT);
 
     if (meta->is_ptr)
     {
@@ -866,6 +902,8 @@ cra_bin_write_list(CraSerializer *ser, void *val, const CraTypeMeta *meta)
     // init it & get count
     meta->szer_i->iter_init(list, &count, it, sizeof(it));
 
+    // check count
+    CRA_BIN_CHECK_LENGTH(ser, meta, "List count", count, CRA_BIN_MAX_LIST_COUNT);
     // write count
     if (!__cra_bin_write_varuint(ser, count))
     {
@@ -908,6 +946,8 @@ cra_bin_read_list(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
         CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_LENGTH, "failed to read list count");
         return false;
     }
+    // check count
+    CRA_BIN_CHECK_LENGTH(ser, meta, "List count", count, CRA_BIN_MAX_LIST_COUNT);
 
     slot = meta->submeta->is_ptr ? sizeof(void *) : meta->submeta->size;
 
@@ -987,6 +1027,8 @@ cra_bin_write_dict(CraSerializer *ser, void *val, const CraTypeMeta *meta)
     // init it & get count
     meta->szer_i->iter_init(dict, &count, it, sizeof(it));
 
+    // check count
+    CRA_BIN_CHECK_LENGTH(ser, meta, "Dict count", count, CRA_BIN_MAX_DICT_COUNT);
     // write count
     if (!__cra_bin_write_varuint(ser, count))
     {
@@ -1035,6 +1077,8 @@ cra_bin_read_dict(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
         CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_LENGTH, "failed to read dict count");
         return false;
     }
+    // check count
+    CRA_BIN_CHECK_LENGTH(ser, meta, "Dict count", count, CRA_BIN_MAX_DICT_COUNT);
 
     keymeta = meta->submeta;
     valmeta = meta->submeta + 1;

@@ -1779,6 +1779,115 @@ test_deserialize_failed(void)
 
 #endif
 
+void
+test_to_file(void)
+{
+    struct fi
+    {
+        int32_t i;
+        float   f;
+    };
+    CRA_TYPE_META_BEGIN(metafi)
+    CRA_TYPE_META_MEMBER_INT(struct fi, i, 1)
+    CRA_TYPE_META_MEMBER_FLOAT(struct fi, f, 2)
+    CRA_TYPE_META_END();
+    struct fo
+    {
+        int16_t   si;
+        int32_t   i;
+        double    d;
+        char     *s;
+        bool      b;
+        char     *bt;
+        uint32_t  nbt;
+        struct fi fi;
+        CraAList  l;    // List<int32_t>
+        CraDict   dict; // Dict<char *, int64_t>
+    };
+
+    CRA_TYPE_META_BEGIN(metavarint)
+    CRA_TYPE_META_ELEMENT_VARINT(int32_t)
+    CRA_TYPE_META_END();
+
+    CRA_TYPE_META_BEGIN(metasi)
+    CRA_TYPE_META_ELEMENT_STRING(char *, true)
+    CRA_TYPE_META_ELEMENT_VARINT(int64_t)
+    CRA_TYPE_META_END();
+
+    CraDictSerArgs dict_args = {
+        .hash = (cra_hash_fn)cra_hash_string1_p,
+        .compare = (cra_compare_fn)cra_compare_string_p,
+    };
+
+    CRA_TYPE_META_BEGIN(metafo)
+    CRA_TYPE_META_MEMBER_VARINT(struct fo, si, 0)
+    CRA_TYPE_META_MEMBER_INT(struct fo, i, 1)
+    CRA_TYPE_META_MEMBER_FLOAT(struct fo, d, 2)
+    CRA_TYPE_META_MEMBER_STRING(struct fo, s, 3, true)
+    CRA_TYPE_META_MEMBER_BOOL(struct fo, b, 4)
+    CRA_TYPE_META_MEMBER_BYTES(struct fo, bt, 5, true)
+    CRA_TYPE_META_MEMBER_STRUCT(struct fo, fi, 6, false, metafi, NULL, NULL)
+    CRA_TYPE_META_MEMBER_LIST(struct fo, l, 7, false, metavarint, CRA_ALIST_SZER_I, NULL)
+    CRA_TYPE_META_MEMBER_DICT(struct fo, dict, 8, false, metasi, CRA_DICT_SZER_I, &dict_args)
+    CRA_TYPE_META_END();
+
+    // ============
+
+    struct fo in = {
+        .si = 100,
+        .i = 1000,
+        .d = 1000000.0,
+        .s = "Hello 世界！",
+        .b = true,
+        .bt = "中文",
+        .nbt = sizeof("中文") - 1,
+        .fi = { .i = 1000000, .f = 1000000.0 },
+    };
+    cra_alist_init(&in.l, sizeof(int32_t), false);
+    cra_alist_append(&in.l, &(int32_t){ 1 });
+    cra_alist_append(&in.l, &(int32_t){ 2 });
+    cra_alist_append(&in.l, &(int32_t){ 3 });
+    cra_dict_init(&in.dict, sizeof(char *), sizeof(int64_t), false, dict_args.hash, dict_args.compare);
+    cra_dict_add(&in.dict, &(char *){ "a" }, &(int64_t){ 1000000000000000000 });
+    cra_dict_add(&in.dict, &(char *){ "b" }, &(int64_t){ 2000000000000000000 });
+
+    // serialize
+    unsigned char buffer[1024];
+    size_t        length = sizeof(buffer);
+    assert_always(cra_bin_serialize(buffer, &length, CRA_SERI_STRUCT(in, false, metafo, NULL, NULL)));
+    // write to file
+    FILE *fp = fopen("test.bin", "wb");
+    assert_always(fp != NULL);
+    fwrite(buffer, 1, length, fp);
+    fclose(fp);
+
+    // read from file
+    bzero(buffer, sizeof(buffer));
+    FILE *fp2 = fopen("test.bin", "rb");
+    assert_always(fp2 != NULL);
+    length = fread(buffer, 1, sizeof(buffer), fp2);
+    assert_always(length > 0);
+    fclose(fp2);
+
+    // deserialize
+    struct fo out;
+    assert_always(cra_bin_deserialize(buffer, length, CRA_SERI_STRUCT(out, false, metafo, NULL, NULL)));
+    // compare
+    assert_always(out.si == in.si);
+    assert_always(out.i == in.i);
+    assert_always(out.d == in.d);
+    assert_always(strcmp(out.s, in.s) == 0);
+    assert_always(out.b == in.b);
+    assert_always(out.nbt == in.nbt);
+    assert_always(strncmp(out.bt, in.bt, in.nbt) == 0);
+    assert_always(out.fi.i == in.fi.i);
+    assert_always(out.fi.f == in.fi.f);
+    assert_always(out.l.count == in.l.count);
+    assert_always(out.dict.count == in.dict.count);
+
+    // MEMORY LEAK
+}
+
 int
 main(void)
 {
@@ -1812,6 +1921,8 @@ main(void)
     test_dict();
     printf("========== test deserialize failed ==========\n");
     test_deserialize_failed();
+    printf("========== test to file ==========\n");
+    test_to_file();
 
     cra_memory_leak_report();
     return 0;

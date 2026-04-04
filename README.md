@@ -11,6 +11,7 @@
 ## serialization
 
 - binary serialization
+  - [C# implementation](https://github.com/Cracal/CraBinSerializer)
 - JSON
 
 ## threads
