@@ -153,3 +153,12 @@ struct S s, *p;
 CRA_SERI_STRUCT(s, false, ...);
 CRA_SERI_STRUCT(p, true, ...);
 ```
+
+## check id unique
+
+```c
+bool
+cra_check_id_unique(const CraTypeMeta *meta);
+```
+
+检查对象字段元数据的所有ID是否都唯一

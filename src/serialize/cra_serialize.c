@@ -70,3 +70,19 @@ cra_release_mgr_add(CraReleaseMgr *mgr, void *ptr, const CraTypeMeta *meta)
     ++mgr->count;
     return true;
 }
+
+bool
+cra_check_id_unique(const CraTypeMeta *meta)
+{
+    uint8_t      map = 0;
+    CraTypeMeta *m = (CraTypeMeta *)meta;
+
+    while (m->is_not_end)
+    {
+        if (map & (1 << m->id))
+            return false;
+        map |= (1 << m->id);
+        m++;
+    }
+    return true;
+}

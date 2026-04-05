@@ -264,6 +264,9 @@ struct _CraSeriObject
 #define CRA_SERI_DICT(_dict, _is_ptr, _kv_meta, _szer_i, _arg)                                                \
     __CRA_SERI_OBJ(_dict, _is_ptr, CRA_TYPE_DICT, "<<*DICT*>>", { 0 }, _kv_meta, { .szer_i = _szer_i }, _arg)
 
+CRA_API bool
+cra_check_id_unique(const CraTypeMeta *meta);
+
 // ===================== inner =======================
 
 #ifdef __CRA_SER_INNER

@@ -3,6 +3,10 @@
 将对象序列化成二进制数据  
 配合[测试代码](../../tests/test_bin_ser.c)能更好理解
 
+## 其他实现
+
+- [C# - CraBinSerializer](https://github.com/Cracal/CraBinSerializer)
+
 ## 二进制数据格式
 
 ```shell

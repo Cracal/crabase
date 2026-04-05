@@ -1,5 +1,7 @@
 # c语言通用基础代码
 
+see [documentation](docs/)
+
 ## collections
 
 - array list

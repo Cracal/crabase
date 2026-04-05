@@ -1888,6 +1888,30 @@ test_to_file(void)
     // MEMORY LEAK
 }
 
+void
+test_check_id_unique(void)
+{
+    struct S
+    {
+        int32_t i;
+        float   f;
+        char   *s;
+    };
+    CRA_TYPE_META_BEGIN(meta_unique)
+    CRA_TYPE_META_MEMBER_INT(struct S, i, 0)
+    CRA_TYPE_META_MEMBER_FLOAT(struct S, f, 2)
+    CRA_TYPE_META_MEMBER_STRING(struct S, s, 3, true)
+    CRA_TYPE_META_END();
+    CRA_TYPE_META_BEGIN(meta_not_unique)
+    CRA_TYPE_META_MEMBER_INT(struct S, i, 1)
+    CRA_TYPE_META_MEMBER_FLOAT(struct S, f, 2)
+    CRA_TYPE_META_MEMBER_STRING(struct S, s, 1, true)
+    CRA_TYPE_META_END();
+
+    assert_always(cra_check_id_unique(meta_unique));
+    assert_always(!cra_check_id_unique(meta_not_unique));
+}
+
 int
 main(void)
 {
@@ -1923,6 +1947,8 @@ main(void)
     test_deserialize_failed();
     printf("========== test to file ==========\n");
     test_to_file();
+    printf("========== test check id unique ==========\n");
+    test_check_id_unique();
 
     cra_memory_leak_report();
     return 0;
