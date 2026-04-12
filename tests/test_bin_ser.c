@@ -1908,8 +1908,8 @@ test_check_id_unique(void)
     CRA_TYPE_META_MEMBER_STRING(struct S, s, 1, true)
     CRA_TYPE_META_END();
 
-    assert_always(cra_check_id_unique(meta_unique));
-    assert_always(!cra_check_id_unique(meta_not_unique));
+    assert_always(cra_check_id_unique(meta_unique) == -1);
+    assert_always(cra_check_id_unique(meta_not_unique) == 1);
 }
 
 int

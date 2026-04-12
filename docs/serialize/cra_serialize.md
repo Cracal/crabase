@@ -157,8 +157,10 @@ CRA_SERI_STRUCT(p, true, ...);
 ## check id unique
 
 ```c
-bool
+int
 cra_check_id_unique(const CraTypeMeta *meta);
 ```
 
-检查对象字段元数据的所有ID是否都唯一
+检查对象字段元数据的所有ID是否都唯一  
+如果返回值为-1，说明所有ID都唯一  
+否则，返回第一个非唯一的ID

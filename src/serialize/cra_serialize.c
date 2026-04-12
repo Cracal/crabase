@@ -71,7 +71,7 @@ cra_release_mgr_add(CraReleaseMgr *mgr, void *ptr, const CraTypeMeta *meta)
     return true;
 }
 
-bool
+int
 cra_check_id_unique(const CraTypeMeta *meta)
 {
     uint8_t      map = 0;
@@ -80,9 +80,9 @@ cra_check_id_unique(const CraTypeMeta *meta)
     while (m->is_not_end)
     {
         if (map & (1 << m->id))
-            return false;
+            return m->id;
         map |= (1 << m->id);
         m++;
     }
-    return true;
+    return -1;
 }
