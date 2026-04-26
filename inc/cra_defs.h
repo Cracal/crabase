@@ -194,4 +194,86 @@ cra_basename(char *path);
 CRA_API char *
 cra_dirname(char *path);
 
+#if 1 // interfaces
+
+// ========================== initializable ==========================
+
+typedef struct NewCraInitializable_i
+{
+    bool (*init)(void *obj, void *params);
+    void (*uninit)(void *obj);
+} NewCraInitializable_i;
+
+#define CRA_INITIALIZABLE_DEF(_name) const NewCraInitializable_i _name
+
+static inline bool
+cra_initializable_init(const NewCraInitializable_i *i, void *obj, void *params)
+{
+    return i->init(obj, params);
+}
+
+static inline void
+cra_initializable_uninit(const NewCraInitializable_i *i, void *obj)
+{
+    i->uninit(obj);
+}
+
+// ========================== appendable ==========================
+
+typedef struct CraTwoVals
+{
+    void *val1_ref;
+    void *val2_ref;
+} CraTwoVals;
+
+typedef struct NewCraAppendable_i
+{
+    bool (*append)(void *obj, CraTwoVals *vals);
+} NewCraAppendable_i;
+
+#define CRA_APPENDABLE_DEF(_name) const NewCraAppendable_i _name
+
+static inline bool
+cra_appendable_append(const NewCraAppendable_i *i, void *obj, CraTwoVals *vals)
+{
+    return i->append(obj, vals);
+}
+
+// ========================== iterable ==========================
+
+typedef struct NewCraIterator
+{
+    void  *obj;
+    void  *cur;
+    size_t idx;
+} NewCraIterator;
+
+typedef struct NewCraIterable_i
+{
+    bool (*init)(void *obj, NewCraIterator *it);
+    bool (*next)(NewCraIterator *it, CraTwoVals *vals);
+} NewCraIterable_i;
+
+#define CRA_ITERABLE_DEF(_name) const NewCraIterable_i _name
+
+static inline bool
+cra_iterable_init(const NewCraIterable_i *i, void *obj, NewCraIterator *it)
+{
+    return i->init(obj, it);
+}
+
+static inline bool
+cra_iterable_next(const NewCraIterable_i *i, NewCraIterator *it, CraTwoVals *vals)
+{
+    return i->next(it, vals);
+}
+
+#define CRA_FOREACH(_iterable_i, _obj, _val_name)                                                        \
+    for (NewCraIterator _val_name##_it = { 0 };                                                          \
+         _val_name##_it.idx == 0 && cra_iterable_init(_iterable_i, _obj, &_val_name##_it);               \
+         _val_name##_it.idx = 1)                                                                         \
+        for (CraTwoVals _val_name = { 0 }; cra_iterable_next(_iterable_i, &_val_name##_it, &_val_name);)
+
+#endif // end interfaces
+
 #endif
