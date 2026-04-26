@@ -12,6 +12,7 @@
 #include "cra_assert.h"
 #include "cra_malloc.h"
 
+#if 1
 #define _CRA_ALIST_VALUE_PTR(_list, _index) ((_list)->array + (_index) * (_list)->ele_size)
 
 static inline bool
@@ -424,3 +425,269 @@ cra_alist_add_sort(CraAList *list, cra_compare_fn compare, void *val)
     index = list->count == 0 ? 0 : cra_alist_binary_seach(list, compare, val);
     return cra_alist_insert(list, index, val);
 }
+#endif
+
+bool(newcra_alist_init_with_size)(struct NewCraAList *list, size_t itemsize, size_t init_capacity)
+{
+    assert(list);
+    assert(itemsize > 0);
+
+    list->count = 0;
+    list->itemsize = itemsize;
+    list->capacity = init_capacity > 0 ? init_capacity : CRA_ALIST_INIT_CAPACITY;
+    list->array = cra_malloc(list->capacity * itemsize);
+    if (!list->array)
+        return false;
+    return true;
+}
+
+void(newcra_alist_uninit)(struct NewCraAList *list)
+{
+    assert(list);
+    assert(list->array);
+
+    cra_free(list->array);
+    bzero(list, sizeof(*list));
+}
+
+bool(newcra_alist_ensure)(struct NewCraAList *list, size_t nspare, bool shrink2fit)
+{
+    assert(list);
+    assert(list->array);
+
+    size_t capacity;
+    size_t spare = list->capacity - list->count;
+    if (shrink2fit && spare != nspare)
+    {
+        capacity = list->count + nspare;
+        if (capacity == 0)
+            capacity = CRA_ALIST_INIT_CAPACITY;
+        goto resize;
+    }
+    else if (spare < nspare)
+    {
+        capacity = list->capacity << 1;
+        if (capacity < list->count + nspare)
+            capacity = list->count + nspare;
+
+    resize:
+        void *new_array = cra_realloc(list->array, capacity * list->itemsize);
+        if (!new_array)
+            return false;
+        list->array = new_array;
+        list->capacity = capacity;
+    }
+    return true;
+}
+
+static bool
+newcra_alist_partition(struct NewCraAList *list,
+                       cra_compare_fn      compare,
+                       size_t              begin,
+                       size_t              end,
+                       size_t             *middle,
+                       char               *temp)
+{
+    size_t left, right;
+    char  *array;
+
+    left = begin;
+    right = end;
+    array = (char *)list->array;
+    // temp = array[right]
+    memcpy(temp, array + right * list->itemsize, list->itemsize);
+
+    while (left < right)
+    {
+        //                     array[left] <= temp
+        while (left < right && compare(array + left * list->itemsize, temp) <= 0)
+            left++;
+        // array[right] = array[left];
+        memcpy(array + right * list->itemsize, array + left * list->itemsize, list->itemsize);
+
+        //                     array[right] >= temp
+        while (left < right && compare(array + right * list->itemsize, temp) >= 0)
+            right--;
+        // array[left] = array[right];
+        memcpy(array + left * list->itemsize, array + right * list->itemsize, list->itemsize);
+    }
+    assert(left == right);
+    // array[left] = temp;
+    memcpy(array + left * list->itemsize, temp, list->itemsize);
+
+    *middle = left;
+    return true;
+}
+
+static bool
+newcra_alist_quick_sort(struct NewCraAList *list, cra_compare_fn compare, size_t begin, size_t end, char *temp)
+{
+    size_t middle;
+
+    if (!newcra_alist_partition(list, compare, begin, end, &middle, temp))
+        return false;
+    if (middle > 0 && middle - 1 > begin)
+        newcra_alist_quick_sort(list, compare, begin, middle - 1, temp);
+    if (middle < end && middle + 1 < end)
+        newcra_alist_quick_sort(list, compare, middle + 1, end, temp);
+    return true;
+}
+
+bool(newcra_alist_sort)(struct NewCraAList *list, cra_compare_fn compare)
+{
+    assert(list);
+    assert(compare);
+    assert(list->array);
+    if (list->count > 1) // count(array) >= 2
+    {
+#ifdef CRA_COMPILER_MSVC
+        char *temp = cra_malloc(list->itemsize);
+        if (!temp)
+            return false;
+#else
+        char temp[list->itemsize];
+#endif
+        bool ret = newcra_alist_quick_sort(list, compare, 0, list->count - 1, temp);
+#ifdef CRA_COMPILER_MSVC
+        cra_free(temp);
+#endif
+        return ret;
+    }
+    return true;
+}
+
+static size_t
+newcra_alist_binary_seach(struct NewCraAList *list, cra_compare_fn compare, void *val)
+{
+    int    res;
+    size_t left, mid, right;
+
+    assert(list->count > 0);
+
+    left = 0;
+    right = list->count - 1;
+    while (left <= right)
+    {
+        mid = left + ((right - left) >> 1);
+        res = compare((char *)list->array + mid * list->itemsize, val);
+        if (res < 0)
+        {
+            left = mid + 1; // val in [mid + 1, right]
+        }
+        // else if (res > 0)
+        // {
+        //     if (mid == 0)
+        //         break;
+        //     right = mid - 1; // val in [left, mid - 1]
+        // }
+        // else
+        // {
+        //     if (mid == 0)
+        //         break;
+        //     right = mid - 1; // first (array[mid] < val) in [left, mid - 1]
+        // }
+        else
+        {
+            if (mid == 0)
+                break;
+            right = mid - 1;
+        }
+    }
+    return left;
+}
+
+bool(newcra_alist_add_sort)(struct NewCraAList *list, cra_compare_fn compare, void *val)
+{
+    size_t index;
+
+    assert(val);
+    assert(list);
+    assert(compare);
+    assert(list->array);
+
+    index = list->count == 0 ? 0 : newcra_alist_binary_seach(list, compare, val);
+    if ((newcra_alist_insert)(list, index))
+    {
+        memcpy(list->tempv, val, list->itemsize);
+        return true;
+    }
+    return false;
+}
+
+// ====================================== interfaces ======================================
+
+// initializable
+
+static bool
+newcra_alist_initializable_init(void *obj, void *params)
+{
+    assert(obj);
+    assert(params);
+    CraAListInitializableParam *param = (CraAListInitializableParam *)params;
+    return (newcra_alist_init_with_size)((struct NewCraAList *)obj, param->itemsize, param->init_capacity);
+}
+
+CRA_INITIALIZABLE_DEF(cra_g_alist_initializable_i) = {
+    .init = newcra_alist_initializable_init,
+    .uninit = (void (*)(void *))newcra_alist_uninit,
+};
+
+// appendable
+
+static bool
+newcra_alist_appendable_append(void *obj, CraTwoVals *vals)
+{
+    assert(obj);
+    assert(vals);
+    assert(vals->val1_ref);
+    struct NewCraAList *list = (struct NewCraAList *)obj;
+    if ((newcra_alist_insert)(list, list->count))
+    {
+        memcpy(list->tempv, vals->val1_ref, list->itemsize);
+        return true;
+    }
+    return false;
+}
+
+CRA_APPENDABLE_DEF(cra_g_alist_appendable_i) = {
+    .append = newcra_alist_appendable_append,
+};
+
+// iterable
+
+static bool
+newcra_alist_iterable_init(void *obj, NewCraIterator *it)
+{
+    assert(it);
+    assert(obj);
+
+    if (((struct NewCraAList *)obj)->count > 0)
+    {
+        it->idx = 0;
+        it->obj = obj;
+        return true;
+    }
+    return false;
+}
+
+static bool
+newcra_alist_iterable_next(NewCraIterator *it, CraTwoVals *vals)
+{
+    assert(it);
+    assert(vals);
+    assert(it->obj);
+
+    struct NewCraAList *list = (struct NewCraAList *)it->obj;
+    if (it->idx < list->count)
+    {
+        vals->val1_ref = (char *)list->array + it->idx * list->itemsize;
+        ++it->idx;
+        return true;
+    }
+    return false;
+}
+
+CRA_ITERABLE_DEF(cra_g_alist_iterable_i) = {
+    .init = newcra_alist_iterable_init,
+    .next = newcra_alist_iterable_next,
+};
