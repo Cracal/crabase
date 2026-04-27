@@ -20,15 +20,16 @@ typedef void (*cra_deep_copy_val_fn)(const void *from, void *to);
 #if 1 // compare functions
 
 typedef int (*cra_compare_fn)(const void *a, const void *b);
+#define CRA_COMPARE_FN(_name, _type) int (*_name)(const _type a, const _type b)
 
-#define __CRA_COMPARE_FUNC(_name, _type)                          \
-    static inline int cra_compare_##_name(_type a, _type b)       \
-    {                                                             \
-        return a == b ? 0 : (a > b ? 1 : -1);                     \
-    }                                                             \
-    static inline int cra_compare_##_name##_p(_type *a, _type *b) \
-    {                                                             \
-        return cra_compare_##_name(*a, *b);                       \
+#define __CRA_COMPARE_FUNC(_name, _type)                                      \
+    static inline int cra_compare_##_name(const _type a, const _type b)       \
+    {                                                                         \
+        return a == b ? 0 : (a > b ? 1 : -1);                                 \
+    }                                                                         \
+    static inline int cra_compare_##_name##_p(const _type *a, const _type *b) \
+    {                                                                         \
+        return cra_compare_##_name(*a, *b);                                   \
     }
 
 __CRA_COMPARE_FUNC(int, int)
@@ -46,25 +47,25 @@ __CRA_COMPARE_FUNC(uint32_t, uint32_t)
 __CRA_COMPARE_FUNC(uint64_t, uint64_t)
 
 static inline int
-cra_compare_float(float a, float b)
+cra_compare_float(const float a, const float b)
 {
     return fabsf(a - b) < FLT_EPSILON ? 0 : (a > b ? 1 : -1);
 }
 
 static inline int
-cra_compare_float_p(float *a, float *b)
+cra_compare_float_p(const float *a, const float *b)
 {
     return cra_compare_float(*a, *b);
 }
 
 static inline int
-cra_compare_double(double a, double b)
+cra_compare_double(const double a, const double b)
 {
     return fabs(a - b) < DBL_EPSILON ? 0 : (a > b ? 1 : -1);
 }
 
 static inline int
-cra_compare_double_p(double *a, double *b)
+cra_compare_double_p(const double *a, const double *b)
 {
     return cra_compare_double(*a, *b);
 }
@@ -76,7 +77,7 @@ cra_compare_string_p(const char **a, const char **b)
     return cra_compare_string(*a, *b);
 }
 
-__CRA_COMPARE_FUNC(ptr, const void *)
+__CRA_COMPARE_FUNC(ptr, void *)
 
 #undef __CRA_COMPARE_FUNC
 
@@ -88,24 +89,25 @@ typedef ssize_t cra_hash_t;
 #define CRA_HASH_MAX SSIZE_MAX
 #define CRA_HASH_MIN SSIZE_MIN
 typedef cra_hash_t (*cra_hash_fn)(const void *val);
+#define CRA_HASH_FN(_name, _type) cra_hash_t (*_name)(const _type val)
 
-#define __CRA_HASH_FUNC1(_name, _type)                        \
-    static inline cra_hash_t cra_hash_##_name(_type val)      \
-    {                                                         \
-        return val == (_type)(-1) ? -2 : (cra_hash_t)val;     \
-    }                                                         \
-    static inline cra_hash_t cra_hash_##_name##_p(_type *val) \
-    {                                                         \
-        return cra_hash_##_name(*val);                        \
+#define __CRA_HASH_FUNC1(_name, _type)                              \
+    static inline cra_hash_t cra_hash_##_name(const _type val)      \
+    {                                                               \
+        return val == (_type)(-1) ? -2 : (cra_hash_t)val;           \
+    }                                                               \
+    static inline cra_hash_t cra_hash_##_name##_p(const _type *val) \
+    {                                                               \
+        return cra_hash_##_name(*val);                              \
     }
-#define __CRA_HASH_FUNC2(_name, _type)                        \
-    static inline cra_hash_t cra_hash_##_name(_type val)      \
-    {                                                         \
-        return (cra_hash_t)(val == -1 ? -2 : val);            \
-    }                                                         \
-    static inline cra_hash_t cra_hash_##_name##_p(_type *val) \
-    {                                                         \
-        return cra_hash_##_name(*val);                        \
+#define __CRA_HASH_FUNC2(_name, _type)                              \
+    static inline cra_hash_t cra_hash_##_name(const _type val)      \
+    {                                                               \
+        return (cra_hash_t)(val == -1 ? -2 : val);                  \
+    }                                                               \
+    static inline cra_hash_t cra_hash_##_name##_p(const _type *val) \
+    {                                                               \
+        return cra_hash_##_name(*val);                              \
     }
 
 __CRA_HASH_FUNC2(int, int)
@@ -123,7 +125,7 @@ __CRA_HASH_FUNC1(uint32_t, uint32_t)
 __CRA_HASH_FUNC1(uint64_t, uint64_t)
 
 static inline cra_hash_t
-cra_hash_float(float val)
+cra_hash_float(const float val)
 {
     if (!isnan(val))
     {
@@ -139,13 +141,13 @@ cra_hash_float(float val)
 }
 
 static inline cra_hash_t
-cra_hash_float_p(float *val)
+cra_hash_float_p(const float *val)
 {
     return cra_hash_float(*val);
 }
 
 static inline cra_hash_t
-cra_hash_double(double val)
+cra_hash_double(const double val)
 {
     if (!isnan(val))
     {
@@ -161,7 +163,7 @@ cra_hash_double(double val)
 }
 
 static inline cra_hash_t
-cra_hash_double_p(double *val)
+cra_hash_double_p(const double *val)
 {
     return cra_hash_double(*val);
 }
@@ -184,7 +186,7 @@ cra_hash_string2_p(const char **val)
     return cra_hash_string2(*val);
 }
 
-__CRA_HASH_FUNC1(ptr, const void *)
+__CRA_HASH_FUNC1(ptr, void *)
 
 #undef __CRA_HASH_FUNC1
 #undef __CRA_HASH_FUNC2
