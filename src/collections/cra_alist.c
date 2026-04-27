@@ -606,12 +606,7 @@ bool(newcra_alist_add_sort)(struct NewCraAList *list, cra_compare_fn compare, vo
     assert(list->array);
 
     index = list->count == 0 ? 0 : newcra_alist_binary_seach(list, compare, val);
-    if ((newcra_alist_insert)(list, index))
-    {
-        memcpy(list->tempv, val, list->itemsize);
-        return true;
-    }
-    return false;
+    return (newcra_alist_insert)(list, index, val);
 }
 
 // ====================================== interfaces ======================================
@@ -641,12 +636,7 @@ newcra_alist_appendable_append(void *obj, CraTwoVals *vals)
     assert(vals);
     assert(vals->val1_ref);
     struct NewCraAList *list = (struct NewCraAList *)obj;
-    if ((newcra_alist_insert)(list, list->count))
-    {
-        memcpy(list->tempv, vals->val1_ref, list->itemsize);
-        return true;
-    }
-    return false;
+    return (newcra_alist_insert)(list, list->count, vals->val1_ref);
 }
 
 CRA_APPENDABLE_DEF(cra_g_alist_appendable_i) = {

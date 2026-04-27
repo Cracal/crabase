@@ -70,11 +70,11 @@ test_add(void)
     list = cra_alloc(CRA_ALIST(int));
     assert_always(newcra_alist_init(list));
 
-    assert_always(newcra_alist_append(list, 100) && (i = newcra_alist_get_unchecked(list, 0), i == 100));
+    assert_always(newcra_alist_append(list, 100) && (i = newcra_alist_get(list, 0, -1), i == 100));
     newcra_alist_clear(list);
-    assert_always(newcra_alist_prepend(list, 200) && (i = newcra_alist_get_unchecked(list, 0), i == 200));
+    assert_always(newcra_alist_prepend(list, 200) && (i = newcra_alist_get(list, 0, -1), i == 200));
     newcra_alist_clear(list);
-    assert_always(newcra_alist_insert(list, 0, 300) && (i = newcra_alist_get_unchecked(list, 0), i == 300));
+    assert_always(newcra_alist_insert(list, 0, 300) && (i = newcra_alist_get(list, 0, -1), i == 300));
     newcra_alist_clear(list);
 
     for (i = 0; i < 1000; i++)
@@ -154,26 +154,22 @@ test_remove(void)
     int val, val2;
     assert_always(newcra_alist_pop_at(list, 70 - 1, &val) && val == 70);
     assert_always(newcra_alist_pop_at(list, 60 - 1, &val) && val == 60);
-    val = newcra_alist_get_unchecked(list, 38 - 1);
-    assert_always(newcra_alist_remove_at(list, 38 - 1) &&
-                  (val2 = newcra_alist_get_unchecked(list, 38 - 1), val != val2));
-    val = newcra_alist_get_unchecked(list, 34 - 1);
-    assert_always(newcra_alist_remove_at(list, 34 - 1) &&
-                  (val2 = newcra_alist_get_unchecked(list, 34 - 1), val != val2));
+    val = newcra_alist_get(list, 38 - 1, -1);
+    assert_always(newcra_alist_remove_at(list, 38 - 1) && (val2 = newcra_alist_get(list, 38 - 1, -1), val != val2));
+    val = newcra_alist_get(list, 34 - 1, -1);
+    assert_always(newcra_alist_remove_at(list, 34 - 1) && (val2 = newcra_alist_get(list, 34 - 1, -1), val != val2));
     assert_always(newcra_alist_pop_front(list, &val) && val == 1);
     assert_always(newcra_alist_pop_front(list, &val) && val == 2);
-    val = newcra_alist_get_unchecked(list, 0);
-    assert_always(newcra_alist_remove_front(list) && (val2 = newcra_alist_get_unchecked(list, 0), val != val2));
-    val = newcra_alist_get_unchecked(list, 0);
-    assert_always(newcra_alist_remove_front(list) && (val2 = newcra_alist_get_unchecked(list, 0), val != val2));
+    val = newcra_alist_get(list, 0, -1);
+    assert_always(newcra_alist_remove_front(list) && (val2 = newcra_alist_get(list, 0, -1), val != val2));
+    val = newcra_alist_get(list, 0, -1);
+    assert_always(newcra_alist_remove_front(list) && (val2 = newcra_alist_get(list, 0, -1), val != val2));
     assert_always(newcra_alist_pop_back(list, &val) && val == 100);
     assert_always(newcra_alist_pop_back(list, &val) && val == 99);
-    val = newcra_alist_get_unchecked(list, list->count - 1);
-    assert_always(newcra_alist_remove_back(list) &&
-                  (val2 = newcra_alist_get_unchecked(list, list->count - 1), val != val2));
-    val = newcra_alist_get_unchecked(list, list->count - 1);
-    assert_always(newcra_alist_remove_back(list) &&
-                  (val2 = newcra_alist_get_unchecked(list, list->count - 1), val != val2));
+    val = newcra_alist_get(list, list->count - 1, -1);
+    assert_always(newcra_alist_remove_back(list) && (val2 = newcra_alist_get(list, list->count - 1, -1), val != val2));
+    val = newcra_alist_get(list, list->count - 1, -1);
+    assert_always(newcra_alist_remove_back(list) && (val2 = newcra_alist_get(list, list->count - 1, -1), val != val2));
 
     for (size_t i = 0; i < list->count; i++)
         printf("%d  ", list->array[i]);
@@ -308,16 +304,16 @@ test_sort(void)
     // add sort
 
     newcra_alist_clear(&list);
-    assert_always(newcra_alist_add_sort(&list, comare_int1, &(int){ 8 }));
-    assert_always(newcra_alist_add_sort(&list, comare_int1, &(int){ 7 }));
-    assert_always(newcra_alist_add_sort(&list, comare_int1, &(int){ 1 }));
-    assert_always(newcra_alist_add_sort(&list, comare_int1, &(int){ 3 }));
-    assert_always(newcra_alist_add_sort(&list, comare_int1, &(int){ 0 }));
-    assert_always(newcra_alist_add_sort(&list, comare_int1, &(int){ 9 }));
-    assert_always(newcra_alist_add_sort(&list, comare_int1, &(int){ 6 }));
-    assert_always(newcra_alist_add_sort(&list, comare_int1, &(int){ 4 }));
-    assert_always(newcra_alist_add_sort(&list, comare_int1, &(int){ 5 }));
-    assert_always(newcra_alist_add_sort(&list, comare_int1, &(int){ 2 }));
+    assert_always(newcra_alist_add_sort(&list, comare_int1, 8));
+    assert_always(newcra_alist_add_sort(&list, comare_int1, 7));
+    assert_always(newcra_alist_add_sort(&list, comare_int1, 1));
+    assert_always(newcra_alist_add_sort(&list, comare_int1, 3));
+    assert_always(newcra_alist_add_sort(&list, comare_int1, 0));
+    assert_always(newcra_alist_add_sort(&list, comare_int1, 9));
+    assert_always(newcra_alist_add_sort(&list, comare_int1, 6));
+    assert_always(newcra_alist_add_sort(&list, comare_int1, 4));
+    assert_always(newcra_alist_add_sort(&list, comare_int1, 5));
+    assert_always(newcra_alist_add_sort(&list, comare_int1, 2));
     printf("add sort(ASC) : ");
     i = 0;
     CRA_FOREACH(CRA_ALIST_ITERABLE_I, &list, val)
@@ -329,16 +325,16 @@ test_sort(void)
     printf("\n");
 
     newcra_alist_clear(&list);
-    assert_always(newcra_alist_add_sort(&list, comare_int2, &(int){ 8 }));
-    assert_always(newcra_alist_add_sort(&list, comare_int2, &(int){ 7 }));
-    assert_always(newcra_alist_add_sort(&list, comare_int2, &(int){ 1 }));
-    assert_always(newcra_alist_add_sort(&list, comare_int2, &(int){ 3 }));
-    assert_always(newcra_alist_add_sort(&list, comare_int2, &(int){ 0 }));
-    assert_always(newcra_alist_add_sort(&list, comare_int2, &(int){ 9 }));
-    assert_always(newcra_alist_add_sort(&list, comare_int2, &(int){ 6 }));
-    assert_always(newcra_alist_add_sort(&list, comare_int2, &(int){ 4 }));
-    assert_always(newcra_alist_add_sort(&list, comare_int2, &(int){ 5 }));
-    assert_always(newcra_alist_add_sort(&list, comare_int2, &(int){ 2 }));
+    assert_always(newcra_alist_add_sort(&list, comare_int2, 8));
+    assert_always(newcra_alist_add_sort(&list, comare_int2, 7));
+    assert_always(newcra_alist_add_sort(&list, comare_int2, 1));
+    assert_always(newcra_alist_add_sort(&list, comare_int2, 3));
+    assert_always(newcra_alist_add_sort(&list, comare_int2, 0));
+    assert_always(newcra_alist_add_sort(&list, comare_int2, 9));
+    assert_always(newcra_alist_add_sort(&list, comare_int2, 6));
+    assert_always(newcra_alist_add_sort(&list, comare_int2, 4));
+    assert_always(newcra_alist_add_sort(&list, comare_int2, 5));
+    assert_always(newcra_alist_add_sort(&list, comare_int2, 2));
     printf("add sort(DESC): ");
     i = 9;
     CRA_FOREACH(CRA_ALIST_ITERABLE_I, &list, val)
