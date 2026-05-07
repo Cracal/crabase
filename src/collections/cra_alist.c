@@ -130,7 +130,7 @@ bool(cra_alist_pop_at)(CraAList *list, size_t index, void *retval)
 }
 
 static bool
-cra_alist_partition(struct CraAList *list, cra_compare_fn compare, size_t begin, size_t end, size_t *middle, char *temp)
+cra_alist_partition(CraAList *list, cra_compare_fn compare, size_t begin, size_t end, size_t *middle, char *temp)
 {
     size_t left, right;
     char  *array;
@@ -164,7 +164,7 @@ cra_alist_partition(struct CraAList *list, cra_compare_fn compare, size_t begin,
 }
 
 static bool
-cra_alist_quick_sort(struct CraAList *list, cra_compare_fn compare, size_t begin, size_t end, char *temp)
+cra_alist_quick_sort(CraAList *list, cra_compare_fn compare, size_t begin, size_t end, char *temp)
 {
     size_t middle;
 
@@ -177,7 +177,7 @@ cra_alist_quick_sort(struct CraAList *list, cra_compare_fn compare, size_t begin
     return true;
 }
 
-bool(cra_alist_sort)(struct CraAList *list, cra_compare_fn compare)
+bool(cra_alist_sort)(CraAList *list, cra_compare_fn compare)
 {
     assert(list);
     assert(compare);
@@ -201,7 +201,7 @@ bool(cra_alist_sort)(struct CraAList *list, cra_compare_fn compare)
 }
 
 static size_t
-cra_alist_binary_seach(struct CraAList *list, cra_compare_fn compare, void *val)
+cra_alist_binary_seach(CraAList *list, cra_compare_fn compare, void *val)
 {
     int    res;
     size_t left, mid, right;
@@ -240,7 +240,7 @@ cra_alist_binary_seach(struct CraAList *list, cra_compare_fn compare, void *val)
     return left;
 }
 
-bool(cra_alist_add_sort)(struct CraAList *list, cra_compare_fn compare, void *val)
+bool(cra_alist_add_sort)(CraAList *list, cra_compare_fn compare, void *val)
 {
     size_t index;
 
@@ -262,12 +262,12 @@ static CRA_INITIALIZABLE_INIT_FN(cra_alist_initializable_init)
     assert(obj);
     assert(params);
     CraAListInitializableParam *param = (CraAListInitializableParam *)params;
-    return (cra_alist_init_with_size)((struct CraAList *)obj, param->itemsize, param->init_capacity);
+    return (cra_alist_init_with_size)((CraAList *)obj, param->itemsize, param->init_capacity);
 }
 
 CRA_INITIALIZABLE_DEF(cra_g_alist_initializable_i) = {
     .init = cra_alist_initializable_init,
-    .uninit = (void (*)(void *))cra_alist_uninit,
+    .uninit = (CRA_INITIALIZABLE_UNINIT_FN((*)))cra_alist_uninit,
 };
 
 // appendable
@@ -277,7 +277,7 @@ static CRA_APPENDABLE_APPEND_FN(cra_alist_appendable_append)
     assert(obj);
     assert(vals);
     assert(vals->val1_ref);
-    struct CraAList *list = (struct CraAList *)obj;
+    CraAList *list = (CraAList *)obj;
     return (cra_alist_insert)(list, list->count, vals->val1_ref);
 }
 
@@ -292,9 +292,10 @@ static CRA_ITERABLE_INIT_FN(cra_alist_iterable_init)
     assert(it);
     assert(obj);
 
-    if (((struct CraAList *)obj)->count > 0)
+    CraAList *list = (CraAList *)obj;
+    if (list->count > 0)
     {
-        it->idx = 0;
+        it->idx = reverse ? list->count : 0;
         it->obj = obj;
         return true;
     }
@@ -307,11 +308,25 @@ static CRA_ITERABLE_NEXT_FN(cra_alist_iterable_next)
     assert(vals);
     assert(it->obj);
 
-    struct CraAList *list = (struct CraAList *)it->obj;
+    CraAList *list = (CraAList *)it->obj;
     if (it->idx < list->count)
     {
-        vals->val1_ref = (char *)list->array + it->idx * list->itemsize;
-        ++it->idx;
+        vals->val1_ref = CRA_ALIST_PVAL(list, it->idx++);
+        return true;
+    }
+    return false;
+}
+
+static CRA_ITERABLE_PREV_FN(cra_alist_iterable_prev)
+{
+    assert(it);
+    assert(vals);
+    assert(it->obj);
+
+    CraAList *list = (CraAList *)it->obj;
+    if (it->idx > 0)
+    {
+        vals->val1_ref = CRA_ALIST_PVAL(list, --it->idx);
         return true;
     }
     return false;
@@ -320,4 +335,5 @@ static CRA_ITERABLE_NEXT_FN(cra_alist_iterable_next)
 CRA_ITERABLE_DEF(cra_g_alist_iterable_i) = {
     .init = cra_alist_iterable_init,
     .next = cra_alist_iterable_next,
+    .prev = cra_alist_iterable_prev,
 };

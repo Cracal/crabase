@@ -207,9 +207,16 @@ CRA_ALIST_ITERABLE_I // alist可迭代接口
 
 T val;
 CraAlist *list = ...;
+// 正向迭代
 CRA_FOREACH(CRA_ALIST_ITERABLE_I, list, vals)
 {
-    memcpy(&val, vals.val1_ref, list->itemsize);
+    memcpy(&val, vals.val1_ref, sizeof(val));
+    printf("val = %d\n", val);
+}
+// 反向迭代
+CRA_FOREACH_REVERSE(CRA_ALIST_ITERABLE_I, list, vals)
+{
+    memcpy(&val, vals.val1_ref, sizeof(val));
     printf("val = %d\n", val);
 }
 ```

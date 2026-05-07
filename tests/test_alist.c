@@ -380,21 +380,24 @@ test_foreach(void)
     CraAList *list = cra_alloc(CraAList);
     assert_always(cra_alist_init(int, list));
 
-    printf("foreach(    empty): ");
-    CRA_FOREACH(CRA_ALIST_ITERABLE_I, list, vals)
-    {
-        memcpy(&val, vals.val1_ref, list->itemsize);
-        printf("%d ", val);
-        assert_always(false);
-    }
-    printf("\n");
+    // foreach(empty)
+    CRA_FOREACH(CRA_ALIST_ITERABLE_I, list, vals) assert_always(false);
+    CRA_FOREACH_REVERSE(CRA_ALIST_ITERABLE_I, list, vals) assert_always(false);
 
     for (int i = 0; i < 10; i++)
         cra_alist_append(list, &i);
     assert_always(list->count == 10);
 
-    printf("foreach(not empty): ");
+    printf("foreach        : ");
     CRA_FOREACH(CRA_ALIST_ITERABLE_I, list, vals)
+    {
+        memcpy(&val, vals.val1_ref, list->itemsize);
+        printf("%d ", val);
+    }
+    printf("\n");
+
+    printf("foreach reverse: ");
+    CRA_FOREACH_REVERSE(CRA_ALIST_ITERABLE_I, list, vals)
     {
         memcpy(&val, vals.val1_ref, list->itemsize);
         printf("%d ", val);
@@ -403,14 +406,9 @@ test_foreach(void)
 
     cra_alist_clear(list);
 
-    printf("foreach(    empty): ");
-    CRA_FOREACH(CRA_ALIST_ITERABLE_I, list, vals)
-    {
-        memcpy(&val, vals.val1_ref, list->itemsize);
-        printf("%d ", val);
-        assert_always(false);
-    }
-    printf("\n");
+    // foreach(empty)
+    CRA_FOREACH(CRA_ALIST_ITERABLE_I, list, vals) assert_always(false);
+    CRA_FOREACH_REVERSE(CRA_ALIST_ITERABLE_I, list, vals) assert_always(false);
 
     cra_alist_uninit(list);
     cra_dealloc(list);
