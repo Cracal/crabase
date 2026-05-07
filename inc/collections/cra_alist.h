@@ -97,24 +97,24 @@ cra_alist_get(CraAList *list, size_t index, void *retval)
     (CRA_ALIST_CHECK_VAL(_list, _retval), cra_alist_get(_list, _index, _retval))
 
 static inline bool
-cra_alist_get_and_set(CraAList *list, size_t index, void *new_val, void *old_val)
+cra_alist_get_and_set(CraAList *list, size_t index, void *newval, void *retoldval)
 {
-    assert(new_val);
+    assert(newval);
 
     void *pval = cra_alist_get_ref(list, index);
     if (pval)
     {
-        if (old_val)
-            memcpy(old_val, pval, list->itemsize);
-        memcpy(pval, new_val, list->itemsize);
+        if (retoldval)
+            memcpy(retoldval, pval, list->itemsize);
+        memcpy(pval, newval, list->itemsize);
     }
     return pval != NULL;
 }
-// bool get_and_set(CraAList *list, size_t index, T *new_val, out T *old_val)
-#define cra_alist_get_and_set(_list, _index, _new_val, _old_val) \
-    (CRA_ALIST_CHECK_VAL(_list, _new_val),                       \
-     CRA_ALIST_CHECK_VAL(_list, _old_val),                       \
-     cra_alist_get_and_set(_list, _index, _new_val, _old_val))
+// bool get_and_set(CraAList *list, size_t index, T *newval, out T *retoldval)
+#define cra_alist_get_and_set(_list, _index, _newval, _retoldval) \
+    (CRA_ALIST_CHECK_VAL(_list, _newval),                         \
+     CRA_ALIST_CHECK_VAL(_list, _retoldval),                      \
+     cra_alist_get_and_set(_list, _index, _newval, _retoldval))
 
 static inline bool
 cra_alist_set(CraAList *list, size_t index, void *val)
@@ -130,12 +130,12 @@ cra_alist_set(CraAList *list, size_t index, void *val)
 
 CRA_API bool
 cra_alist_sort(struct CraAList *list, cra_compare_fn compare);
-// bool sort(CraAList *list, cra_cmp_fn<T *> compare)
+// bool sort(CraAList *list, int (*compare)(const T *, const T *))
 #define cra_alist_sort(_list, _compare) cra_alist_sort(_list, (cra_compare_fn)(_compare))
 
 CRA_API bool
 cra_alist_add_sort(struct CraAList *list, cra_compare_fn compare, void *val);
-// bool add_sort(CraAList *list, cra_cmp_fn<T *> compare, T *val)
+// bool add_sort(CraAList *list, int (*compare)(const T *, const T *), T *val)
 #define cra_alist_add_sort(_list, _compare, _val)                                                   \
     (CRA_ALIST_CHECK_VAL(_list, _val), cra_alist_add_sort(_list, (cra_compare_fn)(_compare), _val))
 
