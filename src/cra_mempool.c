@@ -33,9 +33,9 @@ cra_mempool_init(CraMemPool *pool, size_t item_size, size_t items_per_block, siz
 
     pool->item_size = item_size;
     pool->items_per_block = items_per_block;
-    if (!cra_alist_init_size0(void *, &pool->blocks, init_block, false))
+    if (!cra_alist_init_with_size(void *, &pool->blocks, init_block))
         return false;
-    if (!cra_alist_init_size0(void *, &pool->stack, init_block *items_per_block, false))
+    if (!cra_alist_init_with_size(void *, &pool->stack, init_block *items_per_block))
         return false;
 
     for (size_t i = 0; i < init_block; ++i)
@@ -48,13 +48,15 @@ cra_mempool_init(CraMemPool *pool, size_t item_size, size_t items_per_block, siz
 void
 cra_mempool_uninit_no_check(CraMemPool *pool)
 {
-    CraAListIter it;
-    void       **pblock;
+    void *block;
 
     assert(pool);
 
-    for (cra_alist_iter_init(&pool->blocks, &it); cra_alist_iter_next(&it, (void **)&pblock);)
-        cra_free(*pblock);
+    CRA_FOREACH(CRA_ALIST_ITERABLE_I, &pool->blocks, vals)
+    {
+        memcpy(&block, vals.val1_ref, pool->blocks.itemsize);
+        cra_free(block);
+    }
     cra_alist_uninit(&pool->blocks);
     cra_alist_uninit(&pool->stack);
 }
@@ -67,8 +69,8 @@ cra_mempool_uninit(CraMemPool *pool)
 
     assert(pool);
 
-    nstack = cra_alist_get_count(&pool->stack);
-    nmax = cra_alist_get_count(&pool->blocks) * pool->items_per_block;
+    nstack = pool->stack.count;
+    nmax = pool->blocks.count * pool->items_per_block;
     if (nstack != nmax)
     {
         fprintf(stderr, "mempool_uninit() error: %zu items are actively being used.", nmax - nstack);

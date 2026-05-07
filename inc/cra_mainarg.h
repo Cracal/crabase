@@ -21,7 +21,7 @@ typedef union
 } CraMainArgVal_u;
 
 typedef struct _CraDict           CraDict;
-typedef struct _CraAList          CraAList;
+typedef struct CraAList           CraAList;
 typedef struct _CraMemPool        CraMemPool;
 typedef struct _CraMainArg        CraMainArg;
 typedef struct _CraMainArgElement CraMainArgElement;

@@ -184,7 +184,7 @@ cra_mainarg_init(CraMainArg *ma, char *program, const char *intro, const char *u
     {
         PRINT_ERROR_EXIT("Failed to initialize items.");
     }
-    if (!cra_alist_init0(char *, ma->pos_args, false))
+    if (!cra_alist_init(char *, ma->pos_args))
         PRINT_ERROR_EXIT("Failed to initialize pos_args.");
     if (!cra_mempool_init(ma->pool, sizeof(CraMainArgItem), nitem, 1))
         PRINT_ERROR_EXIT("Failed to initialize memory pool for CraMainArgItem.");
@@ -272,7 +272,7 @@ int
 cra_mainarg_get_pos_args_count(CraMainArg *ma)
 {
     assert(ma);
-    return (int)cra_alist_get_count(ma->pos_args);
+    return (int)ma->pos_args->count;
 }
 
 CraMainArgVal_u

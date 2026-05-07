@@ -39,7 +39,7 @@ add_definitions(-DCRA_JSON_SAFE_INT)
 include_directories(inc)
 
 aux_source_directory(src/collections SRC)
-aux_source_directory(src/serialize SRC)
+# aux_source_directory(src/serialize SRC)
 aux_source_directory(src/threads SRC)
 aux_source_directory(src SRC)
 

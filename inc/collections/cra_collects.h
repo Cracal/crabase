@@ -10,6 +10,7 @@
  */
 #ifndef __CRA_COLLECTS_H__
 #define __CRA_COLLECTS_H__
+#include "cra_assert.h"
 #include "cra_defs.h"
 #include <float.h>
 #include <math.h>

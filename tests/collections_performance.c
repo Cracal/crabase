@@ -18,12 +18,12 @@
 void
 test_alist_performance(int sizes[])
 {
-    CraAListIter  it;
+    int           val;
     CraAList      list;
-    int           val, *valptr;
+    int           nloop;
     unsigned long start_ms, end_ms;
 
-    assert_always(cra_alist_init_size0(int, &list, sizes[0], false));
+    assert_always(cra_alist_init_with_size(int, &list, sizes[0]));
     srand((unsigned int)time(NULL));
 
     printf("\n=========================================================\n\n");
@@ -76,10 +76,10 @@ test_alist_performance(int sizes[])
 
         // iter
         start_ms = cra_tick_ms();
-        for (cra_alist_iter_init(&list, &it); cra_alist_iter_next(&it, (void **)&valptr);)
-            ;
+        nloop = 0;
+        CRA_FOREACH(CRA_ALIST_ITERABLE_I, &list, vals) nloop++;
         end_ms = cra_tick_ms();
-        printf("\titer:          %lums.\n", end_ms - start_ms);
+        printf("\titer:          %lums. loop times: %d\n", end_ms - start_ms, nloop);
 
         // sort
         start_ms = cra_tick_ms();
