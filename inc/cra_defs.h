@@ -198,13 +198,15 @@ cra_dirname(char *path);
 
 // ========================== initializable ==========================
 
+#define CRA_INITIALIZABLE_INIT_FN(_name)   bool _name(void *obj, void *params)
+#define CRA_INITIALIZABLE_UNINIT_FN(_name) void _name(void *obj)
+#define CRA_INITIALIZABLE_DEF(_name)       const NewCraInitializable_i _name
+
 typedef struct NewCraInitializable_i
 {
-    bool (*init)(void *obj, void *params);
-    void (*uninit)(void *obj);
+    CRA_INITIALIZABLE_INIT_FN((*init));
+    CRA_INITIALIZABLE_UNINIT_FN((*uninit));
 } NewCraInitializable_i;
-
-#define CRA_INITIALIZABLE_DEF(_name) const NewCraInitializable_i _name
 
 static inline bool
 cra_initializable_init(const NewCraInitializable_i *i, void *obj, void *params)
@@ -220,6 +222,9 @@ cra_initializable_uninit(const NewCraInitializable_i *i, void *obj)
 
 // ========================== appendable ==========================
 
+#define CRA_APPENDABLE_APPEND_FN(_name) bool _name(void *obj, CraTwoVals *vals)
+#define CRA_APPENDABLE_DEF(_name)       const NewCraAppendable_i _name
+
 typedef struct CraTwoVals
 {
     void *val1_ref;
@@ -228,10 +233,8 @@ typedef struct CraTwoVals
 
 typedef struct NewCraAppendable_i
 {
-    bool (*append)(void *obj, CraTwoVals *vals);
+    CRA_APPENDABLE_APPEND_FN((*append));
 } NewCraAppendable_i;
-
-#define CRA_APPENDABLE_DEF(_name) const NewCraAppendable_i _name
 
 static inline bool
 cra_appendable_append(const NewCraAppendable_i *i, void *obj, CraTwoVals *vals)
@@ -240,6 +243,10 @@ cra_appendable_append(const NewCraAppendable_i *i, void *obj, CraTwoVals *vals)
 }
 
 // ========================== iterable ==========================
+
+#define CRA_ITERABLE_INIT_FN(_name) bool _name(void *obj, NewCraIterator *it)
+#define CRA_ITERABLE_NEXT_FN(_name) bool _name(NewCraIterator *it, CraTwoVals *vals)
+#define CRA_ITERABLE_DEF(_name)     const NewCraIterable_i _name
 
 typedef struct NewCraIterator
 {
@@ -250,11 +257,9 @@ typedef struct NewCraIterator
 
 typedef struct NewCraIterable_i
 {
-    bool (*init)(void *obj, NewCraIterator *it);
-    bool (*next)(NewCraIterator *it, CraTwoVals *vals);
+    CRA_ITERABLE_INIT_FN((*init));
+    CRA_ITERABLE_NEXT_FN((*next));
 } NewCraIterable_i;
-
-#define CRA_ITERABLE_DEF(_name) const NewCraIterable_i _name
 
 static inline bool
 cra_iterable_init(const NewCraIterable_i *i, void *obj, NewCraIterator *it)
