@@ -136,6 +136,17 @@ T newval = XXX; cra_alist_set(list, index, &newval);
 获取/更新元素  
 **newval**不可为**NULL**；**retoldval**为**NULL**时，`get_and_set`等价于`set`。
 
+## reverse
+
+```c
+bool
+cra_alist_reverse(CraAList *list);
+```
+
+反转数组
+
+只有`MSVC`才会在临时内存分配失败时返回**false**
+
 ## sort
 
 ```c

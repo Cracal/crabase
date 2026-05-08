@@ -177,6 +177,43 @@ cra_alist_quick_sort(CraAList *list, cra_compare_fn compare, size_t begin, size_
     return true;
 }
 
+bool
+cra_alist_reverse(CraAList *list)
+{
+    size_t begin, end;
+
+    assert(list);
+    assert(list->array);
+    assert(list->itemsize > 0);
+
+    if (list->count < 2)
+        return true;
+
+#ifdef CRA_COMPILER_MSVC
+    char *temp = cra_malloc(list->itemsize);
+    if (!temp)
+        return false;
+#else
+    char temp[list->itemsize];
+#endif
+
+    begin = 0;
+    end = list->count - 1;
+    while (begin < end)
+    {
+        memcpy(temp, CRA_ALIST_PVAL(list, begin), list->itemsize);
+        memcpy(CRA_ALIST_PVAL(list, begin), CRA_ALIST_PVAL(list, end), list->itemsize);
+        memcpy(CRA_ALIST_PVAL(list, end), temp, list->itemsize);
+        begin++;
+        end--;
+    }
+
+#ifdef CRA_COMPILER_MSVC
+    cra_free(temp);
+#endif
+    return true;
+}
+
 bool(cra_alist_sort)(CraAList *list, cra_compare_fn compare)
 {
     assert(list);

@@ -170,6 +170,7 @@ test_remove(void)
     assert_always(cra_alist_remove_back(list) && cra_alist_get(list, list->count - 1, &val2) && val != val2);
     cra_alist_get(list, list->count - 1, &val);
     assert_always(cra_alist_remove_back(list) && cra_alist_get(list, list->count - 1, &val2) && val != val2);
+    assert_always(list->count == 88);
 
     for (size_t i = 0; i < list->count; i++)
     {
@@ -237,12 +238,42 @@ test_get(void)
         cra_alist_get(&list, i, &val);
         pval = cra_alist_get_ref(&list, i);
         assert_always(val == *pval);
-        assert_always(val == *(int *)CRA_ALIST_PVAL(&list, i)); // UB
+        assert_always(val == *(int *)CRA_ALIST_PVAL(&list, i)); // UB?
         // printf("%d  ", val);
     }
     // printf("\n");
 
     cra_alist_uninit(&list);
+}
+
+void
+test_reverse(void)
+{
+    CraAList list, list2;
+    int      val, val2, i;
+
+    cra_alist_init_with_size(int, &list, 1000);
+    cra_alist_init_with_size(int, &list2, 1000);
+
+    for (i = 0; i < 1000; i++)
+    {
+        cra_alist_append(&list, &i);
+        cra_alist_prepend(&list2, &i);
+    }
+
+    cra_alist_reverse(&list);
+
+    i = 0;
+    CRA_FOREACH(CRA_ALIST_ITERABLE_I, &list, vals)
+    {
+        assert_always(cra_alist_get(&list2, i, &val2));
+        memcpy(&val, vals.val1_ref, sizeof(val));
+        assert_always(val == val2);
+        i++;
+    }
+
+    cra_alist_uninit(&list);
+    cra_alist_uninit(&list2);
 }
 
 static int
@@ -376,7 +407,7 @@ test_sort(void)
 void
 test_foreach(void)
 {
-    int       val;
+    int       i, val;
     CraAList *list = cra_alloc(CraAList);
     assert_always(cra_alist_init(int, list));
 
@@ -384,23 +415,29 @@ test_foreach(void)
     CRA_FOREACH(CRA_ALIST_ITERABLE_I, list, vals) assert_always(false);
     CRA_FOREACH_REVERSE(CRA_ALIST_ITERABLE_I, list, vals) assert_always(false);
 
-    for (int i = 0; i < 10; i++)
+    for (i = 0; i < 10; i++)
         cra_alist_append(list, &i);
     assert_always(list->count == 10);
 
+    i = 0;
     printf("foreach        : ");
     CRA_FOREACH(CRA_ALIST_ITERABLE_I, list, vals)
     {
         memcpy(&val, vals.val1_ref, list->itemsize);
-        printf("%d ", val);
+        assert_always(i == val);
+        printf("%d  ", val);
+        i++;
     }
     printf("\n");
 
+    i = 9;
     printf("foreach reverse: ");
     CRA_FOREACH_REVERSE(CRA_ALIST_ITERABLE_I, list, vals)
     {
         memcpy(&val, vals.val1_ref, list->itemsize);
-        printf("%d ", val);
+        assert_always(i == val);
+        printf("%d  ", val);
+        i--;
     }
     printf("\n");
 
@@ -428,7 +465,7 @@ test_test(void)
         for (j = 0; j < n; j++)
             cra_alist_append(list, &j);
 
-        n = (rand() + 1) % list->count;
+        n = list->count == 0 ? 0 : (rand() + 1) % list->count;
         for (j = 0; j < n; j++)
         {
             cra_alist_pop_front(list, &v);
@@ -513,6 +550,7 @@ main(void)
     test_remove();
     test_set();
     test_get();
+    test_reverse();
     test_sort();
     test_foreach();
     test_test();

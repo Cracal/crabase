@@ -129,6 +129,9 @@ cra_alist_set(CraAList *list, size_t index, void *val)
 #define cra_alist_set(_list, _index, _val) (CRA_ALIST_CHECK_VAL(_list, _val), cra_alist_set(_list, _index, _val))
 
 CRA_API bool
+cra_alist_reverse(CraAList *list);
+
+CRA_API bool
 cra_alist_sort(struct CraAList *list, cra_compare_fn compare);
 // bool sort(CraAList *list, int (*compare)(const T *, const T *))
 #define cra_alist_sort(_list, _compare) cra_alist_sort(_list, (cra_compare_fn)(_compare))
