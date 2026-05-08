@@ -75,8 +75,8 @@ test_alist_performance(int sizes[])
         printf("\tget(miss):     %lums.\n", end_ms - start_ms);
 
         // iter
-        start_ms = cra_tick_ms();
         nloop = 0;
+        start_ms = cra_tick_ms();
         CRA_FOREACH(CRA_ALIST_ITERABLE_I, &list, vals) nloop++;
         end_ms = cra_tick_ms();
         printf("\titer:          %lums. loop times: %d\n", end_ms - start_ms, nloop);
@@ -121,12 +121,12 @@ test_alist_performance(int sizes[])
 void
 test_llist_performance(int sizes[])
 {
-    CraLListIter  it;
+    int           val;
     CraLList      list;
-    int           val, *valptr;
+    int           nloop;
     unsigned long start_ms, end_ms;
 
-    assert_always(cra_llist_init0(int, &list, false));
+    assert_always(cra_llist_init(int, &list));
     srand((unsigned int)time(NULL));
 
     printf("\n=========================================================\n\n");
@@ -178,11 +178,11 @@ test_llist_performance(int sizes[])
         printf("\tget(miss):     %lums.\n", end_ms - start_ms);
 
         // iter
+        nloop = 0;
         start_ms = cra_tick_ms();
-        for (cra_llist_iter_init(&list, &it); cra_llist_iter_next(&it, (void **)&valptr);)
-            ;
+        CRA_FOREACH(CRA_LLIST_ITERABLE_I, &list, vals) nloop++;
         end_ms = cra_tick_ms();
-        printf("\titer:          %lums.\n", end_ms - start_ms);
+        printf("\titer:          %lums. loop times: %d\n", end_ms - start_ms, nloop);
 
         // sort
         start_ms = cra_tick_ms();

@@ -87,7 +87,7 @@ cra_timer_base_set_timeout(CraTimer_base *base, uint32_t timeout_ms)
 
 #endif // end timer
 
-typedef struct _CraLList CraLList;
+typedef struct CraLList CraLList;
 
 struct _CraTimewheel
 {

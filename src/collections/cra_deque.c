@@ -63,7 +63,7 @@ cra_deque_init(CraDeque *deque, size_t element_size, size_t que_max, bool zero_m
 
     assert(!!deque && element_size > 0);
 
-    if (!cra_llist_init(&deque->list, element_size * CRA_DEQUE_ELE_COUNT, zero_memory))
+    if (!(cra_llist_init_with_size)(&deque->list, element_size * CRA_DEQUE_ELE_COUNT, 0))
         return false;
 
     node = cra_llist_get_free_node(&deque->list);
@@ -101,7 +101,7 @@ cra_deque_clear(CraDeque *deque)
     deque->count = 0;
     CRA_DEQUE_EMPTY_INDEX;
     if (deque->zero_memory)
-        bzero(deque->list.head->val, deque->list.ele_size);
+        bzero(deque->list.head->val, deque->list.itemsize);
 
     while (deque->list.count > 1)
         cra_llist_remove_back(&deque->list);

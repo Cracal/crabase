@@ -1,27 +1,31 @@
-
 # CraLList
 
 双链表
 
 请先看[数据类型的解释](./cra_collects.md#存放值类型和指针类型)
 
+## 可访问字段
+
+- `head` 链表头结点, 只读
+- `count` 当前元素个数，只读
+- `itemsize` 元素大小，只读
+
 ## init
 
 ```c
 bool
-cra_llist_init_size(CraLList *list, size_t element_size, size_t init_spare_node, bool zero_memory);
+(cra_llist_init_with_size)(CraLList *list, size_t itemsize, size_t init_spare_node);
 bool
-cra_llist_init(CraLList *list, size_t element_size, bool zero_memory);
-#define cra_llist_init_size0(TVal, list, init_spare_node, zero_memory)
-#define cra_llist_init0(TVal, list, zero_memory)
+cra_llist_init_with_size(T, CraLList *list, size_t init_spare_node);
+bool
+cra_llist_init(T, CraLList *list);
 ```
 
 初始化
 
-- `element_size` 元素大小
-- `TVal` 元素类型
+- `T` 元素类型
+- `itemsize` 元素大小
 - `init_spare_node` 预先分配的结节个数
-- `zero_memory` 没有有效元素的地方是否清零
 
 成功返回**true**，失败返回**false**
 
@@ -34,15 +38,6 @@ cra_llist_uninit(CraLList *list);
 
 反初始化
 
-## get count
-
-```c
-static inline size_t
-cra_llist_get_count(CraLList *list);
-```
-
-获取当前元素个数
-
 ## clear
 
 ```c
@@ -52,13 +47,30 @@ cra_llist_clear(CraLList *list);
 
 清空链表
 
+## ensure
+
+```c
+bool
+cra_llist_ensure(CraLList *list, size_t nspare, bool shrink2fit);
+```
+
+调用此函数可确保链表容量足够容纳**nspare**个元素。
+
+- `nspare` 需要的空闲结节个数
+- `shrink2fit` 当空闲空间超过**nspare**时，是否缩小链表容量到只有**nspare**个空闲结节。
+
+成功返回**true**，失败返回**false**  
+只有为扩容失败时才会返回**false**
+
 ## add
 
 ```c
 bool
-cra_llist_insert(CraLList *list, size_t index, void *val);
-#define cra_llist_prepend(list, val)
-#define cra_llist_append(list, val)
+cra_llist_insert(CraLList *list, size_t index, T *val);
+bool
+cra_llist_prepend(CraLList *list, T *val);
+bool
+cra_llist_append(CraLList *list, T *val);
 ```
 
 添加元素
@@ -73,19 +85,21 @@ cra_llist_insert(CraLList *list, size_t index, void *val);
 ```c
 bool
 cra_llist_remove_at(CraLList *list, size_t index);
-#define cra_llist_remove_front(list)
-#define cra_llist_remove_back(list)
+bool
+cra_llist_remove_front(CraLList *list);
+bool
+cra_llist_remove_back(CraLList *list);
 
 bool
-cra_llist_pop_at(CraLList *list, size_t index, void *retval);
-#define cra_llist_pop_front(list, retval)
-#define cra_llist_pop_back(list, retval)
-
-size_t
-cra_llist_remove_match(CraLList *list, cra_match_fn match, void *arg);
+cra_llist_pop_at(CraLList *list, size_t index, out T *retval);
+bool
+cra_llist_pop_front(CraLList *list, out T *retval);
+bool
+cra_llist_pop_back(CraLList *list, out T *retval);
 ```
 
-删除元素
+删除元素  
+**retval**为**NULL**时，`pop`等价于`remove`。
 
 `remove_at`: 删除**index**处的元素  
 `remove_front`: 删除链表头部的元素  
@@ -93,31 +107,32 @@ cra_llist_remove_match(CraLList *list, cra_match_fn match, void *arg);
 `pop_at`: 弹出**index**处的元素  
 `pop_front`: 弹出头部元素  
 `pop_back`: 弹出尾部元素  
-`remove_match`: 删除匹配的元素。返回被删除的元素个数
 
-## set
-
-```c
-bool
-cra_llist_set(CraLList *list, size_t index, void *newval);
-bool
-cra_llist_set_and_pop_old(CraLList *list, size_t index, void *newval, void *retoldval);
-```
-
-更新元素
-
-`set_and_pop_old`: 先获取旧元素，再更新
-
-## get
+## get and set
 
 ```c
+T *
+cra_llist_get_ref(CraLList *list, size_t index);
 bool
-cra_llist_get(CraLList *list, size_t index, void *retval);
+cra_llist_get(CraLList *list, size_t index, out T *retval);
 bool
-cra_llist_get_ptr(CraLList *list, size_t index, void **retvalptr);
+cra_llist_get_and_set(CraLList *list, size_t index, T *newval, out T *retoldval);
+bool
+cra_llist_set(CraLList *list, size_t index, T *val);
+
+// ============
+
+T *pval = cra_llist_get_ref(list, index);
+
+T val; cra_llist_get(list, index, &val);
+
+T newval = XXX, retoldval; cra_llist_get_and_set(list, index, &newval, &retoldval);
+
+T newval = XXX; cra_llist_set(list, index, &newval);
 ```
 
-获取元素
+获取/更新元素  
+**newval**不可为**NULL**；**retoldval**为**NULL**时，`get_and_set`等价于`set`。
 
 ## reverse
 
@@ -128,71 +143,128 @@ cra_llist_reverse(CraLList *list);
 
 翻转链表
 
-## clone
-
-```c
-CraLList *
-cra_llist_clone(CraLList *list, cra_deep_copy_val_fn deep_copy_val);
-```
-
-克隆链表
-
-- `deep_copy_val` 深拷贝函数
-
 ## sort
 
 ```c
-void
-cra_llist_sort(CraLList *list, cra_compare_fn compare);
+bool
+cra_llist_sort(CraLList *list, int (*compare)(const T *, const T *));
 ```
 
-对链表进行排序
+对链表进行（快速）排序
 
 - `compare` 比较函数
+
+成功返回**true**，失败返回**false**  
+只有`MSVC`才会在临时内存分配失败时返回**false**
 
 ## add sort
 
 ```c
 bool
-cra_llist_add_sort(CraLList *list, cra_compare_fn compare, void *val);
+cra_llist_add_sort(CraLList *list, int (*compare)(const T *, const T *), T *val);
 ```
 
 有序添加元素  
 使用前要保证链表有序，并且之后的添加操作只能使用`add_sort`，这样才能保证链表有序
 
-## iterator
+## 已实现接口
+
+### initializable
 
 ```c
-void
-cra_llist_iter_init(CraLList *list, CraLListIter *it);
-bool
-cra_llist_iter_next(CraLListIter *it, void **retvalptr);
+CRA_LLIST_INITIALIZABLE_I // llist可初始化接口
+
+// 传递给初始化函数的必要参数
+typedef struct CraLListInitializableParam
+{
+    size_t itemsize;
+    size_t init_spare_node;
+} CraLListInitializableParam;
+// 初始化参数
+CRA_LLIST_INITIALIZABLE_PARAM_INIT(T, init_spare_node)
+
+// ============
+
+CraLListInitializableParam param = CRA_LLIST_INITIALIZABLE_PARAM_INIT(T, 0);
+
+CraLList *list = cra_alloc(CraLList);
+if (!cra_initializable_init(CRA_LLIST_INITIALIZABLE_I, list, &param))
+    printf("init failed");
+cra_initializable_uninit(CRA_LLIST_INITIALIZABLE_I, list);
+cra_dealloc(list);
 ```
 
-迭代链表
+### appendable
+
+```c
+CRA_LLIST_APPENDABLE_I // llist可追加接口
+
+// ============
+
+if (!cra_appendable_append(CRA_LLIST_APPENDABLE_I, list, &val))
+    printf("append failed");
+```
+
+### iterable
+
+```c
+CRA_LLIST_ITERABLE_I // llist可迭代接口
+
+// ============
+
+T val;
+CraLList *list = ...;
+// 正向迭代
+CRA_FOREACH(CRA_LLIST_ITERABLE_I, list, vals)
+{
+    memcpy(&val, vals.val1_ref, sizeof(val));
+    printf("val = %d\n", val);
+}
+// 反向迭代
+CRA_FOREACH_REVERSE(CRA_LLIST_ITERABLE_I, list, vals)
+{
+    memcpy(&val, vals.val1_ref, sizeof(val));
+    printf("val = %d\n", val);
+}
+```
 
 ## 直接操作链表结点
 
 ```c
 // 新建结点
 CraLListNode *
-cra_llist_create_node(size_t element_size);
+cra_llist_create_node(size_t itemsize);
+
 // 销毁结点
 void
-cra_llist_destroy_node(CraLListNode **node);
-// 获取一个空闲结点
-CraLListNode *
-cra_llist_get_free_node(CraLList *list);
-// 归还一个空闲结点
+cra_llist_destroy_node(CraLListNode *node);
+
+// 连接结点
 void
-cra_llist_put_free_node(CraLList *list, CraLListNode *node);
-// 插入结点
-bool
-cra_llist_insert_node(CraLList *list, size_t index, CraLListNode *node);
+cra_llist_link_node(CraLListNode *node, CraLListNode *prev);
+
 // 断开结点
 void
 cra_llist_unlink_node(CraLList *list, CraLListNode *node);
-// 获取结点
+
+// 从llist中获取一个空闲结点
+CraLListNode *
+cra_llist_get_free_node(CraLList *list);
+
+// 归还一个空闲结点到llist中
+void
+cra_llist_put_free_node(CraLList *list, CraLListNode *node);
+
+// 获取llist中**index**处的结点
 CraLListNode *
 cra_llist_get_node(CraLList *list, size_t index);
+
+// 向llist的**index**处插入结点
+bool
+cra_llist_insert_node(CraLList *list, size_t index, CraLListNode *node);
+
+// 将**node**从llist中移除
+// 如果**put_to_free_list**为**true**，则将**node**归还到llist的空闲结点列表中
+bool
+cra_llist_remove_node(CraLList *list, CraLListNode *node, bool put_to_free_list);
 ```

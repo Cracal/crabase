@@ -12,7 +12,7 @@ cra_freenodelist_new(void)
     CraLList *list = cra_alloc(CraLList);
     if (!list)
         return NULL;
-    if (!cra_llist_init0(CraTimer_base *, list, false))
+    if (!cra_llist_init(CraTimer_base *, list))
     {
         cra_dealloc(list);
         return NULL;
@@ -36,11 +36,11 @@ cra_freenodelist_get(CraLList *list)
     if (list->count > 0)
     {
         node = list->head;
-        cra_llist_unlink_node(list, node);
+        cra_llist_remove_node(list, node, false);
     }
     else
     {
-        node = cra_llist_create_node(list->ele_size);
+        node = cra_llist_create_node(list->itemsize);
     }
     return node;
 }
@@ -58,7 +58,7 @@ cra_freenodelist_put(CraLList *list, CraLListNode *node)
     }
     else
     {
-        cra_llist_destroy_node(&node);
+        cra_llist_destroy_node(node);
     }
 }
 
@@ -109,7 +109,7 @@ cra_timewheel_add_node_to(CraTimewheel *wheel, CraLListNode *timernode, uint32_t
     if (!list)
     {
         list = cra_alloc(CraLList);
-        if (!list || !cra_llist_init0(CraTimer_base *, list, false))
+        if (!list || !cra_llist_init(CraTimer_base *, list))
             return false;
         wheel->wheel_buckets[bucket] = list;
     }
@@ -162,7 +162,7 @@ cra_timewheel_tick_inner(CraTimewheel *wheel, CraTimewheel *lower_wheel)
     {
         curr = list->head;
         timer = CRA_TIMER_IN_NODE(curr);
-        cra_llist_unlink_node(list, curr);
+        cra_llist_remove_node(list, curr, false);
 
         if (!timer->active)
         {
@@ -237,12 +237,12 @@ cra_timewheel_uninit(CraTimewheel *wheel)
     {
         if (wheel->wheel_buckets[i])
         {
-            CraLListIter    it;
-            CraTimer_base **timerptr;
-            for (cra_llist_iter_init(wheel->wheel_buckets[i], &it); cra_llist_iter_next(&it, (void **)&timerptr);)
+            CraTimer_base *timer;
+            CRA_FOREACH(CRA_LLIST_ITERABLE_I, wheel->wheel_buckets[i], vals)
             {
-                if ((*timerptr)->on_remove_timer)
-                    (*timerptr)->on_remove_timer(*timerptr);
+                memcpy(&timer, vals.val1_ref, sizeof(timer));
+                if (timer->on_remove_timer)
+                    timer->on_remove_timer(timer);
             }
             cra_llist_uninit(wheel->wheel_buckets[i]);
             cra_dealloc(wheel->wheel_buckets[i]);

@@ -49,7 +49,7 @@ cra_alist_clear(CraAList *list);
 
 清空数组
 
-## resize
+## ensure
 
 ```c
 bool
@@ -58,8 +58,8 @@ cra_alist_ensure(CraAList *list, size_t nspare, bool shrink2fit)
 
 调用此函数可确保数组容量足够容纳**nspare**个元素。
 
-- `nspare` 需要的空闲元素个数
-- `shrink2fit` 当空闲空间超过**nspare**时，是否缩小数组容量到只有**nspare**个空闲元素。
+- `nspare` 需要的空闲空间个数
+- `shrink2fit` 当空闲空间超过**nspare**时，是否缩小数组容量到只有**nspare**个空闲空间。
 
 成功返回**true**，失败返回**false**  
 只有为扩容失败时才会返回**false**
@@ -143,8 +143,7 @@ bool
 cra_alist_reverse(CraAList *list);
 ```
 
-反转数组
-
+反转数组  
 只有`MSVC`才会在临时内存分配失败时返回**false**
 
 ## sort
