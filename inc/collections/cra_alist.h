@@ -152,6 +152,9 @@ typedef struct CraAListInitializableParam
     size_t init_capacity;
 } CraAListInitializableParam;
 #define CRA_ALIST_INITIALIZABLE_PARAM_INIT(_T, _init_capacity) { sizeof(_T), _init_capacity }
+#define CRA_ALIST_INITIALIZABLE_PARAM_DECL(_var_name)          CraAListInitializableParam _var_name
+#define CRA_ALIST_INITIALIZABLE_PARAM_DEF(_var_name, _T, _init_capacity)                                   \
+    CRA_ALIST_INITIALIZABLE_PARAM_DECL(_var_name) = CRA_ALIST_INITIALIZABLE_PARAM_INIT(_T, _init_capacity)
 
 CRA_API CRA_INITIALIZABLE_DEF(cra_g_alist_initializable_i);
 #define CRA_ALIST_INITIALIZABLE_I (&cra_g_alist_initializable_i)

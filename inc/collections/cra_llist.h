@@ -21,7 +21,7 @@ struct CraLListNode
 {
     CraLListNode *prev;
     CraLListNode *next;
-    char          val[];
+    unsigned char val[];
 };
 
 struct CraLList
@@ -305,6 +305,9 @@ typedef struct CraLListInitializableParam
     size_t init_spare_node;
 } CraLListInitializableParam;
 #define CRA_LLIST_INITIALIZABLE_PARAM_INIT(_T, _init_spare_node) { sizeof(_T), _init_spare_node }
+#define CRA_LLIST_INITIALIZABLE_PARAM_DECL(_var_name)            CraLListInitializableParam _var_name
+#define CRA_LLIST_INITIALIZABLE_PARAM_DEF(_var_name, _T, _init_spare_node)                                   \
+    CRA_LLIST_INITIALIZABLE_PARAM_DECL(_var_name) = CRA_LLIST_INITIALIZABLE_PARAM_INIT(_T, _init_spare_node)
 
 CRA_API CRA_INITIALIZABLE_DEF(cra_g_llist_initializable_i);
 #define CRA_LLIST_INITIALIZABLE_I (&cra_g_llist_initializable_i)

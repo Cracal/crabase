@@ -108,6 +108,17 @@ test_new_delete(void)
     cra_dealloc(list);
     cra_llist_uninit(&list2);
     assert_always(memcmp(&list2, &(CraLList){ 0 }, sizeof(CraLList)) == 0);
+
+    CRA_LLIST_INITIALIZABLE_PARAM_DEF(param, int, 4);
+    assert_always(cra_initializable_init(CRA_LLIST_INITIALIZABLE_I, &list2, &param));
+    assert_always(list2.count == 0);
+    assert_always(list2.head == NULL);
+    assert_always(list2.nfreelist == 4);
+    assert_always(list2.free_list != NULL);
+    assert_always(list2.itemsize == sizeof(int));
+
+    cra_initializable_uninit(CRA_LLIST_INITIALIZABLE_I, &list2);
+    assert_always(memcmp(&list2, &(CraLList){ 0 }, sizeof(CraLList)) == 0);
 }
 
 void
@@ -158,8 +169,11 @@ test_add(void)
     assert_always(cra_llist_prepend(list, &(int){ -2 }));
     assert_always(cra_llist_insert(list, 4, &(int){ 4000 }));
     assert_always(cra_llist_insert(list, 4, &(int){ 40000 }));
-    assert_always(cra_llist_append(list, &(int){ 11 }));
-    assert_always(cra_llist_append(list, &(int){ 12 }));
+    CraTwoVals vals_;
+    vals_.val1_ref = &(int){ 11 };
+    assert_always(cra_appendable_append(CRA_LLIST_APPENDABLE_I, list, &vals_));
+    vals_.val1_ref = &(int){ 12 };
+    assert_always(cra_appendable_append(CRA_LLIST_APPENDABLE_I, list, &vals_));
     assert_always(list->count == 1006);
 
     assert_always(!cra_llist_insert(list, 10000, &(int){ 1 }));
