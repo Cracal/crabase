@@ -336,7 +336,7 @@ static CRA_ITERABLE_INIT_FN(cra_llist_iter_init)
     assert(list->head->prev);
 
     it->obj = list;
-    it->cur = reverse ? list->head->prev : list->head;
+    it->ic1.cur = reverse ? list->head->prev : list->head;
     return true;
 }
 
@@ -350,7 +350,7 @@ static CRA_ITERABLE_NEXT_FN(cra_llist_iter_next)
     assert(it->obj);
 
     list = (CraLList *)it->obj;
-    curr = (CraLListNode *)it->cur;
+    curr = (CraLListNode *)it->ic1.cur;
 
     if (!curr)
         return false;
@@ -360,7 +360,7 @@ static CRA_ITERABLE_NEXT_FN(cra_llist_iter_next)
 
     next = curr->next;
     vals->val1_ref = curr->val;
-    it->cur = next != list->head ? next : NULL;
+    it->ic1.cur = next != list->head ? next : NULL;
     return true;
 }
 
@@ -374,7 +374,7 @@ static CRA_ITERABLE_PREV_FN(cra_llist_iter_prev)
     assert(it->obj);
 
     list = (CraLList *)it->obj;
-    curr = (CraLListNode *)it->cur;
+    curr = (CraLListNode *)it->ic1.cur;
 
     if (!curr)
         return false;
@@ -384,7 +384,7 @@ static CRA_ITERABLE_PREV_FN(cra_llist_iter_prev)
 
     prev = curr->prev;
     vals->val1_ref = curr->val;
-    it->cur = prev != list->head->prev ? prev : NULL;
+    it->ic1.cur = prev != list->head->prev ? prev : NULL;
     return true;
 }
 

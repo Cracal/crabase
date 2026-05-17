@@ -332,7 +332,7 @@ static CRA_ITERABLE_INIT_FN(cra_alist_iterable_init)
     CraAList *list = (CraAList *)obj;
     if (list->count > 0)
     {
-        it->idx = reverse ? list->count : 0;
+        it->ic1.idx = reverse ? list->count : 0;
         it->obj = obj;
         return true;
     }
@@ -346,9 +346,9 @@ static CRA_ITERABLE_NEXT_FN(cra_alist_iterable_next)
     assert(it->obj);
 
     CraAList *list = (CraAList *)it->obj;
-    if (it->idx < list->count)
+    if (it->ic1.idx < list->count)
     {
-        vals->val1_ref = CRA_ALIST_PVAL(list, it->idx++);
+        vals->val1_ref = CRA_ALIST_PVAL(list, it->ic1.idx++);
         return true;
     }
     return false;
@@ -361,9 +361,9 @@ static CRA_ITERABLE_PREV_FN(cra_alist_iterable_prev)
     assert(it->obj);
 
     CraAList *list = (CraAList *)it->obj;
-    if (it->idx > 0)
+    if (it->ic1.idx > 0)
     {
-        vals->val1_ref = CRA_ALIST_PVAL(list, --it->idx);
+        vals->val1_ref = CRA_ALIST_PVAL(list, --it->ic1.idx);
         return true;
     }
     return false;

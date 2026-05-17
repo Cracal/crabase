@@ -249,11 +249,17 @@ cra_appendable_append(const NewCraAppendable_i *i, void *obj, CraTwoVals *vals)
 #define CRA_ITERABLE_PREV_FN(_name) bool _name(NewCraIterator *it, CraTwoVals *vals)
 #define CRA_ITERABLE_DEF(_name)     const NewCraIterable_i _name
 
+union CraIteratorVal_u
+{
+    size_t idx;
+    void  *cur;
+};
+
 typedef struct NewCraIterator
 {
-    void  *obj;
-    void  *cur;
-    size_t idx;
+    void                  *obj;
+    union CraIteratorVal_u ic1;
+    union CraIteratorVal_u ic2;
 } NewCraIterator;
 
 typedef struct NewCraIterable_i
@@ -283,14 +289,14 @@ cra_iterable_prev(const NewCraIterable_i *i, NewCraIterator *it, CraTwoVals *val
 
 #define CRA_FOREACH(_iterable_i, _obj, _val_name)                                                        \
     for (NewCraIterator _val_name##_it = { 0 };                                                          \
-         _val_name##_it.idx == 0 && cra_iterable_init(_iterable_i, _obj, &_val_name##_it, false);        \
-         _val_name##_it.idx = 1)                                                                         \
+         _val_name##_it.ic1.idx == 0 && cra_iterable_init(_iterable_i, _obj, &_val_name##_it, false);    \
+         _val_name##_it.ic1.idx = 1)                                                                     \
         for (CraTwoVals _val_name = { 0 }; cra_iterable_next(_iterable_i, &_val_name##_it, &_val_name);)
 
 #define CRA_FOREACH_REVERSE(_iterable_i, _obj, _val_name)                                                \
     for (NewCraIterator _val_name##_it = { 0 };                                                          \
-         _val_name##_it.idx == 0 && cra_iterable_init(_iterable_i, _obj, &_val_name##_it, true);         \
-         _val_name##_it.idx = 1)                                                                         \
+         _val_name##_it.ic1.idx == 0 && cra_iterable_init(_iterable_i, _obj, &_val_name##_it, true);     \
+         _val_name##_it.ic1.idx = 1)                                                                     \
         for (CraTwoVals _val_name = { 0 }; cra_iterable_prev(_iterable_i, &_val_name##_it, &_val_name);)
 
 #endif // end interfaces
