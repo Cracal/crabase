@@ -224,12 +224,12 @@ test_llist_performance(int sizes[])
 void
 test_deque_performance(int sizes[])
 {
-    CraDequeIter  it;
+    int           val;
     CraDeque      deque;
-    int           val, *valptr;
+    int           nloop;
     unsigned long start_ms, end_ms;
 
-    cra_deque_init0(int, &deque, CRA_DEQUE_INFINITE, false);
+    cra_deque_init(int, &deque);
     srand((unsigned int)time(NULL));
 
     printf("\n=========================================================\n\n");
@@ -244,7 +244,7 @@ test_deque_performance(int sizes[])
         // append
         start_ms = cra_tick_ms();
         for (int j = 0; j < sizes[i]; j++)
-            cra_deque_push(&deque, &j);
+            cra_deque_append(&deque, &j);
         end_ms = cra_tick_ms();
         printf("\tappend:        %lums.\n", end_ms - start_ms);
 
@@ -253,7 +253,7 @@ test_deque_performance(int sizes[])
         // prepend
         start_ms = cra_tick_ms();
         for (int j = 0; j < sizes[i]; j++)
-            cra_deque_push_left(&deque, &j);
+            cra_deque_prepend(&deque, &j);
         end_ms = cra_tick_ms();
         printf("\tprepend:       %lums.\n", end_ms - start_ms);
 
@@ -281,11 +281,11 @@ test_deque_performance(int sizes[])
         printf("\tget(miss):     %lums.\n", end_ms - start_ms);
 
         // iter
+        nloop = 0;
         start_ms = cra_tick_ms();
-        for (cra_deque_iter_init(&deque, &it); cra_deque_iter_next(&it, (void **)&valptr);)
-            ;
+        CRA_FOREACH(CRA_DEQUE_ITERABLE_I, &deque, vals) nloop++;
         end_ms = cra_tick_ms();
-        printf("\titer:          %lums.\n", end_ms - start_ms);
+        printf("\titer:          %lums. loop times: %d\n", end_ms - start_ms, nloop);
 
         // // sort
         // start_ms = cra_tick_ms();
@@ -296,7 +296,7 @@ test_deque_performance(int sizes[])
         // remove back
         start_ms = cra_tick_ms();
         for (int j = 0; j < sizes[i]; j++)
-            cra_deque_pop(&deque, NULL);
+            cra_deque_remove_back(&deque);
         end_ms = cra_tick_ms();
         printf("\tremove back:   %lums.\n", end_ms - start_ms);
 
@@ -306,7 +306,7 @@ test_deque_performance(int sizes[])
         // remove front
         start_ms = cra_tick_ms();
         for (int j = 0; j < sizes[i]; j++)
-            cra_deque_pop_left(&deque, NULL);
+            cra_deque_remove_front(&deque);
         end_ms = cra_tick_ms();
         printf("\tremove front:  %lums.\n", end_ms - start_ms);
 

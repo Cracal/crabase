@@ -13,7 +13,7 @@
 #include "collections/cra_deque.h"
 #include "threads/cra_lock.h"
 
-#define CRA_BLK_DEQUE_INFINITE CRA_DEQUE_INFINITE
+#define CRA_BLK_DEQUE_INFINITE SIZE_MAX
 
 typedef enum
 {
