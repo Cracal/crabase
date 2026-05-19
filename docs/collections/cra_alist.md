@@ -134,7 +134,8 @@ T newval = XXX; cra_alist_set(list, index, &newval);
 ```
 
 获取/更新元素  
-**newval**不可为**NULL**；**retoldval**为**NULL**时，`get_and_set`等价于`set`。
+**newval**不可为**NULL**。
+**retoldval**不可为**NULL**。
 
 ## reverse
 
@@ -188,7 +189,12 @@ CRA_ALIST_INITIALIZABLE_PARAM_INIT(T, init_capacity)
 
 // ============
 
+// 1.
 CraAListInitializableParam param = CRA_ALIST_INITIALIZABLE_PARAM_INIT(T, 0);
+// 2.
+CRA_ALIST_INITIALIZABLE_PARAM_DECL(T) param = CRA_ALIST_INITIALIZABLE_PARAM_INIT(T, 0);
+// 3.
+CRA_ALIST_INITIALIZABLE_PARAM_DEF(param, T, 0);
 
 CraAList *list = cra_alloc(CraAList);
 if (!cra_initializable_init(CRA_ALIST_INITIALIZABLE_I, list, &param))

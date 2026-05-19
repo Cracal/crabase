@@ -269,17 +269,9 @@ cra_llist_get_and_set(CraLList *list, size_t index, void *newval, void *retoldva
      CRA_LLIST_CHECK_VAL(_list, _retoldval),                      \
      cra_llist_get_and_set(_list, _index, _newval, _retoldval))
 
-static inline bool
-cra_llist_set(CraLList *list, size_t index, void *val)
-{
-    assert(val);
-    void *pval = cra_llist_get_ref(list, index);
-    if (pval)
-        memcpy(pval, val, list->itemsize);
-    return pval != NULL;
-}
 // bool set(CraLList *list, size_t index, T *val)
-#define cra_llist_set(_list, _index, _val) (CRA_LLIST_CHECK_VAL(_list, _val), cra_llist_set(_list, _index, _val))
+#define cra_llist_set(_list, _index, _val)                                                 \
+    (CRA_LLIST_CHECK_VAL(_list, _val), (cra_llist_get_and_set)(_list, _index, _val, NULL))
 
 CRA_API void
 cra_llist_reverse(CraLList *list);

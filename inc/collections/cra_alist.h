@@ -116,17 +116,9 @@ cra_alist_get_and_set(CraAList *list, size_t index, void *newval, void *retoldva
      CRA_ALIST_CHECK_VAL(_list, _retoldval),                      \
      cra_alist_get_and_set(_list, _index, _newval, _retoldval))
 
-static inline bool
-cra_alist_set(CraAList *list, size_t index, void *val)
-{
-    assert(val);
-    void *pval = cra_alist_get_ref(list, index);
-    if (pval)
-        memcpy(pval, val, list->itemsize);
-    return pval != NULL;
-}
 // bool set(CraAList *list, size_t index, T *val)
-#define cra_alist_set(_list, _index, _val) (CRA_ALIST_CHECK_VAL(_list, _val), cra_alist_set(_list, _index, _val))
+#define cra_alist_set(_list, _index, _val)                                                 \
+    (CRA_ALIST_CHECK_VAL(_list, _val), (cra_alist_get_and_set)(_list, _index, _val, NULL))
 
 CRA_API bool
 cra_alist_reverse(CraAList *list);

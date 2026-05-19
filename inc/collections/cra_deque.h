@@ -123,17 +123,9 @@ cra_deque_get_and_set(CraDeque *deque, size_t index, void *newval, void *retoldv
      CRA_DEQUE_CHECK_VAL(_deque, _retoldval),                      \
      cra_deque_get_and_set(_deque, _index, _newval, _retoldval))
 
-static inline bool
-cra_deque_set(CraDeque *deque, size_t index, void *val)
-{
-    assert(val);
-    void *pval = cra_deque_get_ref(deque, index);
-    if (pval)
-        memcpy(pval, val, deque->itemsize);
-    return pval != NULL;
-}
 // bool set(CraDeque *deque, size_t index, T *val)
-#define cra_deque_set(_deque, _index, _val) (CRA_DEQUE_CHECK_VAL(_deque, _val), cra_deque_set(_deque, _index, _val))
+#define cra_deque_set(_deque, _index, _val)                                                  \
+    (CRA_DEQUE_CHECK_VAL(_deque, _val), (cra_deque_get_and_set)(_deque, _index, _val, NULL))
 
 CRA_API bool
 cra_deque_reverse(CraDeque *deque);
