@@ -12,6 +12,7 @@
 #define __CRA_DICT_H__
 #include "cra_collects.h"
 
+#if 1
 typedef struct _CraDictEntry CraDictEntry;
 
 typedef struct _CraDict
@@ -99,5 +100,21 @@ cra_dict_get_ptr(CraDict *dict, void *key, void **retvalptr);
 
 CRA_API CraDict *
 cra_dict_clone(CraDict *dict, cra_deep_copy_val_fn deep_copy_key, cra_deep_copy_val_fn deep_copy_val);
+#endif
+
+typedef struct NewCraDictEntry NewCraDictEntry;
+typedef struct NewCraDict      NewCraDict;
+
+struct NewCraDict
+{
+    ssize_t         *buckets;
+    NewCraDictEntry *entries;
+    ssize_t          next;
+    ssize_t          count;
+    ssize_t          capacity;
+    ssize_t          freelist;
+    size_t           key_size;
+    size_t           val_size;
+};
 
 #endif

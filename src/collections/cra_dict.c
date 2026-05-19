@@ -9,9 +9,9 @@
  *
  */
 #include "collections/cra_dict.h"
-#include "cra_assert.h"
 #include "cra_malloc.h"
 
+#if 1
 struct _CraDictEntry
 {
     // `hashcode == -1`表示该位置的entry是未使用的entry
@@ -451,3 +451,4 @@ fail:
     cra_free(ret);
     return NULL;
 }
+#endif
