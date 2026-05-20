@@ -167,7 +167,8 @@ CRA_DEQUE_APPENDABLE_I // deque可追加接口
 
 // ============
 
-if (!cra_appendable_append(CRA_DEQUE_APPENDABLE_I, deque, &val))
+CraTwoVals vals = {.val1_ref = &val};
+if (!cra_appendable_append(CRA_DEQUE_APPENDABLE_I, deque, &vals))
     printf("append failed");
 ```
 
@@ -184,12 +185,12 @@ CraAlist *list = ...;
 CRA_FOREACH(CRA_DEQUE_ITERABLE_I, deque, vals)
 {
     memcpy(&val, vals.val1_ref, sizeof(val));
-    printf("val = %d\n", val);
+    printf("val = %??\n", val);
 }
 // 反向迭代
 CRA_FOREACH_REVERSE(CRA_DEQUE_ITERABLE_I, deque, vals)
 {
     memcpy(&val, vals.val1_ref, sizeof(val));
-    printf("val = %d\n", val);
+    printf("val = %??\n", val);
 }
 ```

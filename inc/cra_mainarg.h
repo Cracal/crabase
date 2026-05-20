@@ -20,7 +20,7 @@ typedef union
     char   *s;
 } CraMainArgVal_u;
 
-typedef struct _CraDict           CraDict;
+typedef struct CraDict            CraDict;
 typedef struct CraAList           CraAList;
 typedef struct _CraMemPool        CraMemPool;
 typedef struct _CraMainArg        CraMainArg;

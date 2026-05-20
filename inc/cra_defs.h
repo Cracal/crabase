@@ -10,11 +10,12 @@
  */
 #ifndef __CRA_DEFS_H__
 #define __CRA_DEFS_H__
-#include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
+#include <stddef.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
+#include <stdbool.h>
 
 #if 1 // OS
 

@@ -207,7 +207,8 @@ CRA_LLIST_APPENDABLE_I // llist可追加接口
 
 // ============
 
-if (!cra_appendable_append(CRA_LLIST_APPENDABLE_I, list, &val))
+CraTwoVals vals = {.val1_ref = &val};
+if (!cra_appendable_append(CRA_LLIST_APPENDABLE_I, list, &vals))
     printf("append failed");
 ```
 
@@ -224,13 +225,13 @@ CraLList *list = ...;
 CRA_FOREACH(CRA_LLIST_ITERABLE_I, list, vals)
 {
     memcpy(&val, vals.val1_ref, sizeof(val));
-    printf("val = %d\n", val);
+    printf("val = %??\n", val);
 }
 // 反向迭代
 CRA_FOREACH_REVERSE(CRA_LLIST_ITERABLE_I, list, vals)
 {
     memcpy(&val, vals.val1_ref, sizeof(val));
-    printf("val = %d\n", val);
+    printf("val = %??\n", val);
 }
 ```
 

@@ -174,13 +174,8 @@ cra_mainarg_init(CraMainArg *ma, char *program, const char *intro, const char *u
     if (noption == 0 || nitem == 0)
         PRINT_ERROR_EXIT("The option array 'options' cannot be empty.");
 
-    if (!cra_dict_init_size0(char *,
-                             CraMainArgItem *,
-                             ma->items,
-                             noption,
-                             false,
-                             (cra_hash_fn)cra_hash_string1_p,
-                             (cra_compare_fn)cra_compare_string_p))
+    if (!cra_dict_init_with_size(
+          char *, CraMainArgItem *, ma->items, noption, cra_hash_string1_p, cra_compare_string_p))
     {
         PRINT_ERROR_EXIT("Failed to initialize items.");
     }
@@ -297,10 +292,9 @@ void
 cra_mainarg_print_help(CraMainArg *ma)
 {
     int                l;
-    CraDictIter        it;
     CraMainArgElement *elem;
     CraMainArgItem    *last;
-    CraMainArgItem   **pitem;
+    CraMainArgItem    *item;
 
     assert(ma);
 
@@ -310,13 +304,14 @@ cra_mainarg_print_help(CraMainArg *ma)
     last = NULL;
     printf("Options:\n");
     printf("  -h, --help  %*.sShow options\n", ma->tipstart - (int)HELP_OPTION_LENGTH, "");
-    for (cra_dict_iter_init(ma->items, &it); cra_dict_iter_next(&it, NULL, (void **)&pitem);)
+    CRA_FOREACH(CRA_DICT_ITERABLE_I, ma->items, vals)
     {
-        if (*pitem == last)
+        memcpy(&item, vals.val2_ref, sizeof(item));
+        if (item == last)
             continue;
 
-        last = *pitem;
-        elem = (*pitem)->element;
+        last = item;
+        elem = item->element;
         //   [-X][, ][--X..X][ len(valtip)]  len(optip)
         l = printf("  %s%s%s",
                    elem->op ? elem->op : "  ",

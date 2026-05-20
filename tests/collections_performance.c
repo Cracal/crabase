@@ -15,16 +15,26 @@
 #include "cra_malloc.h"
 #include "cra_time.h"
 
+static inline int
+rand_large(void)
+{
+    uint32_t r = 0;
+    r ^= (uint32_t)rand() << 20;
+    r ^= (uint32_t)rand() << 5;
+    r ^= (uint32_t)rand();
+    return r;
+}
+
 void
 test_alist_performance(int sizes[])
 {
     int           val;
     CraAList      list;
     int           nloop;
+    long long     sum;
     unsigned long start_ms, end_ms;
 
     assert_always(cra_alist_init_with_size(int, &list, sizes[0]));
-    srand((unsigned int)time(NULL));
 
     printf("\n=========================================================\n\n");
 
@@ -56,30 +66,35 @@ test_alist_performance(int sizes[])
         // insert
         start_ms = cra_tick_ms();
         for (int j = 0; j < sizes[i]; j++)
-            cra_alist_insert(&list, rand() % (list.count + 1), &j);
+            cra_alist_insert(&list, rand_large() % (list.count + 1), &j);
         end_ms = cra_tick_ms();
         printf("\tinsert:        %lums.\n", end_ms - start_ms);
 
         // get
         start_ms = cra_tick_ms();
         for (int j = 0; j < sizes[i]; j++)
-            cra_alist_get(&list, rand() % list.count, &val);
+            cra_alist_get(&list, rand_large() % list.count, &val);
         end_ms = cra_tick_ms();
         printf("\tget:           %lums.\n", end_ms - start_ms);
 
         // get miss
         start_ms = cra_tick_ms();
         for (int j = 0; j < sizes[i]; j++)
-            cra_alist_get(&list, rand() + (list.count + 1), &val);
+            cra_alist_get(&list, rand_large() + (list.count + 1), &val);
         end_ms = cra_tick_ms();
         printf("\tget(miss):     %lums.\n", end_ms - start_ms);
 
         // iter
+        sum = 0;
         nloop = 0;
         start_ms = cra_tick_ms();
-        CRA_FOREACH(CRA_ALIST_ITERABLE_I, &list, vals) nloop++;
+        CRA_FOREACH(CRA_ALIST_ITERABLE_I, &list, vals)
+        {
+            nloop++;
+            sum += *(int *)vals.val1_ref;
+        }
         end_ms = cra_tick_ms();
-        printf("\titer:          %lums. loop times: %d\n", end_ms - start_ms, nloop);
+        printf("\titer:          %lums. loop times: %d. sum: %lld\n", end_ms - start_ms, nloop, sum);
 
         // sort
         start_ms = cra_tick_ms();
@@ -95,7 +110,7 @@ test_alist_performance(int sizes[])
         printf("\tremove back:   %lums.\n", end_ms - start_ms);
 
         for (int j = 0; j < sizes[i]; j++)
-            cra_alist_insert(&list, rand() % (list.count + 1), &j);
+            cra_alist_insert(&list, rand_large() % (list.count + 1), &j);
 
         // remove front
         start_ms = cra_tick_ms();
@@ -105,12 +120,12 @@ test_alist_performance(int sizes[])
         printf("\tremove front:  %lums.\n", end_ms - start_ms);
 
         for (int j = 0; j < sizes[i]; j++)
-            cra_alist_insert(&list, rand() % (list.count + 1), &j);
+            cra_alist_insert(&list, rand_large() % (list.count + 1), &j);
 
         // remove random
         start_ms = cra_tick_ms();
         for (int j = 0; j < sizes[i]; j++)
-            cra_alist_remove_at(&list, rand() % list.count);
+            cra_alist_remove_at(&list, rand_large() % list.count);
         end_ms = cra_tick_ms();
         printf("\tremove random: %lums.\n", end_ms - start_ms);
     }
@@ -124,10 +139,10 @@ test_llist_performance(int sizes[])
     int           val;
     CraLList      list;
     int           nloop;
+    long long     sum;
     unsigned long start_ms, end_ms;
 
     assert_always(cra_llist_init(int, &list));
-    srand((unsigned int)time(NULL));
 
     printf("\n=========================================================\n\n");
 
@@ -159,30 +174,35 @@ test_llist_performance(int sizes[])
         // insert
         start_ms = cra_tick_ms();
         for (int j = 0; j < sizes[i]; j++)
-            cra_llist_insert(&list, rand() % (list.count + 1), &j);
+            cra_llist_insert(&list, rand_large() % (list.count + 1), &j);
         end_ms = cra_tick_ms();
         printf("\tinsert:        %lums.\n", end_ms - start_ms);
 
         // get
         start_ms = cra_tick_ms();
         for (int j = 0; j < sizes[i]; j++)
-            cra_llist_get(&list, rand() % list.count, &val);
+            cra_llist_get(&list, rand_large() % list.count, &val);
         end_ms = cra_tick_ms();
         printf("\tget:           %lums.\n", end_ms - start_ms);
 
         // get miss
         start_ms = cra_tick_ms();
         for (int j = 0; j < sizes[i]; j++)
-            cra_llist_get(&list, rand() + (list.count + 1), &val);
+            cra_llist_get(&list, rand_large() + (list.count + 1), &val);
         end_ms = cra_tick_ms();
         printf("\tget(miss):     %lums.\n", end_ms - start_ms);
 
         // iter
+        sum = 0;
         nloop = 0;
         start_ms = cra_tick_ms();
-        CRA_FOREACH(CRA_LLIST_ITERABLE_I, &list, vals) nloop++;
+        CRA_FOREACH(CRA_LLIST_ITERABLE_I, &list, vals)
+        {
+            nloop++;
+            sum += *(int *)vals.val1_ref;
+        }
         end_ms = cra_tick_ms();
-        printf("\titer:          %lums. loop times: %d\n", end_ms - start_ms, nloop);
+        printf("\titer:          %lums. loop times: %d. sum: %lld\n", end_ms - start_ms, nloop, sum);
 
         // sort
         start_ms = cra_tick_ms();
@@ -198,7 +218,7 @@ test_llist_performance(int sizes[])
         printf("\tremove back:   %lums.\n", end_ms - start_ms);
 
         for (int j = 0; j < sizes[i]; j++)
-            cra_llist_insert(&list, rand() % (list.count + 1), &j);
+            cra_llist_insert(&list, rand_large() % (list.count + 1), &j);
 
         // remove front
         start_ms = cra_tick_ms();
@@ -208,12 +228,12 @@ test_llist_performance(int sizes[])
         printf("\tremove front:  %lums.\n", end_ms - start_ms);
 
         for (int j = 0; j < sizes[i]; j++)
-            cra_llist_insert(&list, rand() % (list.count + 1), &j);
+            cra_llist_insert(&list, rand_large() % (list.count + 1), &j);
 
         // remove random
         start_ms = cra_tick_ms();
         for (int j = 0; j < sizes[i]; j++)
-            cra_llist_remove_at(&list, rand() % list.count);
+            cra_llist_remove_at(&list, rand_large() % list.count);
         end_ms = cra_tick_ms();
         printf("\tremove random: %lums.\n", end_ms - start_ms);
     }
@@ -227,10 +247,10 @@ test_deque_performance(int sizes[])
     int           val;
     CraDeque      deque;
     int           nloop;
+    long long     sum;
     unsigned long start_ms, end_ms;
 
     cra_deque_init(int, &deque);
-    srand((unsigned int)time(NULL));
 
     printf("\n=========================================================\n\n");
 
@@ -262,30 +282,35 @@ test_deque_performance(int sizes[])
         // insert
         start_ms = cra_tick_ms();
         for (int j = 0; j < sizes[i]; j++)
-            cra_deque_insert(&deque, rand() % (deque.count + 1), &j);
+            cra_deque_insert(&deque, rand_large() % (deque.count + 1), &j);
         end_ms = cra_tick_ms();
         printf("\tinsert:        %lums.\n", end_ms - start_ms);
 
         // get
         start_ms = cra_tick_ms();
         for (int j = 0; j < sizes[i]; j++)
-            cra_deque_get(&deque, rand() % deque.count, &val);
+            cra_deque_get(&deque, rand_large() % deque.count, &val);
         end_ms = cra_tick_ms();
         printf("\tget:           %lums.\n", end_ms - start_ms);
 
         // get miss
         start_ms = cra_tick_ms();
         for (int j = 0; j < sizes[i]; j++)
-            cra_deque_get(&deque, rand() + (deque.count + 1), &val);
+            cra_deque_get(&deque, rand_large() + (deque.count + 1), &val);
         end_ms = cra_tick_ms();
         printf("\tget(miss):     %lums.\n", end_ms - start_ms);
 
         // iter
+        sum = 0;
         nloop = 0;
         start_ms = cra_tick_ms();
-        CRA_FOREACH(CRA_DEQUE_ITERABLE_I, &deque, vals) nloop++;
+        CRA_FOREACH(CRA_DEQUE_ITERABLE_I, &deque, vals)
+        {
+            nloop++;
+            sum += *(int *)vals.val1_ref;
+        }
         end_ms = cra_tick_ms();
-        printf("\titer:          %lums. loop times: %d\n", end_ms - start_ms, nloop);
+        printf("\titer:          %lums. loop times: %d. sum: %lld\n", end_ms - start_ms, nloop, sum);
 
         // // sort
         // start_ms = cra_tick_ms();
@@ -301,7 +326,7 @@ test_deque_performance(int sizes[])
         printf("\tremove back:   %lums.\n", end_ms - start_ms);
 
         for (int j = 0; j < sizes[i]; j++)
-            cra_deque_insert(&deque, rand() % (deque.count + 1), &j);
+            cra_deque_insert(&deque, rand_large() % (deque.count + 1), &j);
 
         // remove front
         start_ms = cra_tick_ms();
@@ -311,12 +336,12 @@ test_deque_performance(int sizes[])
         printf("\tremove front:  %lums.\n", end_ms - start_ms);
 
         for (int j = 0; j < sizes[i]; j++)
-            cra_deque_insert(&deque, rand() % (deque.count + 1), &j);
+            cra_deque_insert(&deque, rand_large() % (deque.count + 1), &j);
 
         // remove random
         start_ms = cra_tick_ms();
         for (int j = 0; j < sizes[i]; j++)
-            cra_deque_remove_at(&deque, rand() % deque.count);
+            cra_deque_remove_at(&deque, rand_large() % deque.count);
         end_ms = cra_tick_ms();
         printf("\tremove random: %lums.\n", end_ms - start_ms);
     }
@@ -327,15 +352,13 @@ test_deque_performance(int sizes[])
 void
 test_dict_performance(int sizes[])
 {
-    CraDictIter   it;
+    size_t        val;
     CraDict       dict;
-    int          *keyptr;
-    size_t        val, *valptr;
+    int           nloop;
+    long long     sum;
     unsigned long start_ms, end_ms;
 
-    assert_always(
-      cra_dict_init0(int, size_t, &dict, false, (cra_hash_fn)cra_hash_int_p, (cra_compare_fn)cra_compare_int_p));
-    srand((unsigned int)time(NULL));
+    assert_always(cra_dict_init(int, size_t, &dict, cra_hash_int_p, cra_cmp_int_p));
 
     printf("\n=========================================================\n\n");
 
@@ -349,28 +372,33 @@ test_dict_performance(int sizes[])
         // insert
         start_ms = cra_tick_ms();
         for (int j = 0; j < sizes[i]; j++)
-            cra_dict_put0(&dict, &(int){ rand() }, &(size_t){ j });
+            cra_dict_put(&dict, &(int){ rand_large() }, &(size_t){ j });
         end_ms = cra_tick_ms();
         printf("\tput:           %lums.\n", end_ms - start_ms);
 
         // get
         start_ms = cra_tick_ms();
         for (int j = 0; j < sizes[i]; j++)
-            cra_dict_get(&dict, &(int){ rand() }, &val);
+            cra_dict_get(&dict, &(int){ rand_large() }, &val);
         end_ms = cra_tick_ms();
         printf("\tget:           %lums.\n", end_ms - start_ms);
 
         // iter
+        sum = 0;
+        nloop = 0;
         start_ms = cra_tick_ms();
-        for (cra_dict_iter_init(&dict, &it); cra_dict_iter_next(&it, (void **)&keyptr, (void **)&valptr);)
-            ;
+        CRA_FOREACH(CRA_DICT_ITERABLE_I, &dict, vals)
+        {
+            nloop++;
+            sum += *(size_t *)vals.val2_ref;
+        }
         end_ms = cra_tick_ms();
-        printf("\titer:          %lums.\n", end_ms - start_ms);
+        printf("\titer:          %lums. loop times: %d. sum: %lld\n", end_ms - start_ms, nloop, sum);
 
         // remove random
         start_ms = cra_tick_ms();
         for (int j = 0; j < sizes[i]; j++)
-            cra_dict_remove(&dict, &(int){ rand() });
+            cra_dict_remove(&dict, &(int){ rand_large() });
         end_ms = cra_tick_ms();
         printf("\tremove:        %lums.\n", end_ms - start_ms);
     }
@@ -383,6 +411,9 @@ main(void)
 {
     //              千     万     十万  百万  千万
     int sizes[] = { 1000, 10000, 100000, 0, 10000000, 0 };
+
+    srand((unsigned int)time(NULL));
+
     test_alist_performance(sizes);
     test_llist_performance(sizes);
     test_deque_performance(sizes);
