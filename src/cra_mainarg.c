@@ -25,9 +25,9 @@
         exit(EXIT_FAILURE);               \
     } while (0)
 
-typedef struct _CraMainArgItem CraMainArgItem;
+typedef struct CraMainArgItem CraMainArgItem;
 
-struct _CraMainArgItem
+struct CraMainArgItem
 {
     CraMainArgElement *element;
     CraMainArgVal_u    val;

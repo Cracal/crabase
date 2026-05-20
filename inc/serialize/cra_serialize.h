@@ -12,14 +12,14 @@
 #define __CRA_SERIALIZE_H__
 #include "cra_defs.h"
 
-typedef struct _CraInitializable_i CraInitializable_i;
-typedef struct _CraSerializable_i  CraSerializable_i;
-typedef struct _CraSeriObject      CraSeriObject;
-typedef struct _CraInitArgs        CraInitArgs;
-typedef struct _CraTypeMeta        CraTypeMeta;
-typedef struct _CraSerErr          CraSerErr;
+typedef struct CraInitializable_i CraInitializable_i;
+typedef struct CraSerializable_i  CraSerializable_i;
+typedef struct CraSeriObject      CraSeriObject;
+typedef struct CraInitArgs        CraInitArgs;
+typedef struct CraTypeMeta        CraTypeMeta;
+typedef struct CraSerErr          CraSerErr;
 
-struct _CraInitializable_i
+struct CraInitializable_i
 {
     bool (*init)(void *obj, CraInitArgs *arg);
     // `dont_free_ptr_member`永远是`true`。仅作为一个醒目的提示，
@@ -27,7 +27,7 @@ struct _CraInitializable_i
     void (*uninit)(void *obj, bool dont_free_ptr_member);
 };
 
-struct _CraSerializable_i
+struct CraSerializable_i
 {
     CraInitializable_i init_i;
 
@@ -37,7 +37,7 @@ struct _CraSerializable_i
     bool (*add)(void *obj, void *val1, void *val2);
 };
 
-struct _CraInitArgs
+struct CraInitArgs
 {
     size_t size;
     size_t length;
@@ -63,7 +63,7 @@ typedef enum
     CRA_SER_ERR_CANNOT_BE_NULL,
 } CraSerErr_e;
 
-struct _CraSerErr
+struct CraSerErr
 {
     CraSerErr_e err;
     char        msg[124];
@@ -85,7 +85,7 @@ typedef enum
     CRA_TYPE_DICT,    // dict
 } CraType_e;
 
-struct _CraTypeMeta
+struct CraTypeMeta
 {
     bool               is_not_end;
     bool               is_len;
@@ -104,7 +104,7 @@ struct _CraTypeMeta
     void *arg;
 };
 
-struct _CraSeriObject
+struct CraSeriObject
 {
     void       *objptr;
     CraTypeMeta meta[3];
@@ -232,7 +232,7 @@ struct _CraSeriObject
 
 // make object with meta
 
-#define __CRA_SERI_OBJ(_obj, _is_ptr, _TYPE, _name, _2meta, _submeta, _init_i, _arg)                          \
+#define __CRA_SERI_OBJ(_obj, _is_ptr, _TYPE, _name, _2meta, _submeta, _init_i, _arg)                             \
     &(CraSeriObject)                                                                                          \
     {                                                                                                         \
         .objptr = (void *)&(_obj),                                                                            \
@@ -273,18 +273,18 @@ cra_check_id_unique(const CraTypeMeta *meta);
 #ifdef __CRA_SER_INNER
 #include "cra_assert.h"
 
-typedef struct _CraSerializer CraSerializer;
-typedef struct _CraRelaseMgr  CraReleaseMgr;
-typedef struct _CraRelaseBlk  CraReleaseBlk;
+typedef struct CraSerializer CraSerializer;
+typedef struct CraRelaseMgr  CraReleaseMgr;
+typedef struct CraRelaseBlk  CraReleaseBlk;
 
-struct _CraRelaseBlk
+struct CraRelaseBlk
 {
     void              *ptr;
     const CraTypeMeta *meta;
 };
 
 // 有uninit函数的对象（struct/array/list/dict）Mgr不记录其字段/元素
-struct _CraRelaseMgr
+struct CraRelaseMgr
 {
     size_t         size;
     size_t         count;
@@ -292,7 +292,7 @@ struct _CraRelaseMgr
     CraReleaseBlk *nodes2;
 };
 
-struct _CraSerializer
+struct CraSerializer
 {
     bool         format;
     unsigned int nesting;

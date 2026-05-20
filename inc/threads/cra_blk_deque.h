@@ -22,7 +22,7 @@ typedef enum
     CRA_BLKDEQUE_STATE_TERMINATED,
 } CraBlkDequeState_e;
 
-typedef struct _CraBlkDeque
+typedef struct CraBlkDeque
 {
     CraDeque           deque;
     CraBlkDequeState_e state;

@@ -39,7 +39,7 @@ CRA_API const CraSerializable_i cra_g_deque_szer_i;
 
 #if 1 // dict
 
-typedef struct _CraDictSerArgs
+typedef struct CraDictSerArgs
 {
     cra_hash_fn    hash;
     cra_compare_fn compare;

@@ -15,7 +15,7 @@
 // default : 8KB
 #define CRA_LOG_MSG_MAX 8192
 
-typedef enum _CraLogLevel_e
+typedef enum CraLogLevel_e
 {
     CRA_LOG_LEVEL_TRACE,
     CRA_LOG_LEVEL_DEBUG,
@@ -26,8 +26,8 @@ typedef enum _CraLogLevel_e
     CRA_LOG_LEVEL_NO_LOG,
 } CraLogLevel_e;
 
-typedef struct _CraLogTo_i CraLogTo_i;
-struct _CraLogTo_i
+typedef struct CraLogTo_i CraLogTo_i;
+struct CraLogTo_i
 {
     void (*destroy)(CraLogTo_i **self);
     void (*append)(CraLogTo_i **self, const char *msg, int len, CraLogLevel_e level);
@@ -99,7 +99,7 @@ __cra_log_message(const char   *logname,
 // default: 2MB
 #define CRA_LOG_BUFFER_SIZE    (2 * 1024 * 1024)
 
-typedef struct _CraLogAsync CraLogAsync;
+typedef struct CraLogAsync CraLogAsync;
 
 typedef void (*cra_log_async_write2logto_fn)(CraLogTo_i **logto, const char *content, size_t len);
 
@@ -126,7 +126,7 @@ cra_log_async_write_array(CraLogAsync *obj, const CraLogAsyncBuffer buffers[]);
 
 #if 1 // log to stdout
 
-typedef struct _CraLogToStdout CraLogToStdout;
+typedef struct CraLogToStdout CraLogToStdout;
 
 CRA_API CraLogToStdout *
 cra_logto_stdout_create(bool async);
@@ -138,7 +138,7 @@ cra_logto_stdout_create(bool async);
 // default: 260 bytes
 #define CRA_LOG_FILENAME_MAX 260
 
-typedef struct _CraLogToFile CraLogToFile;
+typedef struct CraLogToFile CraLogToFile;
 
 CRA_API CraLogToFile *
 cra_logto_file_create(bool async, bool with_localtime, const char *path, const char *name, size_t max_file_size);

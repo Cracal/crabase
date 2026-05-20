@@ -18,13 +18,13 @@ void  (*__cra_freeee_fn__)(void *ptr) = NULL;
 
 // ===========================================
 
-typedef struct _CraMallocBlkNode
+typedef struct CraMallocBlkNode
 {
-    int                       line;
-    char                     *file;
-    size_t                    size;
-    struct _CraMallocBlkNode *next;
-    char                      block[];
+    int                      line;
+    char                    *file;
+    size_t                   size;
+    struct CraMallocBlkNode *next;
+    char                     block[];
 } CraMallocBlkNode;
 
 static CraMallocBlkNode *__s_malloc_memblk_head = NULL;

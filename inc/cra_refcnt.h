@@ -16,11 +16,11 @@ typedef cra_atomic_int64_t cra_refcnt_t;
 #define __CRA_REFCNT_INC cra_atomic_inc64
 #define __CRA_REFCNT_DEC cra_atomic_dec64
 
-typedef struct _CraRefcnt CraRefcnt;
+typedef struct CraRefcnt CraRefcnt;
 
 typedef void (*cra_refcnt_release_fn)(CraRefcnt *ref);
 
-struct _CraRefcnt
+struct CraRefcnt
 {
     cra_refcnt_t          cnt;     // 计数
     cra_refcnt_release_fn release; // 回调函数

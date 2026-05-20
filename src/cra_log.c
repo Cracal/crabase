@@ -229,7 +229,7 @@ typedef struct
     char   buffer[CRA_LOG_BUFFER_SIZE];
 } CraLogBuffer;
 
-struct _CraLogAsync
+struct CraLogAsync
 {
     cra_thrd_t  thread;
     cra_mutex_t mutex;
@@ -503,7 +503,7 @@ cra_log_async_destory(CraLogAsync **pobj)
 
 #if 1 // log to stdout
 
-struct _CraLogToStdout
+struct CraLogToStdout
 {
     CRA_LOGTO_HEAD;
     CraLogAsync *async;
@@ -686,7 +686,7 @@ end:
 
 #endif // end file
 
-struct _CraLogToFile
+struct CraLogToFile
 {
     CRA_LOGTO_HEAD;
     CraLogAsync *async;
