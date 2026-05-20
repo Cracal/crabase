@@ -170,7 +170,7 @@ test_get_val(void)
     assert_always(i == 20);
 
     f = (float)cra_mainarg_get_f(&ma, "delay", 0);
-    assert_always(cra_compare_float(f, 3.5) == 0);
+    assert_always(cra_cmp_float(f, 3.5) == 0);
 
     s = cra_mainarg_get_s(&ma, "-o", NULL);
     assert_always(s != NULL && strcmp(s, "/dev/null") == 0);

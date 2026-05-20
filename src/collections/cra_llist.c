@@ -200,7 +200,7 @@ cra_llist_reverse(CraLList *list)
 }
 
 static CraLListNode *
-cra_llist_partition(CraLList *list, cra_compare_fn compare, CraLListNode *begin, CraLListNode *end)
+cra_llist_partition(CraLList *list, cra_cmp_fn compare, CraLListNode *begin, CraLListNode *end)
 {
     CraLListNode *left, *right, *temp;
     left = begin;
@@ -233,7 +233,7 @@ cra_llist_partition(CraLList *list, cra_compare_fn compare, CraLListNode *begin,
 }
 
 static bool
-cra_llist_quick_sort(CraLList *list, cra_compare_fn compare, CraLListNode *begin, CraLListNode *end)
+cra_llist_quick_sort(CraLList *list, cra_cmp_fn compare, CraLListNode *begin, CraLListNode *end)
 {
     CraLListNode *middle = cra_llist_partition(list, compare, begin, end);
     if (!middle)
@@ -245,7 +245,7 @@ cra_llist_quick_sort(CraLList *list, cra_compare_fn compare, CraLListNode *begin
     return true;
 }
 
-bool(cra_llist_sort)(CraLList *list, cra_compare_fn compare)
+bool(cra_llist_sort)(CraLList *list, cra_cmp_fn compare)
 {
     assert(list);
     assert(compare);
@@ -256,7 +256,7 @@ bool(cra_llist_sort)(CraLList *list, cra_compare_fn compare)
     return true;
 }
 
-bool(cra_llist_add_sort)(CraLList *list, cra_compare_fn compare, void *val)
+bool(cra_llist_add_sort)(CraLList *list, cra_cmp_fn compare, void *val)
 {
     size_t        index;
     CraLListNode *curr;

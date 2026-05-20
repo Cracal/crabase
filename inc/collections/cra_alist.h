@@ -124,15 +124,15 @@ CRA_API bool
 cra_alist_reverse(CraAList *list);
 
 CRA_API bool
-cra_alist_sort(struct CraAList *list, cra_compare_fn compare);
+cra_alist_sort(struct CraAList *list, cra_cmp_fn compare);
 // bool sort(CraAList *list, int (*compare)(const T *, const T *))
-#define cra_alist_sort(_list, _compare) cra_alist_sort(_list, (cra_compare_fn)(_compare))
+#define cra_alist_sort(_list, _compare) cra_alist_sort(_list, (cra_cmp_fn)(_compare))
 
 CRA_API bool
-cra_alist_add_sort(struct CraAList *list, cra_compare_fn compare, void *val);
+cra_alist_add_sort(struct CraAList *list, cra_cmp_fn compare, void *val);
 // bool add_sort(CraAList *list, int (*compare)(const T *, const T *), T *val)
-#define cra_alist_add_sort(_list, _compare, _val)                                                   \
-    (CRA_ALIST_CHECK_VAL(_list, _val), cra_alist_add_sort(_list, (cra_compare_fn)(_compare), _val))
+#define cra_alist_add_sort(_list, _compare, _val)                                               \
+    (CRA_ALIST_CHECK_VAL(_list, _val), cra_alist_add_sort(_list, (cra_cmp_fn)(_compare), _val))
 
 // ====================================== interfaces ======================================
 

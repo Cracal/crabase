@@ -174,8 +174,7 @@ cra_mainarg_init(CraMainArg *ma, char *program, const char *intro, const char *u
     if (noption == 0 || nitem == 0)
         PRINT_ERROR_EXIT("The option array 'options' cannot be empty.");
 
-    if (!cra_dict_init_with_size(
-          char *, CraMainArgItem *, ma->items, noption, cra_hash_string1_p, cra_compare_string_p))
+    if (!cra_dict_init_with_size(char *, CraMainArgItem *, ma->items, noption, cra_hash_string1_p, cra_cmp_string_p))
     {
         PRINT_ERROR_EXIT("Failed to initialize items.");
     }

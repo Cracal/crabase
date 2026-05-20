@@ -130,7 +130,7 @@ bool(cra_alist_pop_at)(CraAList *list, size_t index, void *retval)
 }
 
 static bool
-cra_alist_partition(CraAList *list, cra_compare_fn compare, size_t begin, size_t end, size_t *middle, char *temp)
+cra_alist_partition(CraAList *list, cra_cmp_fn compare, size_t begin, size_t end, size_t *middle, char *temp)
 {
     size_t left, right;
     char  *array;
@@ -164,7 +164,7 @@ cra_alist_partition(CraAList *list, cra_compare_fn compare, size_t begin, size_t
 }
 
 static bool
-cra_alist_quick_sort(CraAList *list, cra_compare_fn compare, size_t begin, size_t end, char *temp)
+cra_alist_quick_sort(CraAList *list, cra_cmp_fn compare, size_t begin, size_t end, char *temp)
 {
     size_t middle;
 
@@ -214,7 +214,7 @@ cra_alist_reverse(CraAList *list)
     return true;
 }
 
-bool(cra_alist_sort)(CraAList *list, cra_compare_fn compare)
+bool(cra_alist_sort)(CraAList *list, cra_cmp_fn compare)
 {
     assert(list);
     assert(compare);
@@ -238,7 +238,7 @@ bool(cra_alist_sort)(CraAList *list, cra_compare_fn compare)
 }
 
 static size_t
-cra_alist_binary_seach(CraAList *list, cra_compare_fn compare, void *val)
+cra_alist_binary_seach(CraAList *list, cra_cmp_fn compare, void *val)
 {
     int    res;
     size_t left, mid, right;
@@ -277,7 +277,7 @@ cra_alist_binary_seach(CraAList *list, cra_compare_fn compare, void *val)
     return left;
 }
 
-bool(cra_alist_add_sort)(CraAList *list, cra_compare_fn compare, void *val)
+bool(cra_alist_add_sort)(CraAList *list, cra_cmp_fn compare, void *val)
 {
     size_t index;
 

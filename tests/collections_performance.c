@@ -98,7 +98,7 @@ test_alist_performance(int sizes[])
 
         // sort
         start_ms = cra_tick_ms();
-        cra_alist_sort(&list, (cra_compare_fn)cra_compare_int_p);
+        cra_alist_sort(&list, (cra_cmp_fn)cra_cmp_int_p);
         end_ms = cra_tick_ms();
         printf("\tsort:          %lums.\n", end_ms - start_ms);
 
@@ -206,7 +206,7 @@ test_llist_performance(int sizes[])
 
         // sort
         start_ms = cra_tick_ms();
-        cra_llist_sort(&list, (cra_compare_fn)cra_compare_int_p);
+        cra_llist_sort(&list, (cra_cmp_fn)cra_cmp_int_p);
         end_ms = cra_tick_ms();
         printf("\tsort:          %lums.\n", end_ms - start_ms);
 
