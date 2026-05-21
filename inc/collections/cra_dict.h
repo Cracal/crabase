@@ -154,22 +154,20 @@ typedef struct CraDictInitializableParam
     size_t      val_size;
     size_t      key_align;
     size_t      val_align;
-    size_t      init_capacity;
     cra_cmp_fn  compare_key;
     cra_hash_fn hash_key;
 } CraDictInitializableParam;
-#define CRA_DICT_INITIALIZABLE_PARAM_INIT(_TKey, _TVal, _init_capacity, _hash_key_fn, _compare_key_fn) \
-    { sizeof(_TKey),                                                                                   \
-      sizeof(_TVal),                                                                                   \
-      alignof(_TKey),                                                                                  \
-      alignof(_TVal),                                                                                  \
-      _init_capacity,                                                                                  \
-      (cra_cmp_fn)(_compare_key_fn),                                                                   \
+#define CRA_DICT_INITIALIZABLE_PARAM_INIT(_TKey, _TVal, _hash_key_fn, _compare_key_fn) \
+    { sizeof(_TKey),                                                                   \
+      sizeof(_TVal),                                                                   \
+      alignof(_TKey),                                                                  \
+      alignof(_TVal),                                                                  \
+      (cra_cmp_fn)(_compare_key_fn),                                                   \
       (cra_hash_fn)(_hash_key_fn) }
 #define CRA_DICT_INITIALIZABLE_PARAM_DECL(_var_name) CraDictInitializableParam _var_name
-#define CRA_DICT_INITIALIZABLE_PARAM_DEF(_var_name, _TKey, _TVal, _init_capacity, _hash_key_fn, _compare_key_fn) \
-    CRA_DICT_INITIALIZABLE_PARAM_DECL(_var_name) =                                                               \
-      CRA_DICT_INITIALIZABLE_PARAM_INIT(_TKey, _TVal, _init_capacity, _hash_key_fn, _compare_key_fn)
+#define CRA_DICT_INITIALIZABLE_PARAM_DEF(_var_name, _TKey, _TVal, _hash_key_fn, _compare_key_fn) \
+    CRA_DICT_INITIALIZABLE_PARAM_DECL(_var_name) =                                               \
+      CRA_DICT_INITIALIZABLE_PARAM_INIT(_TKey, _TVal, _hash_key_fn, _compare_key_fn)
 
 CRA_API CRA_INITIALIZABLE_DEF(cra_g_dict_initializable_i);
 #define CRA_DICT_INITIALIZABLE_I (&cra_g_dict_initializable_i)

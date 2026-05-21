@@ -199,26 +199,34 @@ cra_dirname(char *path);
 
 // ========================== initializable ==========================
 
-#define CRA_INITIALIZABLE_INIT_FN(_name)   bool _name(void *obj, void *params)
-#define CRA_INITIALIZABLE_UNINIT_FN(_name) void _name(void *obj)
-#define CRA_INITIALIZABLE_DEF(_name)       const NewCraInitializable_i _name
+#define CRA_INITIALIZABLE_INIT_FN(_name)      bool _name(void *obj, size_t length, void *params)
+#define CRA_INITIALIZABLE_UNINIT_FN(_name)    void _name(void *obj)
+#define CRA_INITIALIZABLE_GET_COUNT_FN(_name) size_t _name(void *obj)
+#define CRA_INITIALIZABLE_DEF(_name)          const NewCraInitializable_i _name
 
 typedef struct NewCraInitializable_i
 {
     CRA_INITIALIZABLE_INIT_FN((*init));
     CRA_INITIALIZABLE_UNINIT_FN((*uninit));
+    CRA_INITIALIZABLE_GET_COUNT_FN((*get_count));
 } NewCraInitializable_i;
 
 static inline bool
-cra_initializable_init(const NewCraInitializable_i *i, void *obj, void *params)
+cra_initializable_init(const NewCraInitializable_i *i, void *obj, size_t length, void *params)
 {
-    return i->init(obj, params);
+    return i->init(obj, length, params);
 }
 
 static inline void
 cra_initializable_uninit(const NewCraInitializable_i *i, void *obj)
 {
     i->uninit(obj);
+}
+
+static inline size_t
+cra_initializable_get_count(const NewCraInitializable_i *i, void *obj)
+{
+    return i->get_count(obj);
 }
 
 // ========================== appendable ==========================

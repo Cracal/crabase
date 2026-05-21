@@ -182,23 +182,25 @@ CRA_ALIST_INITIALIZABLE_I // alist可初始化接口
 typedef struct CraAListInitializableParam
 {
     size_t itemsize;
-    size_t init_capacity;
 } CraAListInitializableParam;
 // 初始化参数
-CRA_ALIST_INITIALIZABLE_PARAM_INIT(T, init_capacity)
+CRA_ALIST_INITIALIZABLE_PARAM_INIT(T)
 
 // ============
 
 // 1.
-CraAListInitializableParam param = CRA_ALIST_INITIALIZABLE_PARAM_INIT(T, 0);
+CraAListInitializableParam param = CRA_ALIST_INITIALIZABLE_PARAM_INIT(T);
 // 2.
-CRA_ALIST_INITIALIZABLE_PARAM_DECL(T) param = CRA_ALIST_INITIALIZABLE_PARAM_INIT(T, 0);
+CRA_ALIST_INITIALIZABLE_PARAM_DECL(T) param = CRA_ALIST_INITIALIZABLE_PARAM_INIT(T);
 // 3.
-CRA_ALIST_INITIALIZABLE_PARAM_DEF(param, T, 0);
+CRA_ALIST_INITIALIZABLE_PARAM_DEF(param, T);
 
 CraAList *list = cra_alloc(CraAList);
-if (!cra_initializable_init(CRA_ALIST_INITIALIZABLE_I, list, &param))
+if (!cra_initializable_init(CRA_ALIST_INITIALIZABLE_I, list, INIT_CAPACITY, &param))
     printf("init failed");
+
+size_t count = cra_initializable_get_count(CRA_ALIST_INITIALIZABLE_I, list);
+
 cra_initializable_uninit(CRA_ALIST_INITIALIZABLE_I, list);
 cra_dealloc(list);
 ```

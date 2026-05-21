@@ -137,12 +137,11 @@ cra_deque_reverse(CraDeque *deque);
 typedef struct CraDequeInitializableParam
 {
     size_t itemsize;
-    size_t init_capacity;
 } CraDequeInitializableParam;
-#define CRA_DEQUE_INITIALIZABLE_PARAM_INIT(_T, _init_capacity) { sizeof(_T), _init_capacity }
-#define CRA_DEQUE_INITIALIZABLE_PARAM_DECL(_var_name)          CraDequeInitializableParam _var_name
-#define CRA_DEQUE_INITIALIZABLE_PARAM_DEF(_var_name, _T, _init_capacity)                                   \
-    CRA_DEQUE_INITIALIZABLE_PARAM_DECL(_var_name) = CRA_DEQUE_INITIALIZABLE_PARAM_INIT(_T, _init_capacity)
+#define CRA_DEQUE_INITIALIZABLE_PARAM_INIT(_T)        { sizeof(_T) }
+#define CRA_DEQUE_INITIALIZABLE_PARAM_DECL(_var_name) CraDequeInitializableParam _var_name
+#define CRA_DEQUE_INITIALIZABLE_PARAM_DEF(_var_name, _T)                                   \
+    CRA_DEQUE_INITIALIZABLE_PARAM_DECL(_var_name) = CRA_DEQUE_INITIALIZABLE_PARAM_INIT(_T)
 
 CRA_API CRA_INITIALIZABLE_DEF(cra_g_deque_initializable_i);
 #define CRA_DEQUE_INITIALIZABLE_I (&cra_g_deque_initializable_i)

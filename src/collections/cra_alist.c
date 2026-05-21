@@ -299,12 +299,19 @@ static CRA_INITIALIZABLE_INIT_FN(cra_alist_initializable_init)
     assert(obj);
     assert(params);
     CraAListInitializableParam *param = (CraAListInitializableParam *)params;
-    return (cra_alist_init_with_size)((CraAList *)obj, param->itemsize, param->init_capacity);
+    return (cra_alist_init_with_size)((CraAList *)obj, param->itemsize, length);
+}
+
+static CRA_INITIALIZABLE_GET_COUNT_FN(cra_alist_initializable_get_count)
+{
+    assert(obj);
+    return ((CraAList *)obj)->count;
 }
 
 CRA_INITIALIZABLE_DEF(cra_g_alist_initializable_i) = {
     .init = cra_alist_initializable_init,
     .uninit = (CRA_INITIALIZABLE_UNINIT_FN((*)))cra_alist_uninit,
+    .get_count = cra_alist_initializable_get_count,
 };
 
 // appendable

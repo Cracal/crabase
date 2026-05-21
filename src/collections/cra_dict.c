@@ -431,7 +431,7 @@ void *(cra_dict_get_ref)(CraDict * dict, const void *key)
 
 // initializable
 
-static CRA_INITIALIZABLE_INIT_FN(cra_dict_init_init)
+static CRA_INITIALIZABLE_INIT_FN(cra_dict_initializable_init)
 {
     CraDict                   *dict = (CraDict *)obj;
     CraDictInitializableParam *param = (CraDictInitializableParam *)params;
@@ -444,19 +444,26 @@ static CRA_INITIALIZABLE_INIT_FN(cra_dict_init_init)
                                      param->val_size,
                                      param->key_align,
                                      param->val_align,
-                                     param->init_capacity,
+                                     length,
                                      param->hash_key,
                                      param->compare_key);
 }
 
+static CRA_INITIALIZABLE_GET_COUNT_FN(cra_dict_initializable_get_count)
+{
+    assert(obj);
+    return (size_t)((CraDict *)obj)->count;
+}
+
 CRA_INITIALIZABLE_DEF(cra_g_dict_initializable_i) = {
-    .init = cra_dict_init_init,
+    .init = cra_dict_initializable_init,
     .uninit = (CRA_INITIALIZABLE_UNINIT_FN((*)))cra_dict_uninit,
+    .get_count = cra_dict_initializable_get_count,
 };
 
 // appendable
 
-static CRA_APPENDABLE_APPEND_FN(cra_dict_append_append)
+static CRA_APPENDABLE_APPEND_FN(cra_dict_appendable_append)
 {
     assert(obj);
     assert(vals);
@@ -468,12 +475,12 @@ static CRA_APPENDABLE_APPEND_FN(cra_dict_append_append)
 }
 
 CRA_APPENDABLE_DEF(cra_g_dict_appendable_i) = {
-    .append = cra_dict_append_append,
+    .append = cra_dict_appendable_append,
 };
 
 // iterable
 
-static CRA_ITERABLE_INIT_FN(cra_dict_iter_init)
+static CRA_ITERABLE_INIT_FN(cra_dict_iterable_init)
 {
     CraDict *dict = (CraDict *)obj;
 
@@ -488,7 +495,7 @@ static CRA_ITERABLE_INIT_FN(cra_dict_iter_init)
     return dict->count > 0;
 }
 
-static CRA_ITERABLE_NEXT_FN(cra_dict_iter_next)
+static CRA_ITERABLE_NEXT_FN(cra_dict_iterable_next)
 {
     CraDict      *dict;
     CraDictEntry *entry;
@@ -514,7 +521,7 @@ static CRA_ITERABLE_NEXT_FN(cra_dict_iter_next)
     return false;
 }
 
-static CRA_ITERABLE_PREV_FN(cra_dict_iter_prev)
+static CRA_ITERABLE_PREV_FN(cra_dict_iterable_prev)
 {
     CraDict      *dict;
     CraDictEntry *entry;
@@ -541,7 +548,7 @@ static CRA_ITERABLE_PREV_FN(cra_dict_iter_prev)
 }
 
 CRA_ITERABLE_DEF(cra_g_dict_iterable_i) = {
-    .init = cra_dict_iter_init,
-    .next = cra_dict_iter_next,
-    .prev = cra_dict_iter_prev,
+    .init = cra_dict_iterable_init,
+    .next = cra_dict_iterable_next,
+    .prev = cra_dict_iterable_prev,
 };

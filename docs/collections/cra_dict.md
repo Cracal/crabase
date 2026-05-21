@@ -128,25 +128,27 @@ typedef struct CraDictInitializableParam
     size_t      val_size;
     size_t      key_align;
     size_t      val_align;
-    size_t      init_capacity;
     cra_cmp_fn  compare_key;
     cra_hash_fn hash_key;
 } CraDictInitializableParam;
 // 初始化参数
-CRA_DICT_INITIALIZABLE_PARAM_INIT(TKey, TVal, init_capacity, hash_key, compare_key)
+CRA_DICT_INITIALIZABLE_PARAM_INIT(TKey, TVal, hash_key, compare_key)
 
 // ============
 
 // 1.
-CraDictInitializableParam param = CRA_DICT_INITIALIZABLE_PARAM_INIT(TKey, TVal, N, hash<TKey>, compare<TKey>);
+CraDictInitializableParam param = CRA_DICT_INITIALIZABLE_PARAM_INIT(TKey, TVal, hash<TKey>, compare<TKey>);
 // 2.
-CRA_DICT_INITIALIZABLE_PARAM_DECL(TKey) param = CRA_DICT_INITIALIZABLE_PARAM_INIT(TKey, TVal, N, hash<TKey>, compare<TKey>);
+CRA_DICT_INITIALIZABLE_PARAM_DECL(TKey) param = CRA_DICT_INITIALIZABLE_PARAM_INIT(TKey, TVal, hash<TKey>, compare<TKey>);
 // 3.
-CRA_DICT_INITIALIZABLE_PARAM_DEF(param, TKey, N, hash<TKey>, compare<TKey>);
+CRA_DICT_INITIALIZABLE_PARAM_DEF(param, TKey, TVal, hash<TKey>, compare<TKey>);
 
 CraDict *dict = cra_alloc(CraDict);
 if (!cra_initializable_init(CRA_DICT_INITIALIZABLE_I, dict, &param))
     printf("init failed");
+
+size_t count = cra_initializable_get_count(CRA_DICT_INITIALIZABLE_I, dict);
+
 cra_initializable_uninit(CRA_DICT_INITIALIZABLE_I, dict);
 cra_dealloc(dict);
 ```

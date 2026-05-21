@@ -139,23 +139,25 @@ CRA_DEQUE_INITIALIZABLE_I // deque可初始化接口
 typedef struct CraDequeInitializableParam
 {
     size_t itemsize;
-    size_t init_capacity;
 } CraDequeInitializableParam;
 // 初始化参数
-CRA_DEQUE_INITIALIZABLE_PARAM_INIT(T, init_capacity)
+CRA_DEQUE_INITIALIZABLE_PARAM_INIT(T)
 
 // ============
 
 // 1.
-CraDequeInitializableParam param = CRA_DEQUE_INITIALIZABLE_PARAM_INIT(T, 0);
+CraDequeInitializableParam param = CRA_DEQUE_INITIALIZABLE_PARAM_INIT(T);
 // 2.
-CRA_DEQUE_INITIALIZABLE_PARAM_DECL(T) param = CRA_DEQUE_INITIALIZABLE_PARAM_INIT(T, 0);
+CRA_DEQUE_INITIALIZABLE_PARAM_DECL(T) param = CRA_DEQUE_INITIALIZABLE_PARAM_INIT(T);
 // 3.
-CRA_DEQUE_INITIALIZABLE_PARAM_DEF(param, T, 0);
+CRA_DEQUE_INITIALIZABLE_PARAM_DEF(param, T);
 
 CraDeque *deque = cra_alloc(CraDeque);
-if (!cra_initializable_init(CRA_DEQUE_INITIALIZABLE_I, deque, &param))
+if (!cra_initializable_init(CRA_DEQUE_INITIALIZABLE_I, deque, INIT_CAPACITY, &param))
     printf("init failed");
+
+size_t count = cra_initializable_get_count(CRA_DEQUE_INITIALIZABLE_I, deque);
+
 cra_initializable_uninit(CRA_DEQUE_INITIALIZABLE_I, deque);
 cra_dealloc(deque);
 ```

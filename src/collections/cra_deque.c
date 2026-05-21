@@ -16,12 +16,12 @@
 #define CRA_DEQUE_ITEM_MASK  (CRA_DEQUE_ITEM_COUNT - 1)
 #define CRA_DEQUE_CENTER     ((CRA_DEQUE_ITEM_COUNT - 1) >> 1)
 #define CRA_DEQUE_EMPTY_INDEX(_deque)            \
-    do                                              \
-    {                                               \
+    do                                           \
+    {                                            \
         (_deque)->lindex = CRA_DEQUE_CENTER + 1; \
         (_deque)->rindex = CRA_DEQUE_CENTER;     \
-        (_deque)->front = 0;                        \
-        (_deque)->rear = 0;                         \
+        (_deque)->front = 0;                     \
+        (_deque)->rear = 0;                      \
     } while (0)
 
 #define CRA_DEQUE_ARRAY_PVAL(_deque, _array, _index) ((_array) + (_index) * (_deque)->itemsize)
@@ -551,7 +551,7 @@ cra_deque_reverse(CraDeque *deque)
 
 // initializable
 
-static CRA_INITIALIZABLE_INIT_FN(cra_deque_init_init)
+static CRA_INITIALIZABLE_INIT_FN(cra_deque_initializable_init)
 {
     CraDeque                   *deque;
     CraDequeInitializableParam *param;
@@ -561,17 +561,24 @@ static CRA_INITIALIZABLE_INIT_FN(cra_deque_init_init)
 
     deque = (CraDeque *)obj;
     param = (CraDequeInitializableParam *)params;
-    return (cra_deque_init_with_size)(deque, param->itemsize, param->init_capacity);
+    return (cra_deque_init_with_size)(deque, param->itemsize, length);
+}
+
+static CRA_INITIALIZABLE_GET_COUNT_FN(cra_deque_initializable_get_count)
+{
+    assert(obj);
+    return ((CraDeque *)obj)->count;
 }
 
 CRA_INITIALIZABLE_DEF(cra_g_deque_initializable_i) = {
-    .init = cra_deque_init_init,
+    .init = cra_deque_initializable_init,
     .uninit = (CRA_INITIALIZABLE_UNINIT_FN((*)))cra_deque_uninit,
+    .get_count = cra_deque_initializable_get_count,
 };
 
 // appendable
 
-static CRA_APPENDABLE_APPEND_FN(cra_deque_append_append)
+static CRA_APPENDABLE_APPEND_FN(cra_deque_appendable_append)
 {
     CraDeque *deque = (CraDeque *)obj;
 
@@ -584,12 +591,12 @@ static CRA_APPENDABLE_APPEND_FN(cra_deque_append_append)
 }
 
 CRA_APPENDABLE_DEF(cra_g_deque_appendable_i) = {
-    .append = cra_deque_append_append,
+    .append = cra_deque_appendable_append,
 };
 
 // iterable
 
-static CRA_ITERABLE_INIT_FN(cra_deque_iter_init)
+static CRA_ITERABLE_INIT_FN(cra_deque_iterable_init)
 {
     CraDeque *deque = (CraDeque *)obj;
 
@@ -618,7 +625,7 @@ static CRA_ITERABLE_INIT_FN(cra_deque_iter_init)
     return true;
 }
 
-static CRA_ITERABLE_NEXT_FN(cra_deque_iter_next)
+static CRA_ITERABLE_NEXT_FN(cra_deque_iterable_next)
 {
     CraDeque *deque;
 
@@ -653,7 +660,7 @@ static CRA_ITERABLE_NEXT_FN(cra_deque_iter_next)
     return true;
 }
 
-static CRA_ITERABLE_PREV_FN(cra_deque_iter_prev)
+static CRA_ITERABLE_PREV_FN(cra_deque_iterable_prev)
 {
     CraDeque *deque;
 
@@ -689,7 +696,7 @@ static CRA_ITERABLE_PREV_FN(cra_deque_iter_prev)
 }
 
 CRA_ITERABLE_DEF(cra_g_deque_iterable_i) = {
-    .init = cra_deque_iter_init,
-    .next = cra_deque_iter_next,
-    .prev = cra_deque_iter_prev,
+    .init = cra_deque_iterable_init,
+    .next = cra_deque_iterable_next,
+    .prev = cra_deque_iterable_prev,
 };

@@ -179,23 +179,25 @@ CRA_LLIST_INITIALIZABLE_I // llist可初始化接口
 typedef struct CraLListInitializableParam
 {
     size_t itemsize;
-    size_t init_spare_node;
 } CraLListInitializableParam;
 // 初始化参数
-CRA_LLIST_INITIALIZABLE_PARAM_INIT(T, init_spare_node)
+CRA_LLIST_INITIALIZABLE_PARAM_INIT(T)
 
 // ============
 
 // 1.
-CraLListInitializableParam param = CRA_LLIST_INITIALIZABLE_PARAM_INIT(T, 0);
+CraLListInitializableParam param = CRA_LLIST_INITIALIZABLE_PARAM_INIT(T);
 // 2.
-CRA_LLIST_INITIALIZABLE_PARAM_DECL(T) param = CRA_LLIST_INITIALIZABLE_PARAM_INIT(T, 0);
+CRA_LLIST_INITIALIZABLE_PARAM_DECL(T) param = CRA_LLIST_INITIALIZABLE_PARAM_INIT(T);
 // 3.
-CRA_LLIST_INITIALIZABLE_PARAM_DEF(param, T, 0);
+CRA_LLIST_INITIALIZABLE_PARAM_DEF(param, T);
 
 CraLList *list = cra_alloc(CraLList);
-if (!cra_initializable_init(CRA_LLIST_INITIALIZABLE_I, list, &param))
+if (!cra_initializable_init(CRA_LLIST_INITIALIZABLE_I, list, INIT_SPARSE_NODE_COUNT, &param))
     printf("init failed");
+
+size_t count = cra_initializable_get_count(CRA_LLIST_INITIALIZABLE_I, list);
+
 cra_initializable_uninit(CRA_LLIST_INITIALIZABLE_I, list);
 cra_dealloc(list);
 ```
