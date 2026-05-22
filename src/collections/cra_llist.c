@@ -328,6 +328,9 @@ static CRA_ITERABLE_INIT_FN(cra_llist_iterable_init)
     assert(it);
     assert(list);
 
+    if (retcnt)
+        *retcnt = list->count;
+
     if (!list->head)
         return false;
 

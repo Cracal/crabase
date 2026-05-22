@@ -449,16 +449,9 @@ static CRA_INITIALIZABLE_INIT_FN(cra_dict_initializable_init)
                                      param->compare_key);
 }
 
-static CRA_INITIALIZABLE_GET_COUNT_FN(cra_dict_initializable_get_count)
-{
-    assert(obj);
-    return (size_t)((CraDict *)obj)->count;
-}
-
 CRA_INITIALIZABLE_DEF(cra_g_dict_initializable_i) = {
     .init = cra_dict_initializable_init,
     .uninit = (CRA_INITIALIZABLE_UNINIT_FN((*)))cra_dict_uninit,
-    .get_count = cra_dict_initializable_get_count,
 };
 
 // appendable
@@ -488,6 +481,9 @@ static CRA_ITERABLE_INIT_FN(cra_dict_iterable_init)
     assert(dict);
     assert(dict->buckets);
     assert(dict->entries);
+
+    if (retcnt)
+        *retcnt = (size_t)dict->count;
 
     it->obj = obj;
     it->ic1.idx = reverse ? dict->next - 1 : 0;

@@ -109,8 +109,8 @@ test_new_delete(void)
     cra_llist_uninit(&list2);
     assert_always(memcmp(&list2, &(CraLList){ 0 }, sizeof(CraLList)) == 0);
 
-    CRA_LLIST_INITIALIZABLE_PARAM_DEF(param, int, 4);
-    assert_always(cra_initializable_init(CRA_LLIST_INITIALIZABLE_I, &list2, &param));
+    CRA_LLIST_INITIALIZABLE_PARAM_DEF(param, int);
+    assert_always(cra_initializable_init(CRA_LLIST_INITIALIZABLE_I, &list2, 4, &param));
     assert_always(list2.count == 0);
     assert_always(list2.head == NULL);
     assert_always(list2.nfreelist == 4);

@@ -44,8 +44,8 @@ test_new_delete(void)
     assert_always(list2.capacity == 0);
     assert_always(list2.itemsize == 0);
 
-    CRA_ALIST_INITIALIZABLE_PARAM_DEF(param, int, 16);
-    assert_always(cra_initializable_init(CRA_ALIST_INITIALIZABLE_I, &list2, &param));
+    CRA_ALIST_INITIALIZABLE_PARAM_DEF(param, int);
+    assert_always(cra_initializable_init(CRA_ALIST_INITIALIZABLE_I, &list2, 16, &param));
     assert_always(list2.count == 0);
     assert_always(list2.array != NULL);
     assert_always(list2.capacity == 16);

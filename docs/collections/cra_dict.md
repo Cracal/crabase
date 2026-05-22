@@ -146,9 +146,6 @@ CRA_DICT_INITIALIZABLE_PARAM_DEF(param, TKey, TVal, hash<TKey>, compare<TKey>);
 CraDict *dict = cra_alloc(CraDict);
 if (!cra_initializable_init(CRA_DICT_INITIALIZABLE_I, dict, &param))
     printf("init failed");
-
-size_t count = cra_initializable_get_count(CRA_DICT_INITIALIZABLE_I, dict);
-
 cra_initializable_uninit(CRA_DICT_INITIALIZABLE_I, dict);
 cra_dealloc(dict);
 ```

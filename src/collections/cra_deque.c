@@ -564,16 +564,9 @@ static CRA_INITIALIZABLE_INIT_FN(cra_deque_initializable_init)
     return (cra_deque_init_with_size)(deque, param->itemsize, length);
 }
 
-static CRA_INITIALIZABLE_GET_COUNT_FN(cra_deque_initializable_get_count)
-{
-    assert(obj);
-    return ((CraDeque *)obj)->count;
-}
-
 CRA_INITIALIZABLE_DEF(cra_g_deque_initializable_i) = {
     .init = cra_deque_initializable_init,
     .uninit = (CRA_INITIALIZABLE_UNINIT_FN((*)))cra_deque_uninit,
-    .get_count = cra_deque_initializable_get_count,
 };
 
 // appendable
@@ -604,6 +597,9 @@ static CRA_ITERABLE_INIT_FN(cra_deque_iterable_init)
     assert(deque);
     assert(deque->itemsize > 0);
     CRA_UNUSED_VALUE(reverse);
+
+    if (retcnt)
+        *retcnt = deque->count;
 
     if (deque->count == 0)
     {

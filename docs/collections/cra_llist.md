@@ -195,9 +195,6 @@ CRA_LLIST_INITIALIZABLE_PARAM_DEF(param, T);
 CraLList *list = cra_alloc(CraLList);
 if (!cra_initializable_init(CRA_LLIST_INITIALIZABLE_I, list, INIT_SPARSE_NODE_COUNT, &param))
     printf("init failed");
-
-size_t count = cra_initializable_get_count(CRA_LLIST_INITIALIZABLE_I, list);
-
 cra_initializable_uninit(CRA_LLIST_INITIALIZABLE_I, list);
 cra_dealloc(list);
 ```

@@ -198,9 +198,6 @@ CRA_ALIST_INITIALIZABLE_PARAM_DEF(param, T);
 CraAList *list = cra_alloc(CraAList);
 if (!cra_initializable_init(CRA_ALIST_INITIALIZABLE_I, list, INIT_CAPACITY, &param))
     printf("init failed");
-
-size_t count = cra_initializable_get_count(CRA_ALIST_INITIALIZABLE_I, list);
-
 cra_initializable_uninit(CRA_ALIST_INITIALIZABLE_I, list);
 cra_dealloc(list);
 ```

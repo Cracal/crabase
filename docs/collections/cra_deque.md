@@ -155,9 +155,6 @@ CRA_DEQUE_INITIALIZABLE_PARAM_DEF(param, T);
 CraDeque *deque = cra_alloc(CraDeque);
 if (!cra_initializable_init(CRA_DEQUE_INITIALIZABLE_I, deque, INIT_CAPACITY, &param))
     printf("init failed");
-
-size_t count = cra_initializable_get_count(CRA_DEQUE_INITIALIZABLE_I, deque);
-
 cra_initializable_uninit(CRA_DEQUE_INITIALIZABLE_I, deque);
 cra_dealloc(deque);
 ```

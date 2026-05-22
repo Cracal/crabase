@@ -52,8 +52,8 @@ test_new_delete(void)
     assert_always(memcmp(&dict2, &(CraDict){ 0 }, sizeof(CraDict)) == 0);
     cra_dealloc(dict1);
 
-    CRA_DICT_INITIALIZABLE_PARAM_DEF(param, double, char[3], 0, cra_hash_double_p, cra_cmp_double_p);
-    assert_always(cra_initializable_init(CRA_DICT_INITIALIZABLE_I, &dict2, &param));
+    CRA_DICT_INITIALIZABLE_PARAM_DEF(param, double, char[3], cra_hash_double_p, cra_cmp_double_p);
+    assert_always(cra_initializable_init(CRA_DICT_INITIALIZABLE_I, &dict2, 0, &param));
     assert_always(dict2.buckets);
     assert_always(dict2.entries);
     assert_always(dict2.next == 0);

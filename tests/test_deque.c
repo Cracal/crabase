@@ -36,8 +36,8 @@ test_new_delete(void)
     assert_always(memcmp(&deque2, &(CraDeque){ 0 }, sizeof(CraDeque)) == 0);
     cra_dealloc(deque);
 
-    CRA_DEQUE_INITIALIZABLE_PARAM_DEF(param, int, 513);
-    assert_always(cra_initializable_init(CRA_DEQUE_INITIALIZABLE_I, &deque2, &param));
+    CRA_DEQUE_INITIALIZABLE_PARAM_DEF(param, int);
+    assert_always(cra_initializable_init(CRA_DEQUE_INITIALIZABLE_I, &deque2, 513, &param));
     assert_always(deque2.count == 0);
     assert_always(deque2.itemsize == sizeof(int));
     assert_always(deque2.narray == 16);
