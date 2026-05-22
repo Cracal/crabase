@@ -12,39 +12,9 @@
 #define __CRA_SERIALIZE_H__
 #include "cra_defs.h"
 
-typedef struct CraInitializable_i CraInitializable_i;
-typedef struct CraSerializable_i  CraSerializable_i;
-typedef struct CraSeriObject      CraSeriObject;
-typedef struct CraInitArgs        CraInitArgs;
-typedef struct CraTypeMeta        CraTypeMeta;
-typedef struct CraSerErr          CraSerErr;
-
-struct CraInitializable_i
-{
-    bool (*init)(void *obj, CraInitArgs *arg);
-    // `dont_free_ptr_member`永远是`true`。仅作为一个醒目的提示，
-    // 告知在实现uninit函数时不要对指针类型进行free操作。
-    void (*uninit)(void *obj, bool dont_free_ptr_member);
-};
-
-struct CraSerializable_i
-{
-    CraInitializable_i init_i;
-
-    // `retlen`: return the elements' count
-    void (*iter_init)(void *obj, uint64_t *retlen, void *it, size_t itsize);
-    bool (*iter_next)(void *it, void **retval1, void **retval2);
-    bool (*add)(void *obj, void *val1, void *val2);
-};
-
-struct CraInitArgs
-{
-    size_t size;
-    size_t length;
-    size_t val1size;
-    size_t val2size;
-    void  *arg;
-};
+typedef struct CraSeriObject CraSeriObject;
+typedef struct CraTypeMeta   CraTypeMeta;
+typedef struct CraSerErr     CraSerErr;
 
 typedef enum
 {
@@ -96,11 +66,9 @@ struct CraTypeMeta
     size_t             size;
     size_t             offset;
     const CraTypeMeta *submeta;
-    union
-    {
-        const CraInitializable_i *init_i;
-        const CraSerializable_i  *szer_i;
-    };
+    CRA_ITERABLE_DEF(*iter_i);
+    CRA_APPENDABLE_DEF(*append_i);
+    CRA_INITIALIZABLE_DEF(*init_i);
     void *arg;
 };
 
@@ -125,144 +93,195 @@ struct CraSeriObject
 #define CRA_TYPE_META_BEGIN_CONST(_meta_name) const CRA_TYPE_META_BEGIN(_meta_name)
 #define CRA_TYPE_META_END() {0}}
 
+// set interfaces
+#define CRA_TYPE_META_SET_I(_meta, _iter_i, _append_i, _init_i, _arg)                                                \
+    (void)((_meta)->iter_i = _iter_i, (_meta)->append_i = _append_i, (_meta)->init_i = _init_i, (_meta)->arg = _arg)
+
 // member meta
 
-#define __CRA_TYPE_META_MEMBER_(_Type, _member, _is_len, _id, _is_ptr, _TYPE, _submeta, _i, _arg) \
-    { true,                                                                                       \
-      _is_len,                                                                                    \
-      _is_ptr,                                                                                    \
-      _id,                                                                                        \
-      _TYPE,                                                                                      \
-      #_member,                                                                                   \
-      __CRA_SF##_is_ptr(((_Type *)0)->_member),                                                   \
-      offsetof(_Type, _member),                                                                   \
-      _submeta,                                                                                   \
-      _i,                                                                                         \
-      _arg },
-#define __CRA_TYPE_META_MEMBER(_Type, _member, _id, _is_ptr, _TYPE, _submeta, _i, _arg)     \
-    __CRA_TYPE_META_MEMBER_(_Type, _member, false, _id, _is_ptr, _TYPE, _submeta, _i, _arg)
+#define __CRA_TYPE_META_MEMBER(                                                              \
+  _Type, _member, _is_len, _id, _is_ptr, _TYPE, _submeta, _iter_i, _append_i, _init_i, _arg) \
+    {                                                                                        \
+        .is_not_end = true,                                                                  \
+        .is_len = _is_len,                                                                   \
+        .is_ptr = _is_ptr,                                                                   \
+        .id = _id,                                                                           \
+        .type = _TYPE,                                                                       \
+        .name = #_member,                                                                    \
+        .size = __CRA_SF##_is_ptr(((_Type *)0)->_member),                                    \
+        .offset = offsetof(_Type, _member),                                                  \
+        .submeta = _submeta,                                                                 \
+        .iter_i = _iter_i,                                                                   \
+        .append_i = _append_i,                                                               \
+        .init_i = _init_i,                                                                   \
+        .arg = _arg,                                                                         \
+    },
+#define __CRA_TYPE_META_MEMBER_BASE(_Type, _member, _id, _is_ptr, _TYPE)                             \
+    __CRA_TYPE_META_MEMBER(_Type, _member, false, _id, _is_ptr, _TYPE, NULL, NULL, NULL, NULL, NULL)
 
 // bool
-#define CRA_TYPE_META_MEMBER_BOOL(_Type, _member, _id)                                      \
-    __CRA_TYPE_META_MEMBER(_Type, _member, _id, false, CRA_TYPE_BOOL, NULL, { NULL }, NULL)
+#define CRA_TYPE_META_MEMBER_BOOL(_Type, _member, _id)                     \
+    __CRA_TYPE_META_MEMBER_BASE(_Type, _member, _id, false, CRA_TYPE_BOOL)
 // int
-#define CRA_TYPE_META_MEMBER_INT(_Type, _member, _id)                                      \
-    __CRA_TYPE_META_MEMBER(_Type, _member, _id, false, CRA_TYPE_INT, NULL, { NULL }, NULL)
+#define CRA_TYPE_META_MEMBER_INT(_Type, _member, _id)                     \
+    __CRA_TYPE_META_MEMBER_BASE(_Type, _member, _id, false, CRA_TYPE_INT)
 // uint
-#define CRA_TYPE_META_MEMBER_UINT(_Type, _member, _id)                                      \
-    __CRA_TYPE_META_MEMBER(_Type, _member, _id, false, CRA_TYPE_UINT, NULL, { NULL }, NULL)
+#define CRA_TYPE_META_MEMBER_UINT(_Type, _member, _id)                     \
+    __CRA_TYPE_META_MEMBER_BASE(_Type, _member, _id, false, CRA_TYPE_UINT)
 // varint
-#define CRA_TYPE_META_MEMBER_VARINT(_Type, _member, _id)                                      \
-    __CRA_TYPE_META_MEMBER(_Type, _member, _id, false, CRA_TYPE_VARINT, NULL, { NULL }, NULL)
+#define CRA_TYPE_META_MEMBER_VARINT(_Type, _member, _id)                     \
+    __CRA_TYPE_META_MEMBER_BASE(_Type, _member, _id, false, CRA_TYPE_VARINT)
 // varuint
-#define CRA_TYPE_META_MEMBER_VARUINT(_Type, _member, _id)                                      \
-    __CRA_TYPE_META_MEMBER(_Type, _member, _id, false, CRA_TYPE_VARUINT, NULL, { NULL }, NULL)
+#define CRA_TYPE_META_MEMBER_VARUINT(_Type, _member, _id)                     \
+    __CRA_TYPE_META_MEMBER_BASE(_Type, _member, _id, false, CRA_TYPE_VARUINT)
 // float
-#define CRA_TYPE_META_MEMBER_FLOAT(_Type, _member, _id)                                      \
-    __CRA_TYPE_META_MEMBER(_Type, _member, _id, false, CRA_TYPE_FLOAT, NULL, { NULL }, NULL)
+#define CRA_TYPE_META_MEMBER_FLOAT(_Type, _member, _id)                     \
+    __CRA_TYPE_META_MEMBER_BASE(_Type, _member, _id, false, CRA_TYPE_FLOAT)
 // string
-#define CRA_TYPE_META_MEMBER_STRING(_Type, _member, _id, _is_ptr)                               \
-    __CRA_TYPE_META_MEMBER(_Type, _member, _id, _is_ptr, CRA_TYPE_STRING, NULL, { NULL }, NULL)
+#define CRA_TYPE_META_MEMBER_STRING(_Type, _member, _id, _is_ptr)              \
+    __CRA_TYPE_META_MEMBER_BASE(_Type, _member, _id, _is_ptr, CRA_TYPE_STRING)
 // bytes
-#define CRA_TYPE_META_MEMBER_BYTES(_Type, _member, _id, _is_ptr)                                      \
-    __CRA_TYPE_META_MEMBER(_Type, _member, _id, _is_ptr, CRA_TYPE_BYTES, NULL, { NULL }, NULL)        \
-    __CRA_TYPE_META_MEMBER_(_Type, n##_member, true, _id, false, CRA_TYPE_UINT, NULL, { NULL }, NULL)
+#define CRA_TYPE_META_MEMBER_BYTES(_Type, _member, _id, _is_ptr)                                             \
+    __CRA_TYPE_META_MEMBER_BASE(_Type, _member, _id, _is_ptr, CRA_TYPE_BYTES)                                \
+    __CRA_TYPE_META_MEMBER(_Type, n##_member, true, _id, false, CRA_TYPE_UINT, NULL, NULL, NULL, NULL, NULL)
 // struct
-#define CRA_TYPE_META_MEMBER_STRUCT(_Type, _member, _id, _is_ptr, _member_meta, _init_i, _arg)                       \
-    __CRA_TYPE_META_MEMBER(_Type, _member, _id, _is_ptr, CRA_TYPE_STRUCT, _member_meta, { .init_i = _init_i }, _arg)
+#define CRA_TYPE_META_MEMBER_STRUCT(_Type, _member, _id, _is_ptr, _member_meta, _init_i, _arg)       \
+    __CRA_TYPE_META_MEMBER(                                                                          \
+      _Type, _member, false, _id, _is_ptr, CRA_TYPE_STRUCT, _member_meta, NULL, NULL, _init_i, _arg)
 // c array
-#define CRA_TYPE_META_MEMBER_ARRAY(_Type, _member, _id, _is_ptr, _element_meta)                        \
-    __CRA_TYPE_META_MEMBER(_Type, _member, _id, _is_ptr, CRA_TYPE_LIST, _element_meta, { NULL }, NULL) \
-    __CRA_TYPE_META_MEMBER_(_Type, n##_member, true, _id, false, CRA_TYPE_UINT, NULL, { NULL }, NULL)
+#define CRA_TYPE_META_MEMBER_ARRAY(_Type, _member, _id, _is_ptr, _element_meta)                                       \
+    __CRA_TYPE_META_MEMBER(_Type, _member, false, _id, _is_ptr, CRA_TYPE_LIST, _element_meta, NULL, NULL, NULL, NULL) \
+    __CRA_TYPE_META_MEMBER(_Type, n##_member, true, _id, false, CRA_TYPE_UINT, NULL, NULL, NULL, NULL, NULL)
 // list
-#define CRA_TYPE_META_MEMBER_LIST(_Type, _member, _id, _is_ptr, _element_meta, _szer_i, _arg)                       \
-    __CRA_TYPE_META_MEMBER(_Type, _member, _id, _is_ptr, CRA_TYPE_LIST, _element_meta, { .szer_i = _szer_i }, _arg)
+#define CRA_TYPE_META_MEMBER_LIST(_Type, _member, _id, _is_ptr, _element_meta, _iter_i, _append_i, _init_i, _arg) \
+    __CRA_TYPE_META_MEMBER(                                                                                       \
+      _Type, _member, false, _id, _is_ptr, CRA_TYPE_LIST, _element_meta, _iter_i, _append_i, _init_i, _arg)
 // dict
-#define CRA_TYPE_META_MEMBER_DICT(_Type, _member, _id, _is_ptr, _kv_meta, _szer_i, _arg)                       \
-    __CRA_TYPE_META_MEMBER(_Type, _member, _id, _is_ptr, CRA_TYPE_DICT, _kv_meta, { .szer_i = _szer_i }, _arg)
+#define CRA_TYPE_META_MEMBER_DICT(_Type, _member, _id, _is_ptr, _kv_meta, _iter_i, _append_i, _init_i, _arg) \
+    __CRA_TYPE_META_MEMBER(                                                                                  \
+      _Type, _member, false, _id, _is_ptr, CRA_TYPE_DICT, _kv_meta, _iter_i, _append_i, _init_i, _arg)
 
 // element meta
 
-#define __CRA_TYPE_META_ELEMENT_(_is_len, _is_ptr, _TYPE, _name, _size, _submeta, _i, _arg) \
-    { true, _is_len, _is_ptr, 0, _TYPE, _name, _size, 0, _submeta, _i, _arg }
-#define __CRA_TYPE_META_ELEMENT(_is_ptr, _TYPE, _name, _size, _submeta, _i, _arg)     \
-    __CRA_TYPE_META_ELEMENT_(false, _is_ptr, _TYPE, _name, _size, _submeta, _i, _arg)
+#define __CRA_TYPE_META_ELEMENT(_is_len, _is_ptr, _TYPE, _name, _size, _submeta, _iter_i, _append_i, _init_i, _arg) \
+    {                                                                                                               \
+        .is_not_end = true,                                                                                         \
+        .is_len = _is_len,                                                                                          \
+        .is_ptr = _is_ptr,                                                                                          \
+        .id = 0,                                                                                                    \
+        .type = _TYPE,                                                                                              \
+        .name = _name,                                                                                              \
+        .size = _size,                                                                                              \
+        .offset = 0,                                                                                                \
+        .submeta = _submeta,                                                                                        \
+        .iter_i = _iter_i,                                                                                          \
+        .append_i = _append_i,                                                                                      \
+        .init_i = _init_i,                                                                                          \
+        .arg = _arg,                                                                                                \
+    }
+#define __CRA_TYPE_META_ELEMENT_BASE(_is_ptr, _TYPE, _name, _size)                             \
+    __CRA_TYPE_META_ELEMENT(false, _is_ptr, _TYPE, _name, _size, NULL, NULL, NULL, NULL, NULL)
 // bool
-#define CRA_TYPE_META_ELEMENT_BOOL()                                                               \
-    __CRA_TYPE_META_ELEMENT(false, CRA_TYPE_BOOL, "<<BOOL>>", sizeof(bool), NULL, { NULL }, NULL),
+#define CRA_TYPE_META_ELEMENT_BOOL()      __CRA_TYPE_META_ELEMENT_BASE(false, CRA_TYPE_BOOL, "<<BOOL>>", sizeof(bool)),
 // int
-#define CRA_TYPE_META_ELEMENT_INT(_type)                                                          \
-    __CRA_TYPE_META_ELEMENT(false, CRA_TYPE_INT, "<<INT>>", sizeof(_type), NULL, { NULL }, NULL),
+#define CRA_TYPE_META_ELEMENT_INT(_type)  __CRA_TYPE_META_ELEMENT_BASE(false, CRA_TYPE_INT, "<<INT>>", sizeof(_type)),
 // uint
-#define CRA_TYPE_META_ELEMENT_UINT(_type)                                                           \
-    __CRA_TYPE_META_ELEMENT(false, CRA_TYPE_UINT, "<<UINT>>", sizeof(_type), NULL, { NULL }, NULL),
+#define CRA_TYPE_META_ELEMENT_UINT(_type) __CRA_TYPE_META_ELEMENT_BASE(false, CRA_TYPE_UINT, "<<UINT>>", sizeof(_type)),
 // varint
-#define CRA_TYPE_META_ELEMENT_VARINT(_type)                                                             \
-    __CRA_TYPE_META_ELEMENT(false, CRA_TYPE_VARINT, "<<VARINT>>", sizeof(_type), NULL, { NULL }, NULL),
+#define CRA_TYPE_META_ELEMENT_VARINT(_type)                                            \
+    __CRA_TYPE_META_ELEMENT_BASE(false, CRA_TYPE_VARINT, "<<VARINT>>", sizeof(_type)),
 // varuint
-#define CRA_TYPE_META_ELEMENT_VARUINT(_type)                                                              \
-    __CRA_TYPE_META_ELEMENT(false, CRA_TYPE_VARUINT, "<<VARUINT>>", sizeof(_type), NULL, { NULL }, NULL),
+#define CRA_TYPE_META_ELEMENT_VARUINT(_type)                                             \
+    __CRA_TYPE_META_ELEMENT_BASE(false, CRA_TYPE_VARUINT, "<<VARUINT>>", sizeof(_type)),
 // float
-#define CRA_TYPE_META_ELEMENT_FLOAT(_type)                                                            \
-    __CRA_TYPE_META_ELEMENT(false, CRA_TYPE_FLOAT, "<<FLOAT>>", sizeof(_type), NULL, { NULL }, NULL),
+#define CRA_TYPE_META_ELEMENT_FLOAT(_type)                                           \
+    __CRA_TYPE_META_ELEMENT_BASE(false, CRA_TYPE_FLOAT, "<<FLOAT>>", sizeof(_type)),
 // string
-#define CRA_TYPE_META_ELEMENT_STRING(_type, _is_ptr)                                                      \
-    __CRA_TYPE_META_ELEMENT(_is_ptr, CRA_TYPE_STRING, "<<STRING>>", sizeof(_type), NULL, { NULL }, NULL),
+#define CRA_TYPE_META_ELEMENT_STRING(_type, _is_ptr)                                     \
+    __CRA_TYPE_META_ELEMENT_BASE(_is_ptr, CRA_TYPE_STRING, "<<STRING>>", sizeof(_type)),
 // bytes
-#define CRA_TYPE_META_ELEMENT_BYTES(_type, _is_ptr, _length_var)                                                      \
-    __CRA_TYPE_META_ELEMENT(_is_ptr, CRA_TYPE_BYTES, "<<BYTES>>", sizeof(_type), NULL, { NULL }, NULL),               \
-      __CRA_TYPE_META_ELEMENT_(                                                                                       \
-        true, false, CRA_TYPE_UINT, "<<BYTES_LENGTH>>", sizeof(_length_var), NULL, { NULL }, (void *)&(_length_var)),
+#define CRA_TYPE_META_ELEMENT_BYTES(_type, _is_ptr, _length_var)                       \
+    __CRA_TYPE_META_ELEMENT_BASE(_is_ptr, CRA_TYPE_BYTES, "<<BYTES>>", sizeof(_type)), \
+      __CRA_TYPE_META_ELEMENT(true,                                                    \
+                              false,                                                   \
+                              CRA_TYPE_UINT,                                           \
+                              "<<BYTES_LENGTH>>",                                      \
+                              sizeof(_length_var),                                     \
+                              NULL,                                                    \
+                              NULL,                                                    \
+                              NULL,                                                    \
+                              NULL,                                                    \
+                              (void *)&(_length_var)),
 // struct
-#define CRA_TYPE_META_ELEMENT_STRUCT(_type, _is_ptr, _member_meta, _init_i, _arg)                        \
-    __CRA_TYPE_META_ELEMENT(                                                                             \
-      _is_ptr, CRA_TYPE_STRUCT, "<<STRUCT>>", sizeof(_type), _member_meta, { .init_i = _init_i }, _arg),
+#define CRA_TYPE_META_ELEMENT_STRUCT(_type, _is_ptr, _member_meta, _init_i, _arg)                             \
+    __CRA_TYPE_META_ELEMENT(                                                                                  \
+      false, _is_ptr, CRA_TYPE_STRUCT, "<<STRUCT>>", sizeof(_type), _member_meta, NULL, NULL, _init_i, _arg),
 // c array
-#define CRA_TYPE_META_ELEMENT_ARRAY(_type, _is_ptr, _narray_var, _element_meta)                                      \
-    __CRA_TYPE_META_ELEMENT(_is_ptr, CRA_TYPE_LIST, "<<ARRAY>>", sizeof(_type), _element_meta, { NULL }, NULL),      \
-      __CRA_TYPE_META_ELEMENT_(                                                                                      \
-        true, false, CRA_TYPE_UINT, "<<ARRAY_COUNT>>", sizeof(_narray_var), NULL, { NULL }, (void *)&(_narray_var)),
+#define CRA_TYPE_META_ELEMENT_ARRAY(_type, _is_ptr, _narray_var, _element_meta)                          \
+    __CRA_TYPE_META_ELEMENT(                                                                             \
+      false, _is_ptr, CRA_TYPE_LIST, "<<ARRAY>>", sizeof(_type), _element_meta, NULL, NULL, NULL, NULL), \
+      __CRA_TYPE_META_ELEMENT(true,                                                                      \
+                              false,                                                                     \
+                              CRA_TYPE_UINT,                                                             \
+                              "<<ARRAY_COUNT>>",                                                         \
+                              sizeof(_narray_var),                                                       \
+                              NULL,                                                                      \
+                              NULL,                                                                      \
+                              NULL,                                                                      \
+                              NULL,                                                                      \
+                              (void *)&(_narray_var)),
 // list
-#define CRA_TYPE_META_ELEMENT_LIST(_type, _is_ptr, _element_meta, _szer_i, _arg)                      \
-    __CRA_TYPE_META_ELEMENT(                                                                          \
-      _is_ptr, CRA_TYPE_LIST, "<<LIST>>", sizeof(_type), _element_meta, { .szer_i = _szer_i }, _arg),
+#define CRA_TYPE_META_ELEMENT_LIST(_type, _is_ptr, _element_meta, _iter_i, _append_i, _init_i, _arg)               \
+    __CRA_TYPE_META_ELEMENT(                                                                                       \
+      false, _is_ptr, CRA_TYPE_LIST, "<<LIST>>", sizeof(_type), _element_meta, _iter_i, _append_i, _init_i, _arg),
 // dict
-#define CRA_TYPE_META_ELEMENT_DICT(_type, _is_ptr, _kv_meta, _szer_i, _arg)                                            \
-    __CRA_TYPE_META_ELEMENT(_is_ptr, CRA_TYPE_DICT, "<<DICT>>", sizeof(_type), _kv_meta, { .szer_i = _szer_i }, _arg),
+#define CRA_TYPE_META_ELEMENT_DICT(_type, _is_ptr, _kv_meta, _iter_i, _append_i, _init_i, _arg)               \
+    __CRA_TYPE_META_ELEMENT(                                                                                  \
+      false, _is_ptr, CRA_TYPE_DICT, "<<DICT>>", sizeof(_type), _kv_meta, _iter_i, _append_i, _init_i, _arg),
 
 // make object with meta
 
-#define __CRA_SERI_OBJ(_obj, _is_ptr, _TYPE, _name, _2meta, _submeta, _init_i, _arg)                             \
-    &(CraSeriObject)                                                                                          \
-    {                                                                                                         \
-        .objptr = (void *)&(_obj),                                                                            \
-        .meta = {                                                                                             \
-            __CRA_TYPE_META_ELEMENT(_is_ptr, _TYPE, _name, __CRA_SF##_is_ptr(_obj), _submeta, _init_i, _arg), \
-            _2meta,                                                                                           \
-            { 0 },                                                                                            \
-        },                                                                                                    \
+#define __CRA_SERI_OBJ(_obj, _is_ptr, _TYPE, _name, _submeta, _second_meta, _iter_i, _append_i, _init_i, _arg)    \
+    &(CraSeriObject)                                                                                           \
+    {                                                                                                          \
+        .objptr = (void *)&(_obj),                                                                             \
+        .meta = {                                                                                              \
+            __CRA_TYPE_META_ELEMENT(false, _is_ptr, _TYPE, _name,                                              \
+                __CRA_SF##_is_ptr(_obj), _submeta, _iter_i, _append_i, _init_i, _arg),                         \
+            _second_meta,                                                                                      \
+            { 0 },                                                                                             \
+        },                                                                                                     \
     }
 // struct
-#define CRA_SERI_STRUCT(_stru, _is_ptr, _members_meta, _init_i, _arg)                                                  \
-    __CRA_SERI_OBJ(_stru, _is_ptr, CRA_TYPE_STRUCT, "<<*STRUCT*>>", { 0 }, _members_meta, { .init_i = _init_i }, _arg)
+#define CRA_SERI_STRUCT(_stru, _is_ptr, _members_meta, _init_i, _arg)                                                \
+    __CRA_SERI_OBJ(_stru, _is_ptr, CRA_TYPE_STRUCT, "<<*STRUCT*>>", _members_meta, { 0 }, NULL, NULL, _init_i, _arg)
 // array
-#define CRA_SERI_ARRAY(_array, _is_ptr, _narray_var, _elements_meta)                                                   \
-    __CRA_SERI_OBJ(                                                                                                    \
-      _array,                                                                                                          \
-      _is_ptr,                                                                                                         \
-      CRA_TYPE_LIST,                                                                                                   \
-      "<<*ARRAY*>>",                                                                                                   \
-      __CRA_TYPE_META_ELEMENT_(                                                                                        \
-        true, false, CRA_TYPE_UINT, "<<*ARRAY_COUNT*>>", sizeof(_narray_var), NULL, { NULL }, (void *)&(_narray_var)), \
-      _elements_meta,                                                                                                  \
-      { NULL },                                                                                                        \
-      NULL)
+#define CRA_SERI_ARRAY(_array, _is_ptr, _narray_var, _elements_meta) \
+    __CRA_SERI_OBJ(_array,                                           \
+                   _is_ptr,                                          \
+                   CRA_TYPE_LIST,                                    \
+                   "<<*ARRAY*>>",                                    \
+                   _elements_meta,                                   \
+                   __CRA_TYPE_META_ELEMENT(true,                     \
+                                           false,                    \
+                                           CRA_TYPE_UINT,            \
+                                           "<<*ARRAY_COUNT*>>",      \
+                                           sizeof(_narray_var),      \
+                                           NULL,                     \
+                                           NULL,                     \
+                                           NULL,                     \
+                                           NULL,                     \
+                                           (void *)&(_narray_var)),  \
+                   NULL,                                             \
+                   NULL,                                             \
+                   NULL,                                             \
+                   NULL)
 // list
-#define CRA_SERI_LIST(_list, _is_ptr, _element_meta, _szer_i, _arg)                                                \
-    __CRA_SERI_OBJ(_list, _is_ptr, CRA_TYPE_LIST, "<<*LIST*>>", { 0 }, _element_meta, { .szer_i = _szer_i }, _arg)
+#define CRA_SERI_LIST(_list, _is_ptr, _element_meta, _iter_i, _append_i, _init_i, _arg) \
+    __CRA_SERI_OBJ(_list, _is_ptr, CRA_TYPE_LIST, "<<*LIST*>>", _element_meta, { 0 }, _iter_i, _append_i, _init_i, _arg)
 // dict
-#define CRA_SERI_DICT(_dict, _is_ptr, _kv_meta, _szer_i, _arg)                                                \
-    __CRA_SERI_OBJ(_dict, _is_ptr, CRA_TYPE_DICT, "<<*DICT*>>", { 0 }, _kv_meta, { .szer_i = _szer_i }, _arg)
+#define CRA_SERI_DICT(_dict, _is_ptr, _kv_meta, _iter_i, _append_i, _init_i, _arg)                                  \
+    __CRA_SERI_OBJ(_dict, _is_ptr, CRA_TYPE_DICT, "<<*DICT*>>", _kv_meta, { 0 }, _iter_i, _append_i, _init_i, _arg)
 
 // if id is not unique, return id. else return -1
 CRA_API int

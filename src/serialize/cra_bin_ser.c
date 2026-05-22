@@ -10,10 +10,10 @@
  */
 #define __CRA_SER_INNER
 #define __CRA_BUFFER_UNSIGNED
+#include "serialize/cra_serialize.h"
 #include "serialize/cra_bin_ser.h"
 #include "cra_endian.h"
 #include "cra_malloc.h"
-#include "serialize/cra_serialize.h"
 
 #if CRA_IS_BIG_ENDIAN
 #define CRA_SER_SWAP16 CRA_BSWAP_UINT16
@@ -478,7 +478,7 @@ cra_bin_write_value(CraSerializer *ser, void *val, const CraTypeMeta *meta)
         case CRA_TYPE_STRUCT:
             return cra_bin_write_struct(ser, val, meta);
         case CRA_TYPE_LIST:
-            if (meta->szer_i)
+            if (meta->iter_i)
                 return cra_bin_write_list(ser, val, meta);
             else
                 return cra_bin_write_array(ser, val, meta);
@@ -534,7 +534,7 @@ cra_bin_read_value(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
         case CRA_TYPE_STRUCT:
             return cra_bin_read_struct(ser, retval, meta);
         case CRA_TYPE_LIST:
-            if (meta->szer_i)
+            if (meta->iter_i)
                 return cra_bin_read_list(ser, retval, meta);
             else
                 return cra_bin_read_array(ser, retval, meta);
@@ -580,7 +580,7 @@ cra_bin_write_struct(CraSerializer *ser, void *val, const CraTypeMeta *meta)
             return false;
     }
     // check num of members
-    // CRA_BIN_CHECK_LENGTH(ser, meta, "Struct member count", nfields, CRA_BIN_MAX_STRUCT_MEMBER_COUNT);
+    CRA_BIN_CHECK_LENGTH(ser, meta, "Struct member count", nfields, CRA_BIN_MAX_STRUCT_MEMBER_COUNT);
     // write num of members
     *numbuf = (unsigned char)nfields;
 
@@ -681,7 +681,7 @@ cra_bin_read_struct(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 
     CRA_SERIALIZER_NESTING_INC_CHECK(ser);
 
-    void (*uninit)(void *, bool) = meta->init_i ? meta->init_i->uninit : NULL;
+    CRA_INITIALIZABLE_UNINIT_FN((*uninit)) = meta->init_i ? meta->init_i->uninit : NULL;
 
     // alloc
     if (meta->is_ptr)
@@ -700,8 +700,7 @@ cra_bin_read_struct(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
     // init
     if (meta->init_i && meta->init_i->init)
     {
-        CraInitArgs da = { .size = meta->size, .length = 0, .val1size = 0, .val2size = 0, .arg = meta->arg };
-        if (!meta->init_i->init(stru, &da))
+        if (!meta->init_i->init(stru, meta->size, meta->arg))
         {
             CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_INIT_FAILED, "failed to init struct");
             return false;
@@ -780,7 +779,7 @@ cra_bin_write_array(CraSerializer *ser, void *val, const CraTypeMeta *meta)
     void              *pcount;
     const CraTypeMeta *metacnt;
 
-    assert(!meta->szer_i);
+    assert(!meta->iter_i);
     assert(meta->submeta);
     assert(meta->submeta->is_not_end);
     assert((meta + 1)->is_len && (meta + 1)->type == CRA_TYPE_UINT);
@@ -827,7 +826,7 @@ cra_bin_read_array(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
     void              *pcount;
     const CraTypeMeta *metacnt;
 
-    assert(!meta->szer_i);
+    assert(!meta->iter_i);
     assert(meta->submeta);
     assert(meta->submeta->is_not_end);
     assert((meta + 1)->is_len && (meta + 1)->type == CRA_TYPE_UINT);
@@ -885,36 +884,38 @@ cra_bin_read_array(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 static bool
 cra_bin_write_list(CraSerializer *ser, void *val, const CraTypeMeta *meta)
 {
-    char    *list;
-    uint64_t i, count = 0;
-    void    *value = NULL;
-    char     it[64] = { 0 };
+    size_t      count, i;
+    char       *list;
+    CraTwoVals  vals;
+    CraIterator it;
 
-    assert(meta->szer_i);
     assert(meta->submeta);
     assert(meta->submeta->is_not_end);
-    assert(meta->szer_i->iter_init && meta->szer_i->iter_next);
+    assert(meta->iter_i && meta->iter_i->init && meta->iter_i->next);
 
     CRA_SERIALIZER_NESTING_INC_CHECK(ser);
 
     list = meta->is_ptr ? *(char **)val : (char *)val;
 
     // init it & get count
-    meta->szer_i->iter_init(list, &count, it, sizeof(it));
+    meta->iter_i->init(list, &it, &count, false);
 
     // check count
     CRA_BIN_CHECK_LENGTH(ser, meta, "List count", count, CRA_BIN_MAX_LIST_COUNT);
+
     // write count
-    if (!__cra_bin_write_varuint(ser, count))
+    if (!__cra_bin_write_varuint(ser, (uint64_t)count))
     {
         CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_LENGTH, "failed to write list count");
         return false;
     }
 
     // write elements
-    for (i = 0; meta->szer_i->iter_next(it, (void **)&value, NULL); ++i)
+    i = 0;
+    for (i = 0; meta->iter_i->next(&it, &vals); ++i)
     {
-        if (!cra_bin_write_value(ser, value, meta->submeta))
+        assert(vals.val1_ref);
+        if (!cra_bin_write_value(ser, vals.val1_ref, meta->submeta))
             return false;
     }
 
@@ -928,15 +929,16 @@ cra_bin_write_list(CraSerializer *ser, void *val, const CraTypeMeta *meta)
 static bool
 cra_bin_read_list(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 {
-    bool     ret;
-    char    *list;
-    size_t   slot;
-    uint64_t count;
+    bool       ret;
+    CraTwoVals vals;
+    char      *list;
+    size_t     slot;
+    uint64_t   count;
 
-    assert(meta->szer_i);
     assert(meta->submeta);
     assert(meta->submeta->is_not_end);
-    assert(meta->szer_i->add && meta->init_i->init);
+    assert(meta->init_i && meta->init_i->init);
+    assert(meta->append_i && meta->append_i->append);
 
     CRA_SERIALIZER_NESTING_INC_CHECK(ser);
 
@@ -966,18 +968,18 @@ cra_bin_read_list(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
         CRA_SERIALIZER_RELEASE_MGR_ADD_CHECK(ser, meta, list);
 
     // init
-    CraInitArgs da = { .size = meta->size, .length = count, .val1size = slot, .val2size = 0, .arg = meta->arg };
-    if (!meta->init_i->init(list, &da))
+    if (!meta->init_i->init(list, (size_t)count, meta->arg))
     {
         CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_INIT_FAILED, "failed to init list");
         return false;
     }
 
 #ifdef __STDC_NO_VLA__
-    char *element = (char *)cra_malloc(slot);
-    CRA_SEIALIZER_CHECK_MEMORY(ser, meta, element);
+    vals.val1_ref = cra_malloc(slot);
+    CRA_SEIALIZER_CHECK_MEMORY(ser, meta, vals.val1_ref);
 #else
     char element[slot];
+    vals.val1_ref = element;
 #endif
 
     // read elements
@@ -985,11 +987,11 @@ cra_bin_read_list(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
     for (uint64_t i = 0; i < count; ++i)
     {
         // read element
-        if (!(ret = cra_bin_read_value(ser, element, meta->submeta)))
+        if (!(ret = cra_bin_read_value(ser, vals.val1_ref, meta->submeta)))
             break;
 
         // append
-        if (!(ret = meta->szer_i->add(list, element, NULL)))
+        if (!(ret = meta->append_i->append(list, &vals)))
         {
             CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_ADD_FAILED, "failed to add a list element");
             break;
@@ -997,7 +999,7 @@ cra_bin_read_list(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
     }
 
 #ifdef __STDC_NO_VLA__
-    cra_free(element);
+    cra_free(vals.val1_ref);
 #endif
     CRA_SERIALIZER_NESTING_DEC(ser);
     return ret;
@@ -1006,16 +1008,15 @@ cra_bin_read_list(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 static bool
 cra_bin_write_dict(CraSerializer *ser, void *val, const CraTypeMeta *meta)
 {
-    char    *dict;
-    uint64_t i = 0;
-    uint64_t count = 0;
-    char     it[64] = { 0 };
-    void    *key = NULL, *value = NULL;
+    char       *dict;
+    CraTwoVals  vals;
+    CraIterator it;
+    size_t      count, i;
 
     assert(meta->submeta);
     assert(meta->submeta->is_not_end);
     assert((meta->submeta + 1)->is_not_end);
-    assert(meta->szer_i && meta->szer_i->iter_init && meta->szer_i->iter_next);
+    assert(meta->iter_i && meta->iter_i->init && meta->iter_i->next);
 
     CRA_SERIALIZER_NESTING_INC_CHECK(ser);
 
@@ -1025,10 +1026,11 @@ cra_bin_write_dict(CraSerializer *ser, void *val, const CraTypeMeta *meta)
     dict = meta->is_ptr ? *(char **)val : (char *)val;
 
     // init it & get count
-    meta->szer_i->iter_init(dict, &count, it, sizeof(it));
+    meta->iter_i->init(dict, &it, &count, false);
 
     // check count
     CRA_BIN_CHECK_LENGTH(ser, meta, "Dict count", count, CRA_BIN_MAX_DICT_COUNT);
+
     // write count
     if (!__cra_bin_write_varuint(ser, count))
     {
@@ -1037,11 +1039,13 @@ cra_bin_write_dict(CraSerializer *ser, void *val, const CraTypeMeta *meta)
     }
 
     // write elements
-    for (i = 0; meta->szer_i->iter_next(it, (void **)&key, (void **)&value); ++i)
+    for (i = 0; meta->iter_i->next(&it, &vals); ++i)
     {
-        if (!cra_bin_write_value(ser, key, meta->submeta))
+        assert(vals.val1_ref);
+        assert(vals.val2_ref);
+        if (!cra_bin_write_value(ser, vals.val1_ref, meta->submeta))
             return false;
-        if (!cra_bin_write_value(ser, value, meta->submeta + 1))
+        if (!cra_bin_write_value(ser, vals.val2_ref, meta->submeta + 1))
             return false;
     }
 
@@ -1056,6 +1060,7 @@ static bool
 cra_bin_read_dict(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 {
     bool               ret;
+    CraTwoVals         vals;
     char              *dict;
     uint64_t           count;
     size_t             key_size, val_size;
@@ -1064,7 +1069,8 @@ cra_bin_read_dict(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
     assert(meta->submeta);
     assert(meta->submeta->is_not_end);
     assert((meta->submeta + 1)->is_not_end);
-    assert(meta->szer_i && meta->szer_i->add && meta->init_i->init);
+    assert(meta->init_i && meta->init_i->init);
+    assert(meta->append_i && meta->append_i->append);
 
     CRA_SERIALIZER_NESTING_INC_CHECK(ser);
 
@@ -1102,39 +1108,33 @@ cra_bin_read_dict(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
     }
 
     // init
-    CraInitArgs da = {
-        .size = meta->size,
-        .length = count,
-        .val1size = key_size,
-        .val2size = val_size,
-        .arg = meta->arg,
-    };
-    if (!meta->init_i->init(dict, &da))
+    if (!meta->init_i->init(dict, (size_t)count, meta->arg))
     {
         CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_INIT_FAILED, "failed to init dict");
         return false;
     }
 
 #ifdef __STDC_NO_VLA__
-    char *key = (char *)cra_malloc(key_size + val_size);
-    CRA_SEIALIZER_CHECK_MEMORY(ser, meta, key);
+    vals.val1_ref = cra_malloc(key_size + val_size); // FIXME: alignment
+    CRA_SEIALIZER_CHECK_MEMORY(ser, meta, vals.val1_ref);
 #else
     char key[key_size + val_size];
+    vals.val1_ref = key;
 #endif
-    char *value = key + key_size;
+    vals.val2_ref = (char *)vals.val1_ref + key_size;
 
     // read elements
     ret = true;
     for (uint64_t i = 0; i < count; ++i)
     {
         // read key
-        if (!(ret = cra_bin_read_value(ser, key, keymeta)))
+        if (!(ret = cra_bin_read_value(ser, vals.val1_ref, keymeta)))
             break;
         // read value
-        if (!(ret = cra_bin_read_value(ser, value, valmeta)))
+        if (!(ret = cra_bin_read_value(ser, vals.val2_ref, valmeta)))
             break;
 
-        if (!(ret = meta->szer_i->add(dict, key, value)))
+        if (!(ret = meta->append_i->append(dict, &vals)))
         {
             CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_ADD_FAILED, "failed to insert a key-value pair into dict");
             break;
@@ -1142,7 +1142,7 @@ cra_bin_read_dict(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
     }
 
 #ifdef __STDC_NO_VLA__
-    cra_free(key);
+    cra_free(vals.val1_ref);
 #endif
 
     CRA_SERIALIZER_NESTING_DEC(ser);

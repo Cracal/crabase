@@ -11,10 +11,13 @@
 #include "cra_assert.h"
 #include "cra_malloc.h"
 #include "serialize/cra_json.h"
-#include "serialize/cra_ser_collections.h"
+#include "collections/cra_alist.h"
+#include "collections/cra_llist.h"
+#include "collections/cra_deque.h"
+#include "collections/cra_dict.h"
 #include <float.h>
 
-#define FORMAT false
+#define FORMAT true
 
 void
 test_bool(void)
@@ -616,14 +619,14 @@ test_float(void)
     assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
     printf("%s\n", buffer);
     assert_always(cra_json_parse(buffer, length, CRA_SERI_STRUCT(out, false, meta, NULL, NULL)));
-    assert_always(cra_compare_float(in.fn, out.fn) == 0);
-    assert_always(cra_compare_float(in.fm, out.fm) == 0);
-    assert_always(cra_compare_float(in.fM, out.fM) == 0);
-    assert_always(cra_compare_float(in.fW, out.fW) == 0);
-    assert_always(cra_compare_double(in.dn, out.dn) == 0);
-    assert_always(cra_compare_double(in.dm, out.dm) == 0);
-    assert_always(cra_compare_double(in.dM, out.dM) == 0);
-    assert_always(cra_compare_double(in.dW, out.dW) == 0);
+    assert_always(cra_cmp_float(in.fn, out.fn) == 0);
+    assert_always(cra_cmp_float(in.fm, out.fm) == 0);
+    assert_always(cra_cmp_float(in.fM, out.fM) == 0);
+    assert_always(cra_cmp_float(in.fW, out.fW) == 0);
+    assert_always(cra_cmp_double(in.dn, out.dn) == 0);
+    assert_always(cra_cmp_double(in.dm, out.dm) == 0);
+    assert_always(cra_cmp_double(in.dM, out.dM) == 0);
+    assert_always(cra_cmp_double(in.dW, out.dW) == 0);
 
     // test error
     CraSerErr err;
@@ -711,12 +714,12 @@ test_int_float(void)
     assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in_i, false, metai, NULL, NULL)));
     printf("%s\n", buffer);
     assert_always(cra_json_parse(buffer, length, CRA_SERI_STRUCT(out_f, false, metaf, NULL, NULL)));
-    assert_always(cra_compare_double((double)in_i.n, out_f.n) == 0);
-    assert_always(cra_compare_double((double)in_i.W, out_f.W) == 0);
+    assert_always(cra_cmp_double((double)in_i.n, out_f.n) == 0);
+    assert_always(cra_cmp_double((double)in_i.W, out_f.W) == 0);
 #ifdef CRA_JSON_SAFE_INT
-    assert_always(cra_compare_double((double)CRA_MIN_SAFE_INT, out_f.m) == 0);
-    assert_always(cra_compare_double((double)CRA_MAX_SAFE_INT, out_f.M) == 0);
-    assert_always(cra_compare_double((double)CRA_MAX_SAFE_INT, out_f.UM) == 0);
+    assert_always(cra_cmp_double((double)CRA_MIN_SAFE_INT, out_f.m) == 0);
+    assert_always(cra_cmp_double((double)CRA_MAX_SAFE_INT, out_f.M) == 0);
+    assert_always(cra_cmp_double((double)CRA_MAX_SAFE_INT, out_f.UM) == 0);
 #else
 // 不做SAFE_INT检查，double d = (double)i;
 // d甚至可能是NaN或Inf
@@ -1008,18 +1011,16 @@ CRA_TYPE_META_MEMBER_VARUINT(struct N, v, 7)
 CRA_TYPE_META_MEMBER_STRING(struct N, s, 8, true)
 CRA_TYPE_META_MEMBER_STRUCT(struct N, o, 9, true, metao, NULL, NULL)
 CRA_TYPE_META_MEMBER_ARRAY(struct N, a, 10, false, metaa)
-// CRA_TYPE_META_MEMBER_LIST(struct N, l, 11, true, metal, CRA_LLIST_SZER_I, NULL)
-// CRA_TYPE_META_MEMBER_DICT(struct N, c, 12, false, metac, CRA_DICT_SZER_I, &cargs)
-CRA_TYPE_META_MEMBER_LIST(struct N, l, 11, true, metal, NULL, NULL)
-CRA_TYPE_META_MEMBER_DICT(struct N, c, 12, false, metac, NULL, NULL)
+CRA_TYPE_META_MEMBER_LIST(struct N, l, 11, true, metal, NULL, NULL, NULL, NULL)
+CRA_TYPE_META_MEMBER_DICT(struct N, c, 12, false, metac, NULL, NULL, NULL, NULL)
 // old
 CRA_TYPE_META_MEMBER_UINT(struct N, u, 1)
 CRA_TYPE_META_END();
 
-static bool
-init_on(void *obj, CraInitArgs *da)
+static CRA_INITIALIZABLE_INIT_FN(init_on)
 {
-    if (da->size == sizeof(struct O))
+    CRA_UNUSED_VALUE(params);
+    if (length == sizeof(struct O))
     {
         struct O *o = (struct O *)obj;
         o->u = 200;
@@ -1045,8 +1046,7 @@ init_on(void *obj, CraInitArgs *da)
     return true;
 }
 
-// static void
-// uninit_on(void *obj)
+// static CRA_INITIALIZABLE_UNINIT_FN(uninit_on)
 // {
 //     CRA_UNUSED_VALUE(obj);
 // }
@@ -1059,13 +1059,10 @@ test_struct_xx(void)
     char   buffer[1024];
     size_t length;
 
-    CraDictSerArgs cargs = {
-        .hash = (cra_hash_fn)cra_hash_int32_t_p,
-        .compare = (cra_compare_fn)cra_compare_int32_t_p,
-    };
-    metan[10].szer_i = CRA_LLIST_SZER_I;
-    metan[11].szer_i = CRA_DICT_SZER_I;
-    metan[11].arg = &cargs;
+    CRA_LLIST_INITIALIZABLE_PARAM_DEF(llargs, int32_t);
+    CRA_TYPE_META_SET_I(&metan[10], CRA_LLIST_ITERABLE_I, CRA_LLIST_APPENDABLE_I, CRA_LLIST_INITIALIZABLE_I, &llargs);
+    CRA_DICT_INITIALIZABLE_PARAM_DEF(dargs, int32_t, int32_t, cra_hash_int32_p, cra_cmp_int32_p);
+    CRA_TYPE_META_SET_I(&metan[11], CRA_DICT_ITERABLE_I, CRA_DICT_APPENDABLE_I, CRA_DICT_INITIALIZABLE_I, &dargs);
 
     struct O outo, ino = { .u = 4000, .f = 6.7f };
     struct N outn, inn = { .u = 300,
@@ -1082,8 +1079,8 @@ test_struct_xx(void)
                            .na = 2,
                            .l = cra_alloc(CraLList) };
 
-    cra_llist_init0(int32_t, inn.l, false);
-    cra_dict_init0(int32_t, int32_t, &inn.c, false, cargs.hash, cargs.compare);
+    cra_llist_init(int32_t, inn.l);
+    cra_dict_init(int32_t, int32_t, &inn.c, dargs.hash_key, dargs.compare_key);
     for (int32_t i = 0; i < 20; i++)
     {
         cra_llist_append(inn.l, &i);
@@ -1097,8 +1094,8 @@ test_struct_xx(void)
     assert_always(cra_json_parse(buffer, length, CRA_SERI_STRUCT(outn, false, metan, &oninit_i, NULL)));
     assert_always(ino.u == outn.u);
     assert_always(-48 == outn.i);
-    assert_always(cra_compare_float(ino.f, outn.f) == 0);
-    assert_always(cra_compare_double(88.9, outn.d) == 0);
+    assert_always(cra_cmp_float(ino.f, outn.f) == 0);
+    assert_always(cra_cmp_double(88.9, outn.d) == 0);
     assert_always(false == outn.b);
     assert_always(NULL == outn.n);
     assert_always(0 == outn.v);
@@ -1115,7 +1112,7 @@ test_struct_xx(void)
     printf("%s\n", buffer);
     assert_always(cra_json_parse(buffer, length, CRA_SERI_STRUCT(outo, false, metao, &oninit_i, NULL)));
     assert_always(inn.u == outo.u);
-    assert_always(cra_compare_float(inn.f, outo.f) == 0);
+    assert_always(cra_cmp_float(inn.f, outo.f) == 0);
 
     cra_dict_uninit(&inn.c);
     cra_llist_uninit(inn.l);
@@ -1306,16 +1303,92 @@ test_list(void)
     CRA_TYPE_META_ELEMENT_STRING(char *, true)
     CRA_TYPE_META_END();
 
+    CRA_ALIST_INITIALIZABLE_PARAM_DEF(alargs, int32_t);
+    CRA_LLIST_INITIALIZABLE_PARAM_DEF(llargs, char[20]);
+    CRA_DEQUE_INITIALIZABLE_PARAM_DEF(dqargs, char *);
+
     CRA_TYPE_META_BEGIN(meta)
-    CRA_TYPE_META_MEMBER_LIST(struct L, alist, 1, false, metai32, CRA_ALIST_SZER_I, NULL)
-    CRA_TYPE_META_MEMBER_LIST(struct L, llist, 2, true, metasa, CRA_LLIST_SZER_I, NULL)
-    CRA_TYPE_META_MEMBER_LIST(struct L, deque, 3, true, metasp, CRA_DEQUE_SZER_I, NULL)
-    CRA_TYPE_META_MEMBER_LIST(struct L, alistempty, 4, true, metai32, CRA_ALIST_SZER_I, NULL)
-    CRA_TYPE_META_MEMBER_LIST(struct L, llistempty, 5, false, metasa, CRA_LLIST_SZER_I, NULL)
-    CRA_TYPE_META_MEMBER_LIST(struct L, dequeempty, 6, false, metasp, CRA_DEQUE_SZER_I, NULL)
-    CRA_TYPE_META_MEMBER_LIST(struct L, alistnull, 7, true, metai32, CRA_ALIST_SZER_I, NULL)
-    CRA_TYPE_META_MEMBER_LIST(struct L, llistnull, 8, true, metasa, CRA_LLIST_SZER_I, NULL)
-    CRA_TYPE_META_MEMBER_LIST(struct L, dequenull, 9, true, metasp, CRA_DEQUE_SZER_I, NULL)
+    CRA_TYPE_META_MEMBER_LIST(struct L,
+                              alist,
+                              1,
+                              false,
+                              metai32,
+                              CRA_ALIST_ITERABLE_I,
+                              CRA_ALIST_APPENDABLE_I,
+                              CRA_ALIST_INITIALIZABLE_I,
+                              &alargs)
+    CRA_TYPE_META_MEMBER_LIST(struct L,
+                              llist,
+                              2,
+                              true,
+                              metasa,
+                              CRA_LLIST_ITERABLE_I,
+                              CRA_LLIST_APPENDABLE_I,
+                              CRA_LLIST_INITIALIZABLE_I,
+                              &llargs)
+    CRA_TYPE_META_MEMBER_LIST(struct L,
+                              deque,
+                              3,
+                              true,
+                              metasp,
+                              CRA_DEQUE_ITERABLE_I,
+                              CRA_DEQUE_APPENDABLE_I,
+                              CRA_DEQUE_INITIALIZABLE_I,
+                              &dqargs)
+    CRA_TYPE_META_MEMBER_LIST(struct L,
+                              alistempty,
+                              4,
+                              true,
+                              metai32,
+                              CRA_ALIST_ITERABLE_I,
+                              CRA_ALIST_APPENDABLE_I,
+                              CRA_ALIST_INITIALIZABLE_I,
+                              &alargs)
+    CRA_TYPE_META_MEMBER_LIST(struct L,
+                              llistempty,
+                              5,
+                              false,
+                              metasa,
+                              CRA_LLIST_ITERABLE_I,
+                              CRA_LLIST_APPENDABLE_I,
+                              CRA_LLIST_INITIALIZABLE_I,
+                              &llargs)
+    CRA_TYPE_META_MEMBER_LIST(struct L,
+                              dequeempty,
+                              6,
+                              false,
+                              metasp,
+                              CRA_DEQUE_ITERABLE_I,
+                              CRA_DEQUE_APPENDABLE_I,
+                              CRA_DEQUE_INITIALIZABLE_I,
+                              &dqargs)
+    CRA_TYPE_META_MEMBER_LIST(struct L,
+                              alistnull,
+                              7,
+                              true,
+                              metai32,
+                              CRA_ALIST_ITERABLE_I,
+                              CRA_ALIST_APPENDABLE_I,
+                              CRA_ALIST_INITIALIZABLE_I,
+                              &alargs)
+    CRA_TYPE_META_MEMBER_LIST(struct L,
+                              llistnull,
+                              8,
+                              true,
+                              metasa,
+                              CRA_LLIST_ITERABLE_I,
+                              CRA_LLIST_APPENDABLE_I,
+                              CRA_LLIST_INITIALIZABLE_I,
+                              &llargs)
+    CRA_TYPE_META_MEMBER_LIST(struct L,
+                              dequenull,
+                              9,
+                              true,
+                              metasp,
+                              CRA_DEQUE_ITERABLE_I,
+                              CRA_DEQUE_APPENDABLE_I,
+                              CRA_DEQUE_INITIALIZABLE_I,
+                              &dqargs)
     CRA_TYPE_META_END();
 
     char   buffer[8192];
@@ -1334,17 +1407,17 @@ test_list(void)
     in.llist = cra_alloc(CraLList);
     in.deque = cra_alloc(CraDeque);
     in.alistempty = cra_alloc(CraAList);
-    cra_alist_init0(int32_t, &in.alist, false);
-    cra_llist_init0(char[20], in.llist, false);
-    cra_deque_init0(char *, in.deque, CRA_DEQUE_INFINITE, false);
-    cra_alist_init0(int32_t, in.alistempty, false);
-    cra_llist_init0(char[20], &in.llistempty, false);
-    cra_deque_init0(char *, &in.dequeempty, CRA_DEQUE_INFINITE, false);
+    cra_alist_init(int32_t, &in.alist);
+    cra_llist_init(char[20], in.llist);
+    cra_deque_init(char *, in.deque);
+    cra_alist_init(int32_t, in.alistempty);
+    cra_llist_init(char[20], &in.llistempty);
+    cra_deque_init(char *, &in.dequeempty);
     for (int i = 0; i < 100; i++)
     {
         cra_alist_append(&in.alist, &i);
         cra_llist_append(in.llist, &s20);
-        cra_deque_push(in.deque, &sp);
+        cra_deque_append(in.deque, &sp);
     }
 
     length = sizeof(buffer);
@@ -1443,6 +1516,24 @@ get_array_count(void *narray)
     return (size_t)*(uint32_t *)narray;
 }
 
+static size_t
+get_alist_count(CraAList *alist)
+{
+    return alist->count;
+}
+
+static size_t
+get_llist_count(CraLList *llist)
+{
+    return llist->count;
+}
+
+static size_t
+get_deque_count(CraDeque *deque)
+{
+    return deque->count;
+}
+
 static bool
 get_array_val(void *array, size_t index, void *retval)
 {
@@ -1465,9 +1556,9 @@ test_array_list(void)
     CraDeque indeque, outdeque;
 
     ninarray = 30;
-    cra_alist_init0(int32_t, &inalist, false);
-    cra_llist_init0(int32_t, &inllist, false);
-    cra_deque_init0(int32_t, &indeque, CRA_DEQUE_INFINITE, false);
+    cra_alist_init(int32_t, &inalist);
+    cra_llist_init(int32_t, &inllist);
+    cra_deque_init(int32_t, &indeque);
     for (int32_t i = 0; i < 30; i++)
     {
         inarray[i] = i;
@@ -1476,26 +1567,36 @@ test_array_list(void)
         if (i % 2 != 0)
             cra_llist_append(&inllist, &(int32_t){ i * 2 });
         if (i < 18)
-            cra_deque_push(&indeque, &(int32_t){ i * 8 });
+            cra_deque_append(&indeque, &(int32_t){ i * 8 });
     }
+
+    CRA_ALIST_INITIALIZABLE_PARAM_DEF(alargs, int32_t);
+    CRA_LLIST_INITIALIZABLE_PARAM_DEF(llargs, int32_t);
+    CRA_DEQUE_INITIALIZABLE_PARAM_DEF(dqargs, int32_t);
 
     CraSeriObject *ins[] = {
         CRA_SERI_ARRAY(inarray, false, ninarray, metai32),
-        CRA_SERI_LIST(inalist, false, metai32, CRA_ALIST_SZER_I, NULL),
-        CRA_SERI_LIST(inllist, false, metai32, CRA_LLIST_SZER_I, NULL),
-        CRA_SERI_LIST(indeque, false, metai32, CRA_DEQUE_SZER_I, NULL),
+        CRA_SERI_LIST(
+          inalist, false, metai32, CRA_ALIST_ITERABLE_I, CRA_ALIST_APPENDABLE_I, CRA_ALIST_INITIALIZABLE_I, &alargs),
+        CRA_SERI_LIST(
+          inllist, false, metai32, CRA_LLIST_ITERABLE_I, CRA_LLIST_APPENDABLE_I, CRA_LLIST_INITIALIZABLE_I, &llargs),
+        CRA_SERI_LIST(
+          indeque, false, metai32, CRA_DEQUE_ITERABLE_I, CRA_DEQUE_APPENDABLE_I, CRA_DEQUE_INITIALIZABLE_I, &dqargs),
     };
     CraSeriObject *outs[] = {
         CRA_SERI_ARRAY(outarray, false, noutarray, metai32),
-        CRA_SERI_LIST(outalist, false, metai32, CRA_ALIST_SZER_I, NULL),
-        CRA_SERI_LIST(outllist, false, metai32, CRA_LLIST_SZER_I, NULL),
-        CRA_SERI_LIST(outdeque, false, metai32, CRA_DEQUE_SZER_I, NULL),
+        CRA_SERI_LIST(
+          outalist, false, metai32, CRA_ALIST_ITERABLE_I, CRA_ALIST_APPENDABLE_I, CRA_ALIST_INITIALIZABLE_I, &alargs),
+        CRA_SERI_LIST(
+          outllist, false, metai32, CRA_LLIST_ITERABLE_I, CRA_LLIST_APPENDABLE_I, CRA_LLIST_INITIALIZABLE_I, &llargs),
+        CRA_SERI_LIST(
+          outdeque, false, metai32, CRA_DEQUE_ITERABLE_I, CRA_DEQUE_APPENDABLE_I, CRA_DEQUE_INITIALIZABLE_I, &dqargs),
     };
     size_t (*getcntfns[])(void *) = {
         get_array_count,
-        (size_t (*)(void *))cra_alist_get_count,
-        (size_t (*)(void *))cra_llist_get_count,
-        (size_t (*)(void *))cra_deque_get_count,
+        (size_t (*)(void *))get_alist_count,
+        (size_t (*)(void *))get_llist_count,
+        (size_t (*)(void *))get_deque_count,
     };
     bool (*getvalfns[])(void *, size_t, void *) = {
         get_array_val,
@@ -1562,38 +1663,35 @@ test_dict(void)
     CRA_TYPE_META_ELEMENT_INT(uint8_t)  // val
     CRA_TYPE_META_END();
 
-    CraDictSerArgs daif = {
-        .hash = (cra_hash_fn)cra_hash_int32_t_p,
-        .compare = (cra_compare_fn)cra_compare_int32_t_p,
-    };
-    CraDictSerArgs dadu = {
-        .hash = (cra_hash_fn)cra_hash_double_p,
-        .compare = (cra_compare_fn)cra_compare_double_p,
-    };
+    CRA_DICT_INITIALIZABLE_PARAM_DEF(daif, int32_t, float, cra_hash_int32_p, cra_cmp_int32_p);
+    CRA_DICT_INITIALIZABLE_PARAM_DEF(dadu, double, uint8_t, cra_hash_double_p, cra_cmp_double_p);
 
     CRA_TYPE_META_BEGIN(meta)
-    CRA_TYPE_META_MEMBER_DICT(struct D, ds, 1, false, metaif, CRA_DICT_SZER_I, &daif)
-    CRA_TYPE_META_MEMBER_DICT(struct D, dp, 2, true, metadu, CRA_DICT_SZER_I, &dadu)
-    CRA_TYPE_META_MEMBER_DICT(struct D, dempty, 3, true, metaif, CRA_DICT_SZER_I, &daif)
-    CRA_TYPE_META_MEMBER_DICT(struct D, dnull, 4, true, metadu, CRA_DICT_SZER_I, &dadu)
+    CRA_TYPE_META_MEMBER_DICT(
+      struct D, ds, 1, false, metaif, CRA_DICT_ITERABLE_I, CRA_DICT_APPENDABLE_I, CRA_DICT_INITIALIZABLE_I, &daif)
+    CRA_TYPE_META_MEMBER_DICT(
+      struct D, dp, 2, true, metadu, CRA_DICT_ITERABLE_I, CRA_DICT_APPENDABLE_I, CRA_DICT_INITIALIZABLE_I, &dadu)
+    CRA_TYPE_META_MEMBER_DICT(
+      struct D, dempty, 3, true, metaif, CRA_DICT_ITERABLE_I, CRA_DICT_APPENDABLE_I, CRA_DICT_INITIALIZABLE_I, &daif)
+    CRA_TYPE_META_MEMBER_DICT(
+      struct D, dnull, 4, true, metadu, CRA_DICT_ITERABLE_I, CRA_DICT_APPENDABLE_I, CRA_DICT_INITIALIZABLE_I, &dadu)
     CRA_TYPE_META_END();
 
     char   buffer[4096];
     size_t length;
 
-    int32_t     i1, *pi;
-    float       f1, *pf;
-    double      d1, *pd;
-    uint8_t     u1, *pu;
-    struct D    out, in;
-    CraDictIter it;
+    int32_t  i1;
+    float    f1, f2;
+    double   d1;
+    uint8_t  u1, u2;
+    struct D out, in;
 
     in.dnull = NULL;
     in.dp = cra_alloc(CraDict);
     in.dempty = cra_alloc(CraDict);
-    cra_dict_init0(int32_t, float, &in.ds, false, daif.hash, daif.compare);
-    cra_dict_init0(double, uint8_t, in.dp, false, dadu.hash, dadu.compare);
-    cra_dict_init0(int32_t, float, in.dempty, false, daif.hash, daif.compare);
+    cra_dict_init(int32_t, float, &in.ds, daif.hash_key, daif.compare_key);
+    cra_dict_init(double, uint8_t, in.dp, dadu.hash_key, dadu.compare_key);
+    cra_dict_init(int32_t, float, in.dempty, daif.hash_key, daif.compare_key);
     for (int i = 0; i < 100; i++)
     {
         i1 = i * 7;
@@ -1615,15 +1713,19 @@ test_dict(void)
     assert_always(in.ds.count == out.ds.count);
     assert_always(in.dp->count == out.dp->count);
     assert_always(in.dempty->count == out.dempty->count);
-    for (cra_dict_iter_init(&in.ds, &it); cra_dict_iter_next(&it, (void **)&pi, (void **)&pf);)
+    CRA_FOREACH(CRA_DICT_ITERABLE_I, &in.ds, vals)
     {
-        cra_dict_get(&out.ds, pi, &f1);
-        assert_always(cra_compare_float(f1, *pf) == 0);
+        memcpy(&i1, vals.val1_ref, sizeof(i1));
+        memcpy(&f1, vals.val2_ref, sizeof(f1));
+        cra_dict_get(&out.ds, &i1, &f2);
+        assert_always(cra_cmp_float(f1, f2) == 0);
     }
-    for (cra_dict_iter_init(in.dp, &it); cra_dict_iter_next(&it, (void **)&pd, (void **)&pu);)
+    CRA_FOREACH(CRA_DICT_ITERABLE_I, in.dp, vals)
     {
-        cra_dict_get(out.dp, pd, &u1);
-        assert_always(u1 == *pu);
+        memcpy(&d1, vals.val1_ref, sizeof(d1));
+        memcpy(&u1, vals.val2_ref, sizeof(u1));
+        cra_dict_get(out.dp, &d1, &u2);
+        assert_always(u1 == u2);
     }
     cra_dict_uninit(&out.ds);
     cra_dict_uninit(out.dp);
@@ -1697,14 +1799,13 @@ CRA_TYPE_META_BEGIN(metasa)
 CRA_TYPE_META_MEMBER_STRING(struct A, str, 1, true)
 CRA_TYPE_META_END();
 
-void
-a_uninit(void *obj, bool dont_free_ptr)
+CRA_INITIALIZABLE_UNINIT_FN(a_uninit)
 {
     // 只有在反序列化失败时才会调用
     // 并且不要在这里free
     struct A *a = (struct A *)obj;
-    if (!dont_free_ptr && a->str)
-        cra_free(a->str); // don't call it
+    // cra_free(a->str); // don't free this
+    CRA_UNUSED_VALUE(a);
 }
 
 CraInitializable_i a_init_i = { .init = NULL, .uninit = a_uninit };
@@ -1725,10 +1826,10 @@ test_deserialize_failed(void)
     CRA_TYPE_META_ELEMENT_STRUCT(struct A, true, metasa, &a_init_i, NULL)
     CRA_TYPE_META_END();
 
-    CraDictSerArgs dict_arg = {
-        .hash = (cra_hash_fn)cra_hash_string1_p,
-        .compare = (cra_compare_fn)cra_compare_string_p,
-    };
+    CRA_ALIST_INITIALIZABLE_PARAM_DEF(alist_arg, struct A *);
+    CRA_LLIST_INITIALIZABLE_PARAM_DEF(llist_arg, struct A *);
+    CRA_DEQUE_INITIALIZABLE_PARAM_DEF(deque_arg, struct A *);
+    CRA_DICT_INITIALIZABLE_PARAM_DEF(dict_arg, char *, struct A *, cra_hash_string1_p, cra_cmp_string_p);
 
     struct B
     {
@@ -1743,10 +1844,42 @@ test_deserialize_failed(void)
     CRA_TYPE_META_BEGIN(meta)
     CRA_TYPE_META_MEMBER_STRUCT(struct B, stru, 1, true, metasa, &a_init_i, NULL)
     CRA_TYPE_META_MEMBER_ARRAY(struct B, array, 2, true, metastr_elem)
-    CRA_TYPE_META_MEMBER_LIST(struct B, alist, 3, true, metasa_elem, CRA_ALIST_SZER_I, NULL)
-    CRA_TYPE_META_MEMBER_LIST(struct B, llist, 4, true, metasa_elem, CRA_LLIST_SZER_I, NULL)
-    CRA_TYPE_META_MEMBER_LIST(struct B, deque, 5, true, metasa_elem, CRA_DEQUE_SZER_I, NULL)
-    CRA_TYPE_META_MEMBER_DICT(struct B, dict, 6, true, metasa_kv, CRA_DICT_SZER_I, &dict_arg)
+    CRA_TYPE_META_MEMBER_LIST(struct B,
+                              alist,
+                              3,
+                              true,
+                              metasa_elem,
+                              CRA_ALIST_ITERABLE_I,
+                              CRA_ALIST_APPENDABLE_I,
+                              CRA_ALIST_INITIALIZABLE_I,
+                              &alist_arg)
+    CRA_TYPE_META_MEMBER_LIST(struct B,
+                              llist,
+                              4,
+                              true,
+                              metasa_elem,
+                              CRA_LLIST_ITERABLE_I,
+                              CRA_LLIST_APPENDABLE_I,
+                              CRA_LLIST_INITIALIZABLE_I,
+                              &llist_arg)
+    CRA_TYPE_META_MEMBER_LIST(struct B,
+                              deque,
+                              5,
+                              true,
+                              metasa_elem,
+                              CRA_DEQUE_ITERABLE_I,
+                              CRA_DEQUE_APPENDABLE_I,
+                              CRA_DEQUE_INITIALIZABLE_I,
+                              &deque_arg)
+    CRA_TYPE_META_MEMBER_DICT(struct B,
+                              dict,
+                              6,
+                              true,
+                              metasa_kv,
+                              CRA_DICT_ITERABLE_I,
+                              CRA_DICT_APPENDABLE_I,
+                              CRA_DICT_INITIALIZABLE_I,
+                              &dict_arg)
     CRA_TYPE_META_END();
 
     struct B in, out;
@@ -1758,10 +1891,10 @@ test_deserialize_failed(void)
     in.deque = cra_alloc(CraDeque);
     in.dict = cra_alloc(CraDict);
     in.narray = 3;
-    cra_alist_init0(struct A *, in.alist, false);
-    cra_llist_init0(struct A *, in.llist, false);
-    cra_deque_init0(struct A *, in.deque, CRA_DEQUE_INFINITE, false);
-    cra_dict_init0(char *, struct A *, in.dict, false, dict_arg.hash, dict_arg.compare);
+    cra_alist_init(struct A *, in.alist);
+    cra_llist_init(struct A *, in.llist);
+    cra_deque_init(struct A *, in.deque);
+    cra_dict_init(char *, struct A *, in.dict, dict_arg.hash_key, dict_arg.compare_key);
 
     char     *str;
     struct A *a;
@@ -1788,7 +1921,7 @@ test_deserialize_failed(void)
         a = cra_alloc(struct A);
         a->str = (char *)cra_malloc(30);
         snprintf(a->str, 30, "deque    %d.", i);
-        cra_deque_push(in.deque, &a);
+        cra_deque_append(in.deque, &a);
 
         str = (char *)cra_malloc(30);
         a = cra_alloc(struct A);
@@ -1849,20 +1982,19 @@ test_deserialize_failed(void)
         cra_free(val2);
     }
 
-    char       *key;
-    char      **pkey;
-    struct A  **pval;
-    CraDictIter it;
-    for (cra_dict_iter_init(in.dict, &it); cra_dict_iter_next(&it, (void **)&pkey, (void **)&pval);)
+    char *key, *key2;
+    CRA_FOREACH(CRA_DICT_ITERABLE_I, in.dict, vals)
     {
-        cra_dict_pop(out.dict, pkey, &key, &val1);
-        assert_always(strcmp(val1->str, (*pval)->str) == 0);
-        cra_free(*pkey);
+        memcpy(&key, vals.val1_ref, sizeof(key));
+        memcpy(&val1, vals.val2_ref, sizeof(val1));
+        cra_dict_pop_kv(out.dict, &key, &key2, &val2);
+        assert_always(strcmp(val1->str, val2->str) == 0);
         cra_free(key);
-        cra_free((*pval)->str);
+        cra_free(key2);
         cra_free(val1->str);
-        cra_free(*pval);
+        cra_free(val2->str);
         cra_free(val1);
+        cra_free(val2);
     }
     cra_free(in.stru->str);
     cra_free(out.stru->str);
