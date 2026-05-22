@@ -94,7 +94,7 @@ test_add(void)
     assert_always(!cra_alist_insert(list, 10000, &(int){ 1 }));
 
     i = -2;
-    for (int j = 0; j < list->count; j++, i++)
+    for (int j = 0; j < (int)list->count; j++, i++)
     {
         memcpy(&val, CRA_ALIST_PVAL(list, j), sizeof(int));
         // printf("%d  ", val);
@@ -117,7 +117,7 @@ test_add(void)
     assert_always(list->count == 1000);
 
     i = 999;
-    for (int j = 0; j < list->count; j++, i--)
+    for (int j = 0; j < (int)list->count; j++, i--)
     {
         memcpy(&val, CRA_ALIST_PVAL(list, j), sizeof(int));
         // printf("%d  ", val);

@@ -90,7 +90,10 @@ typedef cra_hash_t (*cra_hash_fn)(const void *val);
 #define CRA_HASH_FUNC(_T, _name)                                 \
     static inline cra_hash_t cra_hash_##_name(_T val)            \
     {                                                            \
-        return (cra_hash_t)(val == -1 ? -2 : val);               \
+        cra_hash_t hash = (cra_hash_t)val;                       \
+        if (hash != -1)                                          \
+            return hash;                                         \
+        return -2;                                               \
     }                                                            \
     static inline cra_hash_t cra_hash_##_name##_p(const _T *val) \
     {                                                            \
