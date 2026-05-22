@@ -51,23 +51,23 @@ CRA_API void
 cra_log_cleanup(void);
 
 CRA_API void
-__cra_log_message(const char   *logname,
-                  CraLogLevel_e level,
+cra_log_message_with_logname(const char   *logname,
+                             CraLogLevel_e level,
 #ifdef CRA_LOG_FILE_LINE
-                  const char *file,
-                  int         line,
+                             const char *file,
+                             int         line,
 #endif
-                  const char *fmt,
-                  ...);
+                             const char *fmt,
+                             ...);
 #if CRA_LOG_FILE_LINE
-#define cra_log_message_with_logname(_logname, _level, _fmt, ...)                \
-    __cra_log_message(_logname, _level, __FILE__, __LINE__, _fmt, ##__VA_ARGS__)
-#define cra_log_message(_level, _fmt, ...)                                           \
-    __cra_log_message(CRA_LOG_NAME, _level, __FILE__, __LINE__, _fmt, ##__VA_ARGS__)
+#define cra_log_message_with_logname(_logname, _level, _fmt, ...)                           \
+    cra_log_message_with_logname(_logname, _level, __FILE__, __LINE__, _fmt, ##__VA_ARGS__)
+#define cra_log_message(_level, _fmt, ...) cra_log_message_with_logname(CRA_LOG_NAME, _level, _fmt, ##__VA_ARGS__)
 #else
-#define cra_log_message_with_logname(_logname, _level, _fmt, ...) \
-    __cra_log_message(_logname, _level, _fmt, ##__VA_ARGS__)
-#define cra_log_message(_logname, _level, _fmt, ...) __cra_log_message(CRA_LOG_NAME, _level, _fmt, ##__VA_ARGS__)
+#define cra_log_message_with_logname(_logname, _level, _fmt, ...)       \
+    cra_log_message_with_logname(_logname, _level, _fmt, ##__VA_ARGS__)
+#define cra_log_message(_logname, _level, _fmt, ...)                        \
+    cra_log_message_with_logname(CRA_LOG_NAME, _level, _fmt, ##__VA_ARGS__)
 #endif
 
 #define cra_log_trace_with_logname(_logname, _fmt, ...)                              \

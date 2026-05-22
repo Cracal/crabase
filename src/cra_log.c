@@ -64,10 +64,23 @@ cra_log_startup(CraLogLevel_e level, bool with_localtime, CraLogTo_i **logto)
     s_logger->with_utc = !with_localtime;
     if (with_localtime)
     {
-        CraDateTime utc, local;
+        CraDateTime utc;
+        CraDateTime local;
+        int         utc_mins;
+        int         local_mins;
+        int         diff;
+
         cra_datetime_now_utc(&utc);
         cra_datetime_now_localtime(&local);
-        s_logger->timezoneoffset = (short)(local.hour - utc.hour);
+        utc_mins = utc.hour * 60 + utc.min;
+        local_mins = local.hour * 60 + local.min;
+        diff = local_mins - utc_mins;
+        if (diff <= -720)
+            diff += 1440;
+        else if (diff > 720)
+            diff -= 1440;
+
+        s_logger->timezoneoffset = (short)(diff / 60);
     }
     else
     {
@@ -111,15 +124,14 @@ cra_level_to_str(CraLogLevel_e level)
     }
 }
 
-void
-__cra_log_message(const char   *logname,
-                  CraLogLevel_e level,
+void(cra_log_message_with_logname)(const char   *logname,
+                                   CraLogLevel_e level,
 #ifdef CRA_LOG_FILE_LINE
-                  const char *file,
-                  int         line,
+                                   const char *file,
+                                   int         line,
 #endif
-                  const char *fmt,
-                  ...)
+                                   const char *fmt,
+                                   ...)
 {
     int  len;
     char msg[CRA_LOG_MSG_MAX];
