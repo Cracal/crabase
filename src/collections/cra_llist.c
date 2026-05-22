@@ -331,16 +331,12 @@ static CRA_ITERABLE_INIT_FN(cra_llist_iterable_init)
     if (retcnt)
         *retcnt = list->count;
 
-    if (!list->head)
-        return false;
-
-    assert(list->head);
-    assert(list->head->next);
-    assert(list->head->prev);
-
     it->obj = list;
-    it->ic1.cur = reverse ? list->head->prev : list->head;
-    return true;
+    it->ic1.cur = list->head;
+    if (reverse && list->head)
+        it->ic1.cur = list->head->prev;
+
+    return !!list->head;
 }
 
 static CRA_ITERABLE_NEXT_FN(cra_llist_iterable_next)

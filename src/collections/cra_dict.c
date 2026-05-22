@@ -486,7 +486,7 @@ static CRA_ITERABLE_INIT_FN(cra_dict_iterable_init)
         *retcnt = (size_t)dict->count;
 
     it->obj = obj;
-    it->ic1.idx = reverse ? dict->next - 1 : 0;
+    it->ic1.idx = reverse ? dict->next : 0;
 
     return dict->count > 0;
 }
@@ -528,7 +528,7 @@ static CRA_ITERABLE_PREV_FN(cra_dict_iterable_prev)
 
     dict = (CraDict *)it->obj;
 
-    while ((ssize_t)it->ic1.idx >= 0)
+    while ((ssize_t)it->ic1.idx > 0)
     {
         entry = CRA_DICT_PENTRY(dict, it->ic1.idx);
         --it->ic1.idx;

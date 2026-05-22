@@ -334,13 +334,10 @@ static CRA_ITERABLE_INIT_FN(cra_alist_iterable_init)
     if (retcnt)
         *retcnt = list->count;
 
-    if (list->count > 0)
-    {
-        it->ic1.idx = reverse ? list->count : 0;
-        it->obj = obj;
-        return true;
-    }
-    return false;
+    it->ic1.idx = reverse ? list->count : 0;
+    it->obj = obj;
+
+    return list->count > 0;
 }
 
 static CRA_ITERABLE_NEXT_FN(cra_alist_iterable_next)
