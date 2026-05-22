@@ -1008,7 +1008,8 @@ cra_json_is_finish(CraSerializer *ser, unsigned char finish_ch, const CraTypeMet
     }
 }
 
-static const CraTypeMeta s_keymeta = __CRA_TYPE_META_ELEMENT_BASE(false, CRA_TYPE_STRING, "<<JSON_KEY>>", CRA_MAX_JSON_KEY_LENGTH);
+static const CraTypeMeta s_keymeta =
+  __CRA_TYPE_META_ELEMENT_BASE(false, CRA_TYPE_STRING, "<<JSON_KEY>>", CRA_MAX_JSON_KEY_LENGTH);
 
 static bool
 cra_json_write_struct(CraSerializer *ser, void *val, const CraTypeMeta *meta)
