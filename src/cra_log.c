@@ -229,7 +229,7 @@ typedef struct
     char   buffer[CRA_LOG_BUFFER_SIZE];
 } CraLogBuffer;
 
-struct _CraLogAsync
+struct CraLogAsync
 {
     cra_thrd_t  thread;
     cra_mutex_t mutex;
@@ -291,7 +291,7 @@ static CRA_THRD_FUNC(cra_log_async_thread)
         fprintf(stderr, "cra_log_async_thread() failed. can not alloc buffers.\n");
         exit(EXIT_FAILURE);
     }
-    if (!cra_llist_init0(CraLogBuffer *, buffers, false))
+    if (!cra_llist_init(CraLogBuffer *, buffers))
     {
         fprintf(stderr, "cra_log_async_thread() failed. can not init buffers.\n");
         exit(EXIT_FAILURE);
@@ -354,7 +354,7 @@ static CRA_THRD_FUNC(cra_log_async_thread)
         }
     }
 
-    assert(cra_llist_get_count(buffers) == 0);
+    assert(buffers->count == 0);
     cra_log_buffer_destroy(buf1);
     cra_log_buffer_destroy(buf2);
     cra_llist_uninit(buffers);
@@ -454,7 +454,7 @@ cra_log_async_create(cra_log_async_write2logto_fn on_write, CraLogTo_i **logto)
         fprintf(stderr, "cra_log_async_create() failed. can not alloc buffers.\n");
         exit(EXIT_FAILURE);
     }
-    if (!cra_llist_init0(CraLogBuffer *, obj->buffers, false))
+    if (!cra_llist_init(CraLogBuffer *, obj->buffers))
     {
         fprintf(stderr, "cra_log_async_create() failed. can not init buffers.\n");
         exit(EXIT_FAILURE);
@@ -503,7 +503,7 @@ cra_log_async_destory(CraLogAsync **pobj)
 
 #if 1 // log to stdout
 
-struct _CraLogToStdout
+struct CraLogToStdout
 {
     CRA_LOGTO_HEAD;
     CraLogAsync *async;
@@ -686,7 +686,7 @@ end:
 
 #endif // end file
 
-struct _CraLogToFile
+struct CraLogToFile
 {
     CRA_LOGTO_HEAD;
     CraLogAsync *async;

@@ -19,7 +19,7 @@ typedef struct
     cra_thrdpool_task_fn2 func;
 } CraThrdPoolTask;
 
-struct _CraThrdPoolWorker
+struct CraThrdPoolWorker
 {
     CraCDL      *cdl;
     CraThrdPool *pool;

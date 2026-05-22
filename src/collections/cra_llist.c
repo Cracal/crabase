@@ -9,341 +9,171 @@
  *
  */
 #include "collections/cra_llist.h"
-#include "cra_assert.h"
 #include "cra_malloc.h"
 
-static inline CraLListNode *
-__cra_llist_create_node(size_t element_size)
+#define CRA_LLIST_CREATE_NODE(_itemsize) (CraLListNode *)cra_malloc(sizeof(CraLListNode) + (_itemsize))
+#define CRA_LLIST_DESTROY_NODE(_node)    cra_free(_node)
+
+CraLListNode *
+cra_llist_create_node(size_t itemsize)
 {
-    return (CraLListNode *)cra_malloc(sizeof(CraLListNode) + element_size);
-}
-
-static inline void
-__cra_llist_destroy_node(CraLListNode *node)
-{
-    cra_free(node);
-}
-
-static inline CraLListNode *
-__cra_llist_get_free_node(CraLList *list)
-{
-    CraLListNode *node;
-    if (list->freelist)
-    {
-        node = list->freelist;
-        list->freelist = node->next;
-        list->freelist_count--;
-    }
-    else
-    {
-        node = __cra_llist_create_node(list->ele_size);
-        if (node && list->zero_memory)
-            bzero(node->val, list->ele_size);
-    }
-    return node;
-}
-
-static inline void
-__cra_llist_add_free_node(CraLList *list, CraLListNode *node)
-{
-    if (list->zero_memory)
-        bzero(node->val, list->ele_size);
-    node->next = list->freelist;
-    list->freelist = node;
-    list->freelist_count++;
-}
-
-static inline void
-__cra_llist_put_free_node(CraLList *list, CraLListNode *node, bool move_to_free_list)
-{
-    if (move_to_free_list && list->freelist_count < CRA_LLIST_FREE_NODE_MAX)
-    {
-        __cra_llist_add_free_node(list, node);
-    }
-    else
-    {
-        __cra_llist_destroy_node(node);
-    }
-}
-
-static inline void
-__cra_llist_insert_node(CraLList *list, size_t index, CraLListNode *node)
-{
-    CraLListNode *curr;
-
-    assert(index <= list->count);
-
-    // 没有元素时
-    if (list->head == NULL)
-    {
-        node->prev = node;
-        node->next = node;
-        list->head = node;
-    }
-    else
-    {
-        // 头插
-        if (index == 0)
-        {
-            curr = list->head;
-            list->head = node;
-        }
-        // 尾插
-        else if (index == list->count)
-        {
-            curr = list->head;
-        }
-        // 中插
-        else
-        {
-            curr = list->head;
-            for (size_t i = 0; i < index; i++)
-                curr = curr->next;
-        }
-        node->next = curr;
-        node->prev = curr->prev;
-        curr->prev->next = node;
-        curr->prev = node;
-    }
-    ++list->count;
-}
-
-static inline void
-__cra_llist_unlink_node(CraLList *list, CraLListNode *node)
-{
-    node->prev->next = node->next;
-    node->next->prev = node->prev;
-    if (node == list->head)
-        list->head = node->next == node ? NULL : node->next;
-    --list->count;
-}
-
-static inline CraLListNode *
-__cra_llist_get_node(CraLList *list, size_t index)
-{
-    size_t        i;
-    CraLListNode *curr;
-
-    assert(index < list->count && list->count > 0);
-
-    if (index < (list->count >> 1))
-    {
-        curr = list->head;
-        for (i = 0; i < index; i++)
-            curr = curr->next;
-    }
-    else
-    {
-        curr = list->head->prev;
-        for (i = list->count - 1; i > index; i--)
-            curr = curr->prev;
-    }
-    return curr;
-}
-
-static inline void
-__cra_llist_clear(CraLList *list, bool move_to_free_list)
-{
-    CraLListNode *cur;
-    while (list->head)
-    {
-        cur = list->head;
-        __cra_llist_unlink_node(list, cur);
-        __cra_llist_put_free_node(list, cur, move_to_free_list);
-    }
-    list->count = 0;
-}
-
-static inline void
-__cra_llist_init(CraLList *list, size_t element_size, bool zero_memory)
-{
-    assert(!!list && element_size > 0);
-    list->zero_memory = zero_memory;
-    list->ele_size = element_size;
-    list->count = 0;
-    list->freelist_count = 0;
-    list->head = NULL;
-    list->freelist = NULL;
-}
-
-#define _CRA_LLIST_REMOVE_NODE(_list, _node, _retval)     \
-    if (_retval)                                          \
-        memcpy(_retval, (_node)->val, (_list)->ele_size); \
-    __cra_llist_unlink_node(_list, _node);                \
-    __cra_llist_put_free_node(_list, (_node), true)
-
-static inline bool
-__cra_llist_pop__(CraLList *list, size_t index, void *retval)
-{
-    CraLListNode *curr;
-    if (index >= list->count)
-        return false;
-    curr = __cra_llist_get_node(list, index);
-    _CRA_LLIST_REMOVE_NODE(list, curr, retval);
-    return true;
+    assert(itemsize > 0);
+    return CRA_LLIST_CREATE_NODE(itemsize);
 }
 
 void
-cra_llist_iter_init(CraLList *list, CraLListIter *it)
+cra_llist_destroy_node(CraLListNode *node)
 {
-    assert(it);
+    assert(node);
+    CRA_LLIST_DESTROY_NODE(node);
+}
+
+bool(cra_llist_init_with_size)(CraLList *list, size_t itemsize, size_t init_spare_node)
+{
     assert(list);
-    it->curr = list->head;
-    it->head = list->head;
-}
+    assert(itemsize > 0);
 
-bool
-cra_llist_iter_next(CraLListIter *it, void **retvalptr)
-{
-    assert(it);
+    bzero(list, sizeof(*list));
+    list->itemsize = itemsize;
 
-    if (it->curr)
-    {
-        if (retvalptr)
-            *retvalptr = it->curr->val;
-        it->curr = it->curr->next;
-        if (it->curr == it->head)
-            it->curr = NULL;
-        return true;
-    }
-    return false;
-}
-
-bool
-cra_llist_init_size(CraLList *list, size_t element_size, size_t init_spare_node, bool zero_memory)
-{
-    __cra_llist_init(list, element_size, zero_memory);
     for (size_t i = 0; i < init_spare_node; ++i)
     {
-        CraLListNode *node = cra_llist_create_node(element_size);
+        CraLListNode *node = CRA_LLIST_CREATE_NODE(itemsize);
         if (!node)
+        {
+            cra_llist_uninit(list);
             return false;
-        __cra_llist_add_free_node(list, node);
+        }
+        cra_llist_put_free_node(list, node);
     }
-    return true;
-}
-
-bool
-cra_llist_init(CraLList *list, size_t element_size, bool zero_memory)
-{
-    __cra_llist_init(list, element_size, zero_memory);
     return true;
 }
 
 void
 cra_llist_uninit(CraLList *list)
 {
-    CraLListNode *node, *temp;
-    __cra_llist_clear(list, false);
-    node = list->freelist;
-    while (node)
+    CraLListNode *curr, *temp;
+
+    assert(list);
+    assert(list->itemsize > 0);
+
+    // destroy list nodes
+    curr = list->head;
+    if (curr)
     {
-        temp = node;
-        node = node->next;
-        cra_free(temp);
+        assert(list->count > 0);
+        assert(list->head->prev);
+        assert(list->head->next);
+        assert(list->head->prev->next == list->head);
+
+        curr->prev->next = NULL;
+        while (curr)
+        {
+            temp = curr;
+            curr = temp->next;
+            CRA_LLIST_DESTROY_NODE(temp);
+        }
     }
+
+    // destroy free list nodes
+    curr = list->free_list;
+    while (curr)
+    {
+        temp = curr;
+        curr = temp->next;
+        CRA_LLIST_DESTROY_NODE(temp);
+    }
+
+    bzero(list, sizeof(*list));
 }
 
 void
 cra_llist_clear(CraLList *list)
 {
-    __cra_llist_clear(list, true);
+    assert(list);
+    assert(list->itemsize > 0);
+
+    if (list->head)
+    {
+        assert(list->count > 0);
+        assert(list->head->prev);
+        assert(list->head->next);
+        assert(list->head->prev->next == list->head);
+
+        list->head->prev->next = list->free_list;
+        list->nfreelist += list->count;
+        list->free_list = list->head;
+        list->head = NULL;
+    }
+    list->count = 0;
 }
 
 bool
-cra_llist_insert(CraLList *list, size_t index, void *val)
+cra_llist_ensure(CraLList *list, size_t nspare, bool shrink2fit)
+{
+    size_t        needed;
+    CraLListNode *curr, *temp;
+
+    assert(list);
+    assert(list->itemsize > 0);
+
+    if (list->nfreelist < nspare)
+    {
+        needed = nspare - list->nfreelist;
+        while (needed--)
+        {
+            CraLListNode *node = CRA_LLIST_CREATE_NODE(list->itemsize);
+            if (!node)
+            {
+                return false;
+            }
+            cra_llist_put_free_node(list, node);
+        }
+    }
+    else if (shrink2fit)
+    {
+        curr = list->free_list;
+        needed = list->nfreelist - nspare;
+        while (needed--)
+        {
+            temp = curr;
+            curr = temp->next;
+            CRA_LLIST_DESTROY_NODE(temp);
+        }
+        list->free_list = curr;
+    }
+    return true;
+}
+
+bool(cra_llist_insert)(CraLList *list, size_t index, void *val)
 {
     CraLListNode *node;
 
-    if (index > list->count)
-        return false;
-
-    node = __cra_llist_get_free_node(list);
+    node = cra_llist_get_free_node(list);
     if (!node)
         return false;
 
-    memcpy(node->val, val, list->ele_size);
-    __cra_llist_insert_node(list, index, node);
-    return true;
-}
-
-bool
-cra_llist_remove_at(CraLList *list, size_t index)
-{
-    return __cra_llist_pop__(list, index, NULL);
-}
-
-bool
-cra_llist_pop_at(CraLList *list, size_t index, void *retval)
-{
-    return __cra_llist_pop__(list, index, retval);
-}
-
-size_t
-cra_llist_remove_match(CraLList *list, cra_match_fn match, void *arg)
-{
-    void         *_null = NULL;
-    size_t        remove_count = 0;
-    CraLListNode *temp, *curr = list->head;
-    for (size_t i = 0; i < list->count;)
+    if (cra_llist_insert_node(list, index, node))
     {
-        if (match(curr->val, arg))
-        {
-            temp = curr;
-            curr = curr->next;
-            _CRA_LLIST_REMOVE_NODE(list, temp, _null);
-            remove_count++;
-            continue;
-        }
-        i++;
-        curr = curr->next;
+        memcpy(node->val, val, list->itemsize);
+        return true;
     }
-    return remove_count;
+    cra_llist_put_free_node(list, node);
+    return false;
 }
 
-bool
-cra_llist_set(CraLList *list, size_t index, void *newval)
+bool(cra_llist_pop_at)(CraLList *list, size_t index, void *retval)
 {
     CraLListNode *node;
-    if (index >= list->count)
-        return false;
-    node = __cra_llist_get_node(list, index);
-    memcpy(node->val, newval, list->ele_size);
-    return true;
-}
 
-bool
-cra_llist_set_and_pop_old(CraLList *list, size_t index, void *newval, void *retoldval)
-{
-    CraLListNode *node;
-    if (index >= list->count)
+    node = cra_llist_get_node(list, index);
+    if (!node)
         return false;
-    node = __cra_llist_get_node(list, index);
-    if (retoldval)
-        memcpy(retoldval, node->val, list->ele_size);
-    memcpy(node->val, newval, list->ele_size);
-    return true;
-}
 
-bool
-cra_llist_get(CraLList *list, size_t index, void *retval)
-{
-    CraLListNode *node;
-    if (index >= list->count)
-        return false;
-    node = __cra_llist_get_node(list, index);
-    memcpy(retval, node->val, list->ele_size);
-    return true;
-}
+    if (retval)
+        memcpy(retval, node->val, list->itemsize);
 
-bool
-cra_llist_get_ptr(CraLList *list, size_t index, void **retvalptr)
-{
-    CraLListNode *node;
-    if (index >= list->count)
-        return false;
-    node = __cra_llist_get_node(list, index);
-    *retvalptr = node->val;
+    cra_llist_remove_node(list, node, true);
     return true;
 }
 
@@ -369,57 +199,17 @@ cra_llist_reverse(CraLList *list)
     list->head = curr->next;
 }
 
-CraLList *
-cra_llist_clone(CraLList *list, cra_deep_copy_val_fn deep_copy_val)
-{
-    CraLList     *ret;
-    CraLListNode *curr, *node;
-
-    ret = cra_alloc(CraLList);
-    if (!ret)
-        return NULL;
-
-    if (!cra_llist_init(ret, list->ele_size, list->zero_memory))
-    {
-        cra_dealloc(ret);
-        return NULL;
-    }
-
-    if (!list->head)
-        return ret;
-
-    // FIXME: 新结点或新值创建失败导致克隆出的链表不完整
-    curr = list->head;
-    do
-    {
-        node = __cra_llist_get_free_node(ret);
-        if (!node)
-            break;
-
-        // link node
-        __cra_llist_insert_node(ret, ret->count, node);
-
-        // copy val
-        if (deep_copy_val)
-            deep_copy_val(curr->val, node->val);
-        else
-            memcpy(node->val, curr->val, ret->ele_size);
-
-        curr = curr->next;
-    } while (curr != list->head);
-
-    return ret;
-}
-
 static CraLListNode *
-cra_llist_partition(CraLList *list, cra_compare_fn compare, CraLListNode *begin, CraLListNode *end)
+cra_llist_partition(CraLList *list, cra_cmp_fn compare, CraLListNode *begin, CraLListNode *end)
 {
     CraLListNode *left, *right, *temp;
     left = begin;
     right = end;
     // temp.val = list[left].val
     temp = cra_llist_get_free_node(list);
-    memcpy(temp->val, right->val, list->ele_size);
+    if (!temp)
+        return NULL;
+    memcpy(temp->val, right->val, list->itemsize);
 
     while (left != right)
     {
@@ -427,46 +217,54 @@ cra_llist_partition(CraLList *list, cra_compare_fn compare, CraLListNode *begin,
         while (left != right && compare(left->val, temp->val) <= 0)
             left = left->next;
         // list[right].val = list[left].val
-        memcpy(right->val, left->val, list->ele_size);
+        memcpy(right->val, left->val, list->itemsize);
 
         //                      list[right].val >= temp.val;
         while (left != right && compare(right->val, temp->val) >= 0)
             right = right->prev;
         // list[left].val = list[right].val
-        memcpy(left->val, right->val, list->ele_size);
+        memcpy(left->val, right->val, list->itemsize);
     }
     // list[left].val = temp.val
-    memcpy(left->val, temp->val, list->ele_size);
+    memcpy(left->val, temp->val, list->itemsize);
 
     cra_llist_put_free_node(list, temp);
     return left;
 }
 
-static void
-cra_llist_quick_sort(CraLList *list, cra_compare_fn compare, CraLListNode *begin, CraLListNode *end)
+static bool
+cra_llist_quick_sort(CraLList *list, cra_cmp_fn compare, CraLListNode *begin, CraLListNode *end)
 {
     CraLListNode *middle = cra_llist_partition(list, compare, begin, end);
+    if (!middle)
+        return false;
     if (begin != middle && begin != middle->prev)
         cra_llist_quick_sort(list, compare, begin, middle->prev);
     if (middle != end && middle->next != end)
         cra_llist_quick_sort(list, compare, middle->next, end);
+    return true;
 }
 
-void
-cra_llist_sort(CraLList *list, cra_compare_fn compare)
+bool(cra_llist_sort)(CraLList *list, cra_cmp_fn compare)
 {
-    assert(compare != NULL);
+    assert(list);
+    assert(compare);
+    assert(list->itemsize > 0);
+
     if (list->count > 1) // count(list) >= 2
-        cra_llist_quick_sort(list, compare, list->head, list->head->prev);
+        return cra_llist_quick_sort(list, compare, list->head, list->head->prev);
+    return true;
 }
 
-bool
-cra_llist_add_sort(CraLList *list, cra_compare_fn compare, void *val)
+bool(cra_llist_add_sort)(CraLList *list, cra_cmp_fn compare, void *val)
 {
     size_t        index;
     CraLListNode *curr;
 
-    assert(compare != NULL);
+    assert(val);
+    assert(list);
+    assert(compare);
+    assert(list->itemsize > 0);
 
     index = 0;
     if (list->head)
@@ -480,55 +278,117 @@ cra_llist_add_sort(CraLList *list, cra_compare_fn compare, void *val)
             curr = curr->next;
         } while (curr != list->head);
     }
-    return cra_llist_insert(list, index, val);
+    return (cra_llist_insert)(list, index, val);
+}
+// ====================================== interfaces ======================================
+
+// initializable
+
+static CRA_INITIALIZABLE_INIT_FN(cra_llist_initializable_init)
+{
+    CraLList                   *list = (CraLList *)obj;
+    CraLListInitializableParam *param = (CraLListInitializableParam *)params;
+
+    assert(list);
+    assert(param);
+    assert(param->itemsize > 0);
+
+    return (cra_llist_init_with_size)(list, param->itemsize, length);
 }
 
-CraLListNode *
-cra_llist_create_node(size_t element_size)
+CRA_INITIALIZABLE_DEF(cra_g_llist_initializable_i) = {
+    .init = cra_llist_initializable_init,
+    .uninit = (CRA_INITIALIZABLE_UNINIT_FN((*)))cra_llist_uninit,
+};
+
+// appendable
+
+static CRA_APPENDABLE_APPEND_FN(cra_llist_appendable_append)
 {
-    return __cra_llist_create_node(element_size);
+    CraLList *list;
+
+    assert(obj);
+    assert(vals);
+    assert(vals->val1_ref);
+
+    list = (CraLList *)obj;
+    return (cra_llist_insert)(list, list->count, vals->val1_ref);
 }
 
-void
-cra_llist_destroy_node(CraLListNode **node)
+CRA_APPENDABLE_DEF(cra_g_llist_appendable_i) = {
+    .append = cra_llist_appendable_append,
+};
+
+// iterable
+
+static CRA_ITERABLE_INIT_FN(cra_llist_iterable_init)
 {
-    __cra_llist_destroy_node(*node);
-    *node = NULL;
+    CraLList *list = (CraLList *)obj;
+
+    assert(it);
+    assert(list);
+
+    if (retcnt)
+        *retcnt = list->count;
+
+    it->obj = list;
+    it->ic1.cur = list->head;
+    if (reverse && list->head)
+        it->ic1.cur = list->head->prev;
+
+    return !!list->head;
 }
 
-CraLListNode *
-cra_llist_get_free_node(CraLList *list)
+static CRA_ITERABLE_NEXT_FN(cra_llist_iterable_next)
 {
-    return __cra_llist_get_free_node(list);
-}
+    CraLList     *list;
+    CraLListNode *curr, *next;
 
-void
-cra_llist_put_free_node(CraLList *list, CraLListNode *node)
-{
-    __cra_llist_put_free_node(list, node, true);
-}
+    assert(it);
+    assert(vals);
+    assert(it->obj);
 
-bool
-cra_llist_insert_node(CraLList *list, size_t index, CraLListNode *node)
-{
-    if (index > list->count)
+    list = (CraLList *)it->obj;
+    curr = (CraLListNode *)it->ic1.cur;
+
+    if (!curr)
         return false;
-    __cra_llist_insert_node(list, index, node);
+
+    assert(curr->next);
+    assert(curr->prev);
+
+    next = curr->next;
+    vals->val1_ref = curr->val;
+    it->ic1.cur = next != list->head ? next : NULL;
     return true;
 }
 
-void
-cra_llist_unlink_node(CraLList *list, CraLListNode *node)
+static CRA_ITERABLE_PREV_FN(cra_llist_iterable_prev)
 {
-    assert(node && node->prev && node->next);
-    __cra_llist_unlink_node(list, node);
-    node->prev = node->next = NULL;
+    CraLList     *list;
+    CraLListNode *curr, *prev;
+
+    assert(it);
+    assert(vals);
+    assert(it->obj);
+
+    list = (CraLList *)it->obj;
+    curr = (CraLListNode *)it->ic1.cur;
+
+    if (!curr)
+        return false;
+
+    assert(curr->next);
+    assert(curr->prev);
+
+    prev = curr->prev;
+    vals->val1_ref = curr->val;
+    it->ic1.cur = prev != list->head->prev ? prev : NULL;
+    return true;
 }
 
-CraLListNode *
-cra_llist_get_node(CraLList *list, size_t index)
-{
-    if (index >= list->count)
-        return NULL;
-    return __cra_llist_get_node(list, index);
-}
+CRA_ITERABLE_DEF(cra_g_llist_iterable_i) = {
+    .init = cra_llist_iterable_init,
+    .next = cra_llist_iterable_next,
+    .prev = cra_llist_iterable_prev,
+};

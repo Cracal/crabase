@@ -15,16 +15,16 @@
 #include "cra_lock.h"
 #include "cra_thread.h"
 
-typedef enum _CraThrdPoolDiscardPolicy_e
+typedef enum CraThrdPoolDiscardPolicy_e
 {
     CRA_TPTASK_DISCARD_SELF = 0,
     CRA_TPTASK_DISCARD_FIRST,
     CRA_TPTASK_DISCARD_LAST,
 } CraThrdPoolDiscardPolicy_e;
 
-typedef struct _CraThrdPoolWorker CraThrdPoolWorker;
+typedef struct CraThrdPoolWorker CraThrdPoolWorker;
 
-typedef struct _CraThrdPool
+typedef struct CraThrdPool
 {
     bool                       can_in;
     bool                       is_running;

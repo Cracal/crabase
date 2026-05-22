@@ -1,26 +1,33 @@
-
 # CraDeque
 
 双端队列
 
 请先看[数据类型的解释](./cra_collects.md#存放值类型和指针类型)
 
+## 可访问字段
+
+- `count` 当前元素个数，只读
+- `itemsize` 元素大小，只读
+
 ## init
 
 ```c
 bool
-cra_deque_init(CraDeque *deque, size_t element_size, size_t que_max, bool zero_memory);
-#define cra_deque_init0(TVal, deque, que_max, zero_memory)
+(cra_deque_init_with_size)(CraDeque *deque, size_t itemsize, size_t init_capacity);
+bool
+cra_deque_init_with_size(T, CraDeque *deque, size_t init_capacity);
+bool
+cra_deque_init(T, CraDeque *deque);
 ```
 
 初始化
 
-- `element_size` 元素大小
-- `TVal` 元素类型
-- `que_max` 队列最大容量。可传入**CRA_DEQUE_INFINITE**
-- `zero_memory` 没有有效元素的地方是否清零
+- `T` 元素类型
+- `itemsize` 元素大小
+- `init_capacity` 初始化容量。deque据此分配桶空间
 
-成功返回**true**，失败返回**false**
+成功返回**true**，失败返回**false**  
+只有申请内存失败时才会返回**false**
 
 ## uninit
 
@@ -30,15 +37,6 @@ cra_deque_uninit(CraDeque *deque);
 ```
 
 反初始化
-
-## get count
-
-```c
-static inline size_t
-cra_deque_get_count(CraDeque *deque);
-```
-
-获取当前元素个数
 
 ## clear
 
@@ -53,72 +51,73 @@ cra_deque_clear(CraDeque *deque);
 
 ```c
 bool
-cra_deque_insert(CraDeque *deque, size_t index, void *val);
-#define cra_deque_push_left(deque, val)
-#define cra_deque_push(deque, val)
+cra_deque_insert(CraDeque *deque, size_t index, T *val);
+bool
+cra_deque_prepend(CraDeque *deque, T *val);
+bool
+cra_deque_append(CraDeque *deque, T *val);
 ```
 
 添加元素
 
 `insert`:  在**index**处插入元素  
-`push_left`: 在队列头部添加元素  
-`push`:  在队列尾部添加元素  
+`prepend`: 在队列头部添加元素  
+`append`:  在队列尾部添加元素  
 成功返回**true**，失败返回**false**
 
-## remove
+## remove and pop
 
 ```c
 bool
 cra_deque_remove_at(CraDeque *deque, size_t index);
+bool
+cra_deque_remove_front(CraDeque *deque);
+bool
+cra_deque_remove_back(CraDeque *deque);
 
 bool
-cra_deque_pop_at(CraDeque *deque, size_t index, void *retval);
-#define cra_deque_pop_left(deque, retval)
-#define cra_deque_pop(deque, retval)
-
-size_t
-cra_deque_remove_match(CraDeque *deque, cra_match_fn match, void *arg);
+cra_deque_pop_at(CraDeque *deque, size_t index, out T *retval);
+bool
+cra_deque_pop_front(CraDeque *deque, out T *retval);
+bool
+cra_deque_pop_back(CraDeque *deque, out T *retval);
 ```
 
-删除元素
+删除/弹出元素
 
 `remove_at`: 删除**index**处的元素  
+`remove_front`: 删除头部元素  
+`remove_back`: 删除尾部元素  
 `pop_at`: 弹出**index**处的元素  
-`pop_left`: 弹出头部元素  
-`pop`: 弹出尾部元素  
-`remove_match`: 删除匹配的元素。返回被删除的元素个数
+`pop_front`: 弹出头部元素  
+`pop_back`: 弹出尾部元素  
 
-## set
-
-```c
-bool
-cra_deque_set(CraDeque *deque, size_t index, void *newval);
-bool
-cra_deque_set_and_pop_old(CraDeque *deque, size_t index, void *newval, void *retoldval);
-```
-
-更新元素
-
-`set_and_pop_old`: 先获取旧元素，再更新
-
-## get
+## get and set
 
 ```c
 bool
-cra_deque_get(CraDeque *deque, size_t index, void *retval);
+cra_deque_get(CraDeque *deque, size_t index, out T *retval);
+T *
+cra_deque_get_ref(CraDeque *deque, size_t index);
+
 bool
-cra_deque_get_ptr(CraDeque *deque, size_t index, void **retvalptr);
+cra_deque_peek_front(CraDeque *deque, out T *retval);
+T *
+cra_deque_peek_front_ref(CraDeque *deque);
 bool
-cra_deque_peek(CraDeque *deque, void *retval);
+cra_deque_peek_back(CraDeque *deque, out T *retval);
+T *
+cra_deque_peek_back_ref(CraDeque *deque);
+
 bool
-cra_deque_peek_ptr(CraDeque *deque, void **retvalptr);
+cra_deque_set(CraDeque *deque, size_t index, T *newval);
 bool
-cra_deque_peek_left(CraDeque *deque, void *retval);
-bool
-cra_deque_peek_left_ptr(CraDeque *deque, void **retvalptr);
+cra_deque_get_and_set(CraDeque *deque, size_t index, T *newval, out T *retoldval);
 ```
 
-获取元素
+获取/更新元素  
+**newval**不可为**NULL**。
+**retoldval**不可为**NULL**。
 
 ## reverse
 
@@ -129,24 +128,68 @@ cra_deque_reverse(CraDeque *deque);
 
 翻转队列
 
-## clone
+## 已实现接口
+
+### initializable
 
 ```c
-CraDeque *
-cra_deque_clone(CraDeque *deque, cra_deep_copy_val_fn deep_copy_val);
+CRA_DEQUE_INITIALIZABLE_I // deque可初始化接口
+
+// 传递给初始化函数的必要参数
+typedef struct CraDequeInitializableParam
+{
+    size_t itemsize;
+} CraDequeInitializableParam;
+// 初始化参数
+CRA_DEQUE_INITIALIZABLE_PARAM_INIT(T)
+
+// ============
+
+// 1.
+CraDequeInitializableParam param = CRA_DEQUE_INITIALIZABLE_PARAM_INIT(T);
+// 2.
+CRA_DEQUE_INITIALIZABLE_PARAM_DECL(T) param = CRA_DEQUE_INITIALIZABLE_PARAM_INIT(T);
+// 3.
+CRA_DEQUE_INITIALIZABLE_PARAM_DEF(param, T);
+
+CraDeque *deque = cra_alloc(CraDeque);
+if (!cra_initializable_init(CRA_DEQUE_INITIALIZABLE_I, deque, INIT_CAPACITY, &param))
+    printf("init failed");
+cra_initializable_uninit(CRA_DEQUE_INITIALIZABLE_I, deque);
+cra_dealloc(deque);
 ```
 
-克隆队列
-
-- `deep_copy_val` 深拷贝函数
-
-## iterator
+### appendable
 
 ```c
-void
-cra_deque_iter_init(CraDeque *deque, CraDequeIter *it);
-bool
-cra_deque_iter_next(CraDequeIter *it, void **retvalptr);
+CRA_DEQUE_APPENDABLE_I // deque可追加接口
+
+// ============
+
+CraTwoVals vals = {.val1_ref = &val};
+if (!cra_appendable_append(CRA_DEQUE_APPENDABLE_I, deque, &vals))
+    printf("append failed");
 ```
 
-迭代队列
+### iterable
+
+```c
+CRA_DEQUE_ITERABLE_I // deque可迭代接口
+
+// ============
+
+T val;
+CraAlist *list = ...;
+// 正向迭代
+CRA_FOREACH(CRA_DEQUE_ITERABLE_I, deque, vals)
+{
+    memcpy(&val, vals.val1_ref, sizeof(val));
+    printf("val = %??\n", val);
+}
+// 反向迭代
+CRA_FOREACH_REVERSE(CRA_DEQUE_ITERABLE_I, deque, vals)
+{
+    memcpy(&val, vals.val1_ref, sizeof(val));
+    printf("val = %??\n", val);
+}
+```

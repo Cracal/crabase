@@ -9,58 +9,95 @@
  *
  */
 #include "collections/cra_alist.h"
-#include "cra_assert.h"
 #include "cra_malloc.h"
 #include <time.h>
 
 void
 test_new_delete(void)
 {
-    CraAList list, *list2;
+    CraAList *list, list2;
 
-    assert_always(cra_alist_init_size0(int, &list, 4, true));
-    list2 = cra_alloc(CraAList);
-    assert_always(cra_alist_init_size0(int, list2, 2, false));
+    list = cra_alloc(CraAList);
+    assert_always(list);
+    assert_always(cra_alist_init_with_size(int, list, 100));
+    assert_always(list->count == 0);
+    assert_always(list->array != NULL);
+    assert_always(list->capacity == 100);
+    assert_always(list->itemsize == sizeof(int));
 
-    cra_alist_uninit(&list);
-    cra_alist_uninit(list2);
-    cra_dealloc(list2);
+    assert_always(cra_alist_init(double, &list2));
+    assert_always(list2.count == 0);
+    assert_always(list2.array != NULL);
+    assert_always(list2.capacity == CRA_ALIST_DEFAULT_CAPACITY);
+    assert_always(list2.itemsize == sizeof(double));
+
+    cra_alist_uninit(list);
+    assert_always(list->count == 0);
+    assert_always(list->array == NULL);
+    assert_always(list->capacity == 0);
+    assert_always(list->itemsize == 0);
+    cra_dealloc(list);
+
+    cra_alist_uninit(&list2);
+    assert_always(list2.count == 0);
+    assert_always(list2.array == NULL);
+    assert_always(list2.capacity == 0);
+    assert_always(list2.itemsize == 0);
+
+    CRA_ALIST_INITIALIZABLE_PARAM_DEF(param, int);
+    assert_always(cra_initializable_init(CRA_ALIST_INITIALIZABLE_I, &list2, 16, &param));
+    assert_always(list2.count == 0);
+    assert_always(list2.array != NULL);
+    assert_always(list2.capacity == 16);
+    assert_always(list2.itemsize == sizeof(int));
+
+    cra_initializable_uninit(CRA_ALIST_INITIALIZABLE_I, &list2);
+    assert_always(list2.count == 0);
+    assert_always(list2.array == NULL);
+    assert_always(list2.capacity == 0);
+    assert_always(list2.itemsize == 0);
 }
 
 void
 test_add(void)
 {
-    CraAListIter it;
-    CraAList    *list;
-    int         *valptr, i;
+    CraAList *list;
+    int       i, val;
 
     list = cra_alloc(CraAList);
-    assert_always(list != NULL);
-    assert_always(cra_alist_init0(int, list, true));
+    assert_always(cra_alist_init(int, list));
 
-    assert_always(cra_alist_append(list, &(int){ 100 }) && cra_alist_get(list, 0, &i) && i == 100);
+    assert_always(cra_alist_append(list, &(int){ 100 }) && cra_alist_get(list, 0, &val) && val == 100);
     cra_alist_clear(list);
-    assert_always(cra_alist_prepend(list, &(int){ 200 }) && cra_alist_get(list, 0, &i) && i == 200);
+    assert_always(cra_alist_prepend(list, &(int){ 200 }) && cra_alist_get(list, 0, &val) && val == 200);
     cra_alist_clear(list);
-    assert_always(cra_alist_insert(list, 0, &(int){ 300 }) && cra_alist_get(list, 0, &i) && i == 300);
+    assert_always(cra_alist_insert(list, 0, &(int){ 300 }) && cra_alist_get(list, 0, &val) && val == 300);
     cra_alist_clear(list);
 
     for (i = 0; i < 1000; i++)
         assert_always(cra_alist_append(list, &i));
+    assert_always(list->count == 1000);
 
     assert_always(cra_alist_prepend(list, &(int){ -1 }));
     assert_always(cra_alist_prepend(list, &(int){ -2 }));
     assert_always(cra_alist_insert(list, 4, &(int){ 4000 }));
     assert_always(cra_alist_insert(list, 4, &(int){ 40000 }));
-    assert_always(cra_alist_append(list, &(int){ 11 }));
-    assert_always(cra_alist_append(list, &(int){ 12 }));
+    CraTwoVals vals;
+    vals.val1_ref = &(int){ 11 };
+    assert_always(cra_appendable_append(CRA_ALIST_APPENDABLE_I, list, &vals));
+    assert_always(cra_alist_get(list, list->count - 1, &val) && val == 11);
+    vals.val1_ref = &(int){ 12 };
+    assert_always(cra_appendable_append(CRA_ALIST_APPENDABLE_I, list, &vals));
+    assert_always(cra_alist_get(list, list->count - 1, &val) && val == 12);
+    assert_always(list->count == 1006);
 
     assert_always(!cra_alist_insert(list, 10000, &(int){ 1 }));
 
     i = -2;
-    for (cra_alist_iter_init(list, &it); cra_alist_iter_next(&it, (void **)&valptr); i++)
+    for (int j = 0; j < (int)list->count; j++, i++)
     {
-        // printf("%d  ", *valptr);
+        memcpy(&val, CRA_ALIST_PVAL(list, j), sizeof(int));
+        // printf("%d  ", val);
         if (i == 2)
             i = 40000;
         else if (i == 40001)
@@ -69,7 +106,7 @@ test_add(void)
             i = 2;
         else if (i == 1000)
             i = 11;
-        assert_always(i == *valptr);
+        assert_always(i == val);
     }
     // printf("\n");
 
@@ -77,12 +114,14 @@ test_add(void)
 
     for (i = 0; i < 1000; i++)
         assert_always(cra_alist_prepend(list, &i));
+    assert_always(list->count == 1000);
 
     i = 999;
-    for (cra_alist_iter_init(list, &it); cra_alist_iter_next(&it, (void **)&valptr); i--)
+    for (int j = 0; j < (int)list->count; j++, i--)
     {
-        // printf("%d  ", *valptr);
-        assert_always(i == *valptr);
+        memcpy(&val, CRA_ALIST_PVAL(list, j), sizeof(int));
+        // printf("%d  ", val);
+        assert_always(i == val);
     }
     // printf("\n");
 
@@ -93,11 +132,8 @@ test_add(void)
 void
 test_remove(void)
 {
-    CraAListIter it;
-    int         *valptr;
-    CraAList    *list = cra_alloc(CraAList);
-    assert_always(list != NULL);
-    assert_always(cra_alist_init_size0(int, list, 100, true));
+    CraAList *list = cra_alloc(CraAList);
+    assert_always(cra_alist_init_with_size(int, list, 100));
 
     assert_always(!cra_alist_remove_back(list));
     assert_always(!cra_alist_remove_front(list));
@@ -105,12 +141,15 @@ test_remove(void)
 
     for (int i = 0; i < 100; i++)
         assert_always(cra_alist_append(list, &i));
+    assert_always(list->count == 100);
 
     for (int i = 0; i < 100; i++)
         assert_always(cra_alist_remove_back(list));
+    assert_always(list->count == 0);
 
     for (int i = 1; i <= 100; i++)
         assert_always(cra_alist_append(list, &i));
+    assert_always(list->count == 100);
 
     int val, val2;
     assert_always(cra_alist_pop_at(list, 70 - 1, &val) && val == 70);
@@ -131,59 +170,14 @@ test_remove(void)
     assert_always(cra_alist_remove_back(list) && cra_alist_get(list, list->count - 1, &val2) && val != val2);
     cra_alist_get(list, list->count - 1, &val);
     assert_always(cra_alist_remove_back(list) && cra_alist_get(list, list->count - 1, &val2) && val != val2);
+    assert_always(list->count == 88);
 
-    for (cra_alist_iter_init(list, &it); cra_alist_iter_next(&it, (void **)&valptr);)
-        printf("%d  ", *valptr);
-    printf("\n");
-
-    cra_alist_uninit(list);
-    cra_dealloc(list);
-}
-
-static bool
-remove_even(const void *val, void *arg)
-{
-    CRA_UNUSED_VALUE(arg);
-    return (*(int *)val) % 2 == 0;
-}
-
-static bool
-remove_all(const void *val, void *arg)
-{
-    CRA_UNUSED_VALUE(val);
-    CRA_UNUSED_VALUE(arg);
-    return true;
-}
-
-void
-test_remove_match(void)
-{
-    int         *valptr;
-    size_t       rmcnt;
-    CraAList    *list;
-    CraAListIter it;
-
-    list = cra_alloc(CraAList);
-    assert_always(cra_alist_init0(int, list, true));
-
-    for (int i = 0; i < 100; i++)
-        assert_always(cra_alist_append(list, &i));
-
-    rmcnt = cra_alist_remove_match(list, remove_even, NULL);
-    printf("removed %zu elements.\n", rmcnt);
-    assert_always(rmcnt == 50);
-
-    for (cra_alist_iter_init(list, &it); cra_alist_iter_next(&it, (void **)&valptr);)
+    for (size_t i = 0; i < list->count; i++)
     {
-        // printf("%d  ", *valptr);
-        assert_always(*valptr % 2 != 0);
+        memcpy(&val, CRA_ALIST_PVAL(list, i), sizeof(int));
+        printf("%d  ", val);
     }
-    // printf("\n");
-
-    rmcnt = cra_alist_remove_match(list, remove_all, NULL);
-    printf("removed %zu elements.\n", rmcnt);
-    assert_always(rmcnt == 50);
-    assert_always(cra_alist_get_count(list) == 0);
+    printf("\n");
 
     cra_alist_uninit(list);
     cra_dealloc(list);
@@ -192,27 +186,26 @@ test_remove_match(void)
 void
 test_set(void)
 {
-    int          val, i;
-    int         *valptr;
-    CraAListIter it;
-    CraAList    *list = cra_alloc(CraAList);
-    assert_always(list != NULL);
-    assert_always(cra_alist_init0(int, list, true));
+    int       val, i;
+    CraAList *list = cra_alloc(CraAList);
+    assert_always(cra_alist_init(int, list));
 
     for (i = 0; i < 1000; i++)
         assert_always(cra_alist_append(list, &i));
+    assert_always(list->count == 1000);
 
     assert_always(cra_alist_set(list, 3, &(int){ 3000 }));
     assert_always(cra_alist_get(list, 3, &val) && val == 3000);
-    assert_always(cra_alist_set_and_pop_old(list, 6, &(int){ 6000 }, &val) && val == 6);
+    assert_always(cra_alist_get_and_set(list, 6, &(int){ 6000 }, &val) && val == 6);
     assert_always(cra_alist_get(list, 6, &val) && val == 6000);
     assert_always(!cra_alist_set(list, 1000, &(int){ 10000 }));
-    assert_always(!cra_alist_set_and_pop_old(list, 1000, &(int){ 10000 }, &val));
+    assert_always(!cra_alist_get_and_set(list, 1000, &(int){ 10000 }, &val));
 
     i = 0;
-    for (cra_alist_iter_init(list, &it); cra_alist_iter_next(&it, (void **)&valptr); i++)
+    for (int j = 0; j < (int)list->count; j++, i++)
     {
-        // printf("%d  ", *valptr);
+        memcpy(&val, CRA_ALIST_PVAL(list, j), sizeof(int));
+        // printf("%d  ", val);
         if (i == 3)
             i = 3000;
         else if (i == 3001)
@@ -221,7 +214,7 @@ test_set(void)
             i = 6000;
         else if (i == 6001)
             i = 7;
-        assert_always(i == *valptr);
+        assert_always(i == val);
     }
     // printf("\n");
 
@@ -232,20 +225,20 @@ test_set(void)
 void
 test_get(void)
 {
-    CraAListIter it;
-    CraAList     list;
-    int          val, *valptr1, *valptr2;
+    CraAList list;
+    int      val, *pval;
 
-    assert_always(cra_alist_init0(int, &list, false));
+    assert_always(cra_alist_init(int, &list));
     for (int i = 0; i < 1000; i++)
         assert_always(cra_alist_prepend(&list, &i));
 
     size_t i = 0;
-    for (cra_alist_iter_init(&list, &it); cra_alist_iter_next(&it, (void **)&valptr1); i++)
+    for (i = 0; i < list.count; i++)
     {
-        assert_always(cra_alist_get(&list, i, &val));
-        assert_always(cra_alist_get_ptr(&list, i, (void **)&valptr2));
-        assert_always(val == *valptr1 && *valptr1 == *valptr2);
+        cra_alist_get(&list, i, &val);
+        pval = cra_alist_get_ref(&list, i);
+        assert_always(val == *pval);
+        assert_always(val == *(int *)CRA_ALIST_PVAL(&list, i)); // UB?
         // printf("%d  ", val);
     }
     // printf("\n");
@@ -256,143 +249,52 @@ test_get(void)
 void
 test_reverse(void)
 {
-    CraAListIter it;
-    int         *valptr, i;
-    CraAList    *list = cra_alloc(CraAList);
-    assert_always(cra_alist_init_size0(int, list, 1000, true));
+    CraAList list, list2;
+    int      val, val2, i;
+
+    cra_alist_init_with_size(int, &list, 1000);
+    cra_alist_init_with_size(int, &list2, 1000);
+
     for (i = 0; i < 1000; i++)
-        assert_always(cra_alist_append(list, &i));
+    {
+        cra_alist_append(&list, &i);
+        cra_alist_prepend(&list2, &i);
+    }
 
-    // printf("before reverse: ");
+    cra_alist_reverse(&list);
+
     i = 0;
-    for (cra_alist_iter_init(list, &it); cra_alist_iter_next(&it, (void **)&valptr); i++)
+    CRA_FOREACH(CRA_ALIST_ITERABLE_I, &list, vals)
     {
-        // printf("%d  ", *valptr);
-        assert_always(i == *valptr);
-    }
-    // printf("\n");
-
-    assert_always(cra_alist_reverse(list));
-
-    // printf("after  reverse: ");
-    i = 999;
-    for (cra_alist_iter_init(list, &it); cra_alist_iter_next(&it, (void **)&valptr); i--)
-    {
-        // printf("%d  ", *valptr);
-        assert_always(i == *valptr);
-    }
-    // printf("\n");
-
-    cra_alist_uninit(list);
-    cra_dealloc(list);
-}
-
-typedef struct
-{
-    int   i;
-    float f;
-} A_s;
-
-static void
-copy_as(const void *from, void *to)
-{
-    A_s *v = *(A_s **)from;
-    A_s *ret = (A_s *)cra_malloc(sizeof(A_s));
-    ret->i = v->i;
-    ret->f = v->f;
-    *(void **)to = ret;
-}
-
-void
-test_clone(void)
-{
-    CraAList *list1, *list2;
-
-    list1 = cra_alloc(CraAList);
-    assert_always(cra_alist_init_size0(int, list1, 1000, false));
-    for (int i = 0; i < 1000; i++)
-        assert_always(cra_alist_append(list1, &i));
-
-    list2 = cra_alist_clone(list1, NULL);
-    assert_always(list2 != NULL);
-    assert_always(list1->count == list2->count);
-
-    int val1, val2;
-    for (size_t i = 0; i < list1->count; i++)
-    {
-        assert_always(cra_alist_get(list1, i, &val1));
-        assert_always(cra_alist_get(list2, i, &val2));
-        assert_always(val1 == val2);
+        assert_always(cra_alist_get(&list2, i, &val2));
+        memcpy(&val, vals.val1_ref, sizeof(val));
+        assert_always(val == val2);
+        i++;
     }
 
-    cra_alist_uninit(list1);
-    cra_alist_uninit(list2);
-    cra_dealloc(list1);
-    cra_dealloc(list2);
-
-    // ===================
-
-    A_s *as1, *as2;
-    list1 = cra_alloc(CraAList);
-    assert_always(cra_alist_init0(A_s *, list1, true));
-    for (int i = 0; i < 800; i++)
-    {
-        as1 = (A_s *)cra_malloc(sizeof(A_s));
-        as1->i = i + 1;
-        as1->f = i + .5f;
-        cra_alist_append(list1, &as1);
-    }
-
-    list2 = cra_alist_clone(list1, copy_as);
-    assert_always(list2 != NULL);
-    assert_always(list1->count == list2->count);
-
-    for (size_t i = 0; i < list1->count; i++)
-    {
-        assert_always(cra_alist_get(list1, i, &as1));
-        assert_always(cra_alist_get(list2, i, &as2));
-        assert_always(as1->i == as2->i);
-        assert_always(as1->f == as2->f);
-        assert_always(as1 != as2);
-
-        assert_always(cra_alist_get_ptr(list1, i, (void *)&as1));
-        assert_always(cra_alist_get_ptr(list2, i, (void *)&as2));
-        assert_always((*(A_s **)as1)->i == (*(A_s **)as2)->i);
-        assert_always((*(A_s **)as1)->f == (*(A_s **)as2)->f);
-        assert_always(*(A_s **)as1 != *(A_s **)as2);
-    }
-    CraAListIter it;
-    for (cra_alist_iter_init(list1, &it); cra_alist_iter_next(&it, (void **)&as1);)
-        cra_free(*(void **)as1);
-    for (cra_alist_iter_init(list2, &it); cra_alist_iter_next(&it, (void **)&as1);)
-        cra_free(*(void **)as1);
-
-    cra_alist_uninit(list1);
-    cra_alist_uninit(list2);
-    cra_dealloc(list1);
-    cra_dealloc(list2);
+    cra_alist_uninit(&list);
+    cra_alist_uninit(&list2);
 }
 
 static int
-comare_int1(const void *a, const void *b)
+comare_int1(const int *a, const int *b)
 {
-    return *(int *)a - *(int *)b;
+    return *a - *b;
 }
 
 static int
-comare_int2(const void *a, const void *b)
+comare_int2(const int *a, const int *b)
 {
-    return *(int *)b - *(int *)a;
+    return *b - *a;
 }
 
 void
 test_sort(void)
 {
-    CraAListIter it;
-    int         *valptr, i;
-    CraAList     list, *list2;
+    int      i, val;
+    CraAList list;
 
-    assert_always(cra_alist_init_size0(int, &list, 10, false));
+    assert_always(cra_alist_init(int, &list));
 
     assert_always(cra_alist_append(&list, &(int){ 8 }));
     assert_always(cra_alist_append(&list, &(int){ 7 }));
@@ -406,35 +308,36 @@ test_sort(void)
     assert_always(cra_alist_append(&list, &(int){ 2 }));
 
     printf("before sort     : ");
-    for (cra_alist_iter_init(&list, &it); cra_alist_iter_next(&it, (void **)&valptr);)
-        printf("%d  ", *valptr);
+    CRA_FOREACH(CRA_ALIST_ITERABLE_I, &list, vals)
+    {
+        memcpy(&val, vals.val1_ref, list.itemsize);
+        printf("%d  ", val);
+    }
     printf("\n");
 
-    list2 = cra_alist_clone(&list, NULL);
-    assert_always(cra_alist_sort(list2, comare_int1));
+    assert_always(cra_alist_sort(&list, comare_int1));
     printf("after sort(ASC) : ");
     i = 0;
-    for (cra_alist_iter_init(list2, &it); cra_alist_iter_next(&it, (void **)&valptr); i++)
+    CRA_FOREACH(CRA_ALIST_ITERABLE_I, &list, vals)
     {
-        printf("%d  ", *valptr);
-        assert_always(i == *valptr);
+        memcpy(&val, vals.val1_ref, list.itemsize);
+        assert_always(i == val);
+        printf("%d  ", val);
+        i++;
     }
     printf("\n");
-    cra_alist_uninit(list2);
-    cra_dealloc(list2);
 
-    list2 = cra_alist_clone(&list, NULL);
-    assert_always(cra_alist_sort(list2, comare_int2));
+    assert_always(cra_alist_sort(&list, comare_int2));
     printf("after sort(DESC): ");
     i = 9;
-    for (cra_alist_iter_init(list2, &it); cra_alist_iter_next(&it, (void **)&valptr); i--)
+    CRA_FOREACH(CRA_ALIST_ITERABLE_I, &list, vals)
     {
-        printf("%d  ", *valptr);
-        assert_always(i == *valptr);
+        memcpy(&val, vals.val1_ref, list.itemsize);
+        assert_always(i == val);
+        printf("%d  ", val);
+        i--;
     }
     printf("\n");
-    cra_alist_uninit(list2);
-    cra_dealloc(list2);
 
     // add sort
 
@@ -449,12 +352,14 @@ test_sort(void)
     assert_always(cra_alist_add_sort(&list, comare_int1, &(int){ 4 }));
     assert_always(cra_alist_add_sort(&list, comare_int1, &(int){ 5 }));
     assert_always(cra_alist_add_sort(&list, comare_int1, &(int){ 2 }));
-    printf("add sort(ASC) : ");
+    printf("add sort(ASC)   : ");
     i = 0;
-    for (cra_alist_iter_init(&list, &it); cra_alist_iter_next(&it, (void **)&valptr); i++)
+    CRA_FOREACH(CRA_ALIST_ITERABLE_I, &list, vals)
     {
-        printf("%d  ", *valptr);
-        assert_always(i == *valptr);
+        memcpy(&val, vals.val1_ref, list.itemsize);
+        assert_always(i == val);
+        printf("%d  ", val);
+        i++;
     }
     printf("\n");
 
@@ -469,12 +374,14 @@ test_sort(void)
     assert_always(cra_alist_add_sort(&list, comare_int2, &(int){ 4 }));
     assert_always(cra_alist_add_sort(&list, comare_int2, &(int){ 5 }));
     assert_always(cra_alist_add_sort(&list, comare_int2, &(int){ 2 }));
-    printf("add sort(DESC): ");
+    printf("add sort(DESC)  : ");
     i = 9;
-    for (cra_alist_iter_init(&list, &it); cra_alist_iter_next(&it, (void **)&valptr); i--)
+    CRA_FOREACH(CRA_ALIST_ITERABLE_I, &list, vals)
     {
-        printf("%d  ", *valptr);
-        assert_always(i == *valptr);
+        memcpy(&val, vals.val1_ref, list.itemsize);
+        assert_always(i == val);
+        printf("%d  ", val);
+        i--;
     }
     printf("\n");
 
@@ -487,10 +394,11 @@ test_sort(void)
     assert_always(cra_alist_sort(&list, comare_int1));
 
     i = 0;
-    for (cra_alist_iter_init(&list, &it); cra_alist_iter_next(&it, (void **)&valptr);)
+    CRA_FOREACH(CRA_ALIST_ITERABLE_I, &list, vals)
     {
-        assert_always(i <= *valptr);
-        i = *valptr;
+        memcpy(&val, vals.val1_ref, list.itemsize);
+        assert_always(i <= val);
+        i = val;
     }
 
     cra_alist_uninit(&list);
@@ -499,39 +407,45 @@ test_sort(void)
 void
 test_foreach(void)
 {
+    int       i, val;
     CraAList *list = cra_alloc(CraAList);
-    assert_always(cra_alist_init0(int, list, false));
+    assert_always(cra_alist_init(int, list));
 
-    CraAListIter it;
-    int         *valptr;
+    // foreach(empty)
+    CRA_FOREACH(CRA_ALIST_ITERABLE_I, list, vals) assert_always(false);
+    CRA_FOREACH_REVERSE(CRA_ALIST_ITERABLE_I, list, vals) assert_always(false);
 
-    printf("foreach(    empty): ");
-    for (cra_alist_iter_init(list, &it); cra_alist_iter_next(&it, (void **)&valptr);)
+    for (i = 0; i < 10; i++)
+        cra_alist_append(list, &i);
+    assert_always(list->count == 10);
+
+    i = 0;
+    printf("foreach        : ");
+    CRA_FOREACH(CRA_ALIST_ITERABLE_I, list, vals)
     {
-        printf("%d ", *valptr);
-        assert_always(false);
+        memcpy(&val, vals.val1_ref, list->itemsize);
+        assert_always(i == val);
+        printf("%d  ", val);
+        i++;
     }
     printf("\n");
 
-    for (int i = 0; i < 10; i++)
-        cra_alist_append(list, &i);
-
-    printf("foreach(not empty): ");
-    for (cra_alist_iter_init(list, &it); cra_alist_iter_next(&it, (void **)&valptr);)
+    i = 9;
+    printf("foreach reverse: ");
+    CRA_FOREACH_REVERSE(CRA_ALIST_ITERABLE_I, list, vals)
     {
-        printf("%d ", *valptr);
+        memcpy(&val, vals.val1_ref, list->itemsize);
+        assert_always(i == val);
+        printf("%d  ", val);
+        i--;
     }
     printf("\n");
 
     cra_alist_clear(list);
 
-    printf("foreach(    empty): ");
-    for (cra_alist_iter_init(list, &it); cra_alist_iter_next(&it, (void **)&valptr);)
-    {
-        printf("%d ", *valptr);
-        assert_always(false);
-    }
-    printf("\n");
+    // foreach(empty)
+    CRA_FOREACH(CRA_ALIST_ITERABLE_I, list, vals) assert_always(false);
+    CRA_FOREACH_REVERSE(CRA_ALIST_ITERABLE_I, list, vals) assert_always(false);
 
     cra_alist_uninit(list);
     cra_dealloc(list);
@@ -540,9 +454,8 @@ test_foreach(void)
 void
 test_test(void)
 {
-    CraAListIter it;
-    CraAList    *list = cra_alloc(CraAList);
-    assert_always(cra_alist_init0(int, list, true));
+    CraAList *list = cra_alloc(CraAList);
+    assert_always(cra_alist_init(int, list));
 
     int i, j, n, v;
     srand((unsigned int)time(NULL));
@@ -552,7 +465,7 @@ test_test(void)
         for (j = 0; j < n; j++)
             cra_alist_append(list, &j);
 
-        n = (rand() + 1) % list->count;
+        n = list->count == 0 ? 0 : (rand() + 1) % list->count;
         for (j = 0; j < n; j++)
         {
             cra_alist_pop_front(list, &v);
@@ -570,7 +483,7 @@ test_test(void)
         for (j = 0; j < n; j++)
             cra_alist_prepend(list, &j);
 
-        n = (rand() + 1) % list->count;
+        n = list->count == 0 ? 0 : (rand() + 1) % list->count;
         for (j = 0; j < n; j++)
         {
             cra_alist_pop_back(list, &v);
@@ -582,9 +495,8 @@ test_test(void)
     }
     assert_always(list->count == 0);
 
-    int *pv;
-    int  idx, last_idx;
-    int  check[10000];
+    int idx, last_idx;
+    int check[10000];
     bzero(check, sizeof(check));
     for (i = 0; i < 100; i++)
     {
@@ -607,9 +519,10 @@ test_test(void)
             check[idx] = j;
         }
         j = 0;
-        for (cra_alist_iter_init(list, &it); cra_alist_iter_next(&it, (void **)&pv); j++)
+        CRA_FOREACH(CRA_ALIST_ITERABLE_I, list, vals)
         {
-            assert_always(*pv == check[j]);
+            memcpy(&v, vals.val1_ref, list->itemsize);
+            assert_always(v == check[j++]);
         }
 
         while (true)
@@ -635,11 +548,9 @@ main(void)
     test_new_delete();
     test_add();
     test_remove();
-    test_remove_match();
     test_set();
     test_get();
     test_reverse();
-    test_clone();
     test_sort();
     test_foreach();
     test_test();

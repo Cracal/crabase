@@ -80,6 +80,12 @@ cra_hash_string1(const char *val)
     return hash == -1 ? -2 : hash;
 }
 
+cra_hash_t
+cra_hash_string1_p(const char **val)
+{
+    return cra_hash_string1(*val);
+}
+
 // AP hash function
 cra_hash_t
 cra_hash_string2(const char *val)
@@ -93,4 +99,10 @@ cra_hash_string2(const char *val)
             hash ^= (~((hash << 11) ^ (*val++) ^ (hash >> 5)));
     }
     return hash == -1 ? -2 : hash;
+}
+
+cra_hash_t
+cra_hash_string2_p(const char **val)
+{
+    return cra_hash_string2(*val);
 }

@@ -13,7 +13,7 @@
 bool
 cra_blkdeque_init(CraBlkDeque *que, size_t element_size, size_t que_max, bool zero_memory)
 {
-    if (!cra_deque_init(&que->deque, element_size, CRA_DEQUE_INFINITE, zero_memory))
+    if (!(cra_deque_init_with_size)(&que->deque, element_size, 0))
         return false;
 
     que->state = CRA_BLKDEQUE_STATE_NORMAL;
@@ -21,6 +21,7 @@ cra_blkdeque_init(CraBlkDeque *que, size_t element_size, size_t que_max, bool ze
     cra_cond_init(&que->not_full);
     cra_cond_init(&que->not_empty);
     cra_mutex_init(&que->mutex);
+    CRA_UNUSED_VALUE(zero_memory);
     return true;
 }
 
@@ -95,7 +96,7 @@ cra_blkdeque_push_nonblocking(CraBlkDeque *que, void *val)
         ret = false;
         goto end;
     }
-    if ((ret = cra_deque_push(&que->deque, val)))
+    if ((ret = (cra_deque_append)(&que->deque, val)))
         cra_cond_signal(&que->not_empty);
 end:
     cra_mutex_unlock(&que->mutex);
@@ -113,7 +114,7 @@ cra_blkdeque_push_left_nonblocking(CraBlkDeque *que, void *val)
         ret = false;
         goto end;
     }
-    if ((ret = cra_deque_push_left(&que->deque, val)))
+    if ((ret = (cra_deque_prepend)(&que->deque, val)))
         cra_cond_signal(&que->not_empty);
 end:
     cra_mutex_unlock(&que->mutex);
@@ -130,7 +131,7 @@ cra_blkdeque_pop_nonblocking(CraBlkDeque *que, void *retval)
         ret = false;
         goto end;
     }
-    if ((ret = cra_deque_pop(&que->deque, retval)))
+    if ((ret = (cra_deque_pop_back)(&que->deque, retval)))
         cra_cond_signal(&que->not_full);
 end:
     cra_mutex_unlock(&que->mutex);
@@ -147,7 +148,7 @@ cra_blkdeque_pop_left_nonblocking(CraBlkDeque *que, void *retval)
         ret = false;
         goto end;
     }
-    if ((ret = cra_deque_pop_left(&que->deque, retval)))
+    if ((ret = (cra_deque_pop_front)(&que->deque, retval)))
         cra_cond_signal(&que->not_full);
 end:
     cra_mutex_unlock(&que->mutex);
@@ -179,7 +180,7 @@ cra_blkdeque_push(CraBlkDeque *que, void *val)
             }
         }
     }
-    if ((ret = cra_deque_push(&que->deque, val)))
+    if ((ret = (cra_deque_append)(&que->deque, val)))
         cra_cond_signal(&que->not_empty);
     else
         ret = true;
@@ -213,7 +214,7 @@ cra_blkdeque_push_left(CraBlkDeque *que, void *val)
             }
         }
     }
-    if ((ret = cra_deque_push_left(&que->deque, val)))
+    if ((ret = (cra_deque_prepend)(&que->deque, val)))
         cra_cond_signal(&que->not_empty);
     else
         ret = true;
@@ -244,7 +245,7 @@ cra_blkdeque_pop(CraBlkDeque *que, void *retval)
             goto end;
         }
     }
-    if ((ret = cra_deque_pop(&que->deque, retval)))
+    if ((ret = (cra_deque_pop_back)(&que->deque, retval)))
         cra_cond_signal(&que->not_full);
     else
         ret = true;
@@ -275,7 +276,7 @@ cra_blkdeque_pop_left(CraBlkDeque *que, void *retval)
             goto end;
         }
     }
-    if ((ret = cra_deque_pop_left(&que->deque, retval)))
+    if ((ret = (cra_deque_pop_front)(&que->deque, retval)))
         cra_cond_signal(&que->not_full);
     else
         ret = true;
@@ -289,7 +290,7 @@ cra_blkdeque_peek(CraBlkDeque *que, void *retval)
 {
     bool ret;
     cra_mutex_lock(&que->mutex);
-    ret = cra_deque_peek(&que->deque, retval);
+    ret = (cra_deque_get)(&que->deque, que->deque.count - 1, retval);
     cra_mutex_unlock(&que->mutex);
     return ret;
 }
@@ -299,7 +300,7 @@ cra_blkdeque_peek_left(CraBlkDeque *que, void *retval)
 {
     bool ret;
     cra_mutex_lock(&que->mutex);
-    ret = cra_deque_peek_left(&que->deque, retval);
+    ret = (cra_deque_get)(&que->deque, 0, retval);
     cra_mutex_unlock(&que->mutex);
     return ret;
 }
@@ -307,19 +308,21 @@ cra_blkdeque_peek_left(CraBlkDeque *que, void *retval)
 bool
 cra_blkdeque_peek_ptr(CraBlkDeque *que, void **retvalptr)
 {
-    bool ret;
+    void *pval;
     cra_mutex_lock(&que->mutex);
-    ret = cra_deque_peek_ptr(&que->deque, retvalptr);
+    pval = cra_deque_peek_back_ref(&que->deque);
+    *retvalptr = pval;
     cra_mutex_unlock(&que->mutex);
-    return ret;
+    return pval != NULL;
 }
 
 bool
 cra_blkdeque_peek_left_ptr(CraBlkDeque *que, void **retvalptr)
 {
-    bool ret;
+    void *pval;
     cra_mutex_lock(&que->mutex);
-    ret = cra_deque_peek_left_ptr(&que->deque, retvalptr);
+    pval = cra_deque_peek_front_ref(&que->deque);
+    *retvalptr = pval;
     cra_mutex_unlock(&que->mutex);
-    return ret;
+    return pval != NULL;
 }

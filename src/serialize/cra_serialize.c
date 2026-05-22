@@ -25,7 +25,7 @@ cra_release_mgr_uninit(CraReleaseMgr *mgr, bool free_ptr)
         {
             blk = i < nnodes1 ? mgr->nodes1 + i : mgr->nodes2 + (i - nnodes1);
             if (blk->meta->init_i && blk->meta->init_i->uninit)
-                blk->meta->init_i->uninit(blk->ptr, blk->meta);
+                blk->meta->init_i->uninit(blk->ptr);
             if (blk->meta->is_ptr)
                 cra_free(blk->ptr);
         }

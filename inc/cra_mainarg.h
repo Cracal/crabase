@@ -20,15 +20,15 @@ typedef union
     char   *s;
 } CraMainArgVal_u;
 
-typedef struct _CraDict           CraDict;
-typedef struct _CraAList          CraAList;
-typedef struct _CraMemPool        CraMemPool;
-typedef struct _CraMainArg        CraMainArg;
-typedef struct _CraMainArgElement CraMainArgElement;
+typedef struct CraDict           CraDict;
+typedef struct CraAList          CraAList;
+typedef struct CraMemPool        CraMemPool;
+typedef struct CraMainArg        CraMainArg;
+typedef struct CraMainArgElement CraMainArgElement;
 
 typedef bool (*cra_mainarg_fn)(CraMainArgVal_u *retval, const char *opval, void *arg);
 
-struct _CraMainArgElement
+struct CraMainArgElement
 {
     char          *op;
     char          *option;
@@ -46,7 +46,7 @@ struct _CraMainArgElement
 #define CRA_MAINARG_ELEMENT_VAL(_op, _option, _valtip, _optip, _func, _arg) \
     CRA_MAINARG_ELEMENT_SET(_op, _option, _valtip, _optip, _func, _arg)
 
-struct _CraMainArg
+struct CraMainArg
 {
     int         tipstart;
     const char *introduction;

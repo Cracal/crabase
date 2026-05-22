@@ -45,7 +45,7 @@ cra_localtime(time_t secs, struct tm *_tm)
 CRA_API void
 cra_print_tm(const struct tm *const _tm);
 
-typedef struct _CraDateTime
+typedef struct CraDateTime
 {
     int year;
     int mon;

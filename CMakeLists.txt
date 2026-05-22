@@ -46,7 +46,11 @@ aux_source_directory(src SRC)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/tests)
 
 add_library(${PROJECT_NAME} SHARED ${SRC})
-target_link_libraries(${PROJECT_NAME} PRIVATE mem_detect_config)
+if(LINUX)
+    target_link_libraries(${PROJECT_NAME} PRIVATE m mem_detect_config)
+else()
+    target_link_libraries(${PROJECT_NAME} PRIVATE mem_detect_config)
+endif()
 target_compile_definitions(${PROJECT_NAME} PRIVATE CRA_BUILD_DLL)
 
 include(CTest)

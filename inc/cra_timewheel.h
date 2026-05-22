@@ -13,8 +13,8 @@
 #include "cra_assert.h"
 #include "cra_defs.h"
 
-typedef struct _CraTimewheel  CraTimewheel;
-typedef struct _CraTimer_base CraTimer_base;
+typedef struct CraTimewheel  CraTimewheel;
+typedef struct CraTimer_base CraTimer_base;
 
 typedef void (*cra_timer_base_fn)(CraTimer_base *);
 
@@ -22,7 +22,7 @@ typedef void (*cra_timer_base_fn)(CraTimer_base *);
 
 #define CRA_TIMER_INFINITE ((1u << 31) - 1)
 
-struct _CraTimer_base
+struct CraTimer_base
 {
     uint32_t          active : 1;
     uint32_t          repeat : 31;
@@ -87,9 +87,9 @@ cra_timer_base_set_timeout(CraTimer_base *base, uint32_t timeout_ms)
 
 #endif // end timer
 
-typedef struct _CraLList CraLList;
+typedef struct CraLList CraLList;
 
-struct _CraTimewheel
+struct CraTimewheel
 {
     uint32_t      tick_ms;
     uint32_t      current;

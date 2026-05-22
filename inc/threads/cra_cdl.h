@@ -12,7 +12,7 @@
 #define __CRA_CDL_H__
 #include "cra_lock.h"
 
-typedef struct _CraCDL
+typedef struct CraCDL
 {
     volatile int count;
     cra_cond_t   cond;

@@ -127,7 +127,10 @@ __cra_memory_leak_report(void);
 
 #endif
 
-#define cra_alloc(_Type) (_Type *)cra_malloc(sizeof(_Type))
+#define cra_alloc(_Type) cra_malloc(sizeof(_Type))
 #define cra_dealloc      cra_free
+
+#define cra_new(_Type) (_Type *)cra_alloc(_Type)
+#define cra_delete     cra_dealloc
 
 #endif

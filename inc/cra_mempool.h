@@ -12,7 +12,7 @@
 #define __CRA_MEMPOOL_H__
 #include "collections/cra_alist.h"
 
-typedef struct _CraMemPool
+typedef struct CraMemPool
 {
     size_t   item_size;
     size_t   items_per_block;
