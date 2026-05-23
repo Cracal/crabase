@@ -13,65 +13,47 @@
 #include "cra_assert.h"
 #include "cra_defs.h"
 
-#if defined(CRA_COMPILER_GNUC)
-#define ATTR_MALLOC __attribute__((malloc, alloc_size(1), warn_unused_result))
-#define ATTR_CALLOC __attribute__((malloc, alloc_size(1, 2), warn_unused_result))
-#define ATTR_REALLO __attribute__((nonnull(1), alloc_size(2), warn_unused_result))
-#define ATTR_FREEEE __attribute__((nonnull(1)))
-#elif defined(CRA_COMPILER_MSVC)
-#define ATTR_MALLOC _Check_return_ _CRTALLOCATOR
-#define ATTR_CALLOC _Check_return_ _CRTALLOCATOR
-#define ATTR_REALLO _Check_return_ _CRTALLOCATOR
-#define ATTR_FREEEE
-#else
-#define ATTR_MALLOC
-#define ATTR_CALLOC
-#define ATTR_REALLO
-#define ATTR_FREEEE
-#endif
-
 CRA_API void *(*__cra_malloc_fn__)(size_t size);
 CRA_API void *(*__cra_calloc_fn__)(size_t num, size_t size);
 CRA_API void *(*__cra_reallo_fn__)(void *oldptr, size_t newsize);
 CRA_API void  (*__cra_freeee_fn__)(void *ptr);
 
-static inline ATTR_MALLOC void *
+static inline void *
 __cra_malloc(size_t size)
 {
     assert(size > 0);
-    if (__cra_malloc_fn__ == NULL)
-        __cra_malloc_fn__ = malloc;
-    return __cra_malloc_fn__(size);
+    if (__cra_malloc_fn__)
+        return __cra_malloc_fn__(size);
+    return malloc(size);
 }
 
-static inline ATTR_CALLOC void *
+static inline void *
 __cra_calloc(size_t num, size_t size)
 {
     assert(num > 0 && size > 0);
-    if (__cra_calloc_fn__ == NULL)
-        __cra_calloc_fn__ = calloc;
-    return __cra_calloc_fn__(num, size);
+    if (__cra_calloc_fn__)
+        return __cra_calloc_fn__(num, size);
+    return calloc(num, size);
 }
-static inline ATTR_REALLO void *
+
+static inline void *
 __cra_realloc(void *oldptr, size_t newsize)
 {
     assert(newsize > 0);
-#ifdef CRA_COMPILER_MSVC
     assert(oldptr != NULL);
-#endif
-    if (__cra_reallo_fn__ == NULL)
-        __cra_reallo_fn__ = realloc;
-    return __cra_reallo_fn__(oldptr, newsize);
+    if (__cra_reallo_fn__)
+        return __cra_reallo_fn__(oldptr, newsize);
+    return realloc(oldptr, newsize);
 }
-static inline ATTR_FREEEE void
+
+static inline void
 __cra_free(void *ptr)
 {
-#ifdef CRA_COMPILER_MSVC
     assert(ptr != NULL);
-#endif
-    if (__cra_freeee_fn__ == NULL)
-        __cra_freeee_fn__ = free;
-    __cra_freeee_fn__(ptr);
+    if (__cra_freeee_fn__)
+        __cra_freeee_fn__(ptr);
+    else
+        free(ptr);
 }
 
 static inline void
@@ -86,11 +68,6 @@ cra_set_allocator(void *(*malloc_fn)(size_t),
     __cra_reallo_fn__ = realloc_fn;
     __cra_freeee_fn__ = free_fn;
 }
-
-#undef ATTR_MALLOC
-#undef ATTR_CALLOC
-#undef ATTR_REALLO
-#undef ATTR_FREEEE
 
 CRA_API void *
 __cra_malloc_dbg(size_t size, char *file, int line);
