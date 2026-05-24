@@ -110,4 +110,16 @@ __cra_memory_leak_report(void);
 #define cra_new(_Type) (_Type *)cra_alloc(_Type)
 #define cra_delete     cra_dealloc
 
+#define CRA_TEMP_NEW(_name, _size)        \
+    char *_name;                          \
+    char  _name##_small[1024];            \
+    if ((_size) <= sizeof(_name##_small)) \
+        _name = _name##_small;            \
+    else                                  \
+        _name = cra_malloc(_size);
+
+#define CRA_TEMP_DEL(_name, _size)       \
+    if ((_size) > sizeof(_name##_small)) \
+        cra_free(_name);
+
 #endif

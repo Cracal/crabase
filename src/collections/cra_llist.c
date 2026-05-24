@@ -109,7 +109,7 @@ cra_llist_clear(CraLList *list)
 }
 
 bool
-cra_llist_ensure(CraLList *list, size_t nspare, bool shrink2fit)
+cra_llist_reserve(CraLList *list, size_t nspare)
 {
     size_t        needed;
     CraLListNode *curr, *temp;
@@ -130,7 +130,7 @@ cra_llist_ensure(CraLList *list, size_t nspare, bool shrink2fit)
             cra_llist_put_free_node(list, node);
         }
     }
-    else if (shrink2fit)
+    else
     {
         curr = list->free_list;
         needed = list->nfreelist - nspare;
@@ -200,15 +200,12 @@ cra_llist_reverse(CraLList *list)
 }
 
 static CraLListNode *
-cra_llist_partition(CraLList *list, cra_cmp_fn compare, CraLListNode *begin, CraLListNode *end)
+cra_llist_partition(CraLList *list, cra_cmp_fn compare, CraLListNode *begin, CraLListNode *end, CraLListNode *temp)
 {
-    CraLListNode *left, *right, *temp;
+    CraLListNode *left, *right;
     left = begin;
     right = end;
     // temp.val = list[left].val
-    temp = cra_llist_get_free_node(list);
-    if (!temp)
-        return NULL;
     memcpy(temp->val, right->val, list->itemsize);
 
     while (left != right)
@@ -228,21 +225,18 @@ cra_llist_partition(CraLList *list, cra_cmp_fn compare, CraLListNode *begin, Cra
     // list[left].val = temp.val
     memcpy(left->val, temp->val, list->itemsize);
 
-    cra_llist_put_free_node(list, temp);
     return left;
 }
 
-static bool
-cra_llist_quick_sort(CraLList *list, cra_cmp_fn compare, CraLListNode *begin, CraLListNode *end)
+static void
+cra_llist_quick_sort(CraLList *list, cra_cmp_fn compare, CraLListNode *begin, CraLListNode *end, CraLListNode *temp)
 {
-    CraLListNode *middle = cra_llist_partition(list, compare, begin, end);
-    if (!middle)
-        return false;
+    CraLListNode *middle = cra_llist_partition(list, compare, begin, end, temp);
+    assert(middle);
     if (begin != middle && begin != middle->prev)
-        cra_llist_quick_sort(list, compare, begin, middle->prev);
+        cra_llist_quick_sort(list, compare, begin, middle->prev, temp);
     if (middle != end && middle->next != end)
-        cra_llist_quick_sort(list, compare, middle->next, end);
-    return true;
+        cra_llist_quick_sort(list, compare, middle->next, end, temp);
 }
 
 bool(cra_llist_sort)(CraLList *list, cra_cmp_fn compare)
@@ -252,7 +246,13 @@ bool(cra_llist_sort)(CraLList *list, cra_cmp_fn compare)
     assert(list->itemsize > 0);
 
     if (list->count > 1) // count(list) >= 2
-        return cra_llist_quick_sort(list, compare, list->head, list->head->prev);
+    {
+        CraLListNode *temp = cra_llist_get_free_node(list);
+        if (!temp)
+            return false;
+        cra_llist_quick_sort(list, compare, list->head, list->head->prev, temp);
+        cra_llist_put_free_node(list, temp);
+    }
     return true;
 }
 

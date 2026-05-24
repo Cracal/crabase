@@ -44,7 +44,7 @@ cra_alist_clear(CraAList *list)
 }
 
 CRA_API bool
-cra_alist_ensure(CraAList *list, size_t nspare, bool shrink2fit);
+cra_alist_reserve(CraAList *list, size_t new_capacity);
 
 CRA_API bool
 cra_alist_insert(CraAList *list, size_t index, void *val);

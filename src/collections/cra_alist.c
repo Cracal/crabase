@@ -50,37 +50,21 @@ cra_alist_resize(CraAList *list, size_t new_capacity)
     unsigned char *new_array;
     if (!(new_array = cra_realloc(list->array, new_capacity * list->itemsize)))
         return false;
-    list->array = new_array;
     list->capacity = new_capacity;
+    list->array = new_array;
     return true;
 }
 
-bool(cra_alist_ensure)(CraAList *list, size_t nspare, bool shrink2fit)
+bool
+cra_alist_reserve(CraAList *list, size_t new_capacity)
 {
-    size_t spare;
-    size_t capacity;
-
     assert(list);
     assert(list->array);
-
-    spare = list->capacity - list->count;
-    if (shrink2fit && spare != nspare)
-    {
-        capacity = list->count + nspare;
-        if (capacity == 0)
-            capacity = CRA_ALIST_DEFAULT_CAPACITY;
-        goto resize;
-    }
-    else if (spare < nspare)
-    {
-        capacity = CRA_ALIST_EXPEND(list->capacity);
-        if (capacity < list->count + nspare)
-            capacity = list->count + nspare;
-
-    resize:
-        return cra_alist_resize(list, capacity);
-    }
-    return true;
+    if (new_capacity < list->count)
+        new_capacity = list->count;
+    if (new_capacity < CRA_ALIST_DEFAULT_CAPACITY)
+        new_capacity = CRA_ALIST_DEFAULT_CAPACITY;
+    return cra_alist_resize(list, new_capacity);
 }
 
 bool(cra_alist_insert)(CraAList *list, size_t index, void *val)
@@ -129,8 +113,40 @@ bool(cra_alist_pop_at)(CraAList *list, size_t index, void *retval)
     return true;
 }
 
-static bool
-cra_alist_partition(CraAList *list, cra_cmp_fn compare, size_t begin, size_t end, size_t *middle, char *temp)
+bool
+cra_alist_reverse(CraAList *list)
+{
+    size_t begin, end;
+
+    assert(list);
+    assert(list->array);
+    assert(list->itemsize > 0);
+
+    if (list->count < 2)
+        return true;
+
+    CRA_TEMP_NEW(temp, list->itemsize);
+    if (!temp)
+        return false;
+
+    begin = 0;
+    end = list->count - 1;
+    while (begin < end)
+    {
+        memcpy(temp, CRA_ALIST_PVAL(list, begin), list->itemsize);
+        memcpy(CRA_ALIST_PVAL(list, begin), CRA_ALIST_PVAL(list, end), list->itemsize);
+        memcpy(CRA_ALIST_PVAL(list, end), temp, list->itemsize);
+        begin++;
+        end--;
+    }
+
+    CRA_TEMP_DEL(temp, list->itemsize);
+
+    return true;
+}
+
+static size_t
+cra_alist_partition(CraAList *list, cra_cmp_fn compare, size_t begin, size_t end, char *temp)
 {
     size_t left, right;
     char  *array;
@@ -159,59 +175,17 @@ cra_alist_partition(CraAList *list, cra_cmp_fn compare, size_t begin, size_t end
     // array[left] = temp;
     memcpy(array + left * list->itemsize, temp, list->itemsize);
 
-    *middle = left;
-    return true;
+    return left;
 }
 
-static bool
+static void
 cra_alist_quick_sort(CraAList *list, cra_cmp_fn compare, size_t begin, size_t end, char *temp)
 {
-    size_t middle;
-
-    if (!cra_alist_partition(list, compare, begin, end, &middle, temp))
-        return false;
+    size_t middle = cra_alist_partition(list, compare, begin, end, temp);
     if (middle > 0 && middle - 1 > begin)
         cra_alist_quick_sort(list, compare, begin, middle - 1, temp);
     if (middle < end && middle + 1 < end)
         cra_alist_quick_sort(list, compare, middle + 1, end, temp);
-    return true;
-}
-
-bool
-cra_alist_reverse(CraAList *list)
-{
-    size_t begin, end;
-
-    assert(list);
-    assert(list->array);
-    assert(list->itemsize > 0);
-
-    if (list->count < 2)
-        return true;
-
-#ifdef CRA_COMPILER_MSVC
-    char *temp = cra_malloc(list->itemsize);
-    if (!temp)
-        return false;
-#else
-    char temp[list->itemsize];
-#endif
-
-    begin = 0;
-    end = list->count - 1;
-    while (begin < end)
-    {
-        memcpy(temp, CRA_ALIST_PVAL(list, begin), list->itemsize);
-        memcpy(CRA_ALIST_PVAL(list, begin), CRA_ALIST_PVAL(list, end), list->itemsize);
-        memcpy(CRA_ALIST_PVAL(list, end), temp, list->itemsize);
-        begin++;
-        end--;
-    }
-
-#ifdef CRA_COMPILER_MSVC
-    cra_free(temp);
-#endif
-    return true;
 }
 
 bool(cra_alist_sort)(CraAList *list, cra_cmp_fn compare)
@@ -221,18 +195,13 @@ bool(cra_alist_sort)(CraAList *list, cra_cmp_fn compare)
     assert(list->array);
     if (list->count > 1) // count(array) >= 2
     {
-#ifdef CRA_COMPILER_MSVC
-        char *temp = cra_malloc(list->itemsize);
+        CRA_TEMP_NEW(temp, list->itemsize);
         if (!temp)
             return false;
-#else
-        char temp[list->itemsize];
-#endif
-        bool ret = cra_alist_quick_sort(list, compare, 0, list->count - 1, temp);
-#ifdef CRA_COMPILER_MSVC
-        cra_free(temp);
-#endif
-        return ret;
+
+        cra_alist_quick_sort(list, compare, 0, list->count - 1, temp);
+
+        CRA_TEMP_DEL(temp, list->itemsize);
     }
     return true;
 }

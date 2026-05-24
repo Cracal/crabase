@@ -51,16 +51,13 @@ cra_llist_clear(CraLList *list);
 
 ```c
 bool
-cra_llist_ensure(CraLList *list, size_t nspare, bool shrink2fit);
+cra_llist_reserve(CraLList *list, size_t nspare);
 ```
 
-调用此函数可确保链表容量足够容纳**nspare**个元素。
-
-- `nspare` 需要的空闲结节个数
-- `shrink2fit` 当空闲空间超过**nspare**时，是否缩小链表容量到只有**nspare**个空闲结节。
-
-成功返回**true**，失败返回**false**  
-只有为扩容失败时才会返回**false**
+添加/删除空闲结节。  
+如果**nspare**多于当前空闲结节个数，会删除空闲结节。  
+如果**nspare**小于当前空闲结节个数，会添加空闲结节。  
+仅创建新结点失败时才会返回**false**。
 
 ## add
 

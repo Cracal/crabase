@@ -195,7 +195,7 @@ CRA_API void
 cra_llist_clear(CraLList *list);
 
 CRA_API bool
-cra_llist_ensure(CraLList *list, size_t nspare, bool shrink2fit);
+cra_llist_reserve(CraLList *list, size_t nspare);
 
 CRA_API bool
 cra_llist_insert(CraLList *list, size_t index, void *val);

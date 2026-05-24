@@ -200,8 +200,8 @@ cra_dict_reserve(CraDict *dict, ssize_t new_capacity)
     assert(dict->entries);
     assert(dict->entry_size > 0 && dict->entry_size % 2 == 0);
 
-    if (new_capacity < dict->next)
-        new_capacity = dict->next;
+    if (new_capacity < dict->count)
+        new_capacity = dict->count;
     new_capacity = cra_dict_next_prime(new_capacity);
     new_buckets_size = new_capacity * sizeof(ssize_t);
     new_entries_size = CRA_DICT_USABLE_FRACTION(new_capacity) * dict->entry_size;
@@ -369,9 +369,9 @@ bool(cra_dict_add)(CraDict *dict, void *key, void *val)
     assert(dict->entries);
 
     entry = cra_dict_find_entry(dict, key, &hash, &bucket, NULL);
-    if (entry)
-        return false;
-    return cra_dict_add_inner(dict, hash, bucket, key, val);
+    if (!entry)
+        return cra_dict_add_inner(dict, hash, bucket, key, val);
+    return false;
 }
 
 bool(cra_dict_pop_kv)(CraDict *dict, const void *key, void *retkey, void *retval)
@@ -530,9 +530,7 @@ static CRA_ITERABLE_PREV_FN(cra_dict_iterable_prev)
 
     while ((ssize_t)it->ic1.idx > 0)
     {
-        entry = CRA_DICT_PENTRY(dict, it->ic1.idx);
-        --it->ic1.idx;
-
+        entry = CRA_DICT_PENTRY(dict, --it->ic1.idx);
         if (entry->hash != -1)
         {
             vals->val1_ref = CRA_DICT_PKEY(dict, entry);
