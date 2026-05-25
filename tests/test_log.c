@@ -233,7 +233,7 @@ test_log_time(void)
 
     cra_log_startup(CRA_LOG_LEVEL_TRACE,
                     false,
-                    (CraLogTo_i **)cra_logto_file_create(false, true, "log/test/", "test-log-utc", 2 * 1024 * 1024));
+                    (CraLogTo_i **)cra_logto_file_create(false, false, "log/test/", "test-log-utc", 2 * 1024 * 1024));
 
     cra_log_trace("hello trace");
     cra_log_debug("hello debug");

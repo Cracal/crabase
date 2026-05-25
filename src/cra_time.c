@@ -117,17 +117,17 @@ cra_datetime_now_localtime(CraDateTime *dt)
     dt->sec = st.wSecond;
     dt->ms = st.wMilliseconds;
 #else
-    struct tm      _tm;
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    cra_gmtime(tv.tv_sec, &_tm);
+    struct tm       _tm;
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    cra_localtime(ts.tv_sec, &_tm);
     dt->year = _tm.tm_year + 1900;
     dt->mon = _tm.tm_mon + 1;
     dt->day = _tm.tm_mday;
     dt->hour = _tm.tm_hour;
     dt->min = _tm.tm_min;
     dt->sec = _tm.tm_sec;
-    dt->ms = tv.tv_usec / 1000;
+    dt->ms = ts.tv_nsec / 1000000;
 #endif
 }
 
