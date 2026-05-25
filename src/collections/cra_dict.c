@@ -11,6 +11,8 @@
 #include "collections/cra_dict.h"
 #include "cra_malloc.h"
 
+#define CRA_DICT_MAX_CHAIN_LENGTH 16
+
 #define CRA_DICT_USABLE_FRACTION(n) (((n) * 72) / 100) // n * 0.72
 
 #define CRA_DICT_ALIGN_UP(n, a) (((n) + ((a) - 1)) & ~((a) - 1))
@@ -200,11 +202,18 @@ cra_dict_reserve(CraDict *dict, ssize_t new_capacity)
     assert(dict->entries);
     assert(dict->entry_size > 0 && dict->entry_size % 2 == 0);
 
-    if (new_capacity < dict->next)
-        new_capacity = dict->next;
-    new_capacity = cra_dict_next_prime(new_capacity);
-    new_buckets_size = new_capacity * sizeof(ssize_t);
-    new_entries_size = CRA_DICT_USABLE_FRACTION(new_capacity) * dict->entry_size;
+    if (new_capacity < dict->count)
+    {
+        new_capacity = cra_dict_next_prime(dict->count);
+        new_buckets_size = new_capacity * sizeof(ssize_t);
+        new_entries_size = new_capacity * dict->entry_size;
+    }
+    else
+    {
+        new_capacity = cra_dict_next_prime(new_capacity);
+        new_buckets_size = new_capacity * sizeof(ssize_t);
+        new_entries_size = CRA_DICT_USABLE_FRACTION(new_capacity) * dict->entry_size;
+    }
 
     new_buckets = cra_malloc(new_buckets_size);
     if (!new_buckets)
@@ -226,7 +235,7 @@ cra_dict_reserve(CraDict *dict, ssize_t new_capacity)
             entry2 = CRA_DICT_PENTRY0(dict, new_entries, j);
             memcpy(entry2, entry1, dict->entry_size);
 
-            new_bucket = CRA_DICT_BUCKET(entry1->hash, new_capacity);
+            new_bucket = CRA_DICT_BUCKET(entry2->hash, new_capacity);
             entry2->next = new_buckets[new_bucket];
             new_buckets[new_bucket] = j;
 
@@ -239,57 +248,66 @@ cra_dict_reserve(CraDict *dict, ssize_t new_capacity)
     dict->buckets = new_buckets;
     dict->entries = new_entries;
     dict->capacity = new_capacity;
+    dict->next = dict->count;
+    dict->freelist = -1;
     return true;
 }
 
-static inline CraDictEntry *
-cra_dict_find_entry(CraDict *dict, const void *key, cra_hash_t *phash, ssize_t *pbucket, ssize_t *plast)
+bool(cra_dict_put_and_return_kv)(CraDict *dict, void *key, void *val, void *retoldkey, void *retoldval, bool add)
 {
-    CraDictEntry *entry;
     cra_hash_t    hash;
-    ssize_t       bucket;
+    CraDictEntry *entry;
+    ssize_t       bucket, index;
+    size_t        chain_len;
 
-    hash = *phash = dict->hash_key(key);
-    bucket = *pbucket = CRA_DICT_BUCKET(hash, dict->capacity);
+    assert(key);
+    assert(val);
+    assert(dict);
+    assert(dict->buckets);
+    assert(dict->entries);
 
-    assert(hash != -1); // hash must be valid
+    hash = dict->hash_key(key);
+    bucket = CRA_DICT_BUCKET(hash, dict->capacity);
 
-    if (plast)
-        *plast = -1;
-
+    chain_len = 0;
     for (ssize_t i = dict->buckets[bucket]; i >= 0;)
     {
         entry = CRA_DICT_PENTRY(dict, i);
         if (entry->hash == hash && dict->compare_key(key, CRA_DICT_PKEY(dict, entry)) == 0)
-            return entry;
-        if (plast)
-            *plast = i;
+        {
+            if (add)
+                return false;
+
+            if (retoldkey)
+                memcpy(retoldkey, CRA_DICT_PKEY(dict, entry), dict->key_size);
+            if (retoldval)
+                memcpy(retoldval, CRA_DICT_PVAL(dict, entry), dict->val_size);
+
+            memcpy(CRA_DICT_PKEY(dict, entry), key, dict->key_size);
+            memcpy(CRA_DICT_PVAL(dict, entry), val, dict->val_size);
+
+            return true;
+        }
         i = entry->next;
+        ++chain_len;
     }
 
-    return NULL;
-}
-
-static inline bool
-cra_dict_add_inner(CraDict *dict, cra_hash_t hash, ssize_t bucket, void *key, void *val)
-{
-    ssize_t       index;
-    CraDictEntry *entry;
+    if (chain_len > CRA_DICT_MAX_CHAIN_LENGTH || dict->next >= CRA_DICT_USABLE_FRACTION(dict->capacity))
+    {
+        if (!cra_dict_reserve(dict, dict->capacity + 1))
+            return false;
+        bucket = CRA_DICT_BUCKET(hash, dict->capacity);
+    }
 
     if (dict->freelist >= 0)
     {
+        assert(dict->freelist < dict->next);
         index = dict->freelist;
         entry = CRA_DICT_PENTRY(dict, index);
         dict->freelist = entry->next;
     }
     else
     {
-        if (dict->next >= CRA_DICT_USABLE_FRACTION(dict->capacity))
-        {
-            if (!cra_dict_reserve(dict, dict->capacity << 1))
-                return false;
-            bucket = CRA_DICT_BUCKET(hash, dict->capacity);
-        }
         index = dict->next++;
         entry = CRA_DICT_PENTRY(dict, index);
     }
@@ -305,75 +323,6 @@ cra_dict_add_inner(CraDict *dict, cra_hash_t hash, ssize_t bucket, void *key, vo
     return true;
 }
 
-bool(cra_dict_put_and_return_kv)(CraDict *dict, void *key, void *val, void *retoldkey, void *retoldval)
-{
-    cra_hash_t    hash;
-    CraDictEntry *entry;
-    ssize_t       bucket;
-
-    assert(key);
-    assert(val);
-    assert(dict);
-    assert(dict->buckets);
-    assert(dict->entries);
-
-    entry = cra_dict_find_entry(dict, key, &hash, &bucket, NULL);
-    if (entry)
-    {
-        if (retoldkey)
-            memcpy(retoldkey, CRA_DICT_PKEY(dict, entry), dict->key_size);
-        if (retoldval)
-            memcpy(retoldval, CRA_DICT_PVAL(dict, entry), dict->val_size);
-
-        memcpy(CRA_DICT_PKEY(dict, entry), key, dict->key_size);
-        memcpy(CRA_DICT_PVAL(dict, entry), val, dict->val_size);
-
-        return true;
-    }
-
-    return cra_dict_add_inner(dict, hash, bucket, key, val);
-}
-
-bool(cra_dict_put)(CraDict *dict, void *key, void *val)
-{
-    cra_hash_t    hash;
-    CraDictEntry *entry;
-    ssize_t       bucket;
-
-    assert(key);
-    assert(val);
-    assert(dict);
-    assert(dict->buckets);
-    assert(dict->entries);
-
-    entry = cra_dict_find_entry(dict, key, &hash, &bucket, NULL);
-    if (entry)
-    {
-        memcpy(CRA_DICT_PKEY(dict, entry), key, dict->key_size);
-        memcpy(CRA_DICT_PVAL(dict, entry), val, dict->val_size);
-        return true;
-    }
-    return cra_dict_add_inner(dict, hash, bucket, key, val);
-}
-
-bool(cra_dict_add)(CraDict *dict, void *key, void *val)
-{
-    cra_hash_t    hash;
-    CraDictEntry *entry;
-    ssize_t       bucket;
-
-    assert(key);
-    assert(val);
-    assert(dict);
-    assert(dict->buckets);
-    assert(dict->entries);
-
-    entry = cra_dict_find_entry(dict, key, &hash, &bucket, NULL);
-    if (entry)
-        return false;
-    return cra_dict_add_inner(dict, hash, bucket, key, val);
-}
-
 bool(cra_dict_pop_kv)(CraDict *dict, const void *key, void *retkey, void *retval)
 {
     cra_hash_t    hash;
@@ -385,28 +334,44 @@ bool(cra_dict_pop_kv)(CraDict *dict, const void *key, void *retkey, void *retval
     assert(dict->buckets);
     assert(dict->entries);
 
-    entry = cra_dict_find_entry(dict, key, &hash, &bucket, &last);
-    if (entry)
+    hash = dict->hash_key(key);
+    bucket = CRA_DICT_BUCKET(hash, dict->capacity);
+
+    last = -1;
+    for (ssize_t i = dict->buckets[bucket]; i >= 0;)
     {
-        if (retkey)
-            memcpy(retkey, CRA_DICT_PKEY(dict, entry), dict->key_size);
-        if (retval)
-            memcpy(retval, CRA_DICT_PVAL(dict, entry), dict->val_size);
+        entry = CRA_DICT_PENTRY(dict, i);
+        if (entry->hash == hash && dict->compare_key(key, CRA_DICT_PKEY(dict, entry)) == 0)
+        {
+            if (retkey)
+                memcpy(retkey, CRA_DICT_PKEY(dict, entry), dict->key_size);
+            if (retval)
+                memcpy(retval, CRA_DICT_PVAL(dict, entry), dict->val_size);
 
-        index = dict->buckets[bucket];
+            index = dict->buckets[bucket];
 
-        if (last >= 0)
-            CRA_DICT_PENTRY(dict, last)->next = entry->next;
-        else
-            dict->buckets[bucket] = entry->next;
+            if (last >= 0)
+                CRA_DICT_PENTRY(dict, last)->next = entry->next;
+            else
+                dict->buckets[bucket] = entry->next;
 
-        entry->hash = -1;
-        entry->next = dict->freelist;
-        dict->freelist = index;
+            entry->hash = -1;
+            entry->next = dict->freelist;
+            dict->freelist = index;
 
-        --dict->count;
-        return true;
+            if (--dict->count == 0)
+            {
+                dict->freelist = -1;
+                dict->next = 0;
+            }
+
+            return true;
+        }
+
+        last = i;
+        i = entry->next;
     }
+
     return false;
 }
 
@@ -421,9 +386,19 @@ void *(cra_dict_get_ref)(CraDict * dict, const void *key)
     assert(dict->buckets);
     assert(dict->entries);
 
-    entry = cra_dict_find_entry(dict, key, &hash, &bucket, NULL);
-    if (entry)
-        return CRA_DICT_PVAL(dict, entry);
+    hash = dict->hash_key(key);
+    bucket = CRA_DICT_BUCKET(hash, dict->capacity);
+
+    for (ssize_t i = dict->buckets[bucket]; i >= 0;)
+    {
+        entry = CRA_DICT_PENTRY(dict, i);
+        if (entry->hash == hash && dict->compare_key(key, CRA_DICT_PKEY(dict, entry)) == 0)
+        {
+            return CRA_DICT_PVAL(dict, entry);
+        }
+        i = entry->next;
+    }
+
     return NULL;
 }
 
@@ -464,7 +439,7 @@ static CRA_APPENDABLE_APPEND_FN(cra_dict_appendable_append)
     assert(vals->val2_ref);
 
     CraDict *dict = (CraDict *)obj;
-    return (cra_dict_add)(dict, vals->val1_ref, vals->val2_ref);
+    return (cra_dict_put_and_return_kv)(dict, vals->val1_ref, vals->val2_ref, NULL, NULL, true);
 }
 
 CRA_APPENDABLE_DEF(cra_g_dict_appendable_i) = {
@@ -530,9 +505,7 @@ static CRA_ITERABLE_PREV_FN(cra_dict_iterable_prev)
 
     while ((ssize_t)it->ic1.idx > 0)
     {
-        entry = CRA_DICT_PENTRY(dict, it->ic1.idx);
-        --it->ic1.idx;
-
+        entry = CRA_DICT_PENTRY(dict, --it->ic1.idx);
         if (entry->hash != -1)
         {
             vals->val1_ref = CRA_DICT_PKEY(dict, entry);

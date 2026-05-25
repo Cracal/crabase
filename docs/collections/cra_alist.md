@@ -49,20 +49,19 @@ cra_alist_clear(CraAList *list);
 
 清空数组
 
-## ensure
+## reserve
 
 ```c
 bool
-cra_alist_ensure(CraAList *list, size_t nspare, bool shrink2fit)
+cra_alist_reserve(CraAList *list, size_t new_capacity)
 ```
 
-调用此函数可确保数组容量足够容纳**nspare**个元素。
-
-- `nspare` 需要的空闲空间个数
-- `shrink2fit` 当空闲空间超过**nspare**时，是否缩小数组容量到只有**nspare**个空闲空间。
-
-成功返回**true**，失败返回**false**  
-只有为扩容失败时才会返回**false**
+扩大/缩小数组容量。  
+如果**new_capacity**小于当前容量，会缩小数组容量。  
+如果**new_capacity**大于当前容量，会扩大数组容量。  
+如果**new_capacity**小于当前元素个数，容量会缩小数组容量到当前元素个数。  
+新容量不会小于**CRA_ALIST_DEFAULT_CAPACITY**。  
+仅在内存分配失败时返回**false**。
 
 ## add
 

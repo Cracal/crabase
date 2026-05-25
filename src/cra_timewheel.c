@@ -2,8 +2,6 @@
 #include "collections/cra_llist.h"
 #include "cra_malloc.h"
 
-#define CRA_TIMEWHEEL_FREE_TIMER_MAX 512
-
 #if 1 // free node list
 
 static inline CraLList *
@@ -12,7 +10,7 @@ cra_freenodelist_new(void)
     CraLList *list = cra_alloc(CraLList);
     if (!list)
         return NULL;
-    if (!cra_llist_init(CraTimer_base *, list))
+    if (!cra_llist_init(CraLListNode *, list))
     {
         cra_dealloc(list);
         return NULL;
@@ -51,15 +49,8 @@ cra_freenodelist_put(CraLList *list, CraLListNode *node)
     assert(list);
     assert(node);
 
-    if (list->count < CRA_TIMEWHEEL_FREE_TIMER_MAX)
-    {
-        // bzero(node->val, sizeof(CraTimer_base *));
-        cra_llist_insert_node(list, 0, node);
-    }
-    else
-    {
-        cra_llist_destroy_node(node);
-    }
+    // bzero(node->val, sizeof(CraTimer_base *));
+    cra_llist_insert_node(list, 0, node);
 }
 
 #endif // end free node list
@@ -88,7 +79,7 @@ cra_timer_base_init(CraTimer_base    *base,
 static bool
 __cra_timewheel_init(CraTimewheel *wheel, uint32_t tick_ms, uint32_t wheel_size, CraLList *freenodelist)
 {
-    wheel->wheel_buckets = (CraLList **)cra_calloc(wheel_size, sizeof(CraLList *));
+    wheel->wheel_buckets = (CraLList *)cra_calloc(wheel_size, sizeof(CraLList));
     if (!wheel->wheel_buckets)
         return false;
 
@@ -105,13 +96,11 @@ cra_timewheel_add_node_to(CraTimewheel *wheel, CraLListNode *timernode, uint32_t
 {
     remain_timeout_ms = CRA_MAX(remain_timeout_ms, wheel->tick_ms);
     uint32_t  bucket = ((wheel->current + remain_timeout_ms / wheel->tick_ms) % wheel->wheel_size);
-    CraLList *list = wheel->wheel_buckets[bucket];
-    if (!list)
+    CraLList *list = &wheel->wheel_buckets[bucket];
+    if (list->itemsize == 0)
     {
-        list = cra_alloc(CraLList);
-        if (!list || !cra_llist_init(CraTimer_base *, list))
+        if (!cra_llist_init(CraTimer_base *, list))
             return false;
-        wheel->wheel_buckets[bucket] = list;
     }
     return cra_llist_insert_node(list, 0, timernode);
 }
@@ -154,8 +143,8 @@ cra_timewheel_tick_inner(CraTimewheel *wheel, CraTimewheel *lower_wheel)
     CraLListNode  *curr;
     CraTimer_base *timer;
 
-    list = wheel->wheel_buckets[wheel->current];
-    if (!list)
+    list = &wheel->wheel_buckets[wheel->current];
+    if (list->itemsize == 0)
         return;
 
     while (list->head)
@@ -224,6 +213,8 @@ cra_timewheel_init(CraTimewheel *wheel, uint32_t tick_ms, uint32_t wheel_size)
 void
 cra_timewheel_uninit(CraTimewheel *wheel)
 {
+    CraLList *list;
+
     assert(wheel);
     assert(wheel->freenodelist);
     assert(wheel->wheel_buckets);
@@ -235,22 +226,40 @@ cra_timewheel_uninit(CraTimewheel *wheel)
     }
     for (uint32_t i = 0; i < wheel->wheel_size; ++i)
     {
-        if (wheel->wheel_buckets[i])
+        list = &wheel->wheel_buckets[i];
+        if (list->itemsize > 0)
         {
             CraTimer_base *timer;
-            CRA_FOREACH(CRA_LLIST_ITERABLE_I, wheel->wheel_buckets[i], vals)
+            CRA_FOREACH(CRA_LLIST_ITERABLE_I, list, vals)
             {
                 memcpy(&timer, vals.val1_ref, sizeof(timer));
                 if (timer->on_remove_timer)
                     timer->on_remove_timer(timer);
             }
-            cra_llist_uninit(wheel->wheel_buckets[i]);
-            cra_dealloc(wheel->wheel_buckets[i]);
+            cra_llist_uninit(list);
         }
     }
     if (!wheel->upper_wheel)
         cra_freenodelist_delete(wheel->freenodelist);
     cra_free(wheel->wheel_buckets);
+}
+
+void
+cra_timewheel_release_all_free_timers(CraTimewheel *wheel)
+{
+    CraLListNode *node;
+
+    assert(wheel);
+    assert(wheel->freenodelist);
+
+    while (wheel->freenodelist->head)
+    {
+        node = wheel->freenodelist->head;
+        cra_llist_remove_node(wheel->freenodelist, node, false);
+        cra_dealloc(node);
+    }
+
+    assert(wheel->freenodelist->count == 0);
 }
 
 bool

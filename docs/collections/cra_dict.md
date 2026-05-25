@@ -67,7 +67,10 @@ cra_dict_reserve(CraDict *dict, size_t new_capacity);
 ```
 
 扩大/缩小字典容量。  
-成功返回**true**，失败返回**false**。内存分配失败时返回**false**
+如果**new_capacity**小于当前容量，会缩小字典容量。  
+如果**new_capacity**大于当前容量，会扩大字典容量。  
+新容量不会小于**CRA_DICT_DEFAULT_CAPACITY**。  
+仅在内存分配失败时返回**false**。
 
 ## add
 

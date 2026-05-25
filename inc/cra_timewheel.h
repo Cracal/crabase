@@ -94,7 +94,7 @@ struct CraTimewheel
     uint32_t      tick_ms;
     uint32_t      current;
     uint32_t      wheel_size;
-    CraLList    **wheel_buckets; // [CraLList<CraTimer_base *>]
+    CraLList     *wheel_buckets; // [CraLList<CraTimer_base *>]
     CraLList     *freenodelist;  // CraLList<CraLListNode<CraTimer_base *> *>
     CraTimewheel *upper_wheel;
 };
@@ -104,6 +104,9 @@ cra_timewheel_init(CraTimewheel *wheel, uint32_t tick_ms, uint32_t wheel_size);
 
 CRA_API void
 cra_timewheel_uninit(CraTimewheel *wheel);
+
+CRA_API void
+cra_timewheel_release_all_free_timers(CraTimewheel *wheel);
 
 CRA_API bool
 cra_timewheel_add(CraTimewheel *wheel, CraTimer_base *timer);

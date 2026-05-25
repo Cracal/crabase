@@ -19,11 +19,20 @@ typedef struct CraCDL
     cra_mutex_t  mutex;
 } CraCDL;
 
-CRA_API void
-cra_cdl_init(CraCDL *cdl, int count);
+static inline void
+cra_cdl_init(CraCDL *cdl, int count)
+{
+    cdl->count = count;
+    cra_cond_init(&cdl->cond);
+    cra_mutex_init(&cdl->mutex);
+}
 
-CRA_API void
-cra_cdl_uninit(CraCDL *cdl);
+static inline void
+cra_cdl_uninit(CraCDL *cdl)
+{
+    cra_cond_destroy(&cdl->cond);
+    cra_mutex_destroy(&cdl->mutex);
+}
 
 static inline void
 cra_cdl_reset(CraCDL *cdl, int count)

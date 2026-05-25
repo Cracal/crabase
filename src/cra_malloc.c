@@ -69,6 +69,7 @@ __cra_calloc_dbg(size_t num, size_t size, char *file, int line)
 void *
 __cra_realloc_dbg(void *ptr, size_t newsize, char *file, int line)
 {
+    void             *ret;
     CraMallocBlkNode *curr;
     CraMallocBlkNode *last;
     CraMallocBlkNode *node;
@@ -76,13 +77,13 @@ __cra_realloc_dbg(void *ptr, size_t newsize, char *file, int line)
     CRA_UNUSED_VALUE(file);
     CRA_UNUSED_VALUE(line);
 
+    ret = NULL;
     CRA_MALLOC_LOCK();
     for (last = NULL, curr = __s_malloc_memblk_head; curr != NULL; last = curr, curr = curr->next)
     {
         if (curr->block == ptr)
             break;
     }
-    CRA_MALLOC_UNLOCK();
 
     if (curr != NULL)
     {
@@ -94,10 +95,12 @@ __cra_realloc_dbg(void *ptr, size_t newsize, char *file, int line)
                 last->next = node;
             else
                 __s_malloc_memblk_head = node;
-            return node->block;
+            ret = node->block;
         }
     }
-    return NULL;
+    CRA_MALLOC_UNLOCK();
+
+    return ret;
 }
 
 void

@@ -65,6 +65,8 @@ test_timewheel(void)
         cra_timewheel_tick(&wheel);
     }
 
+    cra_timewheel_release_all_free_timers(&wheel);
+
     cra_timewheel_uninit(&wheel);
 }
 

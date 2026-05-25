@@ -974,13 +974,9 @@ cra_bin_read_list(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
         return false;
     }
 
-#ifdef __STDC_NO_VLA__
-    vals.val1_ref = cra_malloc(slot);
-    CRA_SEIALIZER_CHECK_MEMORY(ser, meta, vals.val1_ref);
-#else
-    char element[slot];
+    CRA_TEMP_NEW(element, slot);
+    CRA_SEIALIZER_CHECK_MEMORY(ser, meta, element);
     vals.val1_ref = element;
-#endif
 
     // read elements
     ret = true;
@@ -998,10 +994,10 @@ cra_bin_read_list(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
         }
     }
 
-#ifdef __STDC_NO_VLA__
-    cra_free(vals.val1_ref);
-#endif
+    CRA_TEMP_DEL(element, slot);
+
     CRA_SERIALIZER_NESTING_DEC(ser);
+
     return ret;
 }
 
@@ -1114,14 +1110,10 @@ cra_bin_read_dict(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
         return false;
     }
 
-#ifdef __STDC_NO_VLA__
-    vals.val1_ref = cra_malloc(key_size + val_size); // FIXME: alignment
-    CRA_SEIALIZER_CHECK_MEMORY(ser, meta, vals.val1_ref);
-#else
-    char key[key_size + val_size];
+    CRA_TEMP_NEW(key, key_size + val_size);
+    CRA_SEIALIZER_CHECK_MEMORY(ser, meta, key);
     vals.val1_ref = key;
-#endif
-    vals.val2_ref = (char *)vals.val1_ref + key_size;
+    vals.val2_ref = key + key_size;
 
     // read elements
     ret = true;
@@ -1141,9 +1133,7 @@ cra_bin_read_dict(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
         }
     }
 
-#ifdef __STDC_NO_VLA__
-    cra_free(vals.val1_ref);
-#endif
+    CRA_TEMP_DEL(key, key_size + val_size);
 
     CRA_SERIALIZER_NESTING_DEC(ser);
 

@@ -77,8 +77,8 @@ cra_dict_clear(CraDict *dict)
     assert(dict->entries);
     assert(dict->entry_size > 0 && dict->entry_size % 2 == 0);
 
-    if (dict->next > 0)
-        memset(dict->buckets, 0xff, dict->next * sizeof(ssize_t));
+    if (dict->count > 0)
+        memset(dict->buckets, 0xff, dict->capacity * sizeof(ssize_t));
     dict->freelist = -1;
     dict->count = 0;
     dict->next = 0;
@@ -88,30 +88,30 @@ CRA_API bool
 cra_dict_reserve(CraDict *dict, ssize_t new_capacity);
 
 CRA_API bool
-cra_dict_put_and_return_kv(CraDict *dict, void *key, void *val, void *retoldkey, void *retoldval);
-CRA_API bool
-cra_dict_put(CraDict *dict, void *key, void *val);
-CRA_API bool
-cra_dict_add(CraDict *dict, void *key, void *val);
+cra_dict_put_and_return_kv(CraDict *dict, void *key, void *val, void *retoldkey, void *retoldval, bool add);
 // bool put_and_return_kv(CraDict *dict, TKey *key, TVal *val, out TKey *retoldkey, out TVal *retoldval)
-#define cra_dict_put_and_return_kv(_dict, _key, _val, _retoldkey, _retoldval) \
-    (CRA_DICT_CHECK_KEY(_dict, _key),                                         \
-     CRA_DICT_CHECK_VAL(_dict, _val),                                         \
-     CRA_DICT_CHECK_KEY(_dict, _retoldkey),                                   \
-     CRA_DICT_CHECK_VAL(_dict, _retoldval),                                   \
-     cra_dict_put_and_return_kv(_dict, _key, _val, _retoldkey, _retoldval))
+#define cra_dict_put_and_return_kv(_dict, _key, _val, _retoldkey, _retoldval)      \
+    (CRA_DICT_CHECK_KEY(_dict, _key),                                              \
+     CRA_DICT_CHECK_VAL(_dict, _val),                                              \
+     CRA_DICT_CHECK_KEY(_dict, _retoldkey),                                        \
+     CRA_DICT_CHECK_VAL(_dict, _retoldval),                                        \
+     cra_dict_put_and_return_kv(_dict, _key, _val, _retoldkey, _retoldval, false))
 // bool put_and_return_v(CraDict *dict, TKey *key, TVal *val, out TVal *retoldval)
-#define cra_dict_put_and_return_v(_dict, _key, _val, _retoldval)        \
+#define cra_dict_put_and_return_v(_dict, _key, _val, _retoldval)               \
+    (CRA_DICT_CHECK_KEY(_dict, _key),                                          \
+     CRA_DICT_CHECK_VAL(_dict, _val),                                          \
+     CRA_DICT_CHECK_VAL(_dict, _retoldval),                                    \
+     (cra_dict_put_and_return_kv)(_dict, _key, _val, NULL, _retoldval, false))
+// bool put(CraDict *dict, TKey *key, TVal *val)
+#define cra_dict_put(_dict, _key, _val)                                  \
+    (CRA_DICT_CHECK_KEY(_dict, _key),                                    \
+     CRA_DICT_CHECK_VAL(_dict, _val),                                    \
+     (cra_dict_put_and_return_kv)(_dict, _key, _val, NULL, NULL, false))
+// bool add(CraDict *dict, TKey *key, TVal *val)
+#define cra_dict_add(_dict, _key, _val)                                 \
     (CRA_DICT_CHECK_KEY(_dict, _key),                                   \
      CRA_DICT_CHECK_VAL(_dict, _val),                                   \
-     CRA_DICT_CHECK_VAL(_dict, _retoldval),                             \
-     (cra_dict_put_and_return_kv)(_dict, _key, _val, NULL, _retoldval))
-// bool put(CraDict *dict, TKey *key, TVal *val)
-#define cra_dict_put(_dict, _key, _val)                                                                 \
-    (CRA_DICT_CHECK_KEY(_dict, _key), CRA_DICT_CHECK_VAL(_dict, _val), cra_dict_put(_dict, _key, _val))
-// bool add(CraDict *dict, TKey *key, TVal *val)
-#define cra_dict_add(_dict, _key, _val)                                                                 \
-    (CRA_DICT_CHECK_KEY(_dict, _key), CRA_DICT_CHECK_VAL(_dict, _val), cra_dict_add(_dict, _key, _val))
+     (cra_dict_put_and_return_kv)(_dict, _key, _val, NULL, NULL, true))
 
 CRA_API bool
 cra_dict_pop_kv(CraDict *dict, const void *key, void *retkey, void *retval);
