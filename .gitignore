@@ -2,4 +2,5 @@ build/
 .vscode/
 
 log/
+install/
 **/test.bin

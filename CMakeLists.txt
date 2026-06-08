@@ -57,3 +57,57 @@ include(CTest)
 enable_testing()
 
 add_subdirectory(tests)
+
+
+
+include(CMakePackageConfigHelpers)
+
+add_library(cracal::crabase ALIAS ${PROJECT_NAME})
+
+target_include_directories(
+    ${PROJECT_NAME}
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+        $<INSTALL_INTERFACE:inc>
+)
+
+install(
+    TARGETS ${PROJECT_NAME}
+    EXPORT crabaseTargets
+
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+)
+
+install(
+    DIRECTORY inc/
+    DESTINATION inc
+)
+
+install(
+    EXPORT crabaseTargets
+    FILE crabaseTargets.cmake
+    NAMESPACE cracal::
+    DESTINATION lib/cmake/${PROJECT_NAME}
+)
+
+configure_package_config_file(
+    cmake/crabaseConfig.cmake.in
+    "${CMAKE_CURRENT_BINARY_DIR}/crabaseConfig.cmake"
+    INSTALL_DESTINATION lib/cmake/${PROJECT_NAME}
+)
+
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/crabaseConfigVersion.cmake"
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion
+)
+
+install(
+    FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/crabaseConfig.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/crabaseConfigVersion.cmake"
+    DESTINATION
+        lib/cmake/${PROJECT_NAME}
+)
