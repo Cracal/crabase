@@ -124,73 +124,113 @@ cra_level_to_str(CraLogLevel_e level)
     }
 }
 
-void(cra_log_message_with_logname)(const char   *logname,
-                                   CraLogLevel_e level,
-#ifdef CRA_LOG_FILE_LINE
-                                   const char *file,
-                                   int         line,
-#endif
-                                   const char *fmt,
-                                   ...)
+#define CRA_LOG_CHECK(_level)                                                   \
+    if (!s_logger)                                                              \
+    {                                                                           \
+        fprintf(stderr, "Please init Logger(call `cra_log_startup`) first.\n"); \
+        return;                                                                 \
+    }                                                                           \
+                                                                                \
+    if (_level < s_logger->level)                                               \
+    return
+
+static inline int
+cra_log_write_time(char *msg, size_t remaining)
 {
-    int  len;
-    char msg[CRA_LOG_MSG_MAX];
-
-    assert(logname);
-    assert(fmt);
-
-    if (!s_logger)
-    {
-        fprintf(stderr, "Please init Logger(call `cra_log_startup`) first.\n");
-        return;
-    }
-
-    if (level < s_logger->level)
-        return;
-
-    // time
-    int         spaces;
     CraDateTime dt;
+    int         spaces;
+
     if (s_logger->with_utc)
     {
         cra_datetime_now_utc(&dt);
         spaces = dt.ms >= 100 ? 1 : (dt.ms >= 10 ? 2 : 3);
-        len = snprintf(msg,
-                       sizeof(msg),
-                       "%04d-%02d-%02dT%02d:%02d:%02d.%dZ%*.s",
-                       dt.year,
-                       dt.mon,
-                       dt.day,
-                       dt.hour,
-                       dt.min,
-                       dt.sec,
-                       dt.ms,
-                       spaces,
-                       "");
+        return snprintf(msg,
+                        remaining,
+                        "%04d-%02d-%02dT%02d:%02d:%02d.%dZ%*.s",
+                        dt.year,
+                        dt.mon,
+                        dt.day,
+                        dt.hour,
+                        dt.min,
+                        dt.sec,
+                        dt.ms,
+                        spaces,
+                        "");
     }
     else
     {
         cra_datetime_now_localtime(&dt);
         spaces = dt.ms >= 100 ? 1 : (dt.ms >= 10 ? 2 : 3);
-        len = snprintf(msg,
-                       sizeof(msg),
-                       "%04d-%02d-%02dT%02d:%02d:%02d.%d%+03hd:00%*.s",
-                       dt.year,
-                       dt.mon,
-                       dt.day,
-                       dt.hour,
-                       dt.min,
-                       dt.sec,
-                       dt.ms,
-                       s_logger->timezoneoffset,
-                       spaces,
-                       "");
+        return snprintf(msg,
+                        remaining,
+                        "%04d-%02d-%02dT%02d:%02d:%02d.%d%+03hd:00%*.s",
+                        dt.year,
+                        dt.mon,
+                        dt.day,
+                        dt.hour,
+                        dt.min,
+                        dt.sec,
+                        dt.ms,
+                        s_logger->timezoneoffset,
+                        spaces,
+                        "");
     }
+}
 
-    // tid level logname
+static inline int
+cra_log_write_tid_level_logname(char *msg, size_t remaining, CraLogLevel_e level, const char *logname)
+{
     cra_tid_t   tid = cra_thrd_get_current_tid();
     const char *lv = cra_level_to_str(level);
-    len += snprintf(msg + len, sizeof(msg) - len, "%-5lu %s %s ", tid, lv, logname);
+    return snprintf(msg, remaining, "%-5lu %s %s ", tid, lv, logname);
+}
+
+#define CRA_LOG_WRITE_END()                                      \
+    /* \n */                                                     \
+    if (len >= (int)sizeof(msg) - 1)                             \
+    {                                                            \
+    fix_length:                                                  \
+        len = sizeof(msg) - 1;                                   \
+        msg[len - 4] = '.';                                      \
+        msg[len - 3] = '.';                                      \
+        msg[len - 2] = '.';                                      \
+        msg[len - 1] = '\n';                                     \
+    }                                                            \
+    else                                                         \
+    {                                                            \
+        if (msg[len - 1] != '\n')                                \
+        {                                                        \
+            /* [...XX\0] => [...XX\n\0] */                       \
+            msg[len++] = '\n';                                   \
+            msg[len] = '\0';                                     \
+        }                                                        \
+    }                                                            \
+                                                                 \
+    /* write log */                                              \
+    (*s_logger->logto)->append(s_logger->logto, msg, len, level)
+
+void
+cra_log_message_with_logname_with_file_line(const char   *logname,
+                                            CraLogLevel_e level,
+                                            const char   *file,
+                                            int           line,
+                                            const char   *fmt,
+                                            ...)
+{
+    int  len;
+    char msg[CRA_LOG_MSG_MAX];
+
+    assert(logname);
+    assert(file);
+    assert(fmt);
+
+    CRA_LOG_CHECK(level);
+
+    // time
+    len = cra_log_write_time(msg, sizeof(msg));
+
+    // tid level logname
+    len += cra_log_write_tid_level_logname(msg + len, sizeof(msg) - len, level, logname);
     if (len >= (int)sizeof(msg) - 1)
         goto fix_length;
 
@@ -202,35 +242,42 @@ void(cra_log_message_with_logname)(const char   *logname,
     if (len >= (int)sizeof(msg) - 1)
         goto fix_length;
 
-#ifdef CRA_LOG_FILE_LINE
     // file:line
     if (msg[len - 1] == '\n')
         len--;
     len += snprintf(msg + len, sizeof(msg) - len, " - %s:%d", file, line);
-#endif
 
-    // \n
+    CRA_LOG_WRITE_END();
+}
+
+void
+cra_log_message_with_logname_without_file_line(const char *logname, CraLogLevel_e level, const char *fmt, ...)
+{
+    int  len;
+    char msg[CRA_LOG_MSG_MAX];
+
+    assert(logname);
+    assert(fmt);
+
+    CRA_LOG_CHECK(level);
+
+    // time
+    len = cra_log_write_time(msg, sizeof(msg));
+
+    // tid level logname
+    len += cra_log_write_tid_level_logname(msg + len, sizeof(msg) - len, level, logname);
     if (len >= (int)sizeof(msg) - 1)
-    {
-    fix_length:
-        len = sizeof(msg) - 1;
-        msg[len - 4] = '.';
-        msg[len - 3] = '.';
-        msg[len - 2] = '.';
-        msg[len - 1] = '\n';
-    }
-    else
-    {
-        if (msg[len - 1] != '\n')
-        {
-            // [...XX\0] => [...XX\n\0]
-            msg[len++] = '\n';
-            msg[len] = '\0';
-        }
-    }
+        goto fix_length;
 
-    // write log
-    (*s_logger->logto)->append(s_logger->logto, msg, len, level);
+    // msg
+    va_list ap;
+    va_start(ap, fmt);
+    len += vsnprintf(msg + len, sizeof(msg) - len, fmt, ap);
+    va_end(ap);
+    if (len >= (int)sizeof(msg) - 1)
+        goto fix_length;
+
+    CRA_LOG_WRITE_END();
 }
 
 #if 1 // log async
