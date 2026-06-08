@@ -66,8 +66,7 @@ cra_log_message_with_logname(const char   *logname,
 #else
 #define cra_log_message_with_logname(_logname, _level, _fmt, ...)       \
     cra_log_message_with_logname(_logname, _level, _fmt, ##__VA_ARGS__)
-#define cra_log_message(_logname, _level, _fmt, ...)                        \
-    cra_log_message_with_logname(CRA_LOG_NAME, _level, _fmt, ##__VA_ARGS__)
+#define cra_log_message(_level, _fmt, ...) cra_log_message_with_logname(CRA_LOG_NAME, _level, _fmt, ##__VA_ARGS__)
 #endif
 
 #define cra_log_trace_with_logname(_logname, _fmt, ...)                              \
