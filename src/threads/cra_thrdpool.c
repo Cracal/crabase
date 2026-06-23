@@ -38,10 +38,10 @@ static CRA_THRD_FUNC(__cra_thrdpool_worker)
 
     while (cra_blkdeque_pop_left(taskque, &task))
     {
-        cra_atomic_dec32(&pool->idle_threads);
+        cra_atomic_dec(&pool->idle_threads, CRA_MO_ACQUIRE);
         task.args.tid = tid;
         task.func(&task.args);
-        cra_atomic_inc32(&pool->idle_threads);
+        cra_atomic_inc(&pool->idle_threads, CRA_MO_RELEASE);
     }
 
     return (cra_thrd_ret_t){ 0 };

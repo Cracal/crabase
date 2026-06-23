@@ -29,8 +29,8 @@ typedef struct CraMallocBlkNode
 
 static CraMallocBlkNode *__s_malloc_memblk_head = NULL;
 static cra_atomic_flag_t __s_malloc_memblk_lock = CRA_ATOMIC_FLAG_INIT;
-#define CRA_MALLOC_LOCK()   while (cra_atomic_flag_test_and_set(&__s_malloc_memblk_lock))
-#define CRA_MALLOC_UNLOCK() cra_atomic_flag_clear(&__s_malloc_memblk_lock)
+#define CRA_MALLOC_LOCK()   while (cra_atomic_flag_test_and_set(&__s_malloc_memblk_lock, CRA_MO_ACQUIRE))
+#define CRA_MALLOC_UNLOCK() cra_atomic_flag_clear(&__s_malloc_memblk_lock, CRA_MO_RELEASE)
 
 static inline void
 __cra_malloc_set_block(CraMallocBlkNode *node, size_t size, char *file, int line)
