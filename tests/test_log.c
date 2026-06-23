@@ -17,31 +17,32 @@ void
 test_log(void)
 {
 #define CRA_LOG_NAME "TEST-LOG"
-    cra_log_startup(CRA_LOG_LEVEL_TRACE, true, (CraLogTo_i **)cra_logto_stdout_create(false));
-    cra_log_trace("hello trace");
-    cra_log_debug("hello debug");
-    cra_log_info("hello info");
-    cra_log_warn("hello warn");
-    cra_log_error("hello error");
-    cra_log_fatal("hello fatal");
-    cra_log_cleanup();
+    // cra_log_startup(CRA_LOG_LEVEL_TRACE, true, (CraLogTo_i **)cra_logto_stdout_create(false));
+    // cra_log_trace("hello trace");
+    // cra_log_debug("hello debug");
+    // cra_log_info("hello info");
+    // cra_log_warn("hello warn");
+    // cra_log_error("hello error");
+    // cra_log_fatal("hello fatal");
+    // cra_log_cleanup();
 
-    cra_log_fatal("noooooooo!");
+    // cra_log_fatal("noooooooo!");
 
-    cra_log_startup(CRA_LOG_LEVEL_INFO, false, (CraLogTo_i **)cra_logto_stdout_create(true));
-    cra_log_trace("no trace");
-    cra_log_debug("no debug");
-    cra_log_info("output info");
-    cra_log_warn("output warn");
-    cra_log_error("output error");
-    cra_log_fatal("output fatal");
-    cra_log_cleanup();
+    // cra_log_startup(CRA_LOG_LEVEL_INFO, false, (CraLogTo_i **)cra_logto_stdout_create(true));
+    // cra_log_trace("no trace");
+    // cra_log_debug("no debug");
+    // cra_log_info("output info");
+    // cra_log_warn("output warn");
+    // cra_log_error("output error");
+    // cra_log_fatal("output fatal");
+    // cra_log_cleanup();
 
-    cra_log_fatal("noooooooo!!!");
+    // cra_log_fatal("noooooooo!!!");
 
 #undef CRA_LOG_NAME
 }
 
+#if 0
 void
 test_log_out_of_msg_buf(void)
 {
@@ -245,24 +246,25 @@ test_log_time(void)
     cra_log_cleanup();
 #undef CRA_LOG_NAME
 }
+#endif
 
 int
 main(void)
 {
     test_log();
-    cra_sleep(1);
-    test_log_out_of_msg_buf();
-    cra_sleep(1);
-    test_log_multithreads_sync();
-    test_log_multithreads_async();
-    cra_sleep(2);
-    test_log_syn();
-    cra_sleep(1);
-    test_log_asyn();
-    cra_sleep(1);
-    test_log_to_file_sync();
-    test_log_to_file_async();
-    test_log_time();
+    // cra_sleep(1);
+    // test_log_out_of_msg_buf();
+    // cra_sleep(1);
+    // test_log_multithreads_sync();
+    // test_log_multithreads_async();
+    // cra_sleep(2);
+    // test_log_syn();
+    // cra_sleep(1);
+    // test_log_asyn();
+    // cra_sleep(1);
+    // test_log_to_file_sync();
+    // test_log_to_file_async();
+    // test_log_time();
 
     cra_memory_leak_report();
     return 0;

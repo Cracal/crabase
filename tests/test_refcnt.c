@@ -1,11 +1,7 @@
 #include "cra_assert.h"
-#include "cra_log.h"
 #include "cra_malloc.h"
 #include "cra_refcnt.h"
 #include "threads/cra_thread.h"
-
-#undef CRA_LOG_NAME
-#define CRA_LOG_NAME "TestRefcnt"
 
 typedef struct
 {
@@ -20,7 +16,7 @@ test_int100(void *rc)
 {
     CRA_REFCNT_DEF(int) *ref = rc;
     assert_always(*CRA_REFCNT_OBJ(ref) == 100);
-    cra_log_info("test int: %d", *CRA_REFCNT_OBJ(ref));
+    printf("test int: %d\n", *CRA_REFCNT_OBJ(ref));
 }
 
 static void
@@ -28,21 +24,21 @@ test_and_delete_int100_p(void *rc)
 {
     CRA_REFCNT_PTR_DEF(int) *ref = rc;
     assert_always(*CRA_REFCNT_PTR(ref) == 100);
-    cra_log_info("delete int: %d", *CRA_REFCNT_PTR(ref));
+    printf("delete int: %d\n", *CRA_REFCNT_PTR(ref));
     cra_dealloc(CRA_REFCNT_PTR(ref));
 }
 
 static void
 delete_stru(Stru_rc *s)
 {
-    cra_log_info("delete Stru{i: %d, f: %f}", CRA_REFCNT_OBJ(s)->i, CRA_REFCNT_OBJ(s)->f);
+    printf("delete Stru{i: %d, f: %f}\n", CRA_REFCNT_OBJ(s)->i, CRA_REFCNT_OBJ(s)->f);
     cra_dealloc(s);
 }
 
 static void
 delete_stru_p(Stru_rc_p *s)
 {
-    cra_log_info("delete Stru{i: %d, f: %f}", CRA_REFCNT_PTR(s)->i, CRA_REFCNT_PTR(s)->f);
+    printf("delete Stru{i: %d, f: %f}\n", CRA_REFCNT_PTR(s)->i, CRA_REFCNT_PTR(s)->f);
     cra_dealloc(CRA_REFCNT_PTR(s));
 }
 
@@ -145,7 +141,7 @@ test_refcnt_ptr(void)
 static CRA_THRD_FUNC(thread_func)
 {
     Stru_rc *rs = (Stru_rc *)arg;
-    cra_log_info("thread: Stru{i: %d, f: %f}", CRA_REFCNT_OBJ(rs)->i, CRA_REFCNT_OBJ(rs)->f);
+    printf("thread: Stru{i: %d, f: %f}\n", CRA_REFCNT_OBJ(rs)->i, CRA_REFCNT_OBJ(rs)->f);
     cra_refcnt_unref0(CRA_REFCNT_RC(rs));
     return (cra_thrd_ret_t){ 0 };
 }
@@ -179,7 +175,7 @@ static void
 cra_struin_print(CraRefcnt *ref)
 {
     struct StruIn *si = container_of(ref, struct StruIn, ref);
-    cra_log_info("StruIn{i: %d, f: %f}\n", si->i, si->f);
+    printf("StruIn{i: %d, f: %f}\n", si->i, si->f);
 }
 
 static void
@@ -225,14 +221,10 @@ test_ref_inner(void)
 int
 main(void)
 {
-    cra_log_startup(CRA_LOG_LEVEL_TRACE, true, (CraLogTo_i **)cra_logto_stdout_create(false));
-
     test_refcnt();
     test_refcnt_ptr();
     test_multithread();
     test_ref_inner();
-
-    cra_log_cleanup();
 
     cra_memory_leak_report();
     return 0;

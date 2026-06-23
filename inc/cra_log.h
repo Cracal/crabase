@@ -12,6 +12,7 @@
 #define __CRA_LOG_H__
 #include "cra_defs.h"
 
+#if 0
 // default : 8KB
 #define CRA_LOG_MSG_MAX 8192
 
@@ -142,5 +143,8 @@ CRA_API CraLogToFile *
 cra_logto_file_create(bool async, bool with_localtime, const char *path, const char *name, size_t max_file_size);
 
 #endif // end log to file
+#endif
+
+
 
 #endif

@@ -18,6 +18,7 @@
 #include "threads/cra_thread.h"
 #include <stdarg.h>
 
+#if 0
 typedef struct
 {
     short         timezoneoffset;
@@ -185,28 +186,28 @@ cra_log_write_tid_level_logname(char *msg, size_t remaining, CraLogLevel_e level
     return snprintf(msg, remaining, "%-5lu %s %s ", tid, lv, logname);
 }
 
-#define CRA_LOG_WRITE_END()                                      \
-    /* \n */                                                     \
-    if (len >= (int)sizeof(msg) - 1)                             \
-    {                                                            \
-    fix_length:                                                  \
-        len = sizeof(msg) - 1;                                   \
-        msg[len - 4] = '.';                                      \
-        msg[len - 3] = '.';                                      \
-        msg[len - 2] = '.';                                      \
-        msg[len - 1] = '\n';                                     \
-    }                                                            \
-    else                                                         \
-    {                                                            \
-        if (msg[len - 1] != '\n')                                \
-        {                                                        \
-            /* [...XX\0] => [...XX\n\0] */                       \
-            msg[len++] = '\n';                                   \
-            msg[len] = '\0';                                     \
-        }                                                        \
-    }                                                            \
-                                                                 \
-    /* write log */                                              \
+#define CRA_LOG_WRITE_END()                                       \
+    /* \n */                                                      \
+    if (len >= (int)sizeof(msg) - 1)                              \
+    {                                                             \
+    fix_length:                                                   \
+        len = sizeof(msg) - 1;                                    \
+        msg[len - 4] = '.';                                       \
+        msg[len - 3] = '.';                                       \
+        msg[len - 2] = '.';                                       \
+        msg[len - 1] = '\n';                                      \
+    }                                                             \
+    else                                                          \
+    {                                                             \
+        if (msg[len - 1] != '\n')                                 \
+        {                                                         \
+            /* [...XX\0] => [...XX\n\0] */                        \
+            msg[len++] = '\n';                                    \
+            msg[len] = '\0';                                      \
+        }                                                         \
+    }                                                             \
+                                                                  \
+    /* write log */                                               \
     (*s_logger->logto)->append(s_logger->logto, msg, len, level)
 
 void
@@ -926,3 +927,4 @@ cra_logto_file_create(bool async, bool with_localtime, const char *path, const c
 }
 
 #endif // end log to file
+#endif
