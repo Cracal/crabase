@@ -1,15 +1,28 @@
+#include <stdarg.h>
+#include "cra_time.h"
 #include "cra_assert.h"
-#include "cra_log.h"
 #include "cra_malloc.h"
 #include "cra_refcnt.h"
 #include "cra_timewheel.h"
 
-#define CRA_LOG_NAME "test-timewheel"
+static inline void
+printt(const char *fmt, ...)
+{
+    va_list     ap;
+    CraDateTime dt;
+
+    cra_datetime_now_localtime(&dt);
+
+    printf("%4d-%02d-%02d %02d:%02d:%02d.%-3d ", dt.year, dt.mon, dt.day, dt.hour, dt.min, dt.sec, dt.ms);
+    va_start(ap, fmt);
+    vprintf(fmt, ap);
+    va_end(ap);
+}
 
 static void
 on_timeout1(CraTimer_base *timer)
 {
-    cra_log_info("timeout! [timer: 0x%x, tick: %ums, repeat: %u]\n", timer, timer->timeout_ms, timer->repeat);
+    printt("timeout! [timer: 0x%x, tick: %ums, repeat: %u]\n", timer, timer->timeout_ms, timer->repeat);
 }
 
 typedef struct
@@ -28,17 +41,17 @@ on_timeout2(CraTimer_base *timer)
     if (t->t1)
     {
         cra_timer_base_cancel(t->t1);
-        cra_log_info("timeout! [timer: 0x%x, tick: %ums, repeat: %u] kill t1[0x%x]\n",
-                     timer,
-                     timer->timeout_ms,
-                     timer->repeat,
-                     t->t1);
+        printt("timeout! [timer: 0x%x, tick: %ums, repeat: %u] kill t1[0x%x]\n",
+               timer,
+               timer->timeout_ms,
+               timer->repeat,
+               t->t1);
         t->t1 = NULL;
     }
     else
     {
         flag = false;
-        cra_log_info("timeout! [timer: 0x%x]: stop timewheel!", timer);
+        printt("timeout! [timer: 0x%x]: stop timewheel!\n", timer);
     }
 }
 
@@ -83,7 +96,7 @@ static void
 on_free_mytimer2(CraRefcnt *timer)
 {
     CRA_REFCNT_DEF(MyTimer2) *t = (void *)timer;
-    cra_log_info("free MyTimer2{begin: %d, end: \"%s\"}[0x%x]", CRA_REFCNT_OBJ(t)->begin, CRA_REFCNT_OBJ(t)->end, t);
+    printt("free MyTimer2{begin: %d, end: \"%s\"}[0x%x]\n", CRA_REFCNT_OBJ(t)->begin, CRA_REFCNT_OBJ(t)->end, t);
     cra_dealloc(t);
 }
 
@@ -102,13 +115,13 @@ on_timeout3(CraTimer_base *timer)
 {
     MyTimer2 *t = container_of(timer, MyTimer2, base);
     CRA_REFCNT_DEF(MyTimer2) *trc = (void *)container_of(t, CRA_REFCNT_DEF(MyTimer2), o);
-    cra_log_info("timeout! [timer: 0x%x, tick: %ums, repeat: %u, refcnt: %u, begin: %d, end: \"%s\"]",
-                 timer,
-                 timer->timeout_ms,
-                 timer->repeat,
-                 trc->rc.cnt,
-                 t->begin,
-                 t->end);
+    printt("timeout! [timer: 0x%x, tick: %ums, repeat: %u, refcnt: %u, begin: %d, end: \"%s\"]\n",
+           timer,
+           timer->timeout_ms,
+           timer->repeat,
+           trc->rc.cnt,
+           t->begin,
+           t->end);
 }
 
 void
@@ -138,7 +151,7 @@ test_timewheel2(void)
 static void
 stop_timewheel(CraTimer_base *timer)
 {
-    cra_log_info("timer[timeout: %ums, repeat: %u]: stop timing wheel.", timer->timeout_ms, timer->repeat);
+    printt("timer[timeout: %ums, repeat: %u]: stop timing wheel.\n", timer->timeout_ms, timer->repeat);
     flag = false;
 }
 
@@ -166,7 +179,7 @@ test_timeout_less_than_tick(void)
 static void
 on_remove(CraTimer_base *timer)
 {
-    cra_log_info("remove timer[%u, %u].", timer->timeout_ms, timer->repeat);
+    printt("remove timer[%u, %u].\n", timer->timeout_ms, timer->repeat);
     cra_dealloc(timer);
 }
 
@@ -213,14 +226,14 @@ on_timeout_cancel_self(CraTimer_base *timer)
     static int i = 3;
     if (i-- <= 0)
     {
-        cra_log_info("timer[timeout: %ums, repeat: %u]: cancel self", timer->timeout_ms, timer->repeat);
+        printt("timer[timeout: %ums, repeat: %u]: cancel self\n", timer->timeout_ms, timer->repeat);
         // cra_timer_base_cancel(timer);
         // cra_timer_base_cls_active(timer);
         cra_timer_base_set_deactive(timer);
     }
     else
     {
-        cra_log_info("timer[timeout: %ums, repeat: %u]: timeout! ", timer->timeout_ms, timer->repeat);
+        printt("timer[timeout: %ums, repeat: %u]: timeout!\n", timer->timeout_ms, timer->repeat);
     }
 }
 
@@ -250,19 +263,16 @@ test_timer_cancel_self(void)
 int
 main(void)
 {
-    cra_log_startup(CRA_LOG_LEVEL_DEBUG, true, (CraLogTo_i **)cra_logto_stdout_create(false));
-
     test_timewheel();
-    cra_log_info("----------------------- ^_^ -----------------------");
+    printf("----------------------- ^_^ -----------------------\n");
     test_timewheel2();
-    cra_log_info("----------------------- ^_^ -----------------------");
+    printf("----------------------- ^_^ -----------------------\n");
     test_timeout_less_than_tick();
-    cra_log_info("----------------------- ^_^ -----------------------");
+    printf("----------------------- ^_^ -----------------------\n");
     test_timer_clear();
-    cra_log_info("----------------------- ^_^ -----------------------");
+    printf("----------------------- ^_^ -----------------------\n");
     test_timer_cancel_self();
 
-    cra_log_cleanup();
     cra_memory_leak_report();
     return 0;
 }

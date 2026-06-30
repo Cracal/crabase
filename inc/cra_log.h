@@ -12,135 +12,92 @@
 #define __CRA_LOG_H__
 #include "cra_defs.h"
 
-// default : 8KB
-#define CRA_LOG_MSG_MAX 8192
-
-typedef enum CraLogLevel_e
+typedef enum
 {
-    CRA_LOG_LEVEL_TRACE,
-    CRA_LOG_LEVEL_DEBUG,
-    CRA_LOG_LEVEL_INFO,
-    CRA_LOG_LEVEL_WARN,
-    CRA_LOG_LEVEL_ERROR,
-    CRA_LOG_LEVEL_FATAL,
-    CRA_LOG_LEVEL_NO_LOG,
-} CraLogLevel_e;
+    CRA_LOG_LV_TRACE = 0,
+    CRA_LOG_LV_DEBUG,
+    CRA_LOG_LV_INFO,
+    CRA_LOG_LV_WARN,
+    CRA_LOG_LV_ERROR,
+    CRA_LOG_LV_FATAL,
+    CRA_LOG_LV_COUNT,
+#define CRA_LOG_LV_NO_LOG CRA_LOG_LV_COUNT
+} CraLogLv_e;
 
-typedef struct CraLogTo_i CraLogTo_i;
-struct CraLogTo_i
+typedef struct CraLogger CraLogger;
+
+#define CRA_LOG_BUF_SIZE     (4 * 1024 * 1024) // 4MB
+#define CRA_LOG_BUF_MAX_CNT  32
+#define CRA_LOG_BUF_INIT_CNT 2
+
+#define CRA_LOG_FILENAME_MAX     1024
+#define CRA_LOG_OUTPUT_INTERVAL  3000                // 3s
+#define CRA_LOG_FLUSH_INTERVAL   (10 * 60 * 1000)    // 10 min
+#define CRA_LOG_DEFAULT_DIR      "./log/"            // default log dir
+#define CRA_LOG_DEFAULT_FILE_MAX (100 * 1024 * 1024) // 100MB
+
+#define CRA_LOG_NAME_MAX 32
+#define CRA_LOG_LINE_MAX 2048
+
+static inline const char *
+cra_log_level_to_str(CraLogLv_e lv)
 {
-    void (*destroy)(CraLogTo_i **self);
-    void (*append)(CraLogTo_i **self, const char *msg, int len, CraLogLevel_e level);
-};
+    switch (lv)
+    {
+        case CRA_LOG_LV_TRACE:
+            return "TRACE";
+        case CRA_LOG_LV_DEBUG:
+            return "DEBUG";
+        case CRA_LOG_LV_INFO:
+            return "INFO ";
+        case CRA_LOG_LV_WARN:
+            return "WARN ";
+        case CRA_LOG_LV_ERROR:
+            return "ERROR";
+        case CRA_LOG_LV_FATAL:
+            return "FATAL";
+        default:
+            return "INVAL";
+    }
+}
 
-#define CRA_LOGTO_HEAD    const CraLogTo_i **i
-#define CRA_LOGTO_I(_obj) (*(const CraLogTo_i **)(_obj))
+#define cra_log_get_level(_logger)      (*(const CraLogLv_e *)(_logger))
+#define cra_log_set_level(_logger, _lv) ((void)(*(CraLogLv_e *)(_logger) = (_lv)))
 
-#if 1 // Logger
-
-CRA_API CraLogLevel_e
-cra_log_get_level(void);
+CRA_API const char *
+cra_log_get_name(CraLogger *logger);
 
 CRA_API void
-cra_log_set_level(CraLogLevel_e level);
+cra_log_config(CraLogger *logger, unsigned int max_file_size, const char *log_dir);
+
+// use_zulu:
+//     true:  "yyyy-MM-dd HH:mm:ss.SSSZ level tid  msg[ -- file:line]\n"
+//     false: "yyyy-MM-dd HH:mm:ss.SSS+/-hh:00 level tid  msg[ -- file:line]\n"
+//
+// output_to_file: Whether to output to file. (to console: sync; to file: async)
+CRA_API CraLogger *
+cra_log_open(const char *name, CraLogLv_e lv, bool use_zulu, bool output_to_file);
 
 CRA_API void
-cra_log_startup(CraLogLevel_e level, bool with_localtime, CraLogTo_i **logto);
+cra_log_close(CraLogger *logger);
 
 CRA_API void
-cra_log_cleanup(void);
-
-CRA_API void
-cra_log_message_with_logname_with_file_line(const char   *logname,
-                                            CraLogLevel_e level,
-                                            const char   *file,
-                                            int           line,
-                                            const char   *fmt,
-                                            ...);
-CRA_API void
-cra_log_message_with_logname_without_file_line(const char *logname, CraLogLevel_e level, const char *fmt, ...);
+cra_log_msg(CraLogger *logger, CraLogLv_e lv, const char *fmt, ...);
 #ifdef CRA_LOG_FILE_LINE
-#define cra_log_message_with_logname(_logname, _level, _fmt, ...)                                          \
-    cra_log_message_with_logname_with_file_line(_logname, _level, __FILE__, __LINE__, _fmt, ##__VA_ARGS__)
-#define cra_log_message(_level, _fmt, ...) cra_log_message_with_logname(CRA_LOG_NAME, _level, _fmt, ##__VA_ARGS__)
+#define cra_log_msg(_logger, _lv, _fmt, ...)                                                      \
+    (void)((!!(_logger) && cra_log_get_level(_logger) <= (_lv)) &&                                \
+           (cra_log_msg(_logger, _lv, _fmt " -- %s:%d\n", ##__VA_ARGS__, __FILE__, __LINE__), 0))
 #else
-#define cra_log_message_with_logname       cra_log_message_with_logname_without_file_line
-#define cra_log_message(_level, _fmt, ...) cra_log_message_with_logname(CRA_LOG_NAME, _level, _fmt, ##__VA_ARGS__)
+#define cra_log_msg(_logger, _lv, _fmt, ...)                         \
+    (void)((!!(_logger) && cra_log_get_level(_logger) <= (_lv)) &&   \
+           (cra_log_msg(_logger, _lv, _fmt "\n", ##__VA_ARGS__), 0))
 #endif
 
-#define cra_log_trace_with_logname(_logname, _fmt, ...)                              \
-    cra_log_message_with_logname(_logname, CRA_LOG_LEVEL_TRACE, _fmt, ##__VA_ARGS__)
-#define cra_log_debug_with_logname(_logname, _fmt, ...)                              \
-    cra_log_message_with_logname(_logname, CRA_LOG_LEVEL_DEBUG, _fmt, ##__VA_ARGS__)
-#define cra_log_info_with_logname(_logname, _fmt, ...)                              \
-    cra_log_message_with_logname(_logname, CRA_LOG_LEVEL_INFO, _fmt, ##__VA_ARGS__)
-#define cra_log_warn_with_logname(_logname, _fmt, ...)                              \
-    cra_log_message_with_logname(_logname, CRA_LOG_LEVEL_WARN, _fmt, ##__VA_ARGS__)
-#define cra_log_error_with_logname(_logname, _fmt, ...)                              \
-    cra_log_message_with_logname(_logname, CRA_LOG_LEVEL_ERROR, _fmt, ##__VA_ARGS__)
-#define cra_log_fatal_with_logname(_logname, _fmt, ...)                              \
-    cra_log_message_with_logname(_logname, CRA_LOG_LEVEL_FATAL, _fmt, ##__VA_ARGS__)
-
-#define cra_log_trace(_fmt, ...) cra_log_message(CRA_LOG_LEVEL_TRACE, _fmt, ##__VA_ARGS__)
-#define cra_log_debug(_fmt, ...) cra_log_message(CRA_LOG_LEVEL_DEBUG, _fmt, ##__VA_ARGS__)
-#define cra_log_info(_fmt, ...)  cra_log_message(CRA_LOG_LEVEL_INFO, _fmt, ##__VA_ARGS__)
-#define cra_log_warn(_fmt, ...)  cra_log_message(CRA_LOG_LEVEL_WARN, _fmt, ##__VA_ARGS__)
-#define cra_log_error(_fmt, ...) cra_log_message(CRA_LOG_LEVEL_ERROR, _fmt, ##__VA_ARGS__)
-#define cra_log_fatal(_fmt, ...) cra_log_message(CRA_LOG_LEVEL_FATAL, _fmt, ##__VA_ARGS__)
-
-#endif // end Logger
-
-#if 1 // log async
-
-// default: 3s
-#define CRA_LOG_WRITE_INTERVAL (3 * 1000)
-// default: 2MB
-#define CRA_LOG_BUFFER_SIZE    (2 * 1024 * 1024)
-
-typedef struct CraLogAsync CraLogAsync;
-
-typedef void (*cra_log_async_write2logto_fn)(CraLogTo_i **logto, const char *content, size_t len);
-
-typedef struct
-{
-    int         length;
-    const char *buffer;
-} CraLogAsyncBuffer;
-
-CRA_API CraLogAsync *
-cra_log_async_create(cra_log_async_write2logto_fn on_write, CraLogTo_i **logto);
-
-CRA_API void
-cra_log_async_destory(CraLogAsync **pobj);
-
-CRA_API void
-cra_log_async_write(CraLogAsync *obj, const char *msg, int len);
-
-// buffers = [{len1, buf1}, {len2, buf2}, ..., {0}]
-CRA_API void
-cra_log_async_write_array(CraLogAsync *obj, const CraLogAsyncBuffer buffers[]);
-
-#endif // end log async
-
-#if 1 // log to stdout
-
-typedef struct CraLogToStdout CraLogToStdout;
-
-CRA_API CraLogToStdout *
-cra_logto_stdout_create(bool async);
-
-#endif // end log to stdout
-
-#if 1 // log to file
-
-// default: 260 bytes
-#define CRA_LOG_FILENAME_MAX 260
-
-typedef struct CraLogToFile CraLogToFile;
-
-CRA_API CraLogToFile *
-cra_logto_file_create(bool async, bool with_localtime, const char *path, const char *name, size_t max_file_size);
-
-#endif // end log to file
+#define cra_log_trace(_logger, _fmt, ...) cra_log_msg(_logger, CRA_LOG_LV_TRACE, _fmt, ##__VA_ARGS__)
+#define cra_log_debug(_logger, _fmt, ...) cra_log_msg(_logger, CRA_LOG_LV_DEBUG, _fmt, ##__VA_ARGS__)
+#define cra_log_info(_logger, _fmt, ...)  cra_log_msg(_logger, CRA_LOG_LV_INFO, _fmt, ##__VA_ARGS__)
+#define cra_log_warn(_logger, _fmt, ...)  cra_log_msg(_logger, CRA_LOG_LV_WARN, _fmt, ##__VA_ARGS__)
+#define cra_log_error(_logger, _fmt, ...) cra_log_msg(_logger, CRA_LOG_LV_ERROR, _fmt, ##__VA_ARGS__)
+#define cra_log_fatal(_logger, _fmt, ...) cra_log_msg(_logger, CRA_LOG_LV_FATAL, _fmt, ##__VA_ARGS__)
 
 #endif

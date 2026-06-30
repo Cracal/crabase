@@ -13,8 +13,6 @@
 #include "cra_atomic.h"
 
 typedef cra_atomic_int64_t cra_refcnt_t;
-#define __CRA_REFCNT_INC cra_atomic_inc64
-#define __CRA_REFCNT_DEC cra_atomic_dec64
 
 typedef struct CraRefcnt CraRefcnt;
 
@@ -57,13 +55,13 @@ cra_refcnt_init(CraRefcnt *ref, cra_refcnt_release_fn func)
 static inline void
 cra_refcnt_ref(CraRefcnt *ref)
 {
-    __CRA_REFCNT_INC(&ref->cnt);
+    cra_atomic_inc(&ref->cnt, CRA_MO_RELAXED);
 }
 
 static inline bool
 cra_refcnt_unref(CraRefcnt *ref)
 {
-    if (__CRA_REFCNT_DEC(&ref->cnt) == 1)
+    if (cra_atomic_dec(&ref->cnt, CRA_MO_ACQ_REL) == 1)
     {
         if (ref->release)
             ref->release(ref);
@@ -77,8 +75,5 @@ cra_refcnt_unref0(CraRefcnt *ref)
 {
     cra_refcnt_unref(ref);
 }
-
-#undef __CRA_REFCNT_INC
-#undef __CRA_REFCNT_DEC
 
 #endif
