@@ -71,8 +71,8 @@ CRA_API void
 cra_log_config(CraLogger *logger, unsigned int max_file_size, const char *log_dir);
 
 // use_zulu:
-//     true:  "yyyy-MM-dd HH:mm:ss.SSSZ level tid  msg[ -- file:line]\n"
-//     false: "yyyy-MM-dd HH:mm:ss.SSS+/-hh:00 level tid  msg[ -- file:line]\n"
+//     true:  "yyyy-MM-ddTHH:mm:ss.SSSZ level tid  msg[ -- file:line]\n"
+//     false: "yyyy-MM-ddTHH:mm:ss.SSS+/-hh:00 level tid  msg[ -- file:line]\n"
 //
 // output_to_file: Whether to output to file. (to console: sync; to file: async)
 CRA_API CraLogger *
