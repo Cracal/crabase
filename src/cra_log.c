@@ -49,8 +49,8 @@ struct CraLogger
     cra_atomic_int32_t refcnt;
     char               name[CRA_LOG_NAME_MAX];
     short              tz_hour;
-    bool               active   : 4;
-    bool               use_zulu : 4;
+    uint8_t            active   : 4;
+    uint8_t            use_zulu : 4;
     bool               to_file; // if 1, then log to file
     // for async log output(to file) only
     unsigned int       file_size_max;
@@ -383,7 +383,7 @@ cra_log_output_async_append(CraLogger *logger, const char *msg, int len)
             return;
         }
 
-        assert(sizeof(logger->buffer->buf) >= len);
+        assert(sizeof(logger->buffer->buf) >= (size_t)len);
         goto copy_msg;
     }
 
@@ -632,6 +632,7 @@ void(cra_log_msg)(CraLogger *logger, CraLogLv_e lv, const char *fmt, ...)
 
     assert(logger);
     assert(sizeof(msg) > 100);
+    assert(sizeof(msg) <= INT_MAX);
     assert(logger->level <= lv);
 
     if (!logger->active)
@@ -664,7 +665,7 @@ void(cra_log_msg)(CraLogger *logger, CraLogLv_e lv, const char *fmt, ...)
     n += vsnprintf(msg + n, sizeof(msg) - n, fmt, ap);
     va_end(ap);
 
-    if (n >= sizeof(msg))
+    if (n >= (int)sizeof(msg))
     {
         n = sizeof(msg) - 5;
         msg[n++] = '.';
