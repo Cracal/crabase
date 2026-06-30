@@ -8,923 +8,682 @@
  * @copyright Copyright (c) 2021
  *
  */
+#include <stdarg.h>
 #include "cra_log.h"
-#include "collections/cra_llist.h"
-#include "cra_assert.h"
-#include "cra_malloc.h"
 #include "cra_time.h"
-#include "threads/cra_cdl.h"
+#include "cra_atomic.h"
+#include "cra_malloc.h"
 #include "threads/cra_lock.h"
 #include "threads/cra_thread.h"
-#include <stdarg.h>
+#include "collections/cra_alist.h"
+#include "collections/cra_llist.h"
 
-#if 0
-typedef struct
+typedef struct CraLogOutputAsync CraLogOutputAsync;
+typedef struct CraLogBuf         CraLogBuf;
+
+struct CraLogBuf
 {
-    short         timezoneoffset;
-    bool          initialized;
-    bool          with_utc;
-    CraLogLevel_e level;
-    CraLogTo_i  **logto;
-} CraLogger;
-
-static CraLogger *s_logger = NULL;
-
-CraLogLevel_e
-cra_log_get_level(void)
-{
-    assert(s_logger);
-    return s_logger->level;
-}
-
-void
-cra_log_set_level(CraLogLevel_e level)
-{
-    assert(s_logger);
-    s_logger->level = level;
-}
-
-void
-cra_log_startup(CraLogLevel_e level, bool with_localtime, CraLogTo_i **logto)
-{
-    assert(logto);
-    assert(*logto);
-
-    if (s_logger)
-        return;
-
-    s_logger = cra_alloc(CraLogger);
-    if (!s_logger)
-    {
-        fprintf(stderr, "cra_log_startup() failed. can not alloc logger.\n");
-        exit(EXIT_FAILURE);
-    }
-
-    s_logger->initialized = true;
-    s_logger->level = level;
-    s_logger->with_utc = !with_localtime;
-    if (with_localtime)
-    {
-        CraDateTime utc;
-        CraDateTime local;
-        int         utc_mins;
-        int         local_mins;
-        int         diff;
-
-        cra_datetime_now_utc(&utc);
-        cra_datetime_now_localtime(&local);
-        utc_mins = utc.hour * 60 + utc.min;
-        local_mins = local.hour * 60 + local.min;
-        diff = local_mins - utc_mins;
-        if (diff <= -720)
-            diff += 1440;
-        else if (diff > 720)
-            diff -= 1440;
-
-        s_logger->timezoneoffset = (short)(diff / 60);
-    }
-    else
-    {
-        s_logger->timezoneoffset = 0;
-    }
-    s_logger->logto = logto;
-}
-
-void
-cra_log_cleanup(void)
-{
-    if (!s_logger)
-        return;
-
-    (*s_logger->logto)->destroy(s_logger->logto);
-
-    cra_dealloc(s_logger);
-    s_logger = NULL;
-}
-
-static inline const char *
-cra_level_to_str(CraLogLevel_e level)
-{
-    switch (level)
-    {
-        case CRA_LOG_LEVEL_TRACE:
-            return "TRACE";
-        case CRA_LOG_LEVEL_DEBUG:
-            return "DEBUG";
-        case CRA_LOG_LEVEL_INFO:
-            return "INFO ";
-        case CRA_LOG_LEVEL_WARN:
-            return "WARN ";
-        case CRA_LOG_LEVEL_ERROR:
-            return "ERROR";
-        case CRA_LOG_LEVEL_FATAL:
-            return "FATAL";
-        case CRA_LOG_LEVEL_NO_LOG:
-        default:
-            return "UNKNOWN";
-    }
-}
-
-#define CRA_LOG_CHECK(_level)                                                   \
-    if (!s_logger)                                                              \
-    {                                                                           \
-        fprintf(stderr, "Please init Logger(call `cra_log_startup`) first.\n"); \
-        return;                                                                 \
-    }                                                                           \
-                                                                                \
-    if (_level < s_logger->level)                                               \
-    return
-
-static inline int
-cra_log_write_time(char *msg, size_t remaining)
-{
-    CraDateTime dt;
-    int         spaces;
-
-    if (s_logger->with_utc)
-    {
-        cra_datetime_now_utc(&dt);
-        spaces = dt.ms >= 100 ? 1 : (dt.ms >= 10 ? 2 : 3);
-        return snprintf(msg,
-                        remaining,
-                        "%04d-%02d-%02dT%02d:%02d:%02d.%dZ%*.s",
-                        dt.year,
-                        dt.mon,
-                        dt.day,
-                        dt.hour,
-                        dt.min,
-                        dt.sec,
-                        dt.ms,
-                        spaces,
-                        "");
-    }
-    else
-    {
-        cra_datetime_now_localtime(&dt);
-        spaces = dt.ms >= 100 ? 1 : (dt.ms >= 10 ? 2 : 3);
-        return snprintf(msg,
-                        remaining,
-                        "%04d-%02d-%02dT%02d:%02d:%02d.%d%+03hd:00%*.s",
-                        dt.year,
-                        dt.mon,
-                        dt.day,
-                        dt.hour,
-                        dt.min,
-                        dt.sec,
-                        dt.ms,
-                        s_logger->timezoneoffset,
-                        spaces,
-                        "");
-    }
-}
-
-static inline int
-cra_log_write_tid_level_logname(char *msg, size_t remaining, CraLogLevel_e level, const char *logname)
-{
-    cra_tid_t   tid = cra_thrd_get_current_tid();
-    const char *lv = cra_level_to_str(level);
-    return snprintf(msg, remaining, "%-5lu %s %s ", tid, lv, logname);
-}
-
-#define CRA_LOG_WRITE_END()                                       \
-    /* \n */                                                      \
-    if (len >= (int)sizeof(msg) - 1)                              \
-    {                                                             \
-    fix_length:                                                   \
-        len = sizeof(msg) - 1;                                    \
-        msg[len - 4] = '.';                                       \
-        msg[len - 3] = '.';                                       \
-        msg[len - 2] = '.';                                       \
-        msg[len - 1] = '\n';                                      \
-    }                                                             \
-    else                                                          \
-    {                                                             \
-        if (msg[len - 1] != '\n')                                 \
-        {                                                         \
-            /* [...XX\0] => [...XX\n\0] */                        \
-            msg[len++] = '\n';                                    \
-            msg[len] = '\0';                                      \
-        }                                                         \
-    }                                                             \
-                                                                  \
-    /* write log */                                               \
-    (*s_logger->logto)->append(s_logger->logto, msg, len, level)
-
-void
-cra_log_message_with_logname_with_file_line(const char   *logname,
-                                            CraLogLevel_e level,
-                                            const char   *file,
-                                            int           line,
-                                            const char   *fmt,
-                                            ...)
-{
-    int  len;
-    char msg[CRA_LOG_MSG_MAX];
-
-    assert(logname);
-    assert(file);
-    assert(fmt);
-
-    CRA_LOG_CHECK(level);
-
-    // time
-    len = cra_log_write_time(msg, sizeof(msg));
-
-    // tid level logname
-    len += cra_log_write_tid_level_logname(msg + len, sizeof(msg) - len, level, logname);
-    if (len >= (int)sizeof(msg) - 1)
-        goto fix_length;
-
-    // msg
-    va_list ap;
-    va_start(ap, fmt);
-    len += vsnprintf(msg + len, sizeof(msg) - len, fmt, ap);
-    va_end(ap);
-    if (len >= (int)sizeof(msg) - 1)
-        goto fix_length;
-
-    // file:line
-    if (msg[len - 1] == '\n')
-        len--;
-    len += snprintf(msg + len, sizeof(msg) - len, " - %s:%d", file, line);
-
-    CRA_LOG_WRITE_END();
-}
-
-void
-cra_log_message_with_logname_without_file_line(const char *logname, CraLogLevel_e level, const char *fmt, ...)
-{
-    int  len;
-    char msg[CRA_LOG_MSG_MAX];
-
-    assert(logname);
-    assert(fmt);
-
-    CRA_LOG_CHECK(level);
-
-    // time
-    len = cra_log_write_time(msg, sizeof(msg));
-
-    // tid level logname
-    len += cra_log_write_tid_level_logname(msg + len, sizeof(msg) - len, level, logname);
-    if (len >= (int)sizeof(msg) - 1)
-        goto fix_length;
-
-    // msg
-    va_list ap;
-    va_start(ap, fmt);
-    len += vsnprintf(msg + len, sizeof(msg) - len, fmt, ap);
-    va_end(ap);
-    if (len >= (int)sizeof(msg) - 1)
-        goto fix_length;
-
-    CRA_LOG_WRITE_END();
-}
-
-#if 1 // log async
-
-typedef struct
-{
-    size_t current;
-    char   buffer[CRA_LOG_BUFFER_SIZE];
-} CraLogBuffer;
-
-struct CraLogAsync
-{
-    cra_thrd_t  thread;
-    cra_mutex_t mutex;
-    cra_cond_t  cond;
-
-    CraLogBuffer *current;
-    CraLogBuffer *backup;
-    CraLList     *buffers; // LList<CraLogBuffer *>
-
-    CraLogTo_i                 **logto;
-    cra_log_async_write2logto_fn write;
-
-    CraCDL cdl;
-
-    bool started;
+    CraLogger   *log;
+    unsigned int len;
+    char         buf[CRA_LOG_BUF_SIZE];
 };
 
-static inline CraLogBuffer *
-cra_log_buffer_create(void)
+struct CraLogOutputAsync
 {
-    CraLogBuffer *buf = cra_alloc(CraLogBuffer);
+    bool              running;
+    bool              initialized;
+    cra_atomic_flag_t initialized_lock;
+    unsigned int      alloc_buf_cnt;
+    cra_thrd_t        thrd;
+    cra_cond_t        condi;
+    cra_mutex_t       mutex;
+    CraAList          loggers;  // AList<CraLogger *>
+    CraLList         *buffers1; // LList<CraLogBuf *>
+    CraLList         *buffers2; // LList<CraLogBuf *>
+    CraAList          buf_pool; // AList<CraLogBuf *>
+};
+
+struct CraLogger
+{
+    CraLogLv_e         level; // must be first member
+    cra_atomic_int32_t refcnt;
+    char               name[CRA_LOG_NAME_MAX];
+    short              tz_hour;
+    bool               active   : 4;
+    bool               use_zulu : 4;
+    bool               to_file; // if 1, then log to file
+    // for async log output(to file) only
+    unsigned int       file_size_max;
+    unsigned int       file_size_cur;
+    unsigned int       filename_time_start;
+    char               filename[CRA_LOG_FILENAME_MAX];
+    CraLogBuf         *buffer;
+    FILE              *fp;
+    size_t             index; // index in loggers
+    time_t             last_flush;
+    time_t             last_roll;
+};
+
+#define cra_log_ref(_logger) cra_atomic_inc(&(_logger)->refcnt, CRA_MO_RELAXED)
+static inline void
+cra_log_unref(CraLogger *logger)
+{
+    if (cra_atomic_dec(&logger->refcnt, CRA_MO_ACQ_REL) == 1)
+    {
+        assert(!logger->active);
+        assert(logger->buffer == NULL);
+
+        if (logger->fp)
+            fclose(logger->fp);
+
+        cra_dealloc(logger);
+    }
+}
+
+#if 1 // LogOutputAsync
+
+static CraLogOutputAsync s_log_async = { .initialized_lock = CRA_ATOMIC_FLAG_INIT };
+
+#define cra_async_initialized_lock() while (cra_atomic_flag_test_and_set(&s_log_async.initialized_lock, CRA_MO_ACQUIRE))
+#define cra_async_initialized_unlock() cra_atomic_flag_clear(&s_log_async.initialized_lock, CRA_MO_RELEASE)
+
+static CraLogBuf *
+cra_log_output_async_get_buf(void)
+{
+    CraLogBuf *buf = NULL;
+    if (!cra_alist_pop_back(&s_log_async.buf_pool, &buf) && s_log_async.alloc_buf_cnt < CRA_LOG_BUF_MAX_CNT)
+    {
+        buf = cra_alloc(CraLogBuf);
+        if (buf)
+            ++s_log_async.alloc_buf_cnt;
+    }
+
     if (buf)
-        buf->current = 0;
+    {
+        buf->len = 0;
+        buf->log = NULL;
+    }
+
     return buf;
 }
 
 static inline void
-cra_log_buffer_destroy(CraLogBuffer *buf)
+cra_log_output_async_put_buf(CraLogBuf *buf)
 {
-    if (buf)
-        cra_dealloc(buf);
+    cra_alist_append(&s_log_async.buf_pool, &buf);
 }
 
 static inline void
-cra_log_buffer_append(CraLogBuffer *buf, const char *msg, int len)
+cra_log_output_async_del_buf(CraLogBuf *buf)
 {
-    assert(buf);
-    assert(msg);
-    assert(len > 0 && buf->current + len <= CRA_LOG_BUFFER_SIZE);
-    memcpy(buf->buffer + buf->current, msg, len);
-    buf->current += len;
-}
-
-static inline void
-cra_log_buffer_reset(CraLogBuffer *buf)
-{
-    assert(buf);
-    buf->current = 0;
-}
-
-static CRA_THRD_FUNC(cra_log_async_thread)
-{
-    CraLogAsync  *obj = (CraLogAsync *)arg;
-    CraLogBuffer *buf1 = cra_log_buffer_create();
-    CraLogBuffer *buf2 = cra_log_buffer_create();
-    CraLList     *buffers = cra_alloc(CraLList);
-    if (!buf1 || !buf2 || !buffers)
-    {
-        fprintf(stderr, "cra_log_async_thread() failed. can not alloc buffers.\n");
-        exit(EXIT_FAILURE);
-    }
-    if (!cra_llist_init(CraLogBuffer *, buffers))
-    {
-        fprintf(stderr, "cra_log_async_thread() failed. can not init buffers.\n");
-        exit(EXIT_FAILURE);
-    }
-
-    obj->started = true;
-    cra_cdl_count_down(&obj->cdl);
-    while (obj->started)
-    {
-        cra_mutex_lock(&obj->mutex);
-        cra_cond_wait_timeout(&obj->cond, &obj->mutex, CRA_LOG_WRITE_INTERVAL);
-        if (obj->current && obj->current->current > 0)
-        {
-            cra_llist_append(obj->buffers, &obj->current);
-            if (buf1)
-            {
-                obj->current = buf1;
-                buf1 = NULL;
-            }
-            else if (buf2)
-            {
-                obj->current = buf2;
-                buf2 = NULL;
-            }
-            else
-            {
-                obj->current = cra_log_buffer_create();
-                // FIXME: if a new buffer cannot be created, some logs may be lost.
-            }
-        }
-        cra_swap_ptr((void **)&buffers, (void **)&obj->buffers);
-        cra_mutex_unlock(&obj->mutex);
-
-        CraLogBuffer *buf;
-        while (cra_llist_pop_front(buffers, &buf))
-        {
-            obj->write(obj->logto, buf->buffer, buf->current);
-            cra_log_buffer_reset(buf);
-            if (!buf1)
-            {
-                buf1 = buf;
-            }
-            else if (!buf2)
-            {
-                buf2 = buf;
-            }
-            else if (!obj->backup)
-            {
-                cra_mutex_lock(&obj->mutex);
-                if (!obj->backup)
-                    obj->backup = buf;
-                else
-                    cra_log_buffer_destroy(buf);
-                cra_mutex_unlock(&obj->mutex);
-            }
-            else
-            {
-                cra_log_buffer_destroy(buf);
-            }
-        }
-    }
-
-    assert(buffers->count == 0);
-    cra_log_buffer_destroy(buf1);
-    cra_log_buffer_destroy(buf2);
-    cra_llist_uninit(buffers);
-    cra_dealloc(buffers);
-
-    return (cra_thrd_ret_t)0;
-}
-
-void
-cra_log_async_write(CraLogAsync *obj, const char *msg, int len)
-{
-    assert(obj);
-    assert(msg);
-    assert(len > 0);
-
-    cra_mutex_lock(&obj->mutex);
-
-    if (obj->started && obj->current)
-    {
-        if (obj->current->current + len > CRA_LOG_BUFFER_SIZE)
-        {
-            cra_llist_append(obj->buffers, &obj->current);
-            if (obj->backup)
-            {
-                obj->current = obj->backup;
-                obj->backup = NULL;
-            }
-            else
-            {
-                obj->current = cra_log_buffer_create();
-                // FIXME: if a new buffer cannot be created, some logs may be lost.
-            }
-            cra_cond_signal(&obj->cond);
-        }
-        if (obj->current)
-            cra_log_buffer_append(obj->current, msg, len);
-    }
-
-    cra_mutex_unlock(&obj->mutex);
-}
-
-void
-cra_log_async_write_array(CraLogAsync *obj, const CraLogAsyncBuffer buffers[])
-{
-    assert(obj);
-    assert(buffers);
-
-    cra_mutex_lock(&obj->mutex);
-
-    if (obj->started && obj->current)
-    {
-        for (; !!buffers->buffer; buffers++)
-        {
-            if (!obj->current)
-                break;
-            if (obj->current->current + buffers->length > CRA_LOG_BUFFER_SIZE)
-            {
-                cra_llist_append(obj->buffers, &obj->current);
-                if (obj->backup)
-                {
-                    obj->current = obj->backup;
-                    obj->backup = NULL;
-                }
-                else
-                {
-                    obj->current = cra_log_buffer_create();
-                    // FIXME: if a new buffer cannot be created, some logs may be lost.
-                }
-                cra_cond_signal(&obj->cond);
-            }
-            cra_log_buffer_append(obj->current, buffers->buffer, buffers->length);
-        }
-    }
-
-    cra_mutex_unlock(&obj->mutex);
-}
-
-CraLogAsync *
-cra_log_async_create(cra_log_async_write2logto_fn on_write, CraLogTo_i **logto)
-{
-    assert(on_write);
-    assert(logto && *logto);
-
-    CraLogAsync *obj = cra_alloc(CraLogAsync);
-    if (!obj)
-    {
-        fprintf(stderr, "cra_log_async_create() failed. can not alloc logger.\n");
-        exit(EXIT_FAILURE);
-    }
-    cra_mutex_init(&obj->mutex);
-    cra_cond_init(&obj->cond);
-    obj->current = cra_log_buffer_create();
-    obj->backup = cra_log_buffer_create();
-    obj->buffers = cra_alloc(CraLList);
-    if (!obj->current || !obj->backup || !obj->buffers)
-    {
-        fprintf(stderr, "cra_log_async_create() failed. can not alloc buffers.\n");
-        exit(EXIT_FAILURE);
-    }
-    if (!cra_llist_init(CraLogBuffer *, obj->buffers))
-    {
-        fprintf(stderr, "cra_log_async_create() failed. can not init buffers.\n");
-        exit(EXIT_FAILURE);
-    }
-    obj->started = false; // set to `true` in thread func
-    obj->logto = logto;
-    obj->write = on_write;
-    cra_cdl_init(&obj->cdl, 1);
-    assert_always(cra_thrd_create(&obj->thread, cra_log_async_thread, obj));
-    cra_cdl_wait(&obj->cdl);
-    return obj;
-}
-
-void
-cra_log_async_destory(CraLogAsync **pobj)
-{
-    assert(pobj && *pobj);
-    assert((*pobj)->started);
-
-    cra_mutex_lock(&(*pobj)->mutex);
-    (*pobj)->started = false;
-    cra_cond_broadcast(&(*pobj)->cond);
-    cra_mutex_unlock(&(*pobj)->mutex);
-
-    cra_thrd_join((*pobj)->thread);
-
-    CraLogBuffer *buf;
-    while (cra_llist_pop_front((*pobj)->buffers, &buf))
-    {
-        (*pobj)->write((*pobj)->logto, buf->buffer, buf->current);
-        cra_log_buffer_destroy(buf);
-    }
-    cra_log_buffer_destroy((*pobj)->current);
-    cra_log_buffer_destroy((*pobj)->backup);
-    cra_llist_uninit((*pobj)->buffers);
-    cra_dealloc((*pobj)->buffers);
-    cra_mutex_destroy(&(*pobj)->mutex);
-    cra_cond_destroy(&(*pobj)->cond);
-    cra_cdl_uninit(&(*pobj)->cdl);
-
-    cra_dealloc(*pobj);
-    *pobj = NULL;
-}
-
-#endif // end log async
-
-#if 1 // log to stdout
-
-struct CraLogToStdout
-{
-    CRA_LOGTO_HEAD;
-    CraLogAsync *async;
-    bool         is_working;
-};
-
-#define CRA_COLOR_RESET "\033[0m"
-
-#define CRA_COLOR_GRAY   "\033[30m"
-#define CRA_COLOR_GREEN  "\033[32m"
-#define CRA_COLOR_BLUE   "\033[34m"
-#define CRA_COLOR_YELLOW "\033[33m"
-#define CRA_COLOR_RED    "\033[31m"
-#define CRA_COLOR_BG_RED "\033[41m"
-
-static inline const char *
-cra_get_color_fmt(CraLogLevel_e level)
-{
-    switch (level)
-    {
-        case CRA_LOG_LEVEL_TRACE:
-            return CRA_COLOR_GRAY;
-        case CRA_LOG_LEVEL_DEBUG:
-            return CRA_COLOR_GREEN;
-        case CRA_LOG_LEVEL_INFO:
-            return CRA_COLOR_BLUE;
-        case CRA_LOG_LEVEL_WARN:
-            return CRA_COLOR_YELLOW;
-        case CRA_LOG_LEVEL_ERROR:
-            return CRA_COLOR_RED;
-        case CRA_LOG_LEVEL_FATAL:
-            return CRA_COLOR_BG_RED;
-
-        default:
-            assert_always(false);
-            return NULL;
-    }
+    cra_dealloc(buf);
 }
 
 static void
-cra_logto_stdout_append(CraLogTo_i **self, const char *msg, int msglen, CraLogLevel_e level)
+cra_log_output_async_roll_file(CraLogger *log, time_t now, time_t day)
 {
-    assert(msg);
-    assert(self);
-    assert(msglen > 0);
-    assert(level >= CRA_LOG_LEVEL_TRACE && level <= CRA_LOG_LEVEL_FATAL);
-
-    CraLogToStdout *obj = (CraLogToStdout *)self;
-    assert(obj->is_working);
-    const char *color = cra_get_color_fmt(level);
-    if (obj->async)
+    // if user is not call cra_log_config(), then use default config
+    if (log->file_size_max == 0)
     {
-        CraLogAsyncBuffer msg_with_color[] = {
-            { .length = 5, .buffer = color },
-            { .length = msglen, .buffer = msg },
-            { .length = 4, .buffer = CRA_COLOR_RESET },
-            { 0 },
-        };
-        cra_log_async_write_array(obj->async, msg_with_color);
+        cra_log_config(log, CRA_LOG_DEFAULT_FILE_MAX, CRA_LOG_DEFAULT_DIR);
     }
-    else
+
+    // close old file if exists
+    if (log->fp)
     {
-        fprintf(stdout, "%s%.*s%s", color, msglen, msg, CRA_COLOR_RESET);
+        fclose(log->fp);
+        log->last_flush = now;
     }
-}
 
-static void
-cra_logto_stdout_write(CraLogTo_i **self, const char *content, size_t len)
-{
-    assert(content);
-    assert(len > 0);
-    CRA_UNUSED_VALUE(self);
-    fwrite(content, len, 1, stdout);
-}
+    // make new filename
+    // "path/to/logname_yyyyMMdd_hhmmss_SSS.log"
+    // "path/to/logname_yyyyMMdd_hhmmss_SSSZ.log"
 
-static void
-cra_logto_stdout_destroy(CraLogTo_i **self)
-{
-    assert(self);
-    CraLogToStdout *obj = (CraLogToStdout *)self;
-    assert(obj->is_working);
-    obj->is_working = false;
-    if (obj->async)
-        cra_log_async_destory(&obj->async);
-    cra_dealloc(self);
-}
-
-CraLogToStdout *
-cra_logto_stdout_create(bool async)
-{
-    static CraLogTo_i s_i = {
-        .destroy = cra_logto_stdout_destroy,
-        .append = cra_logto_stdout_append,
-    };
-
-    CraLogToStdout *obj = cra_alloc(CraLogToStdout);
-    if (!obj)
-    {
-        fprintf(stderr, "cra_logto_stdout_create() failed. can not alloc CraLogToStdout.\n");
-        exit(EXIT_FAILURE);
-    }
-    CRA_LOGTO_I(obj) = &s_i;
-    obj->is_working = true;
-    obj->async = async ? cra_log_async_create(cra_logto_stdout_write, (CraLogTo_i **)obj) : NULL;
-    return obj;
-}
-
-#endif // end log to stdout
-
-#if 1 // log to file
-
-#if 1 // file
-
-#ifdef CRA_COMPILER_MSVC
-#include <direct.h> // for _mkdir
-#include <io.h>     // for _access
-
-#define strdup              _strdup
-#define exist(_name)        _access(_name, 0)
-#define mkdir(_path, _mode) _mkdir(_path)
-
-#define fopen cra_fopen
-static inline FILE *
-cra_fopen(const char *name, const char *mode)
-{
-    FILE *fp;
-    if (0 != fopen_s(&fp, name, mode))
-        return NULL;
-    return fp;
-}
-
-#else
-#include <sys/stat.h>
-
-#define exist(_name) access(_name, F_OK)
-#ifdef CRA_COMPILER_MINGW
-#define mkdir(_path, _mode) mkdir(_path)
-#endif
-
-#endif
-
-static int
-cra_mkdirs(const char *path, int mode)
-{
-    size_t i = 0;
-    int    ret = -1;
-    char  *p = NULL; // path;
-
-    assert(path);
-    CRA_UNUSED_VALUE(mode);
-
-    if (0 == exist(path))
-        return 0;
-    if (0 == mkdir(path, mode))
-        return 0;
-
-    if (!(p = strdup(path)))
-        return -1;
-
-    for (; p[i] != '\0'; i++)
-    {
-        if ((p[i] != '/' && p[i] != '\\') || i == 0)
-            continue;
-
-        p[i] = '\0';
-        if (0 != exist(p))
-        {
-            if (0 != (ret = mkdir(p, 0755)))
-                goto end;
-        }
-        p[i] = '/';
-    }
-    if (p[i - 1] != '/')
-        ret = mkdir(path, mode);
-end:
-    free(p);
-    return ret;
-}
-#define mkdirs cra_mkdirs
-
-#endif // end file
-
-struct CraLogToFile
-{
-    CRA_LOGTO_HEAD;
-    CraLogAsync *async;
-    FILE        *fp;
-    size_t       cur_size; // current file size
-    size_t       max_size; // max file size
-    char         filename[CRA_LOG_FILENAME_MAX];
-    cra_mutex_t  mutex;      // for `cur_size`
-    unsigned int time_index; // point to the time string head in filename
-    bool         is_working;
-    bool         with_localtime;
-};
-
-// filename: path/to/name_sync_yyyyMMddThhmmss_ms[Z].log
-
-#define CRA_LOG_LOG_FILE_TIME_UTC      "%04d%02d%02dT%02d%02d%02d_%dZ.log"
-#define CRA_LOG_LOG_FILE_TIME_LOCAL    "%04d%02d%02dT%02d%02d%02d_%d.log"
-#define CRA_LOG_FILENAME_DATETIME_SIZE sizeof(".yyyyMMddThhmmss_mssZ.log")
-
-#define CRA_CLOSE_FILE(_fp) \
-    do                      \
-    {                       \
-        if (_fp)            \
-        {                   \
-            fclose(_fp);    \
-            _fp = NULL;     \
-        }                   \
-    } while (0)
-
-static void
-cra_logto_file_open_file(CraLogToFile *obj)
-{
-    assert(obj);
-    assert(!obj->fp);
     CraDateTime dt;
-    const char *datetime_fmt;
-    if (obj->with_localtime)
-    {
-        datetime_fmt = CRA_LOG_LOG_FILE_TIME_LOCAL;
-        cra_datetime_now_localtime(&dt);
-    }
-    else
-    {
-        datetime_fmt = CRA_LOG_LOG_FILE_TIME_UTC;
+    if (log->use_zulu)
         cra_datetime_now_utc(&dt);
-    }
-    snprintf(obj->filename + obj->time_index,
-             CRA_LOG_FILENAME_DATETIME_SIZE,
-             datetime_fmt,
+    else
+        cra_datetime_now_localtime(&dt);
+
+    snprintf(log->filename + log->filename_time_start,
+             sizeof(log->filename) - log->filename_time_start,
+             "%04d%02d%02d_%02d%02d%02d_%d%s.log",
              dt.year,
              dt.mon,
              dt.day,
              dt.hour,
              dt.min,
              dt.sec,
-             dt.ms);
-    obj->cur_size = 0;
-    obj->fp = fopen(obj->filename, "w");
-    if (!obj->fp)
-        fprintf(stderr, "Logger: open file[%s] error(%d).\n", obj->filename, cra_get_last_error());
+             dt.ms,
+             log->use_zulu ? "Z" : "");
+
+// open new file
+#ifdef CRA_OS_WIN
+    if (fopen_s(&log->fp, log->filename, "a+") != 0)
+#else
+    if ((log->fp = fopen(log->filename, "a+e")) == NULL)
+#endif
+    {
+        fprintf(stderr, "Logger: failed to open file `%s`.\n", log->filename);
+        return;
+    }
+
+    log->last_roll = day;
+    log->file_size_cur = 0;
 }
 
 static void
-cra_logto_file_write(CraLogTo_i **self, const char *content, size_t len)
+cra_log_output_async_write_to_file(CraLogBuf *buf)
 {
-    assert(self);
-    assert(content);
-    assert(len > 0);
-    CRA_UNUSED_VALUE(self);
-    CraLogToFile *obj = (CraLogToFile *)self;
-    if (obj->fp)
+    time_t     day;
+    time_t     now;
+    CraLogger *log;
+
+    assert(buf);
+    assert(buf->log);
+    assert(buf->len > 0);
+
+    log = buf->log;
+
+    now = time(NULL);
+    day = now / (24 * 60 * 60);
+
+    // create new file conditions:
+    // 1. fp is NULL (check before write)
+    // 2. file size exceeds max_file_size (check after write)
+    // 3. day changes (check after write)
+
+    // 1. 2.
+    if (log->fp == NULL || day != log->last_roll)
     {
-        fwrite(content, len, 1, obj->fp);
-        obj->cur_size += len;
-        if (obj->cur_size >= obj->max_size)
+        cra_log_output_async_roll_file(log, now, day);
+        if (log->fp == NULL)
+            return; // XXX: drop log
+    }
+
+    // write to file
+    fwrite(buf->buf, buf->len, 1, log->fp);
+    log->file_size_cur += buf->len;
+
+    // 3.
+    if (log->file_size_cur + buf->len > log->file_size_max)
+    {
+        cra_log_output_async_roll_file(log, now, day);
+    }
+
+    // check if need to flush file
+    else if (now - log->last_flush > CRA_LOG_FLUSH_INTERVAL)
+    {
+        fflush(log->fp);
+        log->last_flush = now;
+    }
+}
+
+static CRA_THRD_FUNC(cra_log_output_async_thread)
+{
+    CraLogBuf *buf;
+    CraLogger *logger;
+
+    CRA_UNUSED_VALUE(arg);
+
+    while (s_log_async.running)
+    {
+        cra_mutex_lock(&s_log_async.mutex);
+        while (s_log_async.buffers1->count == 0 && s_log_async.running)
         {
-            // create a new file
-            CRA_CLOSE_FILE(obj->fp);
-            cra_logto_file_open_file(obj);
+            cra_cond_wait_timeout(&s_log_async.condi, &s_log_async.mutex, CRA_LOG_OUTPUT_INTERVAL);
+
+            for (size_t i = 0; i < s_log_async.loggers.count; ++i)
+            {
+                if (!cra_alist_get(&s_log_async.loggers, i, &logger) || (!logger->buffer || logger->buffer->len == 0))
+                    continue;
+
+                cra_log_ref(logger);
+                logger->buffer->log = logger;
+                cra_llist_append(s_log_async.buffers1, &logger->buffer);
+                logger->buffer = cra_log_output_async_get_buf();
+            }
+        }
+
+        cra_swap_ptr((void **)&s_log_async.buffers1, (void **)&s_log_async.buffers2);
+
+        cra_mutex_unlock(&s_log_async.mutex);
+
+        while (cra_llist_pop_front(s_log_async.buffers2, &buf))
+        {
+            cra_log_output_async_write_to_file(buf);
+            cra_log_unref(buf->log);
+
+            cra_mutex_lock(&s_log_async.mutex);
+            cra_log_output_async_put_buf(buf);
+            cra_mutex_unlock(&s_log_async.mutex);
         }
     }
-    else
+
+    while (cra_llist_pop_front(s_log_async.buffers1, &buf))
     {
-        fprintf(stderr, "Logger: no log file.\n");
+        cra_log_output_async_write_to_file(buf);
+        cra_log_unref(buf->log);
+
+        cra_log_output_async_del_buf(buf);
     }
+
+    return (cra_thrd_ret_t)0;
 }
 
 static void
-cra_logto_file_append(CraLogTo_i **self, const char *msg, int msglen, CraLogLevel_e level)
+cra_log_output_async_init(void)
 {
-    assert(self);
-    assert(msg);
-    assert(msglen > 0);
-    assert(level >= CRA_LOG_LEVEL_TRACE && level <= CRA_LOG_LEVEL_FATAL);
-    CraLogToFile *obj = (CraLogToFile *)self;
-    CRA_UNUSED_VALUE(level);
-    assert(obj->is_working);
-    if (obj->async)
+    assert(!s_log_async.initialized);
+
+    s_log_async.running = true;
+    s_log_async.initialized = true;
+    s_log_async.alloc_buf_cnt = CRA_LOG_BUF_INIT_CNT;
+
+    cra_cond_init(&s_log_async.condi);
+    cra_mutex_init(&s_log_async.mutex);
+
+    if (!cra_alist_init(CraLogger *, &s_log_async.loggers))
     {
-        cra_log_async_write(obj->async, msg, msglen);
-    }
-    else
-    {
-        cra_mutex_lock(&obj->mutex);
-        cra_logto_file_write(self, msg, msglen);
-        cra_mutex_unlock(&obj->mutex);
-    }
-}
-
-static void
-cra_logto_file_destroy(CraLogTo_i **self)
-{
-    assert(self);
-    CraLogToFile *obj = (CraLogToFile *)self;
-    assert(obj->is_working);
-    obj->is_working = false;
-    if (obj->async)
-        cra_log_async_destory(&obj->async);
-    CRA_CLOSE_FILE(obj->fp);
-    cra_mutex_destroy(&obj->mutex);
-    cra_dealloc(self);
-}
-
-CraLogToFile *
-cra_logto_file_create(bool async, bool with_localtime, const char *path, const char *name, size_t max_file_size)
-{
-    assert(path);
-    assert(name);
-    assert(max_file_size > 1024);
-
-    static CraLogTo_i s_i = {
-        .destroy = cra_logto_file_destroy,
-        .append = cra_logto_file_append,
-    };
-
-    size_t path_len = strnlen(path, 8192);
-    size_t name_len = strnlen(name, 8192);
-    assert_always(name_len > 0 && path_len + name_len + CRA_LOG_FILENAME_DATETIME_SIZE <= CRA_LOG_FILENAME_MAX);
-
-    CraLogToFile *obj = cra_alloc(CraLogToFile);
-    if (!obj)
-    {
-        fprintf(stderr, "cra_logto_file_create() failed. can not alloc CraLogToFile.\n");
+        fprintf(stderr, "Logger: failed to init loggers.\n");
         exit(EXIT_FAILURE);
     }
-    CRA_LOGTO_I(obj) = &s_i;
-    cra_mutex_init(&obj->mutex);
-    obj->time_index = (unsigned int)(path_len + name_len + 1); // "path/to/name_"
-    // is path end with '/'?
-    if (path_len > 0 && path[path_len - 1] != '/')
+
+    s_log_async.buffers1 = cra_alloc(CraLList);
+    s_log_async.buffers2 = cra_alloc(CraLList);
+    if (!s_log_async.buffers1 || !s_log_async.buffers2)
     {
-        snprintf(obj->filename, sizeof(obj->filename), "%s/%s_", path, name);
-        obj->time_index += 1; // '/'
+        fprintf(stderr, "Logger: failed to create buffers.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (!cra_llist_init(CraLogBuf *, s_log_async.buffers1) || !cra_llist_init(CraLogBuf *, s_log_async.buffers2))
+    {
+        fprintf(stderr, "Logger: failed to init buffers.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (!cra_alist_init(CraLogBuf *, &s_log_async.buf_pool))
+    {
+        fprintf(stderr, "Logger: failed to init buf pool.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    for (unsigned int i = 0; i < s_log_async.alloc_buf_cnt; ++i)
+    {
+        CraLogBuf *buf = cra_alloc(CraLogBuf);
+        if (!buf)
+        {
+            fprintf(stderr, "Logger: failed to create log buffer.\n");
+            exit(EXIT_FAILURE);
+        }
+        cra_alist_append(&s_log_async.buf_pool, &buf);
+    }
+
+    // create thread
+    if (!cra_thrd_create(&s_log_async.thrd, cra_log_output_async_thread, NULL))
+    {
+        fprintf(stderr, "Logger: failed to create log output async thread.\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
+static void
+cra_log_output_async_uninit(void)
+{
+    assert(!s_log_async.running);
+    assert(s_log_async.initialized);
+    assert(s_log_async.loggers.count == 0);
+    assert(s_log_async.buffers1->count == 0);
+    assert(s_log_async.buffers2->count == 0);
+
+    s_log_async.initialized = false;
+    s_log_async.alloc_buf_cnt = 0;
+
+    cra_cond_destroy(&s_log_async.condi);
+    cra_mutex_destroy(&s_log_async.mutex);
+
+    cra_alist_uninit(&s_log_async.loggers);
+
+    cra_llist_uninit(s_log_async.buffers1);
+    cra_llist_uninit(s_log_async.buffers2);
+    cra_dealloc(s_log_async.buffers1);
+    cra_dealloc(s_log_async.buffers2);
+
+    CraLogBuf *buf;
+    while (cra_alist_pop_back(&s_log_async.buf_pool, &buf))
+    {
+        cra_dealloc(buf);
+    }
+
+    cra_alist_uninit(&s_log_async.buf_pool);
+}
+
+static void
+cra_log_output_async_append(CraLogger *logger, const char *msg, int len)
+{
+    assert(logger->active);
+    assert(s_log_async.initialized);
+
+    cra_mutex_lock(&s_log_async.mutex);
+
+    if (!s_log_async.running)
+        goto end;
+
+    if (!logger->buffer)
+    {
+    get_new_buf:
+        logger->buffer = cra_log_output_async_get_buf();
+        if (!logger->buffer)
+        {
+#ifdef _DEBUG
+            fprintf(stderr, "Logger: no log buffer available, this message will be dropped.\n");
+#endif
+            cra_mutex_unlock(&s_log_async.mutex);
+            return;
+        }
+
+        assert(sizeof(logger->buffer->buf) >= len);
+        goto copy_msg;
+    }
+
+    if (logger->buffer->len + len > sizeof(logger->buffer->buf))
+    {
+        cra_log_ref(logger);
+        logger->buffer->log = logger;
+        cra_llist_append(s_log_async.buffers1, &logger->buffer);
+        cra_cond_signal(&s_log_async.condi);
+        goto get_new_buf;
+    }
+
+copy_msg:
+    memcpy(logger->buffer->buf + logger->buffer->len, msg, len);
+    logger->buffer->len += len;
+
+end:
+    cra_mutex_unlock(&s_log_async.mutex);
+}
+
+static void
+cra_log_output_async_add_logger(CraLogger *logger)
+{
+    assert(logger->active);
+
+    if (!s_log_async.initialized)
+    {
+        cra_async_initialized_lock();
+        if (!s_log_async.initialized)
+            cra_log_output_async_init();
+        cra_async_initialized_unlock();
+    }
+
+    cra_log_ref(logger);
+
+    cra_mutex_lock(&s_log_async.mutex);
+    logger->index = s_log_async.loggers.count;
+    logger->buffer = cra_log_output_async_get_buf();
+    cra_alist_append(&s_log_async.loggers, &logger);
+    cra_mutex_unlock(&s_log_async.mutex);
+}
+
+static void
+cra_log_output_async_del_logger(CraLogger *logger)
+{
+    CraLogger *last_logger;
+
+    assert(!logger->active);
+    assert(s_log_async.running);
+
+    cra_mutex_lock(&s_log_async.mutex);
+
+    // pop last logger
+    if (!cra_alist_pop_back(&s_log_async.loggers, &last_logger))
+    {
+        cra_mutex_unlock(&s_log_async.mutex);
+        fprintf(stderr, "Logger: no logger found.\n");
+        exit(EXIT_FAILURE);
+    }
+    // if last logger is not logger, insert it to logger index position
+    if (last_logger != logger)
+    {
+        last_logger->index = logger->index;
+        cra_alist_set(&s_log_async.loggers, logger->index, &last_logger);
+    }
+
+    if (logger->buffer)
+    {
+        if (logger->buffer->len > 0)
+        {
+            cra_log_ref(logger);
+            logger->buffer->log = logger;
+            cra_llist_append(s_log_async.buffers1, &logger->buffer);
+            cra_cond_signal(&s_log_async.condi);
+        }
+        else
+        {
+            cra_log_output_async_put_buf(logger->buffer);
+        }
+        logger->buffer = NULL;
+    }
+
+    if (s_log_async.loggers.count == 0)
+    {
+        s_log_async.running = false;
+        cra_cond_signal(&s_log_async.condi);
+
+        cra_mutex_unlock(&s_log_async.mutex);
+
+        cra_thrd_join(s_log_async.thrd);
+        cra_log_output_async_uninit();
     }
     else
     {
-        snprintf(obj->filename, sizeof(obj->filename), "%s%s_", path, name);
+        cra_mutex_unlock(&s_log_async.mutex);
     }
-    obj->fp = NULL;
-    obj->cur_size = 0;
-    obj->is_working = true;
-    obj->max_size = max_file_size;
-    obj->with_localtime = with_localtime;
-    // mkdir
+
+    cra_log_unref(logger);
+}
+
+#endif // end LogOutputAsync
+
+#if 1 // Logger
+
+const char *
+cra_log_get_name(CraLogger *logger)
+{
+    return logger->name;
+}
+
+// "path/to/logname_yyyyMMdd_hhmmss_SSSZ.log"
+// "path/to/logname_yyyyMMdd_hhmmss_SSS.log"
+static void
+cra_log_make_log_dir(CraLogger *logger, const char *path)
+{
+    assert(path);
+    assert(logger);
+
+    size_t name_len = strnlen(logger->name, CRA_LOG_NAME_MAX);
+    size_t path_len = strnlen(path, CRA_LOG_FILENAME_MAX);
+    size_t index = 0;
+
     if (path_len > 0)
     {
-        if (mkdirs(path, 0755) != 0)
+        size_t n = path_len + name_len + sizeof("/_yyyyMMdd_hhmmss_SSS.log") + (logger->use_zulu ? 1 : 0);
+        if (n > CRA_LOG_FILENAME_MAX)
         {
-            int err = cra_get_last_error();
-            fprintf(stderr, "Logger: mkdirs(%s) failed. error: %d.\n", path, err);
+            if (!CRA_IS_PATH_SEP(path[path_len - 1]) || (n - 1) > CRA_LOG_FILENAME_MAX)
+            {
+                fprintf(stderr, "Logger: `path` is too long.\n");
+                exit(EXIT_FAILURE);
+            }
+        }
+
+        memcpy(logger->filename, path, path_len);
+        if (!CRA_IS_PATH_SEP(logger->filename[path_len - 1]))
+            logger->filename[path_len++] = CRA_PATH_SEP1;
+        logger->filename[path_len] = '\0';
+
+        // create log dir if it does not exist
+        int err = cra_mkdirs(logger->filename, 0755);
+        if (err != 0)
+        {
+            fprintf(stderr, "Logger: failed to create log dir `%s` with error code %d.\n", logger->filename, err);
             exit(EXIT_FAILURE);
         }
     }
-    // open file
-    cra_logto_file_open_file(obj);
-    obj->async = async ? cra_log_async_create(cra_logto_file_write, (CraLogTo_i **)obj) : NULL;
-    return obj;
+
+    memcpy(logger->filename + path_len, logger->name, name_len);
+    index = path_len + name_len;
+    logger->filename[index++] = '_';
+    logger->filename[index] = '\0';
+    logger->filename_time_start = (unsigned int)index;
 }
 
-#endif // end log to file
-#endif
+void
+cra_log_config(CraLogger *logger, unsigned int max_file_size, const char *log_dir)
+{
+    assert(logger);
+    assert(log_dir);
+    assert(logger->to_file);
+    assert(max_file_size >= CRA_LOG_BUF_SIZE);
+
+    logger->file_size_max = max_file_size;
+    cra_log_make_log_dir(logger, log_dir);
+}
+
+CraLogger *
+cra_log_open(const char *name, CraLogLv_e lv, bool use_zulu, bool output_to_file)
+{
+    CraLogger *logger;
+
+    assert(name);
+
+    logger = cra_alloc(CraLogger);
+    if (!logger)
+    {
+        fprintf(stderr, "Logger: failed to create logger.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    bzero(logger, sizeof(*logger));
+
+    logger->level = lv;
+    logger->refcnt = 1;
+    logger->active = true;
+    logger->use_zulu = use_zulu;
+    logger->to_file = output_to_file;
+    snprintf(logger->name, sizeof(logger->name), "%s", name);
+
+    if (!use_zulu)
+    {
+        time_t    now, local, utc;
+        struct tm local_tm, utc_tm;
+
+        now = time(NULL);
+        cra_gmtime(now, &utc_tm);
+        cra_localtime(now, &local_tm);
+
+        local = mktime(&local_tm);
+        utc = mktime(&utc_tm);
+
+        logger->tz_hour = (short)((local - utc) / (3600));
+    }
+
+    if (output_to_file)
+        cra_log_output_async_add_logger(logger);
+
+    return logger;
+}
+
+void
+cra_log_close(CraLogger *logger)
+{
+    assert(logger);
+    logger->active = false;
+    if (logger->to_file)
+        cra_log_output_async_del_logger(logger);
+    cra_log_unref(logger);
+}
+
+static inline void
+cra_log_sync_append(char *msg, size_t n, CraLogLv_e lv)
+{
+    // TRACE: white
+    // DEBUG: green
+    // INFO:  blue
+    // WARN:  yellow
+    // ERROR: red
+    // FATAL: bold red
+    // RESET: no color
+    static const char *lv_colors[] = { "\033[0;37m", "\033[0;32m", "\033[0;34m", "\033[0;33m",
+                                       "\033[0;31m", "\033[1;31m", "\033[0m" };
+
+    msg[n - 1] = '\0';
+    printf("%s%s%s\n", lv_colors[lv], msg, lv_colors[6]);
+}
+
+void(cra_log_msg)(CraLogger *logger, CraLogLv_e lv, const char *fmt, ...)
+{
+    int         s;
+    int         n;
+    va_list     ap;
+    CraDateTime dt;
+    char        msg[CRA_LOG_LINE_MAX];
+
+    assert(logger);
+    assert(sizeof(msg) > 100);
+    assert(logger->level <= lv);
+
+    if (!logger->active)
+        return;
+
+    // format time
+
+    if (logger->use_zulu)
+    {
+        cra_datetime_now_utc(&dt);
+        n = snprintf(msg + 20, sizeof(msg) - 20, "%dZ", dt.ms);
+        s = 5 - n;
+    }
+    else
+    {
+        cra_datetime_now_localtime(&dt);
+        n = snprintf(msg + 20, sizeof(msg) - 20, "%d%+03hd:00", dt.ms, logger->tz_hour);
+        s = 10 - n;
+    }
+    n += snprintf(msg, 20, "%4d-%02d-%02dT%02d:%02d:%02d", dt.year, dt.mon, dt.day, dt.hour, dt.min, dt.sec);
+    msg[19] = '.';
+    ++n;
+
+    // format level & tid
+    n +=
+      snprintf(msg + n, sizeof(msg) - n, "%*.s%s %-8lu", s, "", cra_log_level_to_str(lv), cra_thrd_get_current_tid());
+
+    // format message
+    va_start(ap, fmt);
+    n += vsnprintf(msg + n, sizeof(msg) - n, fmt, ap);
+    va_end(ap);
+
+    if (n >= sizeof(msg))
+    {
+        n = sizeof(msg) - 5;
+        msg[n++] = '.';
+        msg[n++] = '.';
+        msg[n++] = '.';
+        msg[n++] = '\n';
+        msg[n] = '\0';
+    }
+
+    if (logger->to_file)
+    {
+        // log to file
+        cra_log_output_async_append(logger, msg, n);
+    }
+    else
+    {
+        // log to console
+        cra_log_sync_append(msg, n, lv);
+    }
+}
+
+#endif // end Logger
