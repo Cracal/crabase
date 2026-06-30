@@ -110,6 +110,14 @@ typedef enum
 
 #endif
 
+#ifdef CRA_FORCE_SEQ_CST_ATOMICS
+#define CRA_MO_RELAXED CRA_MO_SEQ_CST
+#define CRA_MO_CONSUME CRA_MO_SEQ_CST
+#define CRA_MO_ACQUIRE CRA_MO_SEQ_CST
+#define CRA_MO_RELEASE CRA_MO_SEQ_CST
+#define CRA_MO_ACQ_REL CRA_MO_SEQ_CST
+#endif
+
 // ========================== functions ==========================
 
 #if defined(CRA_USE_STDATOMIC)
