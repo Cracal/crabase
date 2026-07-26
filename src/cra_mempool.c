@@ -52,9 +52,10 @@ cra_mempool_uninit_no_check(CraMemPool *pool)
 
     assert(pool);
 
-    CRA_FOREACH(CRA_ALIST_ITERABLE_I, &pool->blocks, vals)
+    CRA_FOREACH(CRA_ALIST_ITERABLE_I, &pool->blocks, val)
     {
-        memcpy(&block, vals.val1_ref, pool->blocks.itemsize);
+        assert(sizeof(block) == pool->blocks.itemsize);
+        memcpy(&block, val.val_ref, pool->blocks.itemsize);
         cra_free(block);
     }
     cra_alist_uninit(&pool->blocks);

@@ -73,7 +73,7 @@ test_list_node(void)
         assert_always(node != NULL);
         memcpy(&val, node->val, sizeof(val));
         assert_always(i == val);
-        memcpy(&val, vals.val1_ref, sizeof(val));
+        memcpy(&val, vals.val_ref, sizeof(val));
         assert_always(i == val);
         printf("%d ", val);
         i++;
@@ -169,10 +169,10 @@ test_add(void)
     assert_always(cra_llist_prepend(list, &(int){ -2 }));
     assert_always(cra_llist_insert(list, 4, &(int){ 4000 }));
     assert_always(cra_llist_insert(list, 4, &(int){ 40000 }));
-    CraTwoVals vals_;
-    vals_.val1_ref = &(int){ 11 };
+    CraPair vals_;
+    vals_.val_ref = &(int){ 11 };
     assert_always(cra_appendable_append(CRA_LLIST_APPENDABLE_I, list, &vals_));
-    vals_.val1_ref = &(int){ 12 };
+    vals_.val_ref = &(int){ 12 };
     assert_always(cra_appendable_append(CRA_LLIST_APPENDABLE_I, list, &vals_));
     assert_always(list->count == 1006);
 
@@ -183,7 +183,7 @@ test_add(void)
     i = -2;
     CRA_FOREACH(CRA_LLIST_ITERABLE_I, list, vals)
     {
-        memcpy(&val, vals.val1_ref, sizeof(val));
+        memcpy(&val, vals.val_ref, sizeof(val));
         // printf("%d  ", val);
         if (i == 2)
             i = 40000;
@@ -211,7 +211,7 @@ test_add(void)
     i = 999;
     CRA_FOREACH(CRA_LLIST_ITERABLE_I, list, vals)
     {
-        memcpy(&val, vals.val1_ref, sizeof(val));
+        memcpy(&val, vals.val_ref, sizeof(val));
         // printf("%d  ", val);
         assert_always(i == val);
         i--;
@@ -282,7 +282,7 @@ test_remove(void)
 
     CRA_FOREACH(CRA_LLIST_ITERABLE_I, list, vals)
     {
-        memcpy(&val, vals.val1_ref, sizeof(val));
+        memcpy(&val, vals.val_ref, sizeof(val));
         printf("%d  ", val);
     }
     printf("\n");
@@ -316,7 +316,7 @@ test_set(void)
     i = 0;
     CRA_FOREACH(CRA_LLIST_ITERABLE_I, list, vals)
     {
-        memcpy(&val, vals.val1_ref, sizeof(val));
+        memcpy(&val, vals.val_ref, sizeof(val));
         // printf("%d  ", val);
         if (i == 3)
             i = 3000;
@@ -348,7 +348,7 @@ test_get(void)
     size_t i = 0;
     CRA_FOREACH(CRA_LLIST_ITERABLE_I, &list, vals)
     {
-        memcpy(&val, vals.val1_ref, sizeof(val));
+        memcpy(&val, vals.val_ref, sizeof(val));
         pval = cra_llist_get_ref(&list, i);
         assert_always(pval && val == *pval);
         assert_always(cra_llist_get(&list, i, &val2));
@@ -382,7 +382,7 @@ test_reverse(void)
     CRA_FOREACH(CRA_LLIST_ITERABLE_I, &list, vals)
     {
         assert_always(cra_llist_get(&list2, i, &val2));
-        memcpy(&val, vals.val1_ref, sizeof(val));
+        memcpy(&val, vals.val_ref, sizeof(val));
         assert_always(val == val2);
         i++;
     }
@@ -425,7 +425,7 @@ test_sort(void)
     printf("before sort     : ");
     CRA_FOREACH(CRA_LLIST_ITERABLE_I, &list, vals)
     {
-        memcpy(&val, vals.val1_ref, sizeof(val));
+        memcpy(&val, vals.val_ref, sizeof(val));
         printf("%d  ", val);
     }
     printf("\n");
@@ -435,7 +435,7 @@ test_sort(void)
     i = 0;
     CRA_FOREACH(CRA_LLIST_ITERABLE_I, &list, vals)
     {
-        memcpy(&val, vals.val1_ref, sizeof(val));
+        memcpy(&val, vals.val_ref, sizeof(val));
         assert_always(i == val);
         printf("%d  ", val);
         i++;
@@ -447,7 +447,7 @@ test_sort(void)
     i = 9;
     CRA_FOREACH(CRA_LLIST_ITERABLE_I, &list, vals)
     {
-        memcpy(&val, vals.val1_ref, sizeof(val));
+        memcpy(&val, vals.val_ref, sizeof(val));
         assert_always(i == val);
         printf("%d  ", val);
         i--;
@@ -471,7 +471,7 @@ test_sort(void)
     i = 0;
     CRA_FOREACH(CRA_LLIST_ITERABLE_I, &list, vals)
     {
-        memcpy(&val, vals.val1_ref, sizeof(val));
+        memcpy(&val, vals.val_ref, sizeof(val));
         assert_always(i == val);
         printf("%d  ", val);
         i++;
@@ -493,7 +493,7 @@ test_sort(void)
     i = 9;
     CRA_FOREACH(CRA_LLIST_ITERABLE_I, &list, vals)
     {
-        memcpy(&val, vals.val1_ref, sizeof(val));
+        memcpy(&val, vals.val_ref, sizeof(val));
         assert_always(i == val);
         printf("%d  ", val);
         i--;
@@ -511,7 +511,7 @@ test_sort(void)
     i = 0;
     CRA_FOREACH(CRA_LLIST_ITERABLE_I, &list, vals)
     {
-        memcpy(&val, vals.val1_ref, sizeof(val));
+        memcpy(&val, vals.val_ref, sizeof(val));
         assert_always(i <= val);
         i = val;
     }
@@ -537,7 +537,7 @@ test_foreach(void)
     printf("foreach        : ");
     CRA_FOREACH(CRA_LLIST_ITERABLE_I, list, vals)
     {
-        memcpy(&val, vals.val1_ref, sizeof(val));
+        memcpy(&val, vals.val_ref, sizeof(val));
         assert_always(i == val);
         printf("%d  ", val);
         i++;
@@ -548,7 +548,7 @@ test_foreach(void)
     printf("foreach reverse: ");
     CRA_FOREACH_REVERSE(CRA_LLIST_ITERABLE_I, list, vals)
     {
-        memcpy(&val, vals.val1_ref, sizeof(val));
+        memcpy(&val, vals.val_ref, sizeof(val));
         assert_always(i == val);
         printf("%d  ", val);
         i--;
@@ -635,7 +635,7 @@ test_test(void)
         j = 0;
         CRA_FOREACH(CRA_LLIST_ITERABLE_I, list, vals)
         {
-            memcpy(&v, vals.val1_ref, sizeof(v));
+            memcpy(&v, vals.val_ref, sizeof(v));
             assert_always(v == check[j]);
             j++;
         }

@@ -1356,7 +1356,7 @@ cra_json_write_list(CraSerializer *ser, void *val, const CraTypeMeta *meta)
     char       *list;
     size_t      i, count;
     size_t      needed;
-    CraTwoVals  vals;
+    CraPair     vals;
     CraIterator it;
 
     assert(meta->submeta);
@@ -1388,14 +1388,14 @@ cra_json_write_list(CraSerializer *ser, void *val, const CraTypeMeta *meta)
     needed = ser->format ? ser->nesting + sizeof("\n") : sizeof("");
     for (i = 0; meta->iter_i->next(&it, &vals); ++i)
     {
-        assert(vals.val1_ref);
+        assert(vals.val_ref);
 
         // write "," or ",\n\t..\t"
         if (!cra_json_write_comma(ser, needed, i == 0))
             return false;
 
         // write element
-        if (!cra_json_write_value(ser, vals.val1_ref, meta->submeta))
+        if (!cra_json_write_value(ser, vals.val_ref, meta->submeta))
             return false;
     }
 
@@ -1410,12 +1410,12 @@ cra_json_write_list(CraSerializer *ser, void *val, const CraTypeMeta *meta)
 static bool
 cra_json_read_list(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 {
-    int        res;
-    bool       ret;
-    size_t     slot;
-    char      *list;
-    uint64_t   count;
-    CraTwoVals vals;
+    int      res;
+    bool     ret;
+    size_t   slot;
+    char    *list;
+    uint64_t count;
+    CraPair  vals;
 
     assert(meta->submeta);
     assert(meta->submeta->is_not_end);
@@ -1464,7 +1464,7 @@ cra_json_read_list(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 
     CRA_TEMP_NEW(element, slot);
     CRA_SEIALIZER_CHECK_MEMORY(ser, meta, element);
-    vals.val1_ref = element;
+    vals.val_ref = element;
 
     // read elements
     ret = false;
@@ -1473,7 +1473,7 @@ cra_json_read_list(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
         cra_json_skip_whitespaces(ser);
 
         // read element
-        if (!(ret = cra_json_read_value(ser, vals.val1_ref, meta->submeta)))
+        if (!(ret = cra_json_read_value(ser, vals.val_ref, meta->submeta)))
             break;
 
         // append
@@ -1504,7 +1504,7 @@ cra_json_write_dict(CraSerializer *ser, void *val, const CraTypeMeta *meta)
 {
     char              *dict;
     size_t             i, count;
-    CraTwoVals         vals;
+    CraPair            vals;
     CraIterator        it;
     const CraTypeMeta *keymeta, *valmeta;
     size_t             needed;
@@ -1542,15 +1542,15 @@ cra_json_write_dict(CraSerializer *ser, void *val, const CraTypeMeta *meta)
     // write k-v pairs
     for (i = 0; meta->iter_i->next(&it, &vals); ++i)
     {
-        assert(vals.val1_ref);
-        assert(vals.val2_ref);
+        assert(vals.key_ref);
+        assert(vals.val_ref);
 
         // write "," or ",\n\t..\t"
         if (!cra_json_write_comma(ser, needed, i == 0))
             return false;
 
         // write key
-        if (!cra_json_write_key(ser, vals.val1_ref, keymeta))
+        if (!cra_json_write_key(ser, vals.key_ref, keymeta))
             return false;
 
         // write ":" or ": "
@@ -1561,7 +1561,7 @@ cra_json_write_dict(CraSerializer *ser, void *val, const CraTypeMeta *meta)
         *buf = '\0';
 
         // write value
-        if (!cra_json_write_value(ser, vals.val2_ref, valmeta))
+        if (!cra_json_write_value(ser, vals.val_ref, valmeta))
             return false;
     }
 
@@ -1582,7 +1582,7 @@ cra_json_read_dict(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
     char              *dict;
     size_t             key_size, val_size;
     const CraTypeMeta *keymeta, *valmeta;
-    CraTwoVals         vals;
+    CraPair            vals;
 
     assert(meta->submeta);
     assert(meta->submeta->is_not_end);
@@ -1637,23 +1637,20 @@ cra_json_read_dict(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 
     CRA_TEMP_NEW(key, key_size + val_size);
     CRA_SEIALIZER_CHECK_MEMORY(ser, meta, key);
-    vals.val1_ref = key;
-    vals.val2_ref = key + key_size;
+    vals.key_ref = key;
+    vals.val_ref = key + key_size;
 
     // read elements
     ret = false;
     while (true)
     {
         // read key
-        if (!(ret = cra_json_read_key(ser, vals.val1_ref, keymeta)))
+        if (!(ret = cra_json_read_key(ser, vals.key_ref, keymeta)))
             break;
 
         // check ':'
         if (!(ret = cra_json_check_ch(ser, ':')))
         {
-#ifdef __STDC_NO_VLA__
-            cra_free(vals.val1_ref);
-#endif
             ch = ':';
             goto invalid_value;
         }
@@ -1662,7 +1659,7 @@ cra_json_read_dict(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
         cra_json_skip_whitespaces(ser);
 
         // read value
-        if (!(ret = cra_json_read_value(ser, vals.val2_ref, valmeta)))
+        if (!(ret = cra_json_read_value(ser, vals.val_ref, valmeta)))
             break;
 
         // append

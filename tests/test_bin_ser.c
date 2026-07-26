@@ -1617,15 +1617,15 @@ test_dict(void)
     assert_always(in.dempty->count == out.dempty->count);
     CRA_FOREACH(CRA_DICT_ITERABLE_I, &in.ds, vals)
     {
-        memcpy(&i1, vals.val1_ref, sizeof(i1));
-        memcpy(&f1, vals.val2_ref, sizeof(f1));
+        memcpy(&i1, vals.key_ref, sizeof(i1));
+        memcpy(&f1, vals.val_ref, sizeof(f1));
         cra_dict_get(&out.ds, &i1, &f2);
         assert_always(cra_cmp_float(f1, f2) == 0);
     }
     CRA_FOREACH(CRA_DICT_ITERABLE_I, in.dp, vals)
     {
-        memcpy(&d1, vals.val1_ref, sizeof(d1));
-        memcpy(&u1, vals.val2_ref, sizeof(u1));
+        memcpy(&d1, vals.key_ref, sizeof(d1));
+        memcpy(&u1, vals.val_ref, sizeof(u1));
         cra_dict_get(out.dp, &d1, &u2);
         assert_always(u1 == u2);
     }
@@ -1874,8 +1874,8 @@ test_deserialize_failed(void)
     char *key, *key2;
     CRA_FOREACH(CRA_DICT_ITERABLE_I, in.dict, vals)
     {
-        memcpy(&key, vals.val1_ref, sizeof(key));
-        memcpy(&val1, vals.val2_ref, sizeof(val1));
+        memcpy(&key, vals.key_ref, sizeof(key));
+        memcpy(&val1, vals.val_ref, sizeof(val1));
         cra_dict_pop_kv(out.dict, &key, &key2, &val2);
         assert_always(strcmp(val1->str, val2->str) == 0);
         cra_free(key);
