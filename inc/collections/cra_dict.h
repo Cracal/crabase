@@ -12,6 +12,7 @@
 #define __CRA_DICT_H__
 #include <stdalign.h>
 #include "cra_collects.h"
+#include "cra_ifs.h"
 
 #define CRA_DICT_DEAFULT_CAPACITY 11
 

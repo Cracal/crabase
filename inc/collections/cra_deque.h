@@ -11,6 +11,7 @@
 #ifndef __CRA_DEQUE_H__
 #define __CRA_DEQUE_H__
 #include "cra_collects.h"
+#include "cra_ifs.h"
 
 #define CRA_DEQUE_CHECK_VAL(_deque, _val) assert(sizeof(*(_val)) == (_deque)->itemsize)
 

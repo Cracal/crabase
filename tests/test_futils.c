@@ -1,5 +1,5 @@
 #include "cra_assert.h"
-#include "cra_defs.h"
+#include "cra_futils.h"
 
 typedef struct
 {
