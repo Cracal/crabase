@@ -229,7 +229,7 @@ cra_atomic_cas_weak_ptr(cra_atomic_ptr_t *p, void **expected, void *desired, Cra
 
 // return (*p == **expected) ? (*p = desired, true) : false
 static inline bool
-cra_atomic_cas_weak32(cra_atomic_int32_t *p, int32_t **expected, int32_t desired, CraMO_e succ_mo, CraMO_e fail_mo)
+cra_atomic_cas_weak32(cra_atomic_int32_t *p, int32_t *expected, int32_t desired, CraMO_e succ_mo, CraMO_e fail_mo)
 {
     return atomic_compare_exchange_weak_explicit(p, expected, desired, succ_mo, fail_mo);
 }
@@ -683,7 +683,7 @@ static inline void
 cra_atomic_store_ptr(cra_atomic_ptr_t *p, void *v, CraMO_e mo)
 {
     CRA_UNUSED_VALUE(mo);
-    __sync_lock_test_and_set(p, v);
+    (void)__sync_lock_test_and_set(p, v);
 }
 
 // *p = v
@@ -691,7 +691,7 @@ static inline void
 cra_atomic_store32(cra_atomic_int32_t *p, int32_t v, CraMO_e mo)
 {
     CRA_UNUSED_VALUE(mo);
-    __sync_lock_test_and_set(p, v);
+    (void)__sync_lock_test_and_set(p, v);
 }
 
 // *p = v
@@ -699,7 +699,7 @@ static inline void
 cra_atomic_store64(cra_atomic_int64_t *p, int64_t v, CraMO_e mo)
 {
     CRA_UNUSED_VALUE(mo);
-    __sync_lock_test_and_set(p, v);
+    (void)__sync_lock_test_and_set(p, v);
 }
 
 // o = *p; *p += v; return o;
