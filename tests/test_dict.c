@@ -230,7 +230,7 @@ test_test(void)
     srand((unsigned int)time(NULL));
     for (i = 0; i < 100; i++)
     {
-        n = (rand() + 1) % 100000;
+        n = (rand() + 1) % 1000000;
         for (j = 0; j < n; j++)
             cra_dict_put(dict, &j, &(int){ j + 100 });
 
@@ -247,14 +247,14 @@ test_test(void)
     assert_always(dict->count == 0);
 
     int  idx, key, val;
-    int *check = (int *)cra_malloc(sizeof(int) * 1000000);
-    bzero(check, sizeof(sizeof(int) * 1000000));
+    int *check = (int *)cra_malloc(sizeof(int) * 100000);
+    bzero(check, sizeof(sizeof(int) * 100000));
     for (i = 0; i < 100; i++)
     {
-        n = (rand() + 1) % 1000000;
+        n = (rand() + 1) % 100000;
         for (j = 0; j < n; j++)
         {
-            idx = rand() % 1000000;
+            idx = rand() % 100000;
             cra_dict_put(dict, &idx, &j);
             check[idx] = j;
         }
@@ -267,7 +267,7 @@ test_test(void)
 
         while (dict->count > 0)
         {
-            idx = rand() % 1000000;
+            idx = rand() % 100000;
             if (cra_dict_pop(dict, &idx, &val))
                 assert_always(check[idx] == val);
         }

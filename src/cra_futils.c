@@ -102,63 +102,66 @@ cra_mkdirs(const char *path, cra_mode_t mode)
     return 0;
 }
 
+#include <libgen.h>
 char *
 cra_basename(char *path)
 {
-    char *curr, *start, *slash;
+    // char *curr, *start, *slash;
 
-    if (!path || IS_ZERO(*path))
-        return ".";
+    // if (!path || IS_ZERO(*path))
+    //     return ".";
 
-    for (curr = start = slash = path; !IS_ZERO(*curr); ++curr)
-    {
-        if (!IS_SLASH(*curr))
-            continue;
+    // for (curr = start = slash = path; !IS_ZERO(*curr); ++curr)
+    // {
+    //     if (!IS_SLASH(*curr))
+    //         continue;
 
-        if (curr != path && !IS_SLASH(*(curr - 1)))
-            slash = curr;
+    //     if (curr != path && !IS_SLASH(*(curr - 1)))
+    //         slash = curr;
 
-        if (!IS_SLASH(*(curr + 1)) && !IS_ZERO(*(curr + 1)))
-            start = ++curr;
-    }
-    if (slash > start)
-        *slash = '\0';
+    //     if (!IS_SLASH(*(curr + 1)) && !IS_ZERO(*(curr + 1)))
+    //         start = ++curr;
+    // }
+    // if (slash > start)
+    //     *slash = '\0';
 
-    return start;
+    // return start;
+    return basename(path);
 }
 
 char *
 cra_dirname(char *path)
 {
-    char *curr, *start, *slash, *last_slash;
+    // char *curr, *start, *slash, *last_slash;
 
-    if (!path || IS_ZERO(*path))
-        return ".";
+    // if (!path || IS_ZERO(*path))
+    //     return ".";
 
-    slash = NULL;
-    last_slash = NULL;
-    for (curr = start = path; !IS_ZERO(*curr); ++curr)
-    {
-        if (!IS_SLASH(*curr))
-            continue;
+    // slash = NULL;
+    // last_slash = NULL;
+    // for (curr = start = path; !IS_ZERO(*curr); ++curr)
+    // {
+    //     if (!IS_SLASH(*curr))
+    //         continue;
 
-        if (curr != path && !IS_SLASH(*(curr - 1)))
-        {
-            last_slash = slash;
-            slash = curr;
-        }
+    //     if (curr != path && !IS_SLASH(*(curr - 1)))
+    //     {
+    //         last_slash = slash;
+    //         slash = curr;
+    //     }
 
-        if (!IS_SLASH(*(curr + 1)) && !IS_ZERO(*(curr + 1)))
-            start = ++curr;
-    }
-    if (slash && slash <= start)
-        *slash = '\0';
-    else if (last_slash)
-        *last_slash = '\0';
-    else if (IS_SLASH(*path))
-        *(path + 1) = '\0';
-    else
-        return ".";
+    //     if (!IS_SLASH(*(curr + 1)) && !IS_ZERO(*(curr + 1)))
+    //         start = ++curr;
+    // }
+    // if (slash && slash <= start)
+    //     *slash = '\0';
+    // else if (last_slash)
+    //     *last_slash = '\0';
+    // else if (IS_SLASH(*path))
+    //     *(path + 1) = '\0';
+    // else
+    //     return ".";
 
-    return path;
+    // return path;
+    return dirname(path);
 }
