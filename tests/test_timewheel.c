@@ -90,22 +90,22 @@ typedef struct
     int           begin;
     CraTimer_base base;
     char         *end;
+
+    CraRef *ref;
 } MyTimer2;
 
 static void
-on_free_mytimer2(CraRefcnt *timer)
+on_uninit_mytimer2(void *timer)
 {
-    CRA_REFCNT_DEF(MyTimer2) *t = (void *)timer;
-    printt("free MyTimer2{begin: %d, end: \"%s\"}[0x%x]\n", CRA_REFCNT_OBJ(t)->begin, CRA_REFCNT_OBJ(t)->end, t);
-    cra_dealloc(t);
+    MyTimer2 *t = (MyTimer2 *)timer;
+    printt("free MyTimer2{begin: %d, end: \"%s\"}[0x%x]\n", t->begin, t->end, t);
 }
 
 static void
 on_cancel(CraTimer_base *timer)
 {
     MyTimer2 *t = container_of(timer, MyTimer2, base);
-    CRA_REFCNT_DEF(MyTimer2) *trc = (void *)container_of(t, CRA_REFCNT_DEF(MyTimer2), o);
-    cra_refcnt_unref0(CRA_REFCNT_RC(trc));
+    cra_ref_unref(t->ref);
 
     flag = false;
 }
@@ -114,12 +114,11 @@ static void
 on_timeout3(CraTimer_base *timer)
 {
     MyTimer2 *t = container_of(timer, MyTimer2, base);
-    CRA_REFCNT_DEF(MyTimer2) *trc = (void *)container_of(t, CRA_REFCNT_DEF(MyTimer2), o);
     printt("timeout! [timer: 0x%x, tick: %ums, repeat: %u, refcnt: %u, begin: %d, end: \"%s\"]\n",
            timer,
            timer->timeout_ms,
            timer->repeat,
-           trc->rc.cnt,
+           t->ref->cnt,
            t->begin,
            t->end);
 }
@@ -127,15 +126,16 @@ on_timeout3(CraTimer_base *timer)
 void
 test_timewheel2(void)
 {
-    CRA_REFCNT_DEF(MyTimer2) *t = (void *)cra_alloc(CRA_REFCNT_DEF(MyTimer2));
-    cra_refcnt_init(CRA_REFCNT_RC(t), on_free_mytimer2);
-    cra_timer_base_init(&CRA_REFCNT_OBJ(t)->base, 10, 500, on_timeout3, on_cancel);
-    CRA_REFCNT_OBJ(t)->begin = 100;
-    CRA_REFCNT_OBJ(t)->end = "hello world";
+    CraRef   *ref = cra_ref_make(sizeof(MyTimer2), on_uninit_mytimer2);
+    MyTimer2 *t = (MyTimer2 *)cra_ref_get_ptr_uncheck(ref);
+    cra_timer_base_init(&t->base, 10, 500, on_timeout3, on_cancel);
+    t->end = "hello world";
+    t->begin = 100;
+    t->ref = ref;
 
     CraTimewheel *wheel = cra_alloc(CraTimewheel);
     assert_always(cra_timewheel_init(wheel, 50, 25));
-    assert_always(cra_timewheel_add(wheel, &CRA_REFCNT_OBJ(t)->base));
+    assert_always(cra_timewheel_add(wheel, &t->base));
 
     flag = true;
     while (flag)
