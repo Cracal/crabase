@@ -65,7 +65,7 @@ struct CraLogger
     time_t             last_roll;
 };
 
-#define cra_log_ref(_logger) cra_atomic_inc(&(_logger)->refcnt, CRA_MO_RELAXED)
+#define cra_log_ref(logger) cra_atomic_inc(&(logger)->refcnt, CRA_MO_RELAXED)
 static inline void
 cra_log_unref(CraLogger *logger)
 {
@@ -146,16 +146,8 @@ cra_log_output_async_roll_file(CraLogger *log, time_t now, time_t day)
     else
         cra_datetime_now_localtime(&dt);
 
-    snprintf(log->filename + log->filename_time_start,
-             sizeof(log->filename) - log->filename_time_start,
-             "%04d%02d%02d_%02d%02d%02d_%d%s.log",
-             dt.year,
-             dt.mon,
-             dt.day,
-             dt.hour,
-             dt.min,
-             dt.sec,
-             dt.ms,
+    snprintf(log->filename + log->filename_time_start, sizeof(log->filename) - log->filename_time_start,
+             "%04d%02d%02d_%02d%02d%02d_%d%s.log", dt.year, dt.mon, dt.day, dt.hour, dt.min, dt.sec, dt.ms,
              log->use_zulu ? "Z" : "");
 
 // open new file

@@ -1308,87 +1308,24 @@ test_list(void)
     CRA_DEQUE_INITIALIZABLE_PARAM_DEF(dqargs, char *);
 
     CRA_TYPE_META_BEGIN(meta)
-    CRA_TYPE_META_MEMBER_LIST(struct L,
-                              alist,
-                              1,
-                              false,
-                              metai32,
-                              CRA_ALIST_ITERABLE_I,
-                              CRA_ALIST_APPENDABLE_I,
-                              CRA_ALIST_INITIALIZABLE_I,
-                              &alargs)
-    CRA_TYPE_META_MEMBER_LIST(struct L,
-                              llist,
-                              2,
-                              true,
-                              metasa,
-                              CRA_LLIST_ITERABLE_I,
-                              CRA_LLIST_APPENDABLE_I,
-                              CRA_LLIST_INITIALIZABLE_I,
-                              &llargs)
-    CRA_TYPE_META_MEMBER_LIST(struct L,
-                              deque,
-                              3,
-                              true,
-                              metasp,
-                              CRA_DEQUE_ITERABLE_I,
-                              CRA_DEQUE_APPENDABLE_I,
-                              CRA_DEQUE_INITIALIZABLE_I,
-                              &dqargs)
-    CRA_TYPE_META_MEMBER_LIST(struct L,
-                              alistempty,
-                              4,
-                              true,
-                              metai32,
-                              CRA_ALIST_ITERABLE_I,
-                              CRA_ALIST_APPENDABLE_I,
-                              CRA_ALIST_INITIALIZABLE_I,
-                              &alargs)
-    CRA_TYPE_META_MEMBER_LIST(struct L,
-                              llistempty,
-                              5,
-                              false,
-                              metasa,
-                              CRA_LLIST_ITERABLE_I,
-                              CRA_LLIST_APPENDABLE_I,
-                              CRA_LLIST_INITIALIZABLE_I,
-                              &llargs)
-    CRA_TYPE_META_MEMBER_LIST(struct L,
-                              dequeempty,
-                              6,
-                              false,
-                              metasp,
-                              CRA_DEQUE_ITERABLE_I,
-                              CRA_DEQUE_APPENDABLE_I,
-                              CRA_DEQUE_INITIALIZABLE_I,
-                              &dqargs)
-    CRA_TYPE_META_MEMBER_LIST(struct L,
-                              alistnull,
-                              7,
-                              true,
-                              metai32,
-                              CRA_ALIST_ITERABLE_I,
-                              CRA_ALIST_APPENDABLE_I,
-                              CRA_ALIST_INITIALIZABLE_I,
-                              &alargs)
-    CRA_TYPE_META_MEMBER_LIST(struct L,
-                              llistnull,
-                              8,
-                              true,
-                              metasa,
-                              CRA_LLIST_ITERABLE_I,
-                              CRA_LLIST_APPENDABLE_I,
-                              CRA_LLIST_INITIALIZABLE_I,
-                              &llargs)
-    CRA_TYPE_META_MEMBER_LIST(struct L,
-                              dequenull,
-                              9,
-                              true,
-                              metasp,
-                              CRA_DEQUE_ITERABLE_I,
-                              CRA_DEQUE_APPENDABLE_I,
-                              CRA_DEQUE_INITIALIZABLE_I,
-                              &dqargs)
+    CRA_TYPE_META_MEMBER_LIST(struct L, alist, 1, false, metai32, CRA_ALIST_ITERABLE_I, CRA_ALIST_APPENDABLE_I,
+                              CRA_ALIST_INITIALIZABLE_I, &alargs)
+    CRA_TYPE_META_MEMBER_LIST(struct L, llist, 2, true, metasa, CRA_LLIST_ITERABLE_I, CRA_LLIST_APPENDABLE_I,
+                              CRA_LLIST_INITIALIZABLE_I, &llargs)
+    CRA_TYPE_META_MEMBER_LIST(struct L, deque, 3, true, metasp, CRA_DEQUE_ITERABLE_I, CRA_DEQUE_APPENDABLE_I,
+                              CRA_DEQUE_INITIALIZABLE_I, &dqargs)
+    CRA_TYPE_META_MEMBER_LIST(struct L, alistempty, 4, true, metai32, CRA_ALIST_ITERABLE_I, CRA_ALIST_APPENDABLE_I,
+                              CRA_ALIST_INITIALIZABLE_I, &alargs)
+    CRA_TYPE_META_MEMBER_LIST(struct L, llistempty, 5, false, metasa, CRA_LLIST_ITERABLE_I, CRA_LLIST_APPENDABLE_I,
+                              CRA_LLIST_INITIALIZABLE_I, &llargs)
+    CRA_TYPE_META_MEMBER_LIST(struct L, dequeempty, 6, false, metasp, CRA_DEQUE_ITERABLE_I, CRA_DEQUE_APPENDABLE_I,
+                              CRA_DEQUE_INITIALIZABLE_I, &dqargs)
+    CRA_TYPE_META_MEMBER_LIST(struct L, alistnull, 7, true, metai32, CRA_ALIST_ITERABLE_I, CRA_ALIST_APPENDABLE_I,
+                              CRA_ALIST_INITIALIZABLE_I, &alargs)
+    CRA_TYPE_META_MEMBER_LIST(struct L, llistnull, 8, true, metasa, CRA_LLIST_ITERABLE_I, CRA_LLIST_APPENDABLE_I,
+                              CRA_LLIST_INITIALIZABLE_I, &llargs)
+    CRA_TYPE_META_MEMBER_LIST(struct L, dequenull, 9, true, metasp, CRA_DEQUE_ITERABLE_I, CRA_DEQUE_APPENDABLE_I,
+                              CRA_DEQUE_INITIALIZABLE_I, &dqargs)
     CRA_TYPE_META_END();
 
     char   buffer[8192];
@@ -1576,21 +1513,21 @@ test_array_list(void)
 
     CraSeriObject *ins[] = {
         CRA_SERI_ARRAY(inarray, false, ninarray, metai32),
-        CRA_SERI_LIST(
-          inalist, false, metai32, CRA_ALIST_ITERABLE_I, CRA_ALIST_APPENDABLE_I, CRA_ALIST_INITIALIZABLE_I, &alargs),
-        CRA_SERI_LIST(
-          inllist, false, metai32, CRA_LLIST_ITERABLE_I, CRA_LLIST_APPENDABLE_I, CRA_LLIST_INITIALIZABLE_I, &llargs),
-        CRA_SERI_LIST(
-          indeque, false, metai32, CRA_DEQUE_ITERABLE_I, CRA_DEQUE_APPENDABLE_I, CRA_DEQUE_INITIALIZABLE_I, &dqargs),
+        CRA_SERI_LIST(inalist, false, metai32, CRA_ALIST_ITERABLE_I, CRA_ALIST_APPENDABLE_I, CRA_ALIST_INITIALIZABLE_I,
+                      &alargs),
+        CRA_SERI_LIST(inllist, false, metai32, CRA_LLIST_ITERABLE_I, CRA_LLIST_APPENDABLE_I, CRA_LLIST_INITIALIZABLE_I,
+                      &llargs),
+        CRA_SERI_LIST(indeque, false, metai32, CRA_DEQUE_ITERABLE_I, CRA_DEQUE_APPENDABLE_I, CRA_DEQUE_INITIALIZABLE_I,
+                      &dqargs),
     };
     CraSeriObject *outs[] = {
         CRA_SERI_ARRAY(outarray, false, noutarray, metai32),
-        CRA_SERI_LIST(
-          outalist, false, metai32, CRA_ALIST_ITERABLE_I, CRA_ALIST_APPENDABLE_I, CRA_ALIST_INITIALIZABLE_I, &alargs),
-        CRA_SERI_LIST(
-          outllist, false, metai32, CRA_LLIST_ITERABLE_I, CRA_LLIST_APPENDABLE_I, CRA_LLIST_INITIALIZABLE_I, &llargs),
-        CRA_SERI_LIST(
-          outdeque, false, metai32, CRA_DEQUE_ITERABLE_I, CRA_DEQUE_APPENDABLE_I, CRA_DEQUE_INITIALIZABLE_I, &dqargs),
+        CRA_SERI_LIST(outalist, false, metai32, CRA_ALIST_ITERABLE_I, CRA_ALIST_APPENDABLE_I, CRA_ALIST_INITIALIZABLE_I,
+                      &alargs),
+        CRA_SERI_LIST(outllist, false, metai32, CRA_LLIST_ITERABLE_I, CRA_LLIST_APPENDABLE_I, CRA_LLIST_INITIALIZABLE_I,
+                      &llargs),
+        CRA_SERI_LIST(outdeque, false, metai32, CRA_DEQUE_ITERABLE_I, CRA_DEQUE_APPENDABLE_I, CRA_DEQUE_INITIALIZABLE_I,
+                      &dqargs),
     };
     size_t (*getcntfns[])(void *) = {
         get_array_count,
@@ -1667,14 +1604,14 @@ test_dict(void)
     CRA_DICT_INITIALIZABLE_PARAM_DEF(dadu, double, uint8_t, cra_hash_double_p, cra_cmp_double_p);
 
     CRA_TYPE_META_BEGIN(meta)
-    CRA_TYPE_META_MEMBER_DICT(
-      struct D, ds, 1, false, metaif, CRA_DICT_ITERABLE_I, CRA_DICT_APPENDABLE_I, CRA_DICT_INITIALIZABLE_I, &daif)
-    CRA_TYPE_META_MEMBER_DICT(
-      struct D, dp, 2, true, metadu, CRA_DICT_ITERABLE_I, CRA_DICT_APPENDABLE_I, CRA_DICT_INITIALIZABLE_I, &dadu)
-    CRA_TYPE_META_MEMBER_DICT(
-      struct D, dempty, 3, true, metaif, CRA_DICT_ITERABLE_I, CRA_DICT_APPENDABLE_I, CRA_DICT_INITIALIZABLE_I, &daif)
-    CRA_TYPE_META_MEMBER_DICT(
-      struct D, dnull, 4, true, metadu, CRA_DICT_ITERABLE_I, CRA_DICT_APPENDABLE_I, CRA_DICT_INITIALIZABLE_I, &dadu)
+    CRA_TYPE_META_MEMBER_DICT(struct D, ds, 1, false, metaif, CRA_DICT_ITERABLE_I, CRA_DICT_APPENDABLE_I,
+                              CRA_DICT_INITIALIZABLE_I, &daif)
+    CRA_TYPE_META_MEMBER_DICT(struct D, dp, 2, true, metadu, CRA_DICT_ITERABLE_I, CRA_DICT_APPENDABLE_I,
+                              CRA_DICT_INITIALIZABLE_I, &dadu)
+    CRA_TYPE_META_MEMBER_DICT(struct D, dempty, 3, true, metaif, CRA_DICT_ITERABLE_I, CRA_DICT_APPENDABLE_I,
+                              CRA_DICT_INITIALIZABLE_I, &daif)
+    CRA_TYPE_META_MEMBER_DICT(struct D, dnull, 4, true, metadu, CRA_DICT_ITERABLE_I, CRA_DICT_APPENDABLE_I,
+                              CRA_DICT_INITIALIZABLE_I, &dadu)
     CRA_TYPE_META_END();
 
     char   buffer[4096];
@@ -1844,42 +1781,14 @@ test_deserialize_failed(void)
     CRA_TYPE_META_BEGIN(meta)
     CRA_TYPE_META_MEMBER_STRUCT(struct B, stru, 1, true, metasa, &a_init_i, NULL)
     CRA_TYPE_META_MEMBER_ARRAY(struct B, array, 2, true, metastr_elem)
-    CRA_TYPE_META_MEMBER_LIST(struct B,
-                              alist,
-                              3,
-                              true,
-                              metasa_elem,
-                              CRA_ALIST_ITERABLE_I,
-                              CRA_ALIST_APPENDABLE_I,
-                              CRA_ALIST_INITIALIZABLE_I,
-                              &alist_arg)
-    CRA_TYPE_META_MEMBER_LIST(struct B,
-                              llist,
-                              4,
-                              true,
-                              metasa_elem,
-                              CRA_LLIST_ITERABLE_I,
-                              CRA_LLIST_APPENDABLE_I,
-                              CRA_LLIST_INITIALIZABLE_I,
-                              &llist_arg)
-    CRA_TYPE_META_MEMBER_LIST(struct B,
-                              deque,
-                              5,
-                              true,
-                              metasa_elem,
-                              CRA_DEQUE_ITERABLE_I,
-                              CRA_DEQUE_APPENDABLE_I,
-                              CRA_DEQUE_INITIALIZABLE_I,
-                              &deque_arg)
-    CRA_TYPE_META_MEMBER_DICT(struct B,
-                              dict,
-                              6,
-                              true,
-                              metasa_kv,
-                              CRA_DICT_ITERABLE_I,
-                              CRA_DICT_APPENDABLE_I,
-                              CRA_DICT_INITIALIZABLE_I,
-                              &dict_arg)
+    CRA_TYPE_META_MEMBER_LIST(struct B, alist, 3, true, metasa_elem, CRA_ALIST_ITERABLE_I, CRA_ALIST_APPENDABLE_I,
+                              CRA_ALIST_INITIALIZABLE_I, &alist_arg)
+    CRA_TYPE_META_MEMBER_LIST(struct B, llist, 4, true, metasa_elem, CRA_LLIST_ITERABLE_I, CRA_LLIST_APPENDABLE_I,
+                              CRA_LLIST_INITIALIZABLE_I, &llist_arg)
+    CRA_TYPE_META_MEMBER_LIST(struct B, deque, 5, true, metasa_elem, CRA_DEQUE_ITERABLE_I, CRA_DEQUE_APPENDABLE_I,
+                              CRA_DEQUE_INITIALIZABLE_I, &deque_arg)
+    CRA_TYPE_META_MEMBER_DICT(struct B, dict, 6, true, metasa_kv, CRA_DICT_ITERABLE_I, CRA_DICT_APPENDABLE_I,
+                              CRA_DICT_INITIALIZABLE_I, &dict_arg)
     CRA_TYPE_META_END();
 
     struct B in, out;

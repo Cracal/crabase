@@ -95,31 +95,31 @@ __cra_memory_leak_report(void);
 
 #else
 
-#define cra_malloc(_size)           __cra_malloc_dbg(_size, __FILE__, __LINE__)
-#define cra_calloc(_num, _size)     __cra_calloc_dbg(_num, _size, __FILE__, __LINE__)
-#define cra_realloc(_ptr, _newsize) __cra_realloc_dbg(_ptr, _newsize, __FILE__, __LINE__)
-#define cra_free                    __cra_free_dbg
+#define cra_malloc(size)          __cra_malloc_dbg(size, __FILE__, __LINE__)
+#define cra_calloc(num, size)     __cra_calloc_dbg(num, size, __FILE__, __LINE__)
+#define cra_realloc(ptr, newsize) __cra_realloc_dbg(ptr, newsize, __FILE__, __LINE__)
+#define cra_free                  __cra_free_dbg
 
 #define cra_memory_leak_report __cra_memory_leak_report
 
 #endif
 
-#define cra_alloc(_Type) cra_malloc(sizeof(_Type))
-#define cra_dealloc      cra_free
+#define cra_alloc(Type) cra_malloc(sizeof(Type))
+#define cra_dealloc     cra_free
 
-#define cra_new(_Type) (_Type *)cra_alloc(_Type)
-#define cra_delete     cra_dealloc
+#define cra_new(Type) (Type *)cra_alloc(Type)
+#define cra_delete    cra_dealloc
 
-#define CRA_TEMP_NEW(_name, _size)        \
-    char *_name;                          \
-    char  _name##_small[1024];            \
-    if ((_size) <= sizeof(_name##_small)) \
-        _name = _name##_small;            \
-    else                                  \
-        _name = cra_malloc(_size);
+#define CRA_TEMP_NEW(name, size)        \
+    char *name;                         \
+    char  name##_small[1024];           \
+    if ((size) <= sizeof(name##_small)) \
+        name = name##_small;            \
+    else                                \
+        name = cra_malloc(size);
 
-#define CRA_TEMP_DEL(_name, _size)       \
-    if ((_size) > sizeof(_name##_small)) \
-        cra_free(_name);
+#define CRA_TEMP_DEL(name, size)       \
+    if ((size) > sizeof(name##_small)) \
+        cra_free(name);
 
 #endif

@@ -64,10 +64,10 @@ __cra_combine_surrogates(uint32_t high, uint32_t low)
 static int32_t
 __cra_code_point2utf8(uint32_t code_point, unsigned char *str, size_t remain)
 {
-#define CHECK(_needed)    \
-    if (remain < _needed) \
-    {                     \
-        return -1;        \
+#define CHECK(needed)    \
+    if (remain < needed) \
+    {                    \
+        return -1;       \
     }
 
     if (code_point <= 0x7f)
@@ -267,8 +267,8 @@ cra_json_read_string(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
         if (max_length <= len)
         {
         too_small:
-            CRA_SERIALIZER_ERROR(
-              ser, meta, CRA_SER_ERR_TOO_SMALL, "string size too small(%zu < %zu)", meta->size, l + 1);
+            CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_TOO_SMALL, "string size too small(%zu < %zu)", meta->size,
+                                 l + 1);
             return false;
         }
 
@@ -724,14 +724,14 @@ cra_json_read_value(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 
     CRA_SERIALIZER_ENSURE_(ser, buf, sizeof("X"), sizeof("X"));
 
-#define CHECK_TYPE(_TYPE)        \
-    do                           \
-    {                            \
-        if (meta->type != _TYPE) \
-        {                        \
-            type = _TYPE;        \
-            goto type_mismatch;  \
-        }                        \
+#define CHECK_TYPE(TYPE)        \
+    do                          \
+    {                           \
+        if (meta->type != TYPE) \
+        {                       \
+            type = TYPE;        \
+            goto type_mismatch; \
+        }                       \
     } while (0)
 
     // check null
@@ -988,11 +988,8 @@ cra_json_is_finish(CraSerializer *ser, unsigned char finish_ch, const CraTypeMet
         // error
         else
         {
-            CRA_SERIALIZER_ERROR(ser,
-                                 meta,
-                                 CRA_SER_ERR_INVALID_VAL,
-                                 "invalid value. expected a '%c' or ',', but got a '%c'",
-                                 finish_ch,
+            CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_INVALID_VAL,
+                                 "invalid value. expected a '%c' or ',', but got a '%c'", finish_ch,
                                  ser->buffer[ser->index]);
             return -1;
         }
@@ -1305,8 +1302,8 @@ cra_json_read_array(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
         {
             if (!meta->is_ptr)
             {
-                CRA_SERIALIZER_ERROR(
-                  ser, meta, CRA_SER_ERR_TOO_SMALL, "array size too small(%zu < %zu)", maxcnt, index + 1);
+                CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_TOO_SMALL, "array size too small(%zu < %zu)", maxcnt,
+                                     index + 1);
                 ret = false;
                 break;
             }

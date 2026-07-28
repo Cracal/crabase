@@ -41,11 +41,8 @@ on_timeout2(CraTimer_base *timer)
     if (t->t1)
     {
         cra_timer_base_cancel(t->t1);
-        printt("timeout! [timer: 0x%x, tick: %ums, repeat: %u] kill t1[0x%x]\n",
-               timer,
-               timer->timeout_ms,
-               timer->repeat,
-               t->t1);
+        printt("timeout! [timer: 0x%x, tick: %ums, repeat: %u] kill t1[0x%x]\n", timer, timer->timeout_ms,
+               timer->repeat, t->t1);
         t->t1 = NULL;
     }
     else
@@ -114,13 +111,8 @@ static void
 on_timeout3(CraTimer_base *timer)
 {
     MyTimer2 *t = container_of(timer, MyTimer2, base);
-    printt("timeout! [timer: 0x%x, tick: %ums, repeat: %u, refcnt: %u, begin: %d, end: \"%s\"]\n",
-           timer,
-           timer->timeout_ms,
-           timer->repeat,
-           t->ref->cnt,
-           t->begin,
-           t->end);
+    printt("timeout! [timer: 0x%x, tick: %ums, repeat: %u, refcnt: %u, begin: %d, end: \"%s\"]\n", timer,
+           timer->timeout_ms, timer->repeat, t->ref->cnt, t->begin, t->end);
 }
 
 void

@@ -13,8 +13,8 @@
 
 // 动态数组容量扩展策略:
 // 小于1024时，每次扩展一倍, 否则每次扩展1.5倍
-#define CRA_ALIST_EXPEND(_old_capacity)                                                          \
-    ((_old_capacity) < 1024 ? ((_old_capacity) << 1) : (_old_capacity) + ((_old_capacity) >> 1))
+#define CRA_ALIST_EXPEND(old_capacity)                                                       \
+    ((old_capacity) < 1024 ? ((old_capacity) << 1) : (old_capacity) + ((old_capacity) >> 1))
 
 bool(cra_alist_init_with_size)(CraAList *list, size_t itemsize, size_t init_capacity)
 {

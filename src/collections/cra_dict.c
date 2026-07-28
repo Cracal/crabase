@@ -17,13 +17,13 @@
 
 #define CRA_DICT_ALIGN_UP(n, a) (((n) + ((a) - 1)) & ~((a) - 1))
 
-#define CRA_DICT_PENTRY0(_dict, _entries, _index)                                    \
-    ((CraDictEntry *)((unsigned char *)(_entries) + (_index) * (_dict)->entry_size))
-#define CRA_DICT_PENTRY(_dict, _index) CRA_DICT_PENTRY0(_dict, (_dict)->entries, _index)
-#define CRA_DICT_PKEY(_dict, _entry)   ((void *)((unsigned char *)(_entry) + (_dict)->key_offset))
-#define CRA_DICT_PVAL(_dict, _entry)   ((void *)((unsigned char *)(_entry) + (_dict)->val_offset))
+#define CRA_DICT_PENTRY0(dict, entries, index)                                    \
+    ((CraDictEntry *)((unsigned char *)(entries) + (index) * (dict)->entry_size))
+#define CRA_DICT_PENTRY(dict, index) CRA_DICT_PENTRY0(dict, (dict)->entries, index)
+#define CRA_DICT_PKEY(dict, entry)   ((void *)((unsigned char *)(entry) + (dict)->key_offset))
+#define CRA_DICT_PVAL(dict, entry)   ((void *)((unsigned char *)(entry) + (dict)->val_offset))
 
-#define CRA_DICT_BUCKET(_hash, _capacity) (((_hash) & CRA_HASH_MAX) % (_capacity))
+#define CRA_DICT_BUCKET(hash, capacity) (((hash) & CRA_HASH_MAX) % (capacity))
 
 struct CraDictEntry
 {
@@ -414,14 +414,8 @@ static CRA_INITIALIZABLE_INIT_FN(cra_dict_initializable_init)
     assert(dict);
     assert(param);
 
-    return (cra_dict_init_with_size)(dict,
-                                     param->key_size,
-                                     param->val_size,
-                                     param->key_align,
-                                     param->val_align,
-                                     length,
-                                     param->hash_key,
-                                     param->compare_key);
+    return (cra_dict_init_with_size)(dict, param->key_size, param->val_size, param->key_align, param->val_align, length,
+                                     param->hash_key, param->compare_key);
 }
 
 CRA_INITIALIZABLE_DEF(cra_g_dict_initializable_i) = {

@@ -15,16 +15,16 @@
 #define CRA_DEQUE_ITEM_COUNT (1ULL << CRA_DEQUE_ITEM_SHIFT)
 #define CRA_DEQUE_ITEM_MASK  (CRA_DEQUE_ITEM_COUNT - 1)
 #define CRA_DEQUE_CENTER     ((CRA_DEQUE_ITEM_COUNT - 1) >> 1)
-#define CRA_DEQUE_EMPTY_INDEX(_deque)            \
-    do                                           \
-    {                                            \
-        (_deque)->lindex = CRA_DEQUE_CENTER + 1; \
-        (_deque)->rindex = CRA_DEQUE_CENTER;     \
-        (_deque)->front = 0;                     \
-        (_deque)->rear = 0;                      \
+#define CRA_DEQUE_EMPTY_INDEX(deque)            \
+    do                                          \
+    {                                           \
+        (deque)->lindex = CRA_DEQUE_CENTER + 1; \
+        (deque)->rindex = CRA_DEQUE_CENTER;     \
+        (deque)->front = 0;                     \
+        (deque)->rear = 0;                      \
     } while (0)
 
-#define CRA_DEQUE_ARRAY_PVAL(_deque, _array, _index) ((_array) + (_index) * (_deque)->itemsize)
+#define CRA_DEQUE_ARRAY_PVAL(deque, array, index) ((array) + (index) * (deque)->itemsize)
 
 static inline bool
 cra_deque_is_pow2(size_t n)
@@ -202,8 +202,7 @@ cra_deque_move_items_r2l(CraDeque *deque, size_t start_block, size_t start_item,
             assert(deque->array[k]);
             assert(deque->array[last]);
             memcpy(CRA_DEQUE_ARRAY_PVAL(deque, deque->array[last], CRA_DEQUE_ITEM_COUNT - 1),
-                   CRA_DEQUE_ARRAY_PVAL(deque, deque->array[k], 0),
-                   deque->itemsize);
+                   CRA_DEQUE_ARRAY_PVAL(deque, deque->array[k], 0), deque->itemsize);
         }
 
         size_t n = CRA_DEQUE_ITEM_COUNT - 1 - j;
@@ -213,8 +212,7 @@ cra_deque_move_items_r2l(CraDeque *deque, size_t start_block, size_t start_item,
         {
             assert(deque->array[k]);
             memmove(CRA_DEQUE_ARRAY_PVAL(deque, deque->array[k], j),
-                    CRA_DEQUE_ARRAY_PVAL(deque, deque->array[k], j + 1),
-                    n * deque->itemsize);
+                    CRA_DEQUE_ARRAY_PVAL(deque, deque->array[k], j + 1), n * deque->itemsize);
 
             rest -= n;
             j += n;
@@ -242,8 +240,7 @@ cra_deque_move_items_l2r(CraDeque *deque, size_t start_block, size_t start_item,
             assert(deque->array[k]);
             assert(deque->array[last]);
             memcpy(CRA_DEQUE_ARRAY_PVAL(deque, deque->array[last], 0),
-                   CRA_DEQUE_ARRAY_PVAL(deque, deque->array[k], CRA_DEQUE_ITEM_COUNT - 1),
-                   deque->itemsize);
+                   CRA_DEQUE_ARRAY_PVAL(deque, deque->array[k], CRA_DEQUE_ITEM_COUNT - 1), deque->itemsize);
         }
 
         size_t l = rest < j ? j - rest : 0;
@@ -254,8 +251,7 @@ cra_deque_move_items_l2r(CraDeque *deque, size_t start_block, size_t start_item,
             assert(n < CRA_DEQUE_ITEM_COUNT);
             assert(l + n < CRA_DEQUE_ITEM_COUNT);
             memmove(CRA_DEQUE_ARRAY_PVAL(deque, deque->array[k], l + 1),
-                    CRA_DEQUE_ARRAY_PVAL(deque, deque->array[k], l),
-                    n * deque->itemsize);
+                    CRA_DEQUE_ARRAY_PVAL(deque, deque->array[k], l), n * deque->itemsize);
 
             rest -= n;
             j -= n;

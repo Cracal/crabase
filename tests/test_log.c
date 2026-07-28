@@ -192,10 +192,8 @@ test_async(void)
     for (int i = 0; i < n; i++)
     {
         cra_log_debug(logger,
-                      "This is a test message, it is the %dth message. Some extra info: {logname: %s, tid: %lu}",
-                      i + 1,
-                      cra_log_get_name(logger),
-                      cra_thrd_get_current_tid());
+                      "This is a test message, it is the %dth message. Some extra info: {logname: %s, tid: %lu}", i + 1,
+                      cra_log_get_name(logger), cra_thrd_get_current_tid());
     }
 
     cra_log_close(logger);

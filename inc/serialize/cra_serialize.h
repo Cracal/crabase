@@ -79,210 +79,172 @@ struct CraSeriObject
     CraTypeMeta meta[3];
 };
 
-#define __CRA_SFtrue(_member)  sizeof(*(_member))
-#define __CRA_SF1              __CRA_SFtrue
-#define __CRA_SFTRUE           __CRA_SFtrue
-#define __CRA_SFTrue           __CRA_SFtrue
-#define __CRA_SFfalse(_member) sizeof(_member)
-#define __CRA_SF0              __CRA_SFfalse
-#define __CRA_SFFALSE          __CRA_SFfalse
-#define __CRA_SFFalse          __CRA_SFfalse
+#define __CRA_SFtrue(member)  sizeof(*(member))
+#define __CRA_SF1             __CRA_SFtrue
+#define __CRA_SFTRUE          __CRA_SFtrue
+#define __CRA_SFTrue          __CRA_SFtrue
+#define __CRA_SFfalse(member) sizeof(member)
+#define __CRA_SF0             __CRA_SFfalse
+#define __CRA_SFFALSE         __CRA_SFfalse
+#define __CRA_SFFalse         __CRA_SFfalse
 
-#define CRA_TYPE_META_DECL(_meta_name)        CraTypeMeta _meta_name[]
-#define CRA_TYPE_META_DECL_CONST(_meta_name)  const CRA_TYPE_META_DECL
-#define CRA_TYPE_META_BEGIN(_meta_name)       CRA_TYPE_META_DECL(_meta_name) = {
-#define CRA_TYPE_META_BEGIN_CONST(_meta_name) const CRA_TYPE_META_BEGIN(_meta_name)
+#define CRA_TYPE_META_DECL(meta_name)        CraTypeMeta meta_name[]
+#define CRA_TYPE_META_DECL_CONST(meta_name)  const CRA_TYPE_META_DECL
+#define CRA_TYPE_META_BEGIN(meta_name)       CRA_TYPE_META_DECL(meta_name) = {
+#define CRA_TYPE_META_BEGIN_CONST(meta_name) const CRA_TYPE_META_BEGIN(meta_name)
 #define CRA_TYPE_META_END() {0}}
 
 // set interfaces
-#define CRA_TYPE_META_SET_I(_meta, _iter_i, _append_i, _init_i, _arg)                                                \
-    (void)((_meta)->iter_i = _iter_i, (_meta)->append_i = _append_i, (_meta)->init_i = _init_i, (_meta)->arg = _arg)
+#define CRA_TYPE_META_SET_I(meta, _iter_i, _append_i, _init_i, _arg)                                             \
+    (void)((meta)->iter_i = _iter_i, (meta)->append_i = _append_i, (meta)->init_i = _init_i, (meta)->arg = _arg)
 
 // member meta
 
-#define __CRA_TYPE_META_MEMBER(                                                              \
-  _Type, _member, _is_len, _id, _is_ptr, _TYPE, _submeta, _iter_i, _append_i, _init_i, _arg) \
-    {                                                                                        \
-        .is_not_end = true,                                                                  \
-        .is_len = _is_len,                                                                   \
-        .is_ptr = _is_ptr,                                                                   \
-        .id = _id,                                                                           \
-        .type = _TYPE,                                                                       \
-        .name = #_member,                                                                    \
-        .size = __CRA_SF##_is_ptr(((_Type *)0)->_member),                                    \
-        .offset = offsetof(_Type, _member),                                                  \
-        .submeta = _submeta,                                                                 \
-        .iter_i = _iter_i,                                                                   \
-        .append_i = _append_i,                                                               \
-        .init_i = _init_i,                                                                   \
-        .arg = _arg,                                                                         \
+#define __CRA_TYPE_META_MEMBER(Type, member, _is_len, _id, _is_ptr, TYPE, _submeta, _iter_i, _append_i, _init_i, _arg) \
+    {                                                                                                                  \
+        .is_not_end = true,                                                                                            \
+        .is_len = _is_len,                                                                                             \
+        .is_ptr = _is_ptr,                                                                                             \
+        .id = _id,                                                                                                     \
+        .type = TYPE,                                                                                                  \
+        .name = #member,                                                                                               \
+        .size = __CRA_SF##_is_ptr(((Type *)0)->member),                                                                \
+        .offset = offsetof(Type, member),                                                                              \
+        .submeta = _submeta,                                                                                           \
+        .iter_i = _iter_i,                                                                                             \
+        .append_i = _append_i,                                                                                         \
+        .init_i = _init_i,                                                                                             \
+        .arg = _arg,                                                                                                   \
     },
-#define __CRA_TYPE_META_MEMBER_BASE(_Type, _member, _id, _is_ptr, _TYPE)                             \
-    __CRA_TYPE_META_MEMBER(_Type, _member, false, _id, _is_ptr, _TYPE, NULL, NULL, NULL, NULL, NULL)
+#define __CRA_TYPE_META_MEMBER_BASE(Type, member, id, is_ptr, TYPE)                             \
+    __CRA_TYPE_META_MEMBER(Type, member, false, id, is_ptr, TYPE, NULL, NULL, NULL, NULL, NULL)
 
 // bool
-#define CRA_TYPE_META_MEMBER_BOOL(_Type, _member, _id)                     \
-    __CRA_TYPE_META_MEMBER_BASE(_Type, _member, _id, false, CRA_TYPE_BOOL)
+#define CRA_TYPE_META_MEMBER_BOOL(Type, member, id) __CRA_TYPE_META_MEMBER_BASE(Type, member, id, false, CRA_TYPE_BOOL)
 // int
-#define CRA_TYPE_META_MEMBER_INT(_Type, _member, _id)                     \
-    __CRA_TYPE_META_MEMBER_BASE(_Type, _member, _id, false, CRA_TYPE_INT)
+#define CRA_TYPE_META_MEMBER_INT(Type, member, id)  __CRA_TYPE_META_MEMBER_BASE(Type, member, id, false, CRA_TYPE_INT)
 // uint
-#define CRA_TYPE_META_MEMBER_UINT(_Type, _member, _id)                     \
-    __CRA_TYPE_META_MEMBER_BASE(_Type, _member, _id, false, CRA_TYPE_UINT)
+#define CRA_TYPE_META_MEMBER_UINT(Type, member, id) __CRA_TYPE_META_MEMBER_BASE(Type, member, id, false, CRA_TYPE_UINT)
 // varint
-#define CRA_TYPE_META_MEMBER_VARINT(_Type, _member, _id)                     \
-    __CRA_TYPE_META_MEMBER_BASE(_Type, _member, _id, false, CRA_TYPE_VARINT)
+#define CRA_TYPE_META_MEMBER_VARINT(Type, member, id)                     \
+    __CRA_TYPE_META_MEMBER_BASE(Type, member, id, false, CRA_TYPE_VARINT)
 // varuint
-#define CRA_TYPE_META_MEMBER_VARUINT(_Type, _member, _id)                     \
-    __CRA_TYPE_META_MEMBER_BASE(_Type, _member, _id, false, CRA_TYPE_VARUINT)
+#define CRA_TYPE_META_MEMBER_VARUINT(Type, member, id)                     \
+    __CRA_TYPE_META_MEMBER_BASE(Type, member, id, false, CRA_TYPE_VARUINT)
 // float
-#define CRA_TYPE_META_MEMBER_FLOAT(_Type, _member, _id)                     \
-    __CRA_TYPE_META_MEMBER_BASE(_Type, _member, _id, false, CRA_TYPE_FLOAT)
+#define CRA_TYPE_META_MEMBER_FLOAT(Type, member, id)                     \
+    __CRA_TYPE_META_MEMBER_BASE(Type, member, id, false, CRA_TYPE_FLOAT)
 // string
-#define CRA_TYPE_META_MEMBER_STRING(_Type, _member, _id, _is_ptr)              \
-    __CRA_TYPE_META_MEMBER_BASE(_Type, _member, _id, _is_ptr, CRA_TYPE_STRING)
+#define CRA_TYPE_META_MEMBER_STRING(Type, member, id, is_ptr)              \
+    __CRA_TYPE_META_MEMBER_BASE(Type, member, id, is_ptr, CRA_TYPE_STRING)
 // bytes
-#define CRA_TYPE_META_MEMBER_BYTES(_Type, _member, _id, _is_ptr)                                             \
-    __CRA_TYPE_META_MEMBER_BASE(_Type, _member, _id, _is_ptr, CRA_TYPE_BYTES)                                \
-    __CRA_TYPE_META_MEMBER(_Type, n##_member, true, _id, false, CRA_TYPE_UINT, NULL, NULL, NULL, NULL, NULL)
+#define CRA_TYPE_META_MEMBER_BYTES(Type, member, id, is_ptr)                                              \
+    __CRA_TYPE_META_MEMBER_BASE(Type, member, id, is_ptr, CRA_TYPE_BYTES)                                 \
+    __CRA_TYPE_META_MEMBER(Type, n##member, true, id, false, CRA_TYPE_UINT, NULL, NULL, NULL, NULL, NULL)
 // struct
-#define CRA_TYPE_META_MEMBER_STRUCT(_Type, _member, _id, _is_ptr, _member_meta, _init_i, _arg)       \
-    __CRA_TYPE_META_MEMBER(                                                                          \
-      _Type, _member, false, _id, _is_ptr, CRA_TYPE_STRUCT, _member_meta, NULL, NULL, _init_i, _arg)
+#define CRA_TYPE_META_MEMBER_STRUCT(Type, member, id, is_ptr, member_meta, init_i, arg)                            \
+    __CRA_TYPE_META_MEMBER(Type, member, false, id, is_ptr, CRA_TYPE_STRUCT, member_meta, NULL, NULL, init_i, arg)
 // c array
-#define CRA_TYPE_META_MEMBER_ARRAY(_Type, _member, _id, _is_ptr, _element_meta)                                       \
-    __CRA_TYPE_META_MEMBER(_Type, _member, false, _id, _is_ptr, CRA_TYPE_LIST, _element_meta, NULL, NULL, NULL, NULL) \
-    __CRA_TYPE_META_MEMBER(_Type, n##_member, true, _id, false, CRA_TYPE_UINT, NULL, NULL, NULL, NULL, NULL)
+#define CRA_TYPE_META_MEMBER_ARRAY(Type, member, id, is_ptr, element_meta)                                       \
+    __CRA_TYPE_META_MEMBER(Type, member, false, id, is_ptr, CRA_TYPE_LIST, element_meta, NULL, NULL, NULL, NULL) \
+    __CRA_TYPE_META_MEMBER(Type, n##member, true, id, false, CRA_TYPE_UINT, NULL, NULL, NULL, NULL, NULL)
 // list
-#define CRA_TYPE_META_MEMBER_LIST(_Type, _member, _id, _is_ptr, _element_meta, _iter_i, _append_i, _init_i, _arg) \
-    __CRA_TYPE_META_MEMBER(                                                                                       \
-      _Type, _member, false, _id, _is_ptr, CRA_TYPE_LIST, _element_meta, _iter_i, _append_i, _init_i, _arg)
+#define CRA_TYPE_META_MEMBER_LIST(Type, member, id, is_ptr, element_meta, iter_i, append_i, init_i, arg) \
+    __CRA_TYPE_META_MEMBER(Type, member, false, id, is_ptr, CRA_TYPE_LIST, element_meta, iter_i, append_i, init_i, arg)
 // dict
-#define CRA_TYPE_META_MEMBER_DICT(_Type, _member, _id, _is_ptr, _kv_meta, _iter_i, _append_i, _init_i, _arg) \
-    __CRA_TYPE_META_MEMBER(                                                                                  \
-      _Type, _member, false, _id, _is_ptr, CRA_TYPE_DICT, _kv_meta, _iter_i, _append_i, _init_i, _arg)
+#define CRA_TYPE_META_MEMBER_DICT(Type, member, id, is_ptr, kv_meta, iter_i, append_i, init_i, arg)                \
+    __CRA_TYPE_META_MEMBER(Type, member, false, id, is_ptr, CRA_TYPE_DICT, kv_meta, iter_i, append_i, init_i, arg)
 
 // element meta
 
-#define __CRA_TYPE_META_ELEMENT(_is_len, _is_ptr, _TYPE, _name, _size, _submeta, _iter_i, _append_i, _init_i, _arg) \
-    {                                                                                                               \
-        .is_not_end = true,                                                                                         \
-        .is_len = _is_len,                                                                                          \
-        .is_ptr = _is_ptr,                                                                                          \
-        .id = 0,                                                                                                    \
-        .type = _TYPE,                                                                                              \
-        .name = _name,                                                                                              \
-        .size = _size,                                                                                              \
-        .offset = 0,                                                                                                \
-        .submeta = _submeta,                                                                                        \
-        .iter_i = _iter_i,                                                                                          \
-        .append_i = _append_i,                                                                                      \
-        .init_i = _init_i,                                                                                          \
-        .arg = _arg,                                                                                                \
+#define __CRA_TYPE_META_ELEMENT(_is_len, _is_ptr, TYPE, _name, _size, _submeta, _iter_i, _append_i, _init_i, _arg) \
+    {                                                                                                              \
+        .is_not_end = true,                                                                                        \
+        .is_len = _is_len,                                                                                         \
+        .is_ptr = _is_ptr,                                                                                         \
+        .id = 0,                                                                                                   \
+        .type = TYPE,                                                                                              \
+        .name = _name,                                                                                             \
+        .size = _size,                                                                                             \
+        .offset = 0,                                                                                               \
+        .submeta = _submeta,                                                                                       \
+        .iter_i = _iter_i,                                                                                         \
+        .append_i = _append_i,                                                                                     \
+        .init_i = _init_i,                                                                                         \
+        .arg = _arg,                                                                                               \
     }
-#define __CRA_TYPE_META_ELEMENT_BASE(_is_ptr, _TYPE, _name, _size)                             \
-    __CRA_TYPE_META_ELEMENT(false, _is_ptr, _TYPE, _name, _size, NULL, NULL, NULL, NULL, NULL)
+#define __CRA_TYPE_META_ELEMENT_BASE(is_ptr, TYPE, name, size)                             \
+    __CRA_TYPE_META_ELEMENT(false, is_ptr, TYPE, name, size, NULL, NULL, NULL, NULL, NULL)
 // bool
-#define CRA_TYPE_META_ELEMENT_BOOL()      __CRA_TYPE_META_ELEMENT_BASE(false, CRA_TYPE_BOOL, "<<BOOL>>", sizeof(bool)),
+#define CRA_TYPE_META_ELEMENT_BOOL()     __CRA_TYPE_META_ELEMENT_BASE(false, CRA_TYPE_BOOL, "<<BOOL>>", sizeof(bool)),
 // int
-#define CRA_TYPE_META_ELEMENT_INT(_type)  __CRA_TYPE_META_ELEMENT_BASE(false, CRA_TYPE_INT, "<<INT>>", sizeof(_type)),
+#define CRA_TYPE_META_ELEMENT_INT(type)  __CRA_TYPE_META_ELEMENT_BASE(false, CRA_TYPE_INT, "<<INT>>", sizeof(type)),
 // uint
-#define CRA_TYPE_META_ELEMENT_UINT(_type) __CRA_TYPE_META_ELEMENT_BASE(false, CRA_TYPE_UINT, "<<UINT>>", sizeof(_type)),
+#define CRA_TYPE_META_ELEMENT_UINT(type) __CRA_TYPE_META_ELEMENT_BASE(false, CRA_TYPE_UINT, "<<UINT>>", sizeof(type)),
 // varint
-#define CRA_TYPE_META_ELEMENT_VARINT(_type)                                            \
-    __CRA_TYPE_META_ELEMENT_BASE(false, CRA_TYPE_VARINT, "<<VARINT>>", sizeof(_type)),
+#define CRA_TYPE_META_ELEMENT_VARINT(type)                                            \
+    __CRA_TYPE_META_ELEMENT_BASE(false, CRA_TYPE_VARINT, "<<VARINT>>", sizeof(type)),
 // varuint
-#define CRA_TYPE_META_ELEMENT_VARUINT(_type)                                             \
-    __CRA_TYPE_META_ELEMENT_BASE(false, CRA_TYPE_VARUINT, "<<VARUINT>>", sizeof(_type)),
+#define CRA_TYPE_META_ELEMENT_VARUINT(type)                                             \
+    __CRA_TYPE_META_ELEMENT_BASE(false, CRA_TYPE_VARUINT, "<<VARUINT>>", sizeof(type)),
 // float
-#define CRA_TYPE_META_ELEMENT_FLOAT(_type)                                           \
-    __CRA_TYPE_META_ELEMENT_BASE(false, CRA_TYPE_FLOAT, "<<FLOAT>>", sizeof(_type)),
+#define CRA_TYPE_META_ELEMENT_FLOAT(type)                                           \
+    __CRA_TYPE_META_ELEMENT_BASE(false, CRA_TYPE_FLOAT, "<<FLOAT>>", sizeof(type)),
 // string
-#define CRA_TYPE_META_ELEMENT_STRING(_type, _is_ptr)                                     \
-    __CRA_TYPE_META_ELEMENT_BASE(_is_ptr, CRA_TYPE_STRING, "<<STRING>>", sizeof(_type)),
+#define CRA_TYPE_META_ELEMENT_STRING(type, is_ptr)                                     \
+    __CRA_TYPE_META_ELEMENT_BASE(is_ptr, CRA_TYPE_STRING, "<<STRING>>", sizeof(type)),
 // bytes
-#define CRA_TYPE_META_ELEMENT_BYTES(_type, _is_ptr, _length_var)                       \
-    __CRA_TYPE_META_ELEMENT_BASE(_is_ptr, CRA_TYPE_BYTES, "<<BYTES>>", sizeof(_type)), \
-      __CRA_TYPE_META_ELEMENT(true,                                                    \
-                              false,                                                   \
-                              CRA_TYPE_UINT,                                           \
-                              "<<BYTES_LENGTH>>",                                      \
-                              sizeof(_length_var),                                     \
-                              NULL,                                                    \
-                              NULL,                                                    \
-                              NULL,                                                    \
-                              NULL,                                                    \
-                              (void *)&(_length_var)),
+#define CRA_TYPE_META_ELEMENT_BYTES(type, is_ptr, length_var)                                                       \
+    __CRA_TYPE_META_ELEMENT_BASE(is_ptr, CRA_TYPE_BYTES, "<<BYTES>>", sizeof(type)),                                \
+      __CRA_TYPE_META_ELEMENT(true, false, CRA_TYPE_UINT, "<<BYTES_LENGTH>>", sizeof(length_var), NULL, NULL, NULL, \
+                              NULL, (void *)&(length_var)),
 // struct
-#define CRA_TYPE_META_ELEMENT_STRUCT(_type, _is_ptr, _member_meta, _init_i, _arg)                             \
-    __CRA_TYPE_META_ELEMENT(                                                                                  \
-      false, _is_ptr, CRA_TYPE_STRUCT, "<<STRUCT>>", sizeof(_type), _member_meta, NULL, NULL, _init_i, _arg),
+#define CRA_TYPE_META_ELEMENT_STRUCT(type, is_ptr, member_meta, init_i, arg)                                     \
+    __CRA_TYPE_META_ELEMENT(false, is_ptr, CRA_TYPE_STRUCT, "<<STRUCT>>", sizeof(type), member_meta, NULL, NULL, \
+                            init_i, arg),
 // c array
-#define CRA_TYPE_META_ELEMENT_ARRAY(_type, _is_ptr, _narray_var, _element_meta)                          \
-    __CRA_TYPE_META_ELEMENT(                                                                             \
-      false, _is_ptr, CRA_TYPE_LIST, "<<ARRAY>>", sizeof(_type), _element_meta, NULL, NULL, NULL, NULL), \
-      __CRA_TYPE_META_ELEMENT(true,                                                                      \
-                              false,                                                                     \
-                              CRA_TYPE_UINT,                                                             \
-                              "<<ARRAY_COUNT>>",                                                         \
-                              sizeof(_narray_var),                                                       \
-                              NULL,                                                                      \
-                              NULL,                                                                      \
-                              NULL,                                                                      \
-                              NULL,                                                                      \
-                              (void *)&(_narray_var)),
+#define CRA_TYPE_META_ELEMENT_ARRAY(type, is_ptr, narray_var, element_meta)                                          \
+    __CRA_TYPE_META_ELEMENT(false, is_ptr, CRA_TYPE_LIST, "<<ARRAY>>", sizeof(type), element_meta, NULL, NULL, NULL, \
+                            NULL),                                                                                   \
+      __CRA_TYPE_META_ELEMENT(true, false, CRA_TYPE_UINT, "<<ARRAY_COUNT>>", sizeof(narray_var), NULL, NULL, NULL,   \
+                              NULL, (void *)&(narray_var)),
 // list
-#define CRA_TYPE_META_ELEMENT_LIST(_type, _is_ptr, _element_meta, _iter_i, _append_i, _init_i, _arg)               \
-    __CRA_TYPE_META_ELEMENT(                                                                                       \
-      false, _is_ptr, CRA_TYPE_LIST, "<<LIST>>", sizeof(_type), _element_meta, _iter_i, _append_i, _init_i, _arg),
+#define CRA_TYPE_META_ELEMENT_LIST(type, is_ptr, element_meta, iter_i, append_i, init_i, arg)                       \
+    __CRA_TYPE_META_ELEMENT(false, is_ptr, CRA_TYPE_LIST, "<<LIST>>", sizeof(type), element_meta, iter_i, append_i, \
+                            init_i, arg),
 // dict
-#define CRA_TYPE_META_ELEMENT_DICT(_type, _is_ptr, _kv_meta, _iter_i, _append_i, _init_i, _arg)               \
-    __CRA_TYPE_META_ELEMENT(                                                                                  \
-      false, _is_ptr, CRA_TYPE_DICT, "<<DICT>>", sizeof(_type), _kv_meta, _iter_i, _append_i, _init_i, _arg),
+#define CRA_TYPE_META_ELEMENT_DICT(type, is_ptr, kv_meta, iter_i, append_i, init_i, arg)                               \
+    __CRA_TYPE_META_ELEMENT(false, is_ptr, CRA_TYPE_DICT, "<<DICT>>", sizeof(type), kv_meta, iter_i, append_i, init_i, \
+                            arg),
 
 // make object with meta
 
-#define __CRA_SERI_OBJ(_obj, _is_ptr, _TYPE, _name, _submeta, _second_meta, _iter_i, _append_i, _init_i, _arg)    \
-    &(CraSeriObject)                                                                                           \
-    {                                                                                                          \
-        .objptr = (void *)&(_obj),                                                                             \
-        .meta = {                                                                                              \
-            __CRA_TYPE_META_ELEMENT(false, _is_ptr, _TYPE, _name,                                              \
-                __CRA_SF##_is_ptr(_obj), _submeta, _iter_i, _append_i, _init_i, _arg),                         \
-            _second_meta,                                                                                      \
-            { 0 },                                                                                             \
-        },                                                                                                     \
+#define __CRA_SERI_OBJ(obj, is_ptr, TYPE, name, submeta, second_meta, iter_i, append_i, init_i, arg)       \
+    &(CraSeriObject)                                                                                    \
+    {                                                                                                   \
+        .objptr = (void *)&(obj),                                                                       \
+        .meta = {                                                                                       \
+            __CRA_TYPE_META_ELEMENT(false, is_ptr, TYPE, name,                                          \
+                __CRA_SF##is_ptr(obj), submeta, iter_i, append_i, init_i, arg),                         \
+            second_meta,                                                                                \
+            { 0 },                                                                                      \
+        },                                                                                              \
     }
 // struct
-#define CRA_SERI_STRUCT(_stru, _is_ptr, _members_meta, _init_i, _arg)                                                \
-    __CRA_SERI_OBJ(_stru, _is_ptr, CRA_TYPE_STRUCT, "<<*STRUCT*>>", _members_meta, { 0 }, NULL, NULL, _init_i, _arg)
+#define CRA_SERI_STRUCT(stru, is_ptr, members_meta, init_i, arg)                                                \
+    __CRA_SERI_OBJ(stru, is_ptr, CRA_TYPE_STRUCT, "<<*STRUCT*>>", members_meta, { 0 }, NULL, NULL, init_i, arg)
 // array
-#define CRA_SERI_ARRAY(_array, _is_ptr, _narray_var, _elements_meta) \
-    __CRA_SERI_OBJ(_array,                                           \
-                   _is_ptr,                                          \
-                   CRA_TYPE_LIST,                                    \
-                   "<<*ARRAY*>>",                                    \
-                   _elements_meta,                                   \
-                   __CRA_TYPE_META_ELEMENT(true,                     \
-                                           false,                    \
-                                           CRA_TYPE_UINT,            \
-                                           "<<*ARRAY_COUNT*>>",      \
-                                           sizeof(_narray_var),      \
-                                           NULL,                     \
-                                           NULL,                     \
-                                           NULL,                     \
-                                           NULL,                     \
-                                           (void *)&(_narray_var)),  \
-                   NULL,                                             \
-                   NULL,                                             \
-                   NULL,                                             \
-                   NULL)
+#define CRA_SERI_ARRAY(array, is_ptr, narray_var, elements_meta)                                                      \
+    __CRA_SERI_OBJ(array, is_ptr, CRA_TYPE_LIST, "<<*ARRAY*>>", elements_meta,                                        \
+                   __CRA_TYPE_META_ELEMENT(true, false, CRA_TYPE_UINT, "<<*ARRAY_COUNT*>>", sizeof(narray_var), NULL, \
+                                           NULL, NULL, NULL, (void *)&(narray_var)),                                  \
+                   NULL, NULL, NULL, NULL)
 // list
-#define CRA_SERI_LIST(_list, _is_ptr, _element_meta, _iter_i, _append_i, _init_i, _arg) \
-    __CRA_SERI_OBJ(_list, _is_ptr, CRA_TYPE_LIST, "<<*LIST*>>", _element_meta, { 0 }, _iter_i, _append_i, _init_i, _arg)
+#define CRA_SERI_LIST(list, is_ptr, element_meta, iter_i, append_i, init_i, arg)                                  \
+    __CRA_SERI_OBJ(list, is_ptr, CRA_TYPE_LIST, "<<*LIST*>>", element_meta, { 0 }, iter_i, append_i, init_i, arg)
 // dict
-#define CRA_SERI_DICT(_dict, _is_ptr, _kv_meta, _iter_i, _append_i, _init_i, _arg)                                  \
-    __CRA_SERI_OBJ(_dict, _is_ptr, CRA_TYPE_DICT, "<<*DICT*>>", _kv_meta, { 0 }, _iter_i, _append_i, _init_i, _arg)
+#define CRA_SERI_DICT(dict, is_ptr, kv_meta, iter_i, append_i, init_i, arg)                                  \
+    __CRA_SERI_OBJ(dict, is_ptr, CRA_TYPE_DICT, "<<*DICT*>>", kv_meta, { 0 }, iter_i, append_i, init_i, arg)
 
 // if id is not unique, return id. else return -1
 CRA_API int
@@ -341,121 +303,109 @@ cra_release_mgr_uninit(CraReleaseMgr *mgr, bool free_ptr);
 bool
 cra_release_mgr_add(CraReleaseMgr *mgr, void *ptr, const CraTypeMeta *meta);
 
-#define __CRA_SERIALIZER_ERROR(_ser, _name_fmt, _ERR, _fmt, ...) \
-    do                                                           \
-    {                                                            \
-        (_ser)->error.err = _ERR;                                \
-        snprintf((_ser)->error.msg,                              \
-                 sizeof((_ser)->error.msg),                      \
-                 "ERROR(index: %zu" _name_fmt "): " _fmt,        \
-                 (_ser)->index,                                  \
-                 ##__VA_ARGS__);                                 \
+#define __CRA_SERIALIZER_ERROR(ser, name_fmt, ERR, fmt, ...)                                                      \
+    do                                                                                                            \
+    {                                                                                                             \
+        (ser)->error.err = ERR;                                                                                   \
+        snprintf((ser)->error.msg, sizeof((ser)->error.msg), "ERROR(index: %zu" name_fmt "): " fmt, (ser)->index, \
+                 ##__VA_ARGS__);                                                                                  \
     } while (0)
-#define CRA_SERIALIZER_ERROR(_ser, _meta, _ERR, _fmt, ...)                               \
-    __CRA_SERIALIZER_ERROR(_ser, ", name: %s", _ERR, _fmt, (_meta)->name, ##__VA_ARGS__)
-#define CRA_SERIALIZER_ERROR1(_ser, _ERR, _fmt, ...) __CRA_SERIALIZER_ERROR(_ser, , _ERR, _fmt, ##__VA_ARGS__)
+#define CRA_SERIALIZER_ERROR(ser, meta, ERR, fmt, ...)                               \
+    __CRA_SERIALIZER_ERROR(ser, ", name: %s", ERR, fmt, (meta)->name, ##__VA_ARGS__)
+#define CRA_SERIALIZER_ERROR1(ser, ERR, fmt, ...) __CRA_SERIALIZER_ERROR(ser, , ERR, fmt, ##__VA_ARGS__)
 
-#define CRA_SERIALIZER_CHECK_TYPE(_ser, _meta, _type)                              \
-    do                                                                             \
-    {                                                                              \
-        if ((_type) != (_meta)->type)                                              \
-        {                                                                          \
-            CRA_SERIALIZER_ERROR(_ser,                                             \
-                                 _meta,                                            \
-                                 CRA_SER_ERR_TYPE_MISMATCH,                        \
-                                 "type mismatch: expected a '%d', but got a '%d'", \
-                                 (_meta)->type,                                    \
-                                 _type);                                           \
-            return false;                                                          \
-        }                                                                          \
+#define CRA_SERIALIZER_CHECK_TYPE(ser, meta, _type)                                                      \
+    do                                                                                                   \
+    {                                                                                                    \
+        if ((_type) != (meta)->type)                                                                     \
+        {                                                                                                \
+            CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_TYPE_MISMATCH,                                   \
+                                 "type mismatch: expected a '%d', but got a '%d'", (meta)->type, _type); \
+            return false;                                                                                \
+        }                                                                                                \
     } while (0)
-#define CRA_SERIALIZER_CHECK_SIZE(_ser, _meta, _size)                            \
-    do                                                                           \
-    {                                                                            \
-        if ((_size) != (_meta)->size)                                            \
-        {                                                                        \
-            CRA_SERIALIZER_ERROR(_ser,                                           \
-                                 _meta,                                          \
-                                 CRA_SER_ERR_SIZE_MISMATCH,                      \
-                                 "size mismatch: expected '%zu', but got '%zu'", \
-                                 (_meta)->size,                                  \
-                                 _size);                                         \
-            return false;                                                        \
-        }                                                                        \
+#define CRA_SERIALIZER_CHECK_SIZE(ser, meta, _size)                                                                    \
+    do                                                                                                                 \
+    {                                                                                                                  \
+        if ((_size) != (meta)->size)                                                                                   \
+        {                                                                                                              \
+            CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_SIZE_MISMATCH, "size mismatch: expected '%zu', but got '%zu'", \
+                                 (meta)->size, _size);                                                                 \
+            return false;                                                                                              \
+        }                                                                                                              \
     } while (0)
-#define CRA_SERIALIZER_CHECK_NULL(_ser, _meta)                                                          \
-    do                                                                                                  \
-    {                                                                                                   \
-        if ((_meta)->type <= CRA_TYPE_FLOAT || !(_meta)->is_ptr)                                        \
-        {                                                                                               \
-            CRA_SERIALIZER_ERROR(_ser, _meta, CRA_SER_ERR_CANNOT_BE_NULL, "only pointers can be null"); \
-            return false;                                                                               \
-        }                                                                                               \
+#define CRA_SERIALIZER_CHECK_NULL(ser, meta)                                                          \
+    do                                                                                                \
+    {                                                                                                 \
+        if ((meta)->type <= CRA_TYPE_FLOAT || !(meta)->is_ptr)                                        \
+        {                                                                                             \
+            CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_CANNOT_BE_NULL, "only pointers can be null"); \
+            return false;                                                                             \
+        }                                                                                             \
     } while (0)
-#define CRA_SERIALIZER_CHECK_KEY(_ser, _meta)                                                          \
-    do                                                                                                 \
-    {                                                                                                  \
-        if ((_meta)->type > CRA_TYPE_STRING)                                                           \
-        {                                                                                              \
-            CRA_SERIALIZER_ERROR(                                                                      \
-              _ser, _meta, CRA_SER_ERR_CANNOT_BE_KEY, "this type(%d) cannot be a key", (_meta)->type); \
-            return false;                                                                              \
-        }                                                                                              \
+#define CRA_SERIALIZER_CHECK_KEY(ser, meta)                                                                            \
+    do                                                                                                                 \
+    {                                                                                                                  \
+        if ((meta)->type > CRA_TYPE_STRING)                                                                            \
+        {                                                                                                              \
+            CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_CANNOT_BE_KEY, "this type(%d) cannot be a key", (meta)->type); \
+            return false;                                                                                              \
+        }                                                                                                              \
     } while (0)
-#define CRA_SEIALIZER_CHECK_MEMORY(_ser, _meta, _ptr)                                        \
-    do                                                                                       \
-    {                                                                                        \
-        if (!(_ptr))                                                                         \
-        {                                                                                    \
-            CRA_SERIALIZER_ERROR(_ser, _meta, CRA_SER_ERR_ALLOC, "Allocate memory failed."); \
-            return false;                                                                    \
-        }                                                                                    \
+#define CRA_SEIALIZER_CHECK_MEMORY(ser, meta, ptr)                                         \
+    do                                                                                     \
+    {                                                                                      \
+        if (!(ptr))                                                                        \
+        {                                                                                  \
+            CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_ALLOC, "Allocate memory failed."); \
+            return false;                                                                  \
+        }                                                                                  \
     } while (0)
-#define CRA_SERIALIZER_RELEASE_MGR_ADD_CHECK(_ser, _meta, _ptr)                                     \
-    do                                                                                              \
-    {                                                                                               \
-        if (!cra_release_mgr_add(&(_ser)->release, _ptr, _meta))                                    \
-        {                                                                                           \
-            CRA_SERIALIZER_ERROR(_ser, _meta, CRA_SER_ERR_ALLOC, "Add to release manager failed."); \
-            cra_free(_ptr);                                                                         \
-            return false;                                                                           \
-        }                                                                                           \
+#define CRA_SERIALIZER_RELEASE_MGR_ADD_CHECK(ser, meta, ptr)                                      \
+    do                                                                                            \
+    {                                                                                             \
+        if (!cra_release_mgr_add(&(ser)->release, ptr, meta))                                     \
+        {                                                                                         \
+            CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_ALLOC, "Add to release manager failed."); \
+            cra_free(ptr);                                                                        \
+            return false;                                                                         \
+        }                                                                                         \
     } while (0)
 
-#define CRA_NAME(_meta)                         ((_meta)->name ? (_meta)->name : "(null)")
-#define CRA_SERIALIZER_GET_BUF(_ser)            ((_ser)->buffer + (_ser)->index)
-#define CRA_SERIALIZER_IS_ENOUGH(_ser, _needed) ((_ser)->index + (_needed) <= (_ser)->maxlen)
-#define CRA_SERIALIZER_GET_REAMAINING(_ser)     ((_ser)->maxlen - (_ser)->index)
-#define CRA_SERIALIZER_ENSURE_(_ser, _buf, _needed, _sub)                            \
-    do                                                                               \
-    {                                                                                \
-        if (!CRA_SERIALIZER_IS_ENOUGH(_ser, _needed))                                \
-        {                                                                            \
-            CRA_SERIALIZER_ERROR1(_ser, CRA_SER_ERR_NOBUF, "buffer size too small"); \
-            return false;                                                            \
-        }                                                                            \
-        _buf = CRA_SERIALIZER_GET_BUF(_ser);                                         \
-        (_ser)->index += ((_needed) - (_sub));                                       \
+#define CRA_NAME(meta)                        ((meta)->name ? (meta)->name : "(null)")
+#define CRA_SERIALIZER_GET_BUF(ser)           ((ser)->buffer + (ser)->index)
+#define CRA_SERIALIZER_IS_ENOUGH(ser, needed) ((ser)->index + (needed) <= (ser)->maxlen)
+#define CRA_SERIALIZER_GET_REAMAINING(ser)    ((ser)->maxlen - (ser)->index)
+#define CRA_SERIALIZER_ENSURE_(ser, buf, needed, sub)                               \
+    do                                                                              \
+    {                                                                               \
+        if (!CRA_SERIALIZER_IS_ENOUGH(ser, needed))                                 \
+        {                                                                           \
+            CRA_SERIALIZER_ERROR1(ser, CRA_SER_ERR_NOBUF, "buffer size too small"); \
+            return false;                                                           \
+        }                                                                           \
+        buf = CRA_SERIALIZER_GET_BUF(ser);                                          \
+        (ser)->index += ((needed) - (sub));                                         \
     } while (0)
-#define CRA_SERIALIZER_ENSURE(_ser, _buf, _needed) CRA_SERIALIZER_ENSURE_(_ser, _buf, _needed, 0)
+#define CRA_SERIALIZER_ENSURE(ser, buf, needed) CRA_SERIALIZER_ENSURE_(ser, buf, needed, 0)
 
 #define CRA_SERIALIZER_MAX_NESTING 1000
-#define CRA_SERIALIZER_NESTING_INC_CHECK(_ser)                                                                     \
-    do                                                                                                             \
-    {                                                                                                              \
-        if (++(_ser)->nesting > CRA_SERIALIZER_MAX_NESTING)                                                        \
-        {                                                                                                          \
-            CRA_SERIALIZER_ERROR1(_ser, CRA_SER_ERR_NESTING, "excessive nesting(%d)", CRA_SERIALIZER_MAX_NESTING); \
-            return false;                                                                                          \
-        }                                                                                                          \
+#define CRA_SERIALIZER_NESTING_INC_CHECK(ser)                                                                     \
+    do                                                                                                            \
+    {                                                                                                             \
+        if (++(ser)->nesting > CRA_SERIALIZER_MAX_NESTING)                                                        \
+        {                                                                                                         \
+            CRA_SERIALIZER_ERROR1(ser, CRA_SER_ERR_NESTING, "excessive nesting(%d)", CRA_SERIALIZER_MAX_NESTING); \
+            return false;                                                                                         \
+        }                                                                                                         \
     } while (0)
-#define CRA_SERIALIZER_NESTING_DEC(_ser) --(_ser)->nesting
+#define CRA_SERIALIZER_NESTING_DEC(ser) --(ser)->nesting
 
-#define cra_serializer_check_err(_ser, _err, _status)                            \
-    assert(((_status) && (_ser).error.err == CRA_SER_ERR_OK) ||                  \
-           ((_ser).error.err != CRA_SER_ERR_OK && (_ser).error.msg[0] != '\0')); \
-    if (err)                                                                     \
-    memcpy(err, &ser.error, sizeof(*err))
+#define cra_serializer_check_err(ser, err, status)                             \
+    assert(((status) && (ser).error.err == CRA_SER_ERR_OK) ||                  \
+           ((ser).error.err != CRA_SER_ERR_OK && (ser).error.msg[0] != '\0')); \
+    if (err)                                                                   \
+    memcpy(err, &(ser).error, sizeof(*err))
 
 static inline void
 #ifdef __CRA_BUFFER_UNSIGNED

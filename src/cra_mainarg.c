@@ -314,9 +314,7 @@ cra_mainarg_print_help(CraMainArg *ma)
         last = item;
         elem = item->element;
         //   [-X][, ][--X..X][ len(valtip)]  len(optip)
-        l = printf("  %s%s%s",
-                   elem->op ? elem->op : "  ",
-                   elem->option ? (elem->op ? ", " : "  ") : "",
+        l = printf("  %s%s%s", elem->op ? elem->op : "  ", elem->option ? (elem->op ? ", " : "  ") : "",
                    elem->option ? elem->option : "");
         if (elem->valtip)
             l += printf(" %s", elem->valtip);

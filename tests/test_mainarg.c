@@ -64,16 +64,12 @@ test_error_args(void)
     CraMainArg ma;
 
     CRA_MAINARG_ELEMENT_BEGIN(options)
-    CRA_MAINARG_ELEMENT_VAL(
-      "-b", "--bool", "<yes|no>", "Set boolean", cra_mainarg_stob_values, ((char *[]){ "yes", "no" }))
+    CRA_MAINARG_ELEMENT_VAL("-b", "--bool", "<yes|no>", "Set boolean", cra_mainarg_stob_values,
+                            ((char *[]){ "yes", "no" }))
     CRA_MAINARG_ELEMENT_VAL("-i", NULL, "<num>", "Set integer", cra_mainarg_stoi_in_range, ((int64_t[]){ 100, 501 }))
-    CRA_MAINARG_ELEMENT_VAL(
-      NULL, "--float", "<num>", "Set double", cra_mainarg_stof_in_range, ((double[]){ 2.5, 63.8 }))
-    CRA_MAINARG_ELEMENT_VAL("-s",
-                            "--string",
-                            "<str>",
-                            "Set string",
-                            cra_mainarg_stos_in_array,
+    CRA_MAINARG_ELEMENT_VAL(NULL, "--float", "<num>", "Set double", cra_mainarg_stof_in_range,
+                            ((double[]){ 2.5, 63.8 }))
+    CRA_MAINARG_ELEMENT_VAL("-s", "--string", "<str>", "Set string", cra_mainarg_stos_in_array,
                             ((char *[]){ "str1", "string2", "str3", NULL }))
     CRA_MAINARG_ELEMENT_BOL("-c", "--command", "Call a function")
     CRA_MAINARG_ELEMENT_END();
@@ -111,16 +107,12 @@ test_get_val(void)
     CRA_MAINARG_ELEMENT_BOL("-6", NULL, "Use IPv6 only")
     CRA_MAINARG_ELEMENT_BOL("-l", "--listen", "Bind and listen for incoming connections")
     CRA_MAINARG_ELEMENT_VAL("-o", "--output", "<filename>", "Dump session data to a file", cra_mainarg_stos, NULL)
-    CRA_MAINARG_ELEMENT_VAL(
-      "-d", "--delay", "<time>", "Wait between read/writes", cra_mainarg_stof_in_range, ((double[]){ 1.0, 60.0 }))
-    CRA_MAINARG_ELEMENT_VAL("-n",
-                            NULL,
-                            "<num>",
-                            "Set max number of incoming connections",
-                            cra_mainarg_stoi_in_range,
+    CRA_MAINARG_ELEMENT_VAL("-d", "--delay", "<time>", "Wait between read/writes", cra_mainarg_stof_in_range,
+                            ((double[]){ 1.0, 60.0 }))
+    CRA_MAINARG_ELEMENT_VAL("-n", NULL, "<num>", "Set max number of incoming connections", cra_mainarg_stoi_in_range,
                             ((int64_t[]){ 1, 1024 }))
-    CRA_MAINARG_ELEMENT_VAL(
-      "-C", "--crlf", "<yes|no>", "Use CRLF for EOL sequence", cra_mainarg_stob_values, ((char *[]){ "yes", "no" }))
+    CRA_MAINARG_ELEMENT_VAL("-C", "--crlf", "<yes|no>", "Use CRLF for EOL sequence", cra_mainarg_stob_values,
+                            ((char *[]){ "yes", "no" }))
     CRA_MAINARG_ELEMENT_END();
 
     char *argv[] = {

@@ -15,8 +15,8 @@
 
 #define CRA_ALIST_DEFAULT_CAPACITY 8
 
-#define CRA_ALIST_CHECK_VAL(_list, _val) assert(sizeof(*(_val)) == (_list)->itemsize)
-#define CRA_ALIST_PVAL(_list, _index)    ((_list)->array + (_index) * (_list)->itemsize)
+#define CRA_ALIST_CHECK_VAL(list, val) assert(sizeof(*(val)) == (list)->itemsize)
+#define CRA_ALIST_PVAL(list, index)    ((list)->array + (index) * (list)->itemsize)
 
 typedef struct CraAList CraAList;
 struct CraAList
@@ -30,9 +30,9 @@ struct CraAList
 CRA_API bool
 cra_alist_init_with_size(CraAList *list, size_t itemsize, size_t init_capacity);
 // bool init_with_size<T>(CraAList *list, size_t init_capacity)
-#define cra_alist_init_with_size(_T, _list, _init_capacity) cra_alist_init_with_size(_list, sizeof(_T), _init_capacity)
+#define cra_alist_init_with_size(T, list, init_capacity) cra_alist_init_with_size(list, sizeof(T), init_capacity)
 // bool init<T>(CraAList *list)
-#define cra_alist_init(_T, _list) cra_alist_init_with_size(_T, _list, CRA_ALIST_DEFAULT_CAPACITY)
+#define cra_alist_init(T, list)                          cra_alist_init_with_size(T, list, CRA_ALIST_DEFAULT_CAPACITY)
 
 CRA_API void
 cra_alist_uninit(CraAList *list);
@@ -49,28 +49,27 @@ cra_alist_reserve(CraAList *list, size_t new_capacity);
 CRA_API bool
 cra_alist_insert(CraAList *list, size_t index, void *val);
 // bool insert(CraAList *list, size_t index, T *val)
-#define cra_alist_insert(_list, _index, _val) (CRA_ALIST_CHECK_VAL(_list, _val), cra_alist_insert(_list, _index, _val))
+#define cra_alist_insert(list, index, val) (CRA_ALIST_CHECK_VAL(list, val), cra_alist_insert(list, index, val))
 // bool prepend(CraAList *list, T *val)
-#define cra_alist_prepend(_list, _val)        cra_alist_insert(_list, 0, _val)
+#define cra_alist_prepend(list, val)       cra_alist_insert(list, 0, val)
 // bool append(CraAList *list, T *val)
-#define cra_alist_append(_list, _val)         cra_alist_insert(_list, (_list)->count, _val)
+#define cra_alist_append(list, val)        cra_alist_insert(list, (list)->count, val)
 
 CRA_API bool
 cra_alist_pop_at(CraAList *list, size_t index, void *retval);
 // bool pop_at(CraAList *list, size_t index, out T *retval)
-#define cra_alist_pop_at(_list, _index, _retval)                                    \
-    (CRA_ALIST_CHECK_VAL(_list, _retval), cra_alist_pop_at(_list, _index, _retval))
+#define cra_alist_pop_at(list, index, retval) (CRA_ALIST_CHECK_VAL(list, retval), cra_alist_pop_at(list, index, retval))
 // bool pop_front(CraAList *list, out T *retval)
-#define cra_alist_pop_front(_list, _retval) cra_alist_pop_at(_list, 0, _retval)
+#define cra_alist_pop_front(list, retval)     cra_alist_pop_at(list, 0, retval)
 // bool pop_back(CraAList *list, out T *retval)
-#define cra_alist_pop_back(_list, _retval)  cra_alist_pop_at(_list, (_list)->count - 1, _retval)
+#define cra_alist_pop_back(list, retval)      cra_alist_pop_at(list, (list)->count - 1, retval)
 
 // bool remove_at(CraAList *list, size_t index)
-#define cra_alist_remove_at(_list, _index) (cra_alist_pop_at)(_list, _index, NULL)
+#define cra_alist_remove_at(list, index) (cra_alist_pop_at)(list, index, NULL)
 // bool remove_front(CraAList *list)
-#define cra_alist_remove_front(_list)      cra_alist_remove_at(_list, 0)
+#define cra_alist_remove_front(list)     cra_alist_remove_at(list, 0)
 // bool remove_back(CraAList *list)
-#define cra_alist_remove_back(_list)       cra_alist_remove_at(_list, (_list)->count - 1)
+#define cra_alist_remove_back(list)      cra_alist_remove_at(list, (list)->count - 1)
 
 static inline void *
 cra_alist_get_ref(CraAList *list, size_t index)
@@ -93,8 +92,7 @@ cra_alist_get(CraAList *list, size_t index, void *retval)
     return val != NULL;
 }
 // bool get(CraAList *list, size_t index, out T *retval)
-#define cra_alist_get(_list, _index, _retval)                                    \
-    (CRA_ALIST_CHECK_VAL(_list, _retval), cra_alist_get(_list, _index, _retval))
+#define cra_alist_get(list, index, retval) (CRA_ALIST_CHECK_VAL(list, retval), cra_alist_get(list, index, retval))
 
 static inline bool
 cra_alist_get_and_set(CraAList *list, size_t index, void *newval, void *retoldval)
@@ -111,14 +109,13 @@ cra_alist_get_and_set(CraAList *list, size_t index, void *newval, void *retoldva
     return pval != NULL;
 }
 // bool get_and_set(CraAList *list, size_t index, T *newval, out T *retoldval)
-#define cra_alist_get_and_set(_list, _index, _newval, _retoldval) \
-    (CRA_ALIST_CHECK_VAL(_list, _newval),                         \
-     CRA_ALIST_CHECK_VAL(_list, _retoldval),                      \
-     cra_alist_get_and_set(_list, _index, _newval, _retoldval))
+#define cra_alist_get_and_set(list, index, newval, retoldval)                 \
+    (CRA_ALIST_CHECK_VAL(list, newval), CRA_ALIST_CHECK_VAL(list, retoldval), \
+     cra_alist_get_and_set(list, index, newval, retoldval))
 
-// bool set(CraAList *list, size_t index, T *val)
-#define cra_alist_set(_list, _index, _val)                                                 \
-    (CRA_ALIST_CHECK_VAL(_list, _val), (cra_alist_get_and_set)(_list, _index, _val, NULL))
+// bool set(CraAList *list, size_t index, T *newval)
+#define cra_alist_set(list, index, newval)                                                  \
+    (CRA_ALIST_CHECK_VAL(list, newval), (cra_alist_get_and_set)(list, index, newval, NULL))
 
 CRA_API bool
 cra_alist_reverse(CraAList *list);
@@ -126,13 +123,13 @@ cra_alist_reverse(CraAList *list);
 CRA_API bool
 cra_alist_sort(struct CraAList *list, cra_cmp_fn compare);
 // bool sort(CraAList *list, int (*compare)(const T *, const T *))
-#define cra_alist_sort(_list, _compare) cra_alist_sort(_list, (cra_cmp_fn)(_compare))
+#define cra_alist_sort(list, compare) cra_alist_sort(list, (cra_cmp_fn)(compare))
 
 CRA_API bool
 cra_alist_add_sort(struct CraAList *list, cra_cmp_fn compare, void *val);
 // bool add_sort(CraAList *list, int (*compare)(const T *, const T *), T *val)
-#define cra_alist_add_sort(_list, _compare, _val)                                               \
-    (CRA_ALIST_CHECK_VAL(_list, _val), cra_alist_add_sort(_list, (cra_cmp_fn)(_compare), _val))
+#define cra_alist_add_sort(list, compare, val)                                             \
+    (CRA_ALIST_CHECK_VAL(list, val), cra_alist_add_sort(list, (cra_cmp_fn)(compare), val))
 
 // ====================================== interfaces ======================================
 
@@ -142,10 +139,10 @@ typedef struct CraAListInitializableParam
 {
     size_t itemsize;
 } CraAListInitializableParam;
-#define CRA_ALIST_INITIALIZABLE_PARAM_INIT(_T)        { sizeof(_T) }
-#define CRA_ALIST_INITIALIZABLE_PARAM_DECL(_var_name) CraAListInitializableParam _var_name
-#define CRA_ALIST_INITIALIZABLE_PARAM_DEF(_var_name, _T)                                   \
-    CRA_ALIST_INITIALIZABLE_PARAM_DECL(_var_name) = CRA_ALIST_INITIALIZABLE_PARAM_INIT(_T)
+#define CRA_ALIST_INITIALIZABLE_PARAM_INIT(T)        { sizeof(T) }
+#define CRA_ALIST_INITIALIZABLE_PARAM_DECL(var_name) CraAListInitializableParam var_name
+#define CRA_ALIST_INITIALIZABLE_PARAM_DEF(var_name, T)                                   \
+    CRA_ALIST_INITIALIZABLE_PARAM_DECL(var_name) = CRA_ALIST_INITIALIZABLE_PARAM_INIT(T)
 
 CRA_API CRA_INITIALIZABLE_DEF(cra_g_alist_initializable_i);
 #define CRA_ALIST_INITIALIZABLE_I (&cra_g_alist_initializable_i)

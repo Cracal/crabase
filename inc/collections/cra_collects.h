@@ -19,14 +19,14 @@
 
 typedef int (*cra_cmp_fn)(const void *a, const void *b);
 
-#define CRA_CMP_FUNC(_T, _name)                                     \
-    static inline int cra_cmp_##_name(_T a, _T b)                   \
-    {                                                               \
-        return a == b ? 0 : (a > b ? 1 : -1);                       \
-    }                                                               \
-    static inline int cra_cmp_##_name##_p(const _T *a, const _T *b) \
-    {                                                               \
-        return cra_cmp_##_name(*a, *b);                             \
+#define CRA_CMP_FUNC(T, name)                                    \
+    static inline int cra_cmp_##name(T a, T b)                   \
+    {                                                            \
+        return a == b ? 0 : (a > b ? 1 : -1);                    \
+    }                                                            \
+    static inline int cra_cmp_##name##_p(const T *a, const T *b) \
+    {                                                            \
+        return cra_cmp_##name(*a, *b);                           \
     }
 
 CRA_CMP_FUNC(int, int)
@@ -87,17 +87,17 @@ typedef ssize_t    cra_hash_t;
 typedef size_t     cra_uhash_t;
 typedef cra_hash_t (*cra_hash_fn)(const void *val);
 
-#define CRA_HASH_FUNC(_T, _name)                                 \
-    static inline cra_hash_t cra_hash_##_name(_T val)            \
-    {                                                            \
-        cra_hash_t hash = (cra_hash_t)val;                       \
-        if (hash != -1)                                          \
-            return hash;                                         \
-        return -2;                                               \
-    }                                                            \
-    static inline cra_hash_t cra_hash_##_name##_p(const _T *val) \
-    {                                                            \
-        return cra_hash_##_name(*val);                           \
+#define CRA_HASH_FUNC(T, name)                                 \
+    static inline cra_hash_t cra_hash_##name(T val)            \
+    {                                                          \
+        cra_hash_t hash = (cra_hash_t)val;                     \
+        if (hash != -1)                                        \
+            return hash;                                       \
+        return -2;                                             \
+    }                                                          \
+    static inline cra_hash_t cra_hash_##name##_p(const T *val) \
+    {                                                          \
+        return cra_hash_##name(*val);                          \
     }
 
 CRA_HASH_FUNC(int, int)

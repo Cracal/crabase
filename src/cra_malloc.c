@@ -149,11 +149,7 @@ __cra_memory_leak_report(void)
         for (; curr != NULL; curr = curr->next)
         {
             ++count;
-            fprintf(stderr,
-                    "memory leak (0x%zx, size: %zu) in %s:%d.\n",
-                    (size_t)curr->block,
-                    curr->size,
-                    curr->file,
+            fprintf(stderr, "memory leak (0x%zx, size: %zu) in %s:%d.\n", (size_t)curr->block, curr->size, curr->file,
                     curr->line);
         }
         fprintf(stderr, "leak memory count: %d.\n", count);
