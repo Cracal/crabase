@@ -36,7 +36,7 @@ test_ref_make(void)
     CraRef         *ref, *ref2;
     struct TestObj *obj;
 
-    ref = cra_ref_make(sizeof(struct TestObj), testobj_uninit);
+    ref = cra_ref_make(sizeof(struct TestObj), (cra_ref_fn)testobj_uninit);
     assert_always(ref != NULL);
     assert_always(ref->cnt == 1);
 
@@ -84,7 +84,7 @@ test_ref_take(void)
     testobj_init(obj);
     assert_always(flag == 1);
 
-    ref = cra_ref_take(obj, testobj_uninit, cra_dealloc);
+    ref = cra_ref_take(obj, (cra_ref_fn)testobj_uninit, cra_dealloc);
     assert_always(ref != NULL);
     assert_always(ref->cnt == 1);
 
@@ -204,7 +204,7 @@ test_weak_ref_make(void)
     CraWeakRef     *ref, *ref2;
     struct TestObj *obj, *obj2;
 
-    ref = cra_weak_ref_make(sizeof(struct TestObj), testobj_uninit);
+    ref = cra_weak_ref_make(sizeof(struct TestObj), (cra_ref_fn)testobj_uninit);
     assert_always(ref != NULL);
     assert_always(ref->cnt == 1);
     assert_always(ref->weak_cnt == 1);
@@ -258,7 +258,7 @@ test_weak_ref_make(void)
 
     // ===================================
 
-    ref = cra_weak_ref_make(sizeof(struct TestObj), testobj_uninit);
+    ref = cra_weak_ref_make(sizeof(struct TestObj), (cra_ref_fn)testobj_uninit);
     assert_always(ref != NULL);
     assert_always(ref->cnt == 1);
     assert_always(ref->weak_cnt == 1);
@@ -315,7 +315,7 @@ test_weak_ref_take(void)
     testobj_init(obj);
     assert_always(flag == 1);
 
-    ref = cra_weak_ref_take(obj, testobj_uninit, cra_dealloc);
+    ref = cra_weak_ref_take(obj, (cra_ref_fn)testobj_uninit, cra_dealloc);
     assert_always(ref != NULL);
     assert_always(ref->cnt == 1);
     assert_always(ref->weak_cnt == 1);
@@ -369,7 +369,7 @@ test_weak_ref_take(void)
     testobj_init(obj);
     assert_always(flag == 1);
 
-    ref = cra_weak_ref_take(obj, testobj_uninit, cra_dealloc);
+    ref = cra_weak_ref_take(obj, (cra_ref_fn)testobj_uninit, cra_dealloc);
     assert_always(ref != NULL);
     assert_always(ref->cnt == 1);
     assert_always(ref->weak_cnt == 1);
