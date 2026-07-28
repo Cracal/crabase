@@ -19,7 +19,6 @@
 #define CRA_IS_BIG_ENDIAN    0
 #define CRA_IS_LITTLE_ENDIAN 1
 #elif defined(CRA_OS_WIN)
-#include <windows.h>
 #if REG_DWORD == REG_DWORD_BIG_ENDIAN
 #define CRA_IS_BIG_ENDIAN    1
 #define CRA_IS_LITTLE_ENDIAN 0
@@ -50,7 +49,6 @@
 #define CRA_BSWAP_UINT64 bswap_64
 
 #elif defined(CRA_OS_WIN)
-#include <stdlib.h>
 
 #define CRA_BSWAP_UINT16 _byteswap_ushort
 #define CRA_BSWAP_UINT32 _byteswap_ulong

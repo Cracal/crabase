@@ -86,8 +86,8 @@ test_add(void)
     int i = 0;
     CRA_FOREACH(CRA_DICT_ITERABLE_I, dict, vals)
     {
-        memcpy(&key, vals.val1_ref, sizeof(key));
-        memcpy(&val, vals.val2_ref, sizeof(val));
+        memcpy(&key, vals.key_ref, sizeof(key));
+        memcpy(&val, vals.val_ref, sizeof(val));
         assert_always(i == key && cra_cmp_float(val, i + .5f) == 0);
         i++;
     }
@@ -101,8 +101,8 @@ test_add(void)
 
     CRA_FOREACH(CRA_DICT_ITERABLE_I, dict, vals)
     {
-        memcpy(&key, vals.val1_ref, sizeof(key));
-        memcpy(&val, vals.val2_ref, sizeof(val));
+        memcpy(&key, vals.key_ref, sizeof(key));
+        memcpy(&val, vals.val_ref, sizeof(val));
         // printf("{k: %d, v: %f}\n", key, val);
         assert_always(cra_cmp_float(val, key + .5f) == 0);
     }
@@ -157,8 +157,8 @@ test_get(void)
 
     CRA_FOREACH(CRA_DICT_ITERABLE_I, dict, vals)
     {
-        memcpy(&key, vals.val1_ref, sizeof(key));
-        memcpy(&val, vals.val2_ref, sizeof(val));
+        memcpy(&key, vals.key_ref, sizeof(key));
+        memcpy(&val, vals.val_ref, sizeof(val));
         // printf("{k: %d, v: %f}\n", key, val);
         assert_always(cra_cmp_float(val, key + .5f) == 0);
     }
@@ -193,8 +193,8 @@ test_foreach(void)
     printf("foreach        : ");
     CRA_FOREACH(CRA_DICT_ITERABLE_I, dict, vals)
     {
-        memcpy(&key, vals.val1_ref, sizeof(key));
-        memcpy(&val, vals.val2_ref, sizeof(val));
+        memcpy(&key, vals.key_ref, sizeof(key));
+        memcpy(&val, vals.val_ref, sizeof(val));
         assert_always(cra_cmp_double(val, (double)key) == 0);
         printf("{%d: %.2lf}  ", key, val);
     }
@@ -203,8 +203,8 @@ test_foreach(void)
     printf("foreach reverse: ");
     CRA_FOREACH_REVERSE(CRA_DICT_ITERABLE_I, dict, vals)
     {
-        memcpy(&key, vals.val1_ref, sizeof(key));
-        memcpy(&val, vals.val2_ref, sizeof(val));
+        memcpy(&key, vals.key_ref, sizeof(key));
+        memcpy(&val, vals.val_ref, sizeof(val));
         assert_always(cra_cmp_double(val, (double)key) == 0);
         printf("{%d: %.2lf}  ", key, val);
     }
@@ -230,7 +230,7 @@ test_test(void)
     srand((unsigned int)time(NULL));
     for (i = 0; i < 100; i++)
     {
-        n = (rand() + 1) % 100000;
+        n = (rand() + 1) % 1000000;
         for (j = 0; j < n; j++)
             cra_dict_put(dict, &j, &(int){ j + 100 });
 
@@ -247,27 +247,27 @@ test_test(void)
     assert_always(dict->count == 0);
 
     int  idx, key, val;
-    int *check = (int *)cra_malloc(sizeof(int) * 1000000);
-    bzero(check, sizeof(sizeof(int) * 1000000));
+    int *check = (int *)cra_malloc(sizeof(int) * 100000);
+    bzero(check, sizeof(sizeof(int) * 100000));
     for (i = 0; i < 100; i++)
     {
-        n = (rand() + 1) % 1000000;
+        n = (rand() + 1) % 100000;
         for (j = 0; j < n; j++)
         {
-            idx = rand() % 1000000;
+            idx = rand() % 100000;
             cra_dict_put(dict, &idx, &j);
             check[idx] = j;
         }
         CRA_FOREACH(CRA_DICT_ITERABLE_I, dict, vals)
         {
-            memcpy(&key, vals.val1_ref, sizeof(key));
-            memcpy(&val, vals.val2_ref, sizeof(val));
+            memcpy(&key, vals.key_ref, sizeof(key));
+            memcpy(&val, vals.val_ref, sizeof(val));
             assert_always(val == check[key]);
         }
 
         while (dict->count > 0)
         {
-            idx = rand() % 1000000;
+            idx = rand() % 100000;
             if (cra_dict_pop(dict, &idx, &val))
                 assert_always(check[idx] == val);
         }

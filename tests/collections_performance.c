@@ -91,7 +91,7 @@ test_alist_performance(int sizes[])
         CRA_FOREACH(CRA_ALIST_ITERABLE_I, &list, vals)
         {
             nloop++;
-            sum += *(int *)vals.val1_ref;
+            sum += *(int *)vals.val_ref;
         }
         end_ms = cra_tick_ms();
         printf("\titer:          %lums. loop times: %d. sum: %lld\n", end_ms - start_ms, nloop, sum);
@@ -199,7 +199,7 @@ test_llist_performance(int sizes[])
         CRA_FOREACH(CRA_LLIST_ITERABLE_I, &list, vals)
         {
             nloop++;
-            sum += *(int *)vals.val1_ref;
+            sum += *(int *)vals.val_ref;
         }
         end_ms = cra_tick_ms();
         printf("\titer:          %lums. loop times: %d. sum: %lld\n", end_ms - start_ms, nloop, sum);
@@ -307,7 +307,7 @@ test_deque_performance(int sizes[])
         CRA_FOREACH(CRA_DEQUE_ITERABLE_I, &deque, vals)
         {
             nloop++;
-            sum += *(int *)vals.val1_ref;
+            sum += *(int *)vals.val_ref;
         }
         end_ms = cra_tick_ms();
         printf("\titer:          %lums. loop times: %d. sum: %lld\n", end_ms - start_ms, nloop, sum);
@@ -390,7 +390,7 @@ test_dict_performance(int sizes[])
         CRA_FOREACH(CRA_DICT_ITERABLE_I, &dict, vals)
         {
             nloop++;
-            sum += *(size_t *)vals.val2_ref;
+            sum += *(size_t *)vals.val_ref;
         }
         end_ms = cra_tick_ms();
         printf("\titer:          %lums. loop times: %d. sum: %lld\n", end_ms - start_ms, nloop, sum);

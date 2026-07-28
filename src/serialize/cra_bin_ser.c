@@ -886,7 +886,7 @@ cra_bin_write_list(CraSerializer *ser, void *val, const CraTypeMeta *meta)
 {
     size_t      count, i;
     char       *list;
-    CraTwoVals  vals;
+    CraPair     vals;
     CraIterator it;
 
     assert(meta->submeta);
@@ -914,8 +914,8 @@ cra_bin_write_list(CraSerializer *ser, void *val, const CraTypeMeta *meta)
     i = 0;
     for (i = 0; meta->iter_i->next(&it, &vals); ++i)
     {
-        assert(vals.val1_ref);
-        if (!cra_bin_write_value(ser, vals.val1_ref, meta->submeta))
+        assert(vals.val_ref);
+        if (!cra_bin_write_value(ser, vals.val_ref, meta->submeta))
             return false;
     }
 
@@ -929,11 +929,11 @@ cra_bin_write_list(CraSerializer *ser, void *val, const CraTypeMeta *meta)
 static bool
 cra_bin_read_list(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 {
-    bool       ret;
-    CraTwoVals vals;
-    char      *list;
-    size_t     slot;
-    uint64_t   count;
+    bool     ret;
+    CraPair  vals;
+    char    *list;
+    size_t   slot;
+    uint64_t count;
 
     assert(meta->submeta);
     assert(meta->submeta->is_not_end);
@@ -976,14 +976,14 @@ cra_bin_read_list(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 
     CRA_TEMP_NEW(element, slot);
     CRA_SEIALIZER_CHECK_MEMORY(ser, meta, element);
-    vals.val1_ref = element;
+    vals.val_ref = element;
 
     // read elements
     ret = true;
     for (uint64_t i = 0; i < count; ++i)
     {
         // read element
-        if (!(ret = cra_bin_read_value(ser, vals.val1_ref, meta->submeta)))
+        if (!(ret = cra_bin_read_value(ser, vals.val_ref, meta->submeta)))
             break;
 
         // append
@@ -1005,7 +1005,7 @@ static bool
 cra_bin_write_dict(CraSerializer *ser, void *val, const CraTypeMeta *meta)
 {
     char       *dict;
-    CraTwoVals  vals;
+    CraPair     vals;
     CraIterator it;
     size_t      count, i;
 
@@ -1037,11 +1037,11 @@ cra_bin_write_dict(CraSerializer *ser, void *val, const CraTypeMeta *meta)
     // write elements
     for (i = 0; meta->iter_i->next(&it, &vals); ++i)
     {
-        assert(vals.val1_ref);
-        assert(vals.val2_ref);
-        if (!cra_bin_write_value(ser, vals.val1_ref, meta->submeta))
+        assert(vals.key_ref);
+        assert(vals.val_ref);
+        if (!cra_bin_write_value(ser, vals.key_ref, meta->submeta))
             return false;
-        if (!cra_bin_write_value(ser, vals.val2_ref, meta->submeta + 1))
+        if (!cra_bin_write_value(ser, vals.val_ref, meta->submeta + 1))
             return false;
     }
 
@@ -1056,7 +1056,7 @@ static bool
 cra_bin_read_dict(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 {
     bool               ret;
-    CraTwoVals         vals;
+    CraPair            vals;
     char              *dict;
     uint64_t           count;
     size_t             key_size, val_size;
@@ -1112,18 +1112,18 @@ cra_bin_read_dict(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 
     CRA_TEMP_NEW(key, key_size + val_size);
     CRA_SEIALIZER_CHECK_MEMORY(ser, meta, key);
-    vals.val1_ref = key;
-    vals.val2_ref = key + key_size;
+    vals.key_ref = key;
+    vals.val_ref = key + key_size;
 
     // read elements
     ret = true;
     for (uint64_t i = 0; i < count; ++i)
     {
         // read key
-        if (!(ret = cra_bin_read_value(ser, vals.val1_ref, keymeta)))
+        if (!(ret = cra_bin_read_value(ser, vals.key_ref, keymeta)))
             break;
         // read value
-        if (!(ret = cra_bin_read_value(ser, vals.val2_ref, valmeta)))
+        if (!(ret = cra_bin_read_value(ser, vals.val_ref, valmeta)))
             break;
 
         if (!(ret = meta->append_i->append(dict, &vals)))

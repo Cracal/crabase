@@ -434,12 +434,12 @@ CRA_INITIALIZABLE_DEF(cra_g_dict_initializable_i) = {
 static CRA_APPENDABLE_APPEND_FN(cra_dict_appendable_append)
 {
     assert(obj);
-    assert(vals);
-    assert(vals->val1_ref);
-    assert(vals->val2_ref);
+    assert(val);
+    assert(val->key_ref);
+    assert(val->val_ref);
 
     CraDict *dict = (CraDict *)obj;
-    return (cra_dict_put_and_return_kv)(dict, vals->val1_ref, vals->val2_ref, NULL, NULL, true);
+    return (cra_dict_put_and_return_kv)(dict, val->key_ref, val->val_ref, NULL, NULL, true);
 }
 
 CRA_APPENDABLE_DEF(cra_g_dict_appendable_i) = {
@@ -472,7 +472,7 @@ static CRA_ITERABLE_NEXT_FN(cra_dict_iterable_next)
     CraDictEntry *entry;
 
     assert(it);
-    assert(vals);
+    assert(val);
     assert(it->obj);
 
     dict = (CraDict *)it->obj;
@@ -484,8 +484,8 @@ static CRA_ITERABLE_NEXT_FN(cra_dict_iterable_next)
 
         if (entry->hash != -1)
         {
-            vals->val1_ref = CRA_DICT_PKEY(dict, entry);
-            vals->val2_ref = CRA_DICT_PVAL(dict, entry);
+            val->key_ref = CRA_DICT_PKEY(dict, entry);
+            val->val_ref = CRA_DICT_PVAL(dict, entry);
             return true;
         }
     }
@@ -498,7 +498,7 @@ static CRA_ITERABLE_PREV_FN(cra_dict_iterable_prev)
     CraDictEntry *entry;
 
     assert(it);
-    assert(vals);
+    assert(val);
     assert(it->obj);
 
     dict = (CraDict *)it->obj;
@@ -508,8 +508,8 @@ static CRA_ITERABLE_PREV_FN(cra_dict_iterable_prev)
         entry = CRA_DICT_PENTRY(dict, --it->ic1.idx);
         if (entry->hash != -1)
         {
-            vals->val1_ref = CRA_DICT_PKEY(dict, entry);
-            vals->val2_ref = CRA_DICT_PVAL(dict, entry);
+            val->key_ref = CRA_DICT_PKEY(dict, entry);
+            val->val_ref = CRA_DICT_PVAL(dict, entry);
             return true;
         }
     }

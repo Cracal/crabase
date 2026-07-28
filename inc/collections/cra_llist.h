@@ -11,6 +11,7 @@
 #ifndef __CRA_LLIST_H__
 #define __CRA_LLIST_H__
 #include "cra_collects.h"
+#include "cra_ifs.h"
 
 #define CRA_LLIST_CHECK_VAL(_list, _val) assert(sizeof(*(_val)) == (_list)->itemsize)
 

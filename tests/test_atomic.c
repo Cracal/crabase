@@ -129,6 +129,7 @@ test_cas(void)
     printf("test cas.\n");
 
     bool               b;
+    void              *pa;
     int32_t            i32;
     int64_t            i64;
     cra_atomic_ptr_t   pa1;
@@ -138,30 +139,30 @@ test_cas(void)
     for (int i = 0; i < 100000; i++)
     {
         i32 = 64, ia32 = 64;
-        b = cra_atomic_cas_strong(&ia32, i32, 1000, CRA_MO_ACQ_REL, CRA_MO_RELAXED);
-        assert_always(b && ia32 == 1000);
+        b = cra_atomic_cas_strong(&ia32, &i32, 1000, CRA_MO_ACQ_REL, CRA_MO_RELAXED);
+        assert_always(b && ia32 == 1000 && i32 == 64);
         i32 = 100, ia32 = 200;
-        b = cra_atomic_cas_strong(&ia32, i32, 1000, CRA_MO_ACQ_REL, CRA_MO_RELAXED);
-        assert_always(!b && ia32 == 200);
+        b = cra_atomic_cas_strong(&ia32, &i32, 1000, CRA_MO_ACQ_REL, CRA_MO_RELAXED);
+        assert_always(!b && ia32 == 200 && i32 == 200);
 
         i64 = 64, ia64 = 64;
-        b = cra_atomic_cas_strong(&ia64, i64, 1000, CRA_MO_ACQ_REL, CRA_MO_RELAXED);
-        assert_always(b && ia64 == 1000);
+        b = cra_atomic_cas_strong(&ia64, &i64, 1000, CRA_MO_ACQ_REL, CRA_MO_RELAXED);
+        assert_always(b && ia64 == 1000 && i64 == 64);
         i64 = 100, ia64 = 200;
-        b = cra_atomic_cas_strong(&ia64, i64, 1000, CRA_MO_ACQ_REL, CRA_MO_RELAXED);
-        assert_always(!b && ia64 == 200);
+        b = cra_atomic_cas_strong(&ia64, &i64, 1000, CRA_MO_ACQ_REL, CRA_MO_RELAXED);
+        assert_always(!b && ia64 == 200 && i64 == 200);
     }
 
     ia32 = 40;
-    while (cra_atomic_cas_weak(&ia32, 40, 50, CRA_MO_ACQ_REL, CRA_MO_RELAXED))
+    while (cra_atomic_cas_weak(&ia32, &(int32_t){ 40 }, 50, CRA_MO_ACQ_REL, CRA_MO_RELAXED))
         ;
     assert_always(ia32 == 50);
 
-    pa1 = &i64;
-    b = cra_atomic_cas_strong(&pa1, &i64, &i32, CRA_MO_ACQ_REL, CRA_MO_RELAXED);
-    assert_always(b && pa1 == &i32);
-    b = cra_atomic_cas_strong(&pa1, &i64, &i32, CRA_MO_ACQ_REL, CRA_MO_RELAXED);
-    assert_always(!b && pa1 == &i32);
+    pa1 = pa = &i64;
+    b = cra_atomic_cas_strong(&pa1, &pa, &i32, CRA_MO_ACQ_REL, CRA_MO_RELAXED);
+    assert_always(b && pa1 == &i32 && pa == (void *)&i64);
+    b = cra_atomic_cas_strong(&pa1, &pa, &i64, CRA_MO_ACQ_REL, CRA_MO_RELAXED);
+    assert_always(!b && pa1 == &i32 && pa == (void *)&i32);
 
     printf("test cas done.\n");
 }

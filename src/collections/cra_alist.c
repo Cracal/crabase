@@ -281,10 +281,10 @@ CRA_INITIALIZABLE_DEF(cra_g_alist_initializable_i) = {
 static CRA_APPENDABLE_APPEND_FN(cra_alist_appendable_append)
 {
     assert(obj);
-    assert(vals);
-    assert(vals->val1_ref);
+    assert(val);
+    assert(val->val_ref);
     CraAList *list = (CraAList *)obj;
-    return (cra_alist_insert)(list, list->count, vals->val1_ref);
+    return (cra_alist_insert)(list, list->count, val->val_ref);
 }
 
 CRA_APPENDABLE_DEF(cra_g_alist_appendable_i) = {
@@ -312,13 +312,13 @@ static CRA_ITERABLE_INIT_FN(cra_alist_iterable_init)
 static CRA_ITERABLE_NEXT_FN(cra_alist_iterable_next)
 {
     assert(it);
-    assert(vals);
+    assert(val);
     assert(it->obj);
 
     CraAList *list = (CraAList *)it->obj;
     if (it->ic1.idx < list->count)
     {
-        vals->val1_ref = CRA_ALIST_PVAL(list, it->ic1.idx++);
+        val->val_ref = CRA_ALIST_PVAL(list, it->ic1.idx++);
         return true;
     }
     return false;
@@ -327,13 +327,13 @@ static CRA_ITERABLE_NEXT_FN(cra_alist_iterable_next)
 static CRA_ITERABLE_PREV_FN(cra_alist_iterable_prev)
 {
     assert(it);
-    assert(vals);
+    assert(val);
     assert(it->obj);
 
     CraAList *list = (CraAList *)it->obj;
     if (it->ic1.idx > 0)
     {
-        vals->val1_ref = CRA_ALIST_PVAL(list, --it->ic1.idx);
+        val->val_ref = CRA_ALIST_PVAL(list, --it->ic1.idx);
         return true;
     }
     return false;

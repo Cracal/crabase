@@ -1,230 +1,663 @@
 #include "cra_assert.h"
 #include "cra_malloc.h"
 #include "cra_refcnt.h"
-#include "threads/cra_thread.h"
+#include "threads/cra_thrdpool.h"
 
-typedef struct
+struct TestObj
 {
     int   i;
-    float f;
-} Stru;
-typedef CRA_REFCNT_DEF(Stru) Stru_rc;
-typedef CRA_REFCNT_PTR_DEF(Stru) Stru_rc_p;
+    char *s;
+};
+
+int flag = 0;
 
 static void
-test_int100(void *rc)
+testobj_init(struct TestObj *obj)
 {
-    CRA_REFCNT_DEF(int) *ref = rc;
-    assert_always(*CRA_REFCNT_OBJ(ref) == 100);
-    printf("test int: %d\n", *CRA_REFCNT_OBJ(ref));
+    obj->i = 100;
+    obj->s = cra_malloc(100);
+    assert_always(obj->s != NULL);
+    memcpy(obj->s, "hello", 6);
+
+    flag = 1;
 }
 
 static void
-test_and_delete_int100_p(void *rc)
+testobj_uninit(struct TestObj *obj)
 {
-    CRA_REFCNT_PTR_DEF(int) *ref = rc;
-    assert_always(*CRA_REFCNT_PTR(ref) == 100);
-    printf("delete int: %d\n", *CRA_REFCNT_PTR(ref));
-    cra_dealloc(CRA_REFCNT_PTR(ref));
-}
+    cra_free(obj->s);
 
-static void
-delete_stru(Stru_rc *s)
-{
-    printf("delete Stru{i: %d, f: %f}\n", CRA_REFCNT_OBJ(s)->i, CRA_REFCNT_OBJ(s)->f);
-    cra_dealloc(s);
-}
-
-static void
-delete_stru_p(Stru_rc_p *s)
-{
-    printf("delete Stru{i: %d, f: %f}\n", CRA_REFCNT_PTR(s)->i, CRA_REFCNT_PTR(s)->f);
-    cra_dealloc(CRA_REFCNT_PTR(s));
-}
-
-static void
-delete_stru_p2(Stru_rc_p *s)
-{
-    delete_stru_p(s);
-    cra_dealloc(s);
+    flag = 2;
 }
 
 void
-test_refcnt(void)
+test_ref_make(void)
 {
-    CRA_REFCNT_DEF(int)
-    ri;
-    *CRA_REFCNT_OBJ(&ri) = 100;
-    cra_refcnt_init(CRA_REFCNT_RC(&ri), (cra_refcnt_release_fn)test_int100);
-    assert_always(CRA_REFCNT_RC(&ri)->cnt == 1);
-    assert_always(cra_refcnt_unref(CRA_REFCNT_RC(&ri)));
-    assert_always(CRA_REFCNT_RC(&ri)->cnt == 0);
+    CraRef         *ref, *ref2;
+    struct TestObj *obj;
 
-    cra_refcnt_init(CRA_REFCNT_RC(&ri), (cra_refcnt_release_fn)test_int100);
-    assert_always(CRA_REFCNT_RC(&ri)->cnt == 1);
-    cra_refcnt_ref(CRA_REFCNT_RC(&ri));
-    assert_always(CRA_REFCNT_RC(&ri)->cnt == 2);
-    assert_always(!cra_refcnt_unref(CRA_REFCNT_RC(&ri)));
-    assert_always(CRA_REFCNT_RC(&ri)->cnt == 1);
-    cra_refcnt_ref(CRA_REFCNT_RC(&ri));
-    assert_always(CRA_REFCNT_RC(&ri)->cnt == 2);
-    assert_always(!cra_refcnt_unref(CRA_REFCNT_RC(&ri)));
-    assert_always(CRA_REFCNT_RC(&ri)->cnt == 1);
-    assert_always(cra_refcnt_unref(CRA_REFCNT_RC(&ri)));
-    assert_always(CRA_REFCNT_RC(&ri)->cnt == 0);
+    ref = cra_ref_make(sizeof(struct TestObj), (cra_ref_fn)testobj_uninit);
+    assert_always(ref != NULL);
+    assert_always(ref->cnt == 1);
 
-    Stru_rc *rs = cra_alloc(Stru_rc);
-    cra_refcnt_init(CRA_REFCNT_RC(rs), (cra_refcnt_release_fn)delete_stru);
-    CRA_REFCNT_OBJ(rs)->i = 200;
-    CRA_REFCNT_OBJ(rs)->f = 1.5f;
+    assert_always(flag == 0);
+    obj = cra_ref_get_ptr_uncheck(ref);
+    assert_always(obj != NULL);
+    testobj_init(obj);
+    assert_always(flag == 1);
 
-    cra_refcnt_ref(CRA_REFCNT_RC(rs));
-    assert_always(CRA_REFCNT_RC(rs)->cnt == 2);
+    cra_ref_ref(ref);
+    assert_always(ref->cnt == 2);
 
-    cra_refcnt_unref0(CRA_REFCNT_RC(rs));
-    assert_always(CRA_REFCNT_RC(rs)->cnt == 1);
-    cra_refcnt_unref0(CRA_REFCNT_RC(rs));
+    assert_always(cra_ref_unref(ref) == false);
+    assert_always(ref->cnt == 1);
+
+    cra_ref_ref(ref);
+    cra_ref_ref(ref);
+    cra_ref_ref(ref);
+    cra_ref_ref(ref);
+    assert_always(ref->cnt == 5);
+
+    ref2 = ref;
+    cra_ref_unref_clear(&ref2);
+    assert_always(ref2 == NULL);
+    assert_always(ref->cnt == 4);
+    cra_ref_unref(ref);
+    cra_ref_unref(ref);
+    assert_always(cra_ref_unref(ref) == false);
+    assert_always(ref->cnt == 1);
+    assert_always(flag == 1);
+    assert_always(cra_ref_unref(ref) == true);
+    assert_always(flag == 2);
+
+    // cra_ref_unref(ref); // error: dangling pointer
 }
 
 void
-test_refcnt_ptr(void)
+test_ref_take(void)
 {
-    CRA_REFCNT_PTR_DEF(int)(ri);
-    int *pi = cra_alloc(int);
-    *pi = 100;
-    cra_refcnt_init(CRA_REFCNT_RC(&ri), (cra_refcnt_release_fn)test_and_delete_int100_p);
-    CRA_REFCNT_PTR(&ri) = pi;
-    assert_always(CRA_REFCNT_RC(&ri)->cnt == 1);
-    cra_refcnt_ref(CRA_REFCNT_RC(&ri));
-    assert_always(CRA_REFCNT_RC(&ri)->cnt == 2);
-    assert_always(!cra_refcnt_unref(CRA_REFCNT_RC(&ri)));
-    assert_always(CRA_REFCNT_RC(&ri)->cnt == 1);
-    cra_refcnt_ref(CRA_REFCNT_RC(&ri));
-    assert_always(CRA_REFCNT_RC(&ri)->cnt == 2);
-    assert_always(!cra_refcnt_unref(CRA_REFCNT_RC(&ri)));
-    assert_always(CRA_REFCNT_RC(&ri)->cnt == 1);
-    assert_always(cra_refcnt_unref(CRA_REFCNT_RC(&ri)));
-    assert_always(CRA_REFCNT_RC(&ri)->cnt == 0);
+    CraRef         *ref, *ref2;
+    struct TestObj *obj, *obj2;
 
-    Stru_rc_p rs;
-    Stru     *ps = cra_alloc(Stru);
-    ps->i = 200;
-    ps->f = 3.5f;
-    cra_refcnt_init(CRA_REFCNT_RC(&rs), (cra_refcnt_release_fn)delete_stru_p);
-    CRA_REFCNT_PTR(&rs) = ps;
+    obj = cra_alloc(struct TestObj);
+    assert_always(obj != NULL);
+    testobj_init(obj);
+    assert_always(flag == 1);
 
-    cra_refcnt_ref(CRA_REFCNT_RC(&rs));
-    assert_always(CRA_REFCNT_RC(&rs)->cnt == 2);
+    ref = cra_ref_take(obj, (cra_ref_fn)testobj_uninit, cra_dealloc);
+    assert_always(ref != NULL);
+    assert_always(ref->cnt == 1);
 
-    cra_refcnt_unref0(CRA_REFCNT_RC(&rs));
-    assert_always(CRA_REFCNT_RC(&rs)->cnt == 1);
-    cra_refcnt_unref0(CRA_REFCNT_RC(&rs));
-    assert_always(CRA_REFCNT_RC(&rs)->cnt == 0);
+    obj2 = (struct TestObj *)cra_ref_get_ptr_uncheck(ref);
+    assert_always(obj2 == obj);
 
-    // ====================================
+    cra_ref_ref(ref);
+    assert_always(ref->cnt == 2);
 
-    Stru_rc_p *prs = cra_alloc(Stru_rc_p);
-    ps = cra_alloc(Stru);
-    ps->i = 400;
-    ps->f = 5.5f;
-    cra_refcnt_init(CRA_REFCNT_RC(prs), (cra_refcnt_release_fn)delete_stru_p2);
-    CRA_REFCNT_PTR(prs) = ps;
+    assert_always(cra_ref_unref(ref) == false);
+    assert_always(ref->cnt == 1);
 
-    cra_refcnt_ref(CRA_REFCNT_RC(prs));
-    assert_always(CRA_REFCNT_RC(prs)->cnt == 2);
+    cra_ref_ref(ref);
+    cra_ref_ref(ref);
+    cra_ref_ref(ref);
+    cra_ref_ref(ref);
+    assert_always(ref->cnt == 5);
 
-    cra_refcnt_unref0(CRA_REFCNT_RC(prs));
-    assert_always(CRA_REFCNT_RC(prs)->cnt == 1);
-    cra_refcnt_unref0(CRA_REFCNT_RC(prs));
+    ref2 = ref;
+    cra_ref_unref_clear(&ref2);
+    assert_always(ref2 == NULL);
+    assert_always(ref->cnt == 4);
+    cra_ref_unref(ref);
+    cra_ref_unref(ref);
+    assert_always(cra_ref_unref(ref) == false);
+    assert_always(ref->cnt == 1);
+    assert_always(flag == 1);
+    assert_always(cra_ref_unref(ref) == true);
+    assert_always(flag == 2);
+
+    // cra_ref_unref(ref); // error: dangling pointer
 }
 
-static CRA_THRD_FUNC(thread_func)
+#if 1 // intrusive ref
+
+struct TestRefObj
 {
-    Stru_rc *rs = (Stru_rc *)arg;
-    printf("thread: Stru{i: %d, f: %f}\n", CRA_REFCNT_OBJ(rs)->i, CRA_REFCNT_OBJ(rs)->f);
-    cra_refcnt_unref0(CRA_REFCNT_RC(rs));
-    return (cra_thrd_ret_t){ 0 };
-}
-
-void
-test_multithread(void)
-{
-    Stru_rc *rs = cra_alloc(Stru_rc);
-    CRA_REFCNT_OBJ(rs)->i = 1000;
-    CRA_REFCNT_OBJ(rs)->f = 1000.5f;
-    cra_refcnt_init(CRA_REFCNT_RC(rs), (cra_refcnt_release_fn)delete_stru);
-
-    cra_thrd_t th;
-    cra_refcnt_ref(CRA_REFCNT_RC(rs));
-    cra_thrd_create(&th, thread_func, rs);
-
-    // cra_msleep(50);
-    cra_refcnt_unref(CRA_REFCNT_RC(rs));
-
-    cra_thrd_join(th);
-}
-
-struct StruIn
-{
-    int       i;
-    CraRefcnt ref;
-    float     f;
+    int        i;
+    CraRefHead ref;
+    char      *s;
 };
 
 static void
-cra_struin_print(CraRefcnt *ref)
+testrefobj_init(struct TestRefObj *obj)
 {
-    struct StruIn *si = container_of(ref, struct StruIn, ref);
-    printf("StruIn{i: %d, f: %f}\n", si->i, si->f);
+    obj->i = 100;
+    obj->s = cra_malloc(100);
+    assert_always(obj->s != NULL);
+    memcpy(obj->s, "hello world", 12);
+
+    cra_ref_head_init(&obj->ref);
+
+    flag = 1;
 }
 
 static void
-cra_struin_delete(CraRefcnt *ref)
+testrefobj_uninit(struct TestRefObj *obj)
 {
-    cra_struin_print(ref);
-    struct StruIn *si = container_of(ref, struct StruIn, ref);
-    cra_dealloc(si);
+    assert_always(obj->ref.cnt == 0);
+    cra_free(obj->s);
+    obj->s = NULL;
+    obj->i = 0;
+
+    flag = 2;
+}
+
+static void
+testrefobj_ref(struct TestRefObj *obj)
+{
+    cra_ref_head_ref(&obj->ref);
+}
+
+static void
+testrefobj_unref(struct TestRefObj *obj)
+{
+    if (cra_ref_head_unref(&obj->ref))
+        testrefobj_uninit(obj);
 }
 
 void
-test_ref_inner(void)
+test_ref_intrusive(void)
 {
-    struct StruIn si;
-    cra_refcnt_init(&si.ref, cra_struin_print);
-    si.i = 100;
-    si.f = 2.5f;
-    assert_always(si.ref.cnt == 1);
+    struct TestRefObj obj;
 
-    cra_refcnt_ref(&si.ref);
-    assert_always(si.ref.cnt == 2);
+    testrefobj_init(&obj);
+    assert_always(flag == 1);
+    assert_always(obj.ref.cnt == 1);
 
-    assert_always(!cra_refcnt_unref(&si.ref));
-    assert_always(si.ref.cnt == 1);
-    assert_always(cra_refcnt_unref(&si.ref));
-    assert_always(si.ref.cnt == 0);
+    testrefobj_ref(&obj);
+    assert_always(obj.ref.cnt == 2);
 
-    struct StruIn *psi = cra_alloc(struct StruIn);
-    cra_refcnt_init(&psi->ref, cra_struin_delete);
-    psi->i = 200;
-    psi->f = 4.8f;
-    assert_always(psi->ref.cnt == 1);
+    testrefobj_unref(&obj);
+    assert_always(obj.ref.cnt == 1);
 
-    cra_refcnt_ref(&psi->ref);
-    assert_always(psi->ref.cnt == 2);
+    testrefobj_ref(&obj);
+    testrefobj_ref(&obj);
+    testrefobj_ref(&obj);
+    testrefobj_ref(&obj);
+    assert_always(obj.ref.cnt == 5);
 
-    assert_always(!cra_refcnt_unref(&psi->ref));
-    assert_always(psi->ref.cnt == 1);
-    assert_always(cra_refcnt_unref(&psi->ref));
-    psi = NULL;
+    testrefobj_unref(&obj);
+    testrefobj_unref(&obj);
+    testrefobj_unref(&obj);
+    testrefobj_unref(&obj);
+    testrefobj_unref(&obj);
+    assert_always(obj.ref.cnt == 0);
+    assert_always(obj.s == NULL);
+    assert_always(obj.i == 0);
+    assert_always(flag == 2);
 }
+
+#endif // end intrusive ref
+
+void
+test_weak_ref_make(void)
+{
+    CraWeakRef     *ref, *ref2;
+    struct TestObj *obj, *obj2;
+
+    ref = cra_weak_ref_make(sizeof(struct TestObj), (cra_ref_fn)testobj_uninit);
+    assert_always(ref != NULL);
+    assert_always(ref->cnt == 1);
+    assert_always(ref->weak_cnt == 1);
+
+    obj = (struct TestObj *)cra_weak_ref_get_ptr_uncheck(ref);
+    assert_always(obj != NULL);
+    testobj_init(obj);
+    assert_always(flag == 1);
+
+    cra_weak_ref_ref(ref);
+    assert_always(ref->cnt == 1);
+    assert_always(ref->weak_cnt == 2);
+
+    // weak ref holder acquire object
+    obj2 = (struct TestObj *)cra_weak_ref_acquire(ref);
+    assert_always(ref->weak_cnt == 2);
+    assert_always(ref->cnt == 2);
+    assert_always(obj2 != NULL);
+    assert_always(obj2 == obj);
+    // strong ref holder get object directly
+    obj = (struct TestObj *)cra_weak_ref_get_ptr_uncheck(ref);
+    assert_always(ref->weak_cnt == 2);
+    assert_always(ref->cnt == 2);
+    assert_always(obj != NULL);
+    assert_always(obj == obj2);
+
+    cra_weak_ref_release_clear_ptr(ref, (void **)&obj2);
+    assert_always(ref->weak_cnt == 2);
+    assert_always(ref->cnt == 1);
+    assert_always(obj2 == NULL);
+
+    cra_weak_ref_unref(ref);
+    assert_always(ref->weak_cnt == 1);
+    assert_always(ref->cnt == 1);
+
+    cra_weak_ref_ref(ref);
+    assert_always(ref->cnt == 1);
+    assert_always(ref->weak_cnt == 2);
+
+    ref2 = ref;
+    cra_weak_ref_unref_clear(&ref2);
+    assert_always(ref2 == NULL);
+    assert_always(ref->cnt == 1);
+    assert_always(ref->weak_cnt == 1);
+
+    assert_always(flag == 1);
+    // destroy object & control block
+    cra_weak_ref_release_clear(&ref);
+    assert_always(ref == NULL);
+    assert_always(flag == 2);
+
+    // ===================================
+
+    ref = cra_weak_ref_make(sizeof(struct TestObj), (cra_ref_fn)testobj_uninit);
+    assert_always(ref != NULL);
+    assert_always(ref->cnt == 1);
+    assert_always(ref->weak_cnt == 1);
+    obj = (struct TestObj *)cra_weak_ref_get_ptr_uncheck(ref);
+    testobj_init(obj);
+    assert_always(flag == 1);
+
+    cra_weak_ref_ref(ref);
+    assert_always(ref->cnt == 1);
+    assert_always(ref->weak_cnt == 2);
+
+    obj2 = (struct TestObj *)cra_weak_ref_acquire(ref);
+    assert_always(ref->weak_cnt == 2);
+    assert_always(ref->cnt == 2);
+    assert_always(obj2 != NULL);
+    assert_always(obj2 == obj);
+    assert_always(flag == 1);
+
+    cra_weak_ref_release(ref);
+    assert_always(ref->cnt == 1);
+    assert_always(ref->weak_cnt == 2);
+
+    assert_always(flag == 1);
+    cra_weak_ref_release(ref);
+    assert_always(flag == 2);
+    assert_always(ref->cnt == 0); // destroy object
+    assert_always(ref->weak_cnt == 1);
+
+    obj = (struct TestObj *)cra_weak_ref_acquire(ref);
+    assert_always(obj == NULL); // object is destroyed, acquire failed
+    assert_always(ref->cnt == 0);
+    assert_always(ref->weak_cnt == 1);
+
+    cra_weak_ref_ref(ref);
+    assert_always(ref->cnt == 0);
+    assert_always(ref->weak_cnt == 2);
+
+    cra_weak_ref_unref(ref);
+    assert_always(ref->cnt == 0);
+    assert_always(ref->weak_cnt == 1);
+
+    assert_always(cra_weak_ref_unref(ref) == true); // destroy control block
+    // ref is a dangling pointer now
+}
+
+void
+test_weak_ref_take(void)
+{
+    CraWeakRef     *ref, *ref2;
+    struct TestObj *obj, *obj2;
+
+    obj = cra_alloc(struct TestObj);
+    assert_always(obj != NULL);
+    testobj_init(obj);
+    assert_always(flag == 1);
+
+    ref = cra_weak_ref_take(obj, (cra_ref_fn)testobj_uninit, cra_dealloc);
+    assert_always(ref != NULL);
+    assert_always(ref->cnt == 1);
+    assert_always(ref->weak_cnt == 1);
+
+    cra_weak_ref_ref(ref);
+    assert_always(ref->cnt == 1);
+    assert_always(ref->weak_cnt == 2);
+
+    // weak ref holder acquire object
+    obj2 = (struct TestObj *)cra_weak_ref_acquire(ref);
+    assert_always(ref->weak_cnt == 2);
+    assert_always(ref->cnt == 2);
+    assert_always(obj2 != NULL);
+    assert_always(obj2 == obj);
+    // strong ref holder get object directly
+    obj = (struct TestObj *)cra_weak_ref_get_ptr_uncheck(ref);
+    assert_always(ref->weak_cnt == 2);
+    assert_always(ref->cnt == 2);
+    assert_always(obj != NULL);
+    assert_always(obj == obj2);
+
+    cra_weak_ref_release_clear_ptr(ref, (void **)&obj2);
+    assert_always(ref->weak_cnt == 2);
+    assert_always(ref->cnt == 1);
+    assert_always(obj2 == NULL);
+
+    cra_weak_ref_unref(ref);
+    assert_always(ref->weak_cnt == 1);
+    assert_always(ref->cnt == 1);
+
+    cra_weak_ref_ref(ref);
+    assert_always(ref->cnt == 1);
+    assert_always(ref->weak_cnt == 2);
+
+    ref2 = ref;
+    cra_weak_ref_unref_clear(&ref2);
+    assert_always(ref2 == NULL);
+    assert_always(ref->cnt == 1);
+    assert_always(ref->weak_cnt == 1);
+
+    assert_always(flag == 1);
+    // destroy object & control block
+    cra_weak_ref_release_clear(&ref);
+    assert_always(ref == NULL);
+    assert_always(flag == 2);
+
+    // ===================================
+
+    obj = cra_alloc(struct TestObj);
+    assert_always(obj != NULL);
+    testobj_init(obj);
+    assert_always(flag == 1);
+
+    ref = cra_weak_ref_take(obj, (cra_ref_fn)testobj_uninit, cra_dealloc);
+    assert_always(ref != NULL);
+    assert_always(ref->cnt == 1);
+    assert_always(ref->weak_cnt == 1);
+
+    cra_weak_ref_ref(ref);
+    assert_always(ref->cnt == 1);
+    assert_always(ref->weak_cnt == 2);
+
+    obj2 = (struct TestObj *)cra_weak_ref_acquire(ref);
+    assert_always(ref->weak_cnt == 2);
+    assert_always(ref->cnt == 2);
+    assert_always(obj2 != NULL);
+    assert_always(obj2 == obj);
+    assert_always(flag == 1);
+
+    cra_weak_ref_release(ref);
+    assert_always(ref->cnt == 1);
+    assert_always(ref->weak_cnt == 2);
+
+    assert_always(flag == 1);
+    cra_weak_ref_release(ref);
+    assert_always(flag == 2);
+    assert_always(ref->cnt == 0); // destroy object
+    assert_always(ref->weak_cnt == 1);
+
+    obj = (struct TestObj *)cra_weak_ref_acquire(ref);
+    assert_always(obj == NULL); // object is destroyed, acquire failed
+    assert_always(ref->cnt == 0);
+    assert_always(ref->weak_cnt == 1);
+
+    cra_weak_ref_ref(ref);
+    assert_always(ref->cnt == 0);
+    assert_always(ref->weak_cnt == 2);
+
+    cra_weak_ref_unref(ref);
+    assert_always(ref->cnt == 0);
+    assert_always(ref->weak_cnt == 1);
+
+    assert_always(cra_weak_ref_unref(ref) == true); // destroy control block
+    // ref is a dangling pointer now
+}
+
+#if 1 // intrusive weak ref
+
+struct TestWeakRefObj
+{
+    CraWeakRefHead head;
+    float          f;
+    char          *s;
+};
+
+static void
+testweakrefobj_init(struct TestWeakRefObj *obj)
+{
+    cra_weak_ref_head_init(&obj->head);
+    obj->f = 5.7f;
+    obj->s = cra_malloc(100);
+    assert_always(obj->s != NULL);
+    memcpy(obj->s, "hello weak reference", 21);
+
+    flag = 1;
+}
+
+static void
+testweakrefobj_uninit(struct TestWeakRefObj *obj)
+{
+    assert_always(obj->head.cnt == 0);
+    cra_free(obj->s);
+    obj->s = NULL;
+    obj->f = 0.0f;
+
+    flag = 2;
+}
+
+static void
+testweakrefobj_weak_ref(struct TestWeakRefObj *obj)
+{
+    cra_weak_ref_head_ref(&obj->head);
+}
+
+static void
+testweakrefobj_weak_unref(struct TestWeakRefObj *obj)
+{
+    cra_weak_ref_head_unref(&obj->head);
+    // no need to destroy weak ref control block,
+    // it is the object's field
+}
+
+static struct TestWeakRefObj *
+testweakrefobj_acquire(struct TestWeakRefObj *obj)
+{
+    if (cra_weak_ref_head_acquire(&obj->head))
+        return obj;
+    return NULL;
+}
+
+static void
+testweakrefobj_release(struct TestWeakRefObj *obj)
+{
+    if (cra_weak_ref_head_release(&obj->head))
+    {
+        testweakrefobj_uninit(obj);
+
+        assert_always(obj->head.weak_cnt > 0);
+        testweakrefobj_weak_unref(obj); // IMPORTANT
+    }
+}
+
+void
+test_weak_ref_intrusive(void)
+{
+    struct TestWeakRefObj obj, *obj2;
+
+    testweakrefobj_init(&obj);
+    assert_always(flag == 1);
+    assert_always(obj.head.cnt == 1);
+    assert_always(obj.head.weak_cnt == 1);
+
+    testweakrefobj_weak_ref(&obj);
+    assert_always(obj.head.cnt == 1);
+    assert_always(obj.head.weak_cnt == 2);
+
+    obj2 = testweakrefobj_acquire(&obj);
+    assert_always(obj.head.weak_cnt == 2);
+    assert_always(obj.head.cnt == 2);
+    assert_always(obj2 != NULL);
+    assert_always(obj2 == &obj);
+
+    testweakrefobj_release(obj2);
+    assert_always(obj.head.cnt == 1);
+    assert_always(obj.head.weak_cnt == 2);
+
+    assert_always(flag == 1);
+    testweakrefobj_release(&obj);
+    assert_always(obj.head.cnt == 0);
+    assert_always(obj.head.weak_cnt == 1);
+    assert_always(flag == 2);
+
+    testweakrefobj_weak_unref(&obj);
+    assert_always(obj.head.cnt == 0);
+    assert_always(obj.head.weak_cnt == 0);
+
+    // ===================================
+
+    testweakrefobj_init(&obj);
+    assert_always(obj.head.cnt == 1);
+    assert_always(obj.head.weak_cnt == 1);
+    assert_always(flag == 1);
+
+    testweakrefobj_release(&obj);
+    assert_always(obj.head.cnt == 0);
+    assert_always(obj.head.weak_cnt == 0);
+    assert_always(flag == 2);
+}
+
+#endif // end intrusive weak ref
+
+#if 1 // ref(multi threads)
+
+cra_atomic_int32_t ref_multi_num = 0;
+
+static void
+ref_multi_check(void *pi)
+{
+    CRA_UNUSED_VALUE(pi);
+    cra_atomic_inc(&ref_multi_num, CRA_MO_RELAXED);
+}
+
+static void
+ref_multi_task_func(const CraThrdPoolArgs1 *args)
+{
+    CraRef *ref = (CraRef *)args->arg1;
+
+    // cra_msleep(20);
+
+    cra_ref_unref(ref);
+}
+
+void
+test_ref_multi(void)
+{
+    CraRef     *ref;
+    CraThrdPool pool;
+
+    ref = cra_ref_make(sizeof(int), ref_multi_check);
+    assert_always(ref != NULL);
+
+    cra_thrdpool_init(&pool, 8, CRA_THRDPOOL_TASK_INFINITE);
+
+    for (int i = 0; i < 10000; i++)
+    {
+        cra_ref_ref(ref);
+        cra_thrdpool_add_task1(&pool, ref_multi_task_func, ref);
+    }
+
+    cra_ref_unref(ref);
+
+    cra_thrdpool_wait(&pool);
+
+    printf("ref_multi_num = %d\n", ref_multi_num);
+    assert_always(ref_multi_num == 1);
+
+    cra_thrdpool_uninit(&pool);
+}
+
+#endif // end ref(multi threads)
+
+#if 1 // weak ref(multi threads)
+
+cra_atomic_int32_t weak_ref_multi_num = 0;
+cra_atomic_int32_t weak_ref_multi_acquire_fail_num = 0;
+cra_atomic_int32_t weak_ref_multi_acquire_success_num = 0;
+
+static void
+weak_ref_multi_check(void *pi)
+{
+    CRA_UNUSED_VALUE(pi);
+    cra_atomic_inc(&weak_ref_multi_num, CRA_MO_RELAXED);
+}
+
+static void
+weak_ref_multi_task_func(const CraThrdPoolArgs1 *args)
+{
+    CraWeakRef *ref = (CraWeakRef *)args->arg1;
+
+    if (cra_weak_ref_acquire(ref) == NULL)
+    {
+        cra_atomic_inc(&weak_ref_multi_acquire_fail_num, CRA_MO_RELAXED);
+    }
+    else
+    {
+        cra_atomic_inc(&weak_ref_multi_acquire_success_num, CRA_MO_RELAXED);
+
+        // cra_msleep(20);
+
+        cra_weak_ref_release(ref);
+    }
+
+    cra_weak_ref_unref(ref);
+}
+
+void
+test_weak_ref_multi(void)
+{
+    CraWeakRef *ref;
+    CraThrdPool pool;
+
+    ref = cra_weak_ref_make(sizeof(int), weak_ref_multi_check);
+    assert_always(ref != NULL);
+
+    cra_thrdpool_init(&pool, 8, CRA_THRDPOOL_TASK_INFINITE);
+
+    for (int i = 0; i < 1000; i++)
+    {
+        cra_weak_ref_ref(ref);
+        cra_thrdpool_add_task1(&pool, weak_ref_multi_task_func, ref);
+    }
+
+    cra_weak_ref_release_clear(&ref);
+
+    cra_thrdpool_wait(&pool);
+
+    printf("weak_ref_multi_num = %d\n"
+           "weak_ref_multi_acquire_fail_num = %d\n"
+           "weak_ref_multi_acquire_success_num = %d\n",
+           weak_ref_multi_num,
+           weak_ref_multi_acquire_fail_num,
+           weak_ref_multi_acquire_success_num);
+    assert_always(weak_ref_multi_num == 1);
+
+    cra_thrdpool_uninit(&pool);
+}
+
+#endif // end weak ref(multi threads)
 
 int
 main(void)
 {
-    test_refcnt();
-    test_refcnt_ptr();
-    test_multithread();
-    test_ref_inner();
+    test_ref_make();
+    test_ref_take();
+    test_ref_intrusive();
+
+    test_weak_ref_make();
+    test_weak_ref_take();
+    test_weak_ref_intrusive();
+
+    test_ref_multi();
+    test_weak_ref_multi();
 
     cra_memory_leak_report();
     return 0;

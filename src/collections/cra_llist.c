@@ -308,11 +308,11 @@ static CRA_APPENDABLE_APPEND_FN(cra_llist_appendable_append)
     CraLList *list;
 
     assert(obj);
-    assert(vals);
-    assert(vals->val1_ref);
+    assert(val);
+    assert(val->val_ref);
 
     list = (CraLList *)obj;
-    return (cra_llist_insert)(list, list->count, vals->val1_ref);
+    return (cra_llist_insert)(list, list->count, val->val_ref);
 }
 
 CRA_APPENDABLE_DEF(cra_g_llist_appendable_i) = {
@@ -345,7 +345,7 @@ static CRA_ITERABLE_NEXT_FN(cra_llist_iterable_next)
     CraLListNode *curr, *next;
 
     assert(it);
-    assert(vals);
+    assert(val);
     assert(it->obj);
 
     list = (CraLList *)it->obj;
@@ -358,7 +358,7 @@ static CRA_ITERABLE_NEXT_FN(cra_llist_iterable_next)
     assert(curr->prev);
 
     next = curr->next;
-    vals->val1_ref = curr->val;
+    val->val_ref = curr->val;
     it->ic1.cur = next != list->head ? next : NULL;
     return true;
 }
@@ -369,7 +369,7 @@ static CRA_ITERABLE_PREV_FN(cra_llist_iterable_prev)
     CraLListNode *curr, *prev;
 
     assert(it);
-    assert(vals);
+    assert(val);
     assert(it->obj);
 
     list = (CraLList *)it->obj;
@@ -382,7 +382,7 @@ static CRA_ITERABLE_PREV_FN(cra_llist_iterable_prev)
     assert(curr->prev);
 
     prev = curr->prev;
-    vals->val1_ref = curr->val;
+    val->val_ref = curr->val;
     it->ic1.cur = prev != list->head->prev ? prev : NULL;
     return true;
 }

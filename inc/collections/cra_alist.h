@@ -10,8 +10,8 @@
  */
 #ifndef __CRA_ALIST_H__
 #define __CRA_ALIST_H__
-#include "cra_assert.h"
 #include "cra_collects.h"
+#include "cra_ifs.h"
 
 #define CRA_ALIST_DEFAULT_CAPACITY 8
 

@@ -1,17 +1,19 @@
 # CraBuffer
 
-buffer
+Buffer
 
 ## init
 
 ```c
 bool
-cra_buffer_init(CraBuffer *buffer, size_t init_size);
+cra_buffer_init(CraBuffer *buffer, unsigned int init_size, unsigned int head_size);
 ```
 
-将`buffer`初始化成大小为`init_size`的值  
-`init_size`必须大于0  
-成功返回**true**，buffer内存申请失败返回**false**
+初始化Buffer  
+成功返回**true**，失败返回**false**
+
+- init_size: 初始化Buffer大小。必须大于0
+- head_size: 在数据前预留的长度。可以为0
 
 ## uninit
 
@@ -22,105 +24,123 @@ cra_buffer_uninit(CraBuffer *buffer);
 
 反初始化
 
-## get size
+## write head
 
 ```c
-#define cra_buffer_size(buffer)
+bool
+cra_buffer_write_head(CraBuffer *buffer, const void *head);
 ```
 
-获取`buffer`大小
-
-## get readable
-
-```c
-#define cra_buffer_readable(buffer)
-```
-
-获取`buffer`可读区域大小
-
-## get writable
-
-```c
-#define cra_buffer_writable(buffer)
-```
-
-获取`buffer`可写区域大小
-
-## get read buffer
-
-```c
-#define cra_buffer_read_start(buffer)
-```
-
-获取`buffer`可读区域的起始地址
-
-## get write buffer
-
-```c
-#define cra_buffer_write_start(buffer)
-```
-
-获取`buffer`可写区域的起始地址
-
-## resize
-
-```c
-size_t
-cra_buffer_resize(CraBuffer *buffer, size_t new_size);
-```
-
-重新设置`buffer`的大小，返回`buffer`最新的大小，这个大小可能不等于`new_size`  
-`new_size`小于**readable**时，`buffer`的大小是**readable**而不是`new_size`  
-`new_size`等于0时，`buffer`大小不变  
-成功返回**新的buffer大小**，失败返回**0**
+向预留的头部写入数据。写入的数据长度是调用`init`时指定的**head_size**。  
+只有**head_size**大于0时才会写入并返回**true**；否则返回**false**
 
 ## append
 
 ```c
 bool
-cra_buffer_append(CraBuffer *buffer, const void *data, size_t len);
+cra_buffer_append(CraBuffer *buffer, const void *data, unsigned int len);
 ```
 
-向`buffer`追加长度为`len`的数据（from `data`）  
+向Buffer追加数据。  
 成功返回**true**，失败返回**false**
-
-## append size
-
-```c
-size_t
-cra_buffer_append_size(CraBuffer *buffer, size_t len);
-```
-
-通知`buffer`已追加长度为`len`的数据，`buffer`内部更新一下可写指针  
-当用户使用**cra_buffer_write_start()**得到可写buffer并向其写入了数据，需要调用该函数更新可写指针  
-当`len`大小于**writalbe**时，可写指针也只会更新到buffer最大长度（**writalbe**变为0）  
-返回`min(len, WRITABLE)`
 
 ## retrieve
 
 ```c
-size_t
-cra_buffer_retrieve(CraBuffer *buffer, void *data, size_t len);
+unsigned int
+cra_buffer_retrieve(CraBuffer *buffer, void *data, unsigned int len);
 ```
 
-从`buffer`中读出长度为`len`的数据（to `data`）  
-如果**readable**大于等于`len`，则返回`len`；否则返回**readable**
+从Buffer中取出**len**长度的数据到**data**中。  
+返回实现取出的数据长度。
+
+## append size
+
+```c
+void
+cra_buffer_append_size(CraBuffer *buffer, unsigned int len);
+```
+
+通知Buffer追加了**len**长度的数据。
 
 ## retrieve size
 
 ```c
-size_t
-cra_buffer_retrieve_size(CraBuffer *buffer, size_t len);
+unsigned int
+cra_buffer_retrieve_size(CraBuffer *buffer, unsigned int len);
 ```
 
-通知`buffer`已读出长度为`len`的数据，`buffer`内部更新一下可读指针  
-返回`min(len, READABLE)`
+丢弃Buffer中前**len**字节长度的数据。  
+返回实际丢弃的数据长度。
 
-## retrieve all size
+## get size
 
 ```c
-static inline void
-cra_buffer_retrieve_all_size(CraBuffer *buffer);
+unsigned int
+cra_buffer_get_size(CraBuffer *buffer);
 ```
 
-读出所有数据（清空`buffer`）
+获取Buffer的大小。
+
+## get head size
+
+```c
+unsigned int
+cra_buffer_get_head_size(CraBuffer *buffer);
+```
+
+获取在`init`中指定的**head_size**
+
+## get readable size
+
+```c
+unsigned int
+cra_buffer_get_readable_size(CraBuffer *buffer);
+```
+
+获取Buffer当前可读数据大小。
+
+## get readable size with head
+
+```c
+unsigned int
+cra_buffer_get_readable_size_with_head(CraBuffer *buffer);
+```
+
+返回[cra_buffer_get_readable_size\(\)](#get-readable-size) + [cra_buffer_get_head_size\(\)](#get-head-size)
+
+## get read start with head
+
+```c
+const void *
+cra_buffer_get_read_start_with_head(CraBuffer *buffer);
+```
+
+返回[cra_buffer_get_read_start\(\)](#get-read-start) - [cra_buffer_get_head_size\(\)](#get-head-size)
+
+## get read start
+
+```c
+void *
+cra_buffer_get_read_start(CraBuffer *buffer);
+```
+
+返回Buffer当前可读数据的起始地址。
+
+## get write start
+
+```c
+void *
+cra_buffer_get_write_start(CraBuffer *buffer);
+```
+
+返回Buffer当前可写数据的起始地址。
+
+## reset
+
+```c
+void
+cra_buffer_reset(CraBuffer *buffer);
+```
+
+重置Buffer，将可读可写指针都重置为0。

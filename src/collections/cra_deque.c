@@ -575,12 +575,12 @@ static CRA_APPENDABLE_APPEND_FN(cra_deque_appendable_append)
 {
     CraDeque *deque = (CraDeque *)obj;
 
-    assert(vals);
+    assert(val);
     assert(deque);
-    assert(vals->val1_ref);
+    assert(val->val_ref);
     assert(deque->itemsize > 0);
 
-    return (cra_deque_append)(deque, vals->val1_ref);
+    return (cra_deque_append)(deque, val->val_ref);
 }
 
 CRA_APPENDABLE_DEF(cra_g_deque_appendable_i) = {
@@ -626,13 +626,13 @@ static CRA_ITERABLE_NEXT_FN(cra_deque_iterable_next)
     CraDeque *deque;
 
     assert(it);
-    assert(vals);
+    assert(val);
 
     if (!it->obj)
         return false;
 
     deque = (CraDeque *)it->obj;
-    vals->val1_ref = CRA_DEQUE_ARRAY_PVAL(deque, deque->array[it->ic2.idx], it->ic1.idx);
+    val->val_ref = CRA_DEQUE_ARRAY_PVAL(deque, deque->array[it->ic2.idx], it->ic1.idx);
 
     // has next item?
     if (it->ic2.idx == deque->rear && it->ic1.idx == deque->rindex)
@@ -661,13 +661,13 @@ static CRA_ITERABLE_PREV_FN(cra_deque_iterable_prev)
     CraDeque *deque;
 
     assert(it);
-    assert(vals);
+    assert(val);
 
     if (!it->obj)
         return false;
 
     deque = (CraDeque *)it->obj;
-    vals->val1_ref = CRA_DEQUE_ARRAY_PVAL(deque, deque->array[it->ic2.idx], it->ic1.idx);
+    val->val_ref = CRA_DEQUE_ARRAY_PVAL(deque, deque->array[it->ic2.idx], it->ic1.idx);
 
     // has prev item?
     if (it->ic2.idx == deque->front && it->ic1.idx == deque->lindex)
