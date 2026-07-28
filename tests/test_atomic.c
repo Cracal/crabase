@@ -194,7 +194,7 @@ int64_t            i64;
 
 CRA_THRD_FUNC(test_add_thr_fn)
 {
-    CRA_UNUSED_VALUE(arg);
+    CRA_UNUSED(arg);
     for (int i = 0; i < N_TIMES; i++)
     {
         cra_atomic_add(&ia32, 10, CRA_MO_ACQ_REL);
@@ -205,7 +205,7 @@ CRA_THRD_FUNC(test_add_thr_fn)
 
 CRA_THRD_FUNC(test_sub_thr_fn)
 {
-    CRA_UNUSED_VALUE(arg);
+    CRA_UNUSED(arg);
     for (int i = 0; i < N_TIMES; i++)
     {
         cra_atomic_sub(&ia32, 10, CRA_MO_ACQ_REL);
@@ -241,7 +241,7 @@ test_add_and_sub_thr(void)
 
 CRA_THRD_FUNC(test_inc_thr_fn)
 {
-    CRA_UNUSED_VALUE(arg);
+    CRA_UNUSED(arg);
     for (int i = 0; i < N_TIMES; i++)
     {
         cra_atomic_inc(&ia32, CRA_MO_ACQ_REL);
@@ -252,7 +252,7 @@ CRA_THRD_FUNC(test_inc_thr_fn)
 
 CRA_THRD_FUNC(test_dec_thr_fn)
 {
-    CRA_UNUSED_VALUE(arg);
+    CRA_UNUSED(arg);
     for (int i = 0; i < N_TIMES; i++)
     {
         cra_atomic_dec(&ia32, CRA_MO_ACQ_REL);
@@ -288,7 +288,7 @@ test_inc_and_dec_thr(void)
 
 CRA_THRD_FUNC(test_flag_thr_fn)
 {
-    CRA_UNUSED_VALUE(arg);
+    CRA_UNUSED(arg);
     for (int i = 0; i < N_TIMES; i++)
     {
         while (cra_atomic_flag_test_and_set(&flag, CRA_MO_ACQUIRE))

@@ -596,7 +596,7 @@ static CRA_ITERABLE_INIT_FN(cra_deque_iterable_init)
     assert(it);
     assert(deque);
     assert(deque->itemsize > 0);
-    CRA_UNUSED_VALUE(reverse);
+    CRA_UNUSED(reverse);
 
     if (retcnt)
         *retcnt = deque->count;

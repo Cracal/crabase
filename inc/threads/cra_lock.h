@@ -55,7 +55,7 @@ typedef CRITICAL_SECTION cra_mutex_t;
 // cond
 typedef CONDITION_VARIABLE cra_cond_t;
 #define cra_cond_init                            InitializeConditionVariable
-#define cra_cond_destroy(pcond)                  CRA_UNUSED_VALUE(pcond)
+#define cra_cond_destroy(pcond)                  CRA_UNUSED(pcond)
 #define cra_cond_wait(pcond, pmutex)             (void)SleepConditionVariableCS(pcond, pmutex, INFINITE)
 #define cra_cond_wait_timeout(pcond, pmutex, ms) SleepConditionVariableCS(pcond, pmutex, ms)
 #define cra_cond_signal                          WakeConditionVariable

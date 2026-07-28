@@ -438,7 +438,7 @@ cra_atomic_flag_clear(cra_atomic_flag_t *p, CraMO_e mo)
 static inline void *
 cra_atomic_load_ptr(cra_atomic_ptr_t *p, CraMO_e mo)
 {
-    CRA_UNUSED_VALUE(mo);
+    CRA_UNUSED(mo);
     return InterlockedCompareExchangePointer(p, NULL, NULL);
 }
 
@@ -446,7 +446,7 @@ cra_atomic_load_ptr(cra_atomic_ptr_t *p, CraMO_e mo)
 static inline int32_t
 cra_atomic_load32(cra_atomic_int32_t *p, CraMO_e mo)
 {
-    CRA_UNUSED_VALUE(mo);
+    CRA_UNUSED(mo);
     return InterlockedCompareExchange(p, 0, 0);
 }
 
@@ -454,7 +454,7 @@ cra_atomic_load32(cra_atomic_int32_t *p, CraMO_e mo)
 static inline int64_t
 cra_atomic_load64(cra_atomic_int64_t *p, CraMO_e mo)
 {
-    CRA_UNUSED_VALUE(mo);
+    CRA_UNUSED(mo);
     return InterlockedCompareExchange64(p, 0, 0);
 }
 
@@ -462,7 +462,7 @@ cra_atomic_load64(cra_atomic_int64_t *p, CraMO_e mo)
 static inline void
 cra_atomic_store_ptr(cra_atomic_ptr_t *p, void *v, CraMO_e mo)
 {
-    CRA_UNUSED_VALUE(mo);
+    CRA_UNUSED(mo);
     InterlockedExchangePointer(p, v);
 }
 
@@ -470,7 +470,7 @@ cra_atomic_store_ptr(cra_atomic_ptr_t *p, void *v, CraMO_e mo)
 static inline void
 cra_atomic_store32(cra_atomic_int32_t *p, int32_t v, CraMO_e mo)
 {
-    CRA_UNUSED_VALUE(mo);
+    CRA_UNUSED(mo);
     InterlockedExchange(p, v);
 }
 
@@ -478,7 +478,7 @@ cra_atomic_store32(cra_atomic_int32_t *p, int32_t v, CraMO_e mo)
 static inline void
 cra_atomic_store64(cra_atomic_int64_t *p, int64_t v, CraMO_e mo)
 {
-    CRA_UNUSED_VALUE(mo);
+    CRA_UNUSED(mo);
     InterlockedExchange64(p, v);
 }
 
@@ -486,7 +486,7 @@ cra_atomic_store64(cra_atomic_int64_t *p, int64_t v, CraMO_e mo)
 static inline int32_t
 cra_atomic_add32(cra_atomic_int32_t *p, int32_t v, CraMO_e mo)
 {
-    CRA_UNUSED_VALUE(mo);
+    CRA_UNUSED(mo);
     return InterlockedExchangeAdd(p, v);
 }
 
@@ -494,7 +494,7 @@ cra_atomic_add32(cra_atomic_int32_t *p, int32_t v, CraMO_e mo)
 static inline int64_t
 cra_atomic_add64(cra_atomic_int64_t *p, int64_t v, CraMO_e mo)
 {
-    CRA_UNUSED_VALUE(mo);
+    CRA_UNUSED(mo);
     return InterlockedExchangeAdd64(p, v);
 }
 
@@ -502,7 +502,7 @@ cra_atomic_add64(cra_atomic_int64_t *p, int64_t v, CraMO_e mo)
 static inline int32_t
 cra_atomic_sub32(cra_atomic_int32_t *p, int32_t v, CraMO_e mo)
 {
-    CRA_UNUSED_VALUE(mo);
+    CRA_UNUSED(mo);
     return InterlockedExchangeAdd(p, -v);
 }
 
@@ -510,7 +510,7 @@ cra_atomic_sub32(cra_atomic_int32_t *p, int32_t v, CraMO_e mo)
 static inline int64_t
 cra_atomic_sub64(cra_atomic_int64_t *p, int64_t v, CraMO_e mo)
 {
-    CRA_UNUSED_VALUE(mo);
+    CRA_UNUSED(mo);
     return InterlockedExchangeAdd64(p, -v);
 }
 
@@ -518,7 +518,7 @@ cra_atomic_sub64(cra_atomic_int64_t *p, int64_t v, CraMO_e mo)
 static inline int32_t
 cra_atomic_inc32(cra_atomic_int32_t *p, CraMO_e mo)
 {
-    CRA_UNUSED_VALUE(mo);
+    CRA_UNUSED(mo);
     return InterlockedIncrement(p) - 1;
 }
 
@@ -526,7 +526,7 @@ cra_atomic_inc32(cra_atomic_int32_t *p, CraMO_e mo)
 static inline int64_t
 cra_atomic_inc64(cra_atomic_int64_t *p, CraMO_e mo)
 {
-    CRA_UNUSED_VALUE(mo);
+    CRA_UNUSED(mo);
     return InterlockedIncrement64(p) - 1;
 }
 
@@ -534,7 +534,7 @@ cra_atomic_inc64(cra_atomic_int64_t *p, CraMO_e mo)
 static inline int32_t
 cra_atomic_dec32(cra_atomic_int32_t *p, CraMO_e mo)
 {
-    CRA_UNUSED_VALUE(mo);
+    CRA_UNUSED(mo);
     return InterlockedDecrement(p) + 1;
 }
 
@@ -542,7 +542,7 @@ cra_atomic_dec32(cra_atomic_int32_t *p, CraMO_e mo)
 static inline int64_t
 cra_atomic_dec64(cra_atomic_int64_t *p, CraMO_e mo)
 {
-    CRA_UNUSED_VALUE(mo);
+    CRA_UNUSED(mo);
     return InterlockedDecrement64(p) + 1;
 }
 
@@ -551,8 +551,8 @@ static inline bool
 cra_atomic_cas_weak_ptr(cra_atomic_ptr_t *p, void **expected, void *desired, CraMO_e succ_mo, CraMO_e fail_mo)
 {
     void *old;
-    CRA_UNUSED_VALUE(succ_mo);
-    CRA_UNUSED_VALUE(fail_mo);
+    CRA_UNUSED(succ_mo);
+    CRA_UNUSED(fail_mo);
     if ((old = InterlockedCompareExchangePointer(p, desired, *expected)) != *expected)
     {
         *expected = old;
@@ -566,8 +566,8 @@ static inline bool
 cra_atomic_cas_weak32(cra_atomic_int32_t *p, int32_t *expected, int32_t desired, CraMO_e succ_mo, CraMO_e fail_mo)
 {
     int32_t old;
-    CRA_UNUSED_VALUE(succ_mo);
-    CRA_UNUSED_VALUE(fail_mo);
+    CRA_UNUSED(succ_mo);
+    CRA_UNUSED(fail_mo);
     if ((old = InterlockedCompareExchange(p, desired, *expected)) != *expected)
     {
         *expected = old;
@@ -581,8 +581,8 @@ static inline bool
 cra_atomic_cas_weak64(cra_atomic_int64_t *p, int64_t *expected, int64_t desired, CraMO_e succ_mo, CraMO_e fail_mo)
 {
     int64_t old;
-    CRA_UNUSED_VALUE(succ_mo);
-    CRA_UNUSED_VALUE(fail_mo);
+    CRA_UNUSED(succ_mo);
+    CRA_UNUSED(fail_mo);
     if ((old = InterlockedCompareExchange64(p, desired, *expected)) != *expected)
     {
         *expected = old;
@@ -596,8 +596,8 @@ static inline bool
 cra_atomic_cas_strong_ptr(cra_atomic_ptr_t *p, void **expected, void *desired, CraMO_e succ_mo, CraMO_e fail_mo)
 {
     void *old;
-    CRA_UNUSED_VALUE(succ_mo);
-    CRA_UNUSED_VALUE(fail_mo);
+    CRA_UNUSED(succ_mo);
+    CRA_UNUSED(fail_mo);
     if ((old = InterlockedCompareExchangePointer(p, desired, *expected)) != *expected)
     {
         *expected = old;
@@ -611,8 +611,8 @@ static inline bool
 cra_atomic_cas_strong32(cra_atomic_int32_t *p, int32_t *expected, int32_t desired, CraMO_e succ_mo, CraMO_e fail_mo)
 {
     int32_t old;
-    CRA_UNUSED_VALUE(succ_mo);
-    CRA_UNUSED_VALUE(fail_mo);
+    CRA_UNUSED(succ_mo);
+    CRA_UNUSED(fail_mo);
     if ((old = InterlockedCompareExchange(p, desired, *expected)) != *expected)
     {
         *expected = old;
@@ -626,8 +626,8 @@ static inline bool
 cra_atomic_cas_strong64(cra_atomic_int64_t *p, int64_t *expected, int64_t desired, CraMO_e succ_mo, CraMO_e fail_mo)
 {
     int64_t old;
-    CRA_UNUSED_VALUE(succ_mo);
-    CRA_UNUSED_VALUE(fail_mo);
+    CRA_UNUSED(succ_mo);
+    CRA_UNUSED(fail_mo);
     if ((old = InterlockedCompareExchange64(p, desired, *expected)) != *expected)
     {
         *expected = old;
@@ -640,7 +640,7 @@ cra_atomic_cas_strong64(cra_atomic_int64_t *p, int64_t *expected, int64_t desire
 static inline bool
 cra_atomic_flag_test_and_set(cra_atomic_flag_t *p, CraMO_e mo)
 {
-    CRA_UNUSED_VALUE(mo);
+    CRA_UNUSED(mo);
     return InterlockedExchange8(p, 1);
 }
 
@@ -648,7 +648,7 @@ cra_atomic_flag_test_and_set(cra_atomic_flag_t *p, CraMO_e mo)
 static inline void
 cra_atomic_flag_clear(cra_atomic_flag_t *p, CraMO_e mo)
 {
-    CRA_UNUSED_VALUE(mo);
+    CRA_UNUSED(mo);
     InterlockedAnd8(p, 0);
 }
 
@@ -658,7 +658,7 @@ cra_atomic_flag_clear(cra_atomic_flag_t *p, CraMO_e mo)
 static inline void *
 cra_atomic_load_ptr(cra_atomic_ptr_t *p, CraMO_e mo)
 {
-    CRA_UNUSED_VALUE(mo);
+    CRA_UNUSED(mo);
     return __sync_fetch_and_or(p, 0);
 }
 
@@ -666,7 +666,7 @@ cra_atomic_load_ptr(cra_atomic_ptr_t *p, CraMO_e mo)
 static inline int32_t
 cra_atomic_load32(cra_atomic_int32_t *p, CraMO_e mo)
 {
-    CRA_UNUSED_VALUE(mo);
+    CRA_UNUSED(mo);
     return __sync_fetch_and_or(p, 0);
 }
 
@@ -674,7 +674,7 @@ cra_atomic_load32(cra_atomic_int32_t *p, CraMO_e mo)
 static inline int64_t
 cra_atomic_load64(cra_atomic_int64_t *p, CraMO_e mo)
 {
-    CRA_UNUSED_VALUE(mo);
+    CRA_UNUSED(mo);
     return __sync_fetch_and_or(p, 0);
 }
 
@@ -682,7 +682,7 @@ cra_atomic_load64(cra_atomic_int64_t *p, CraMO_e mo)
 static inline void
 cra_atomic_store_ptr(cra_atomic_ptr_t *p, void *v, CraMO_e mo)
 {
-    CRA_UNUSED_VALUE(mo);
+    CRA_UNUSED(mo);
     (void)__sync_lock_test_and_set(p, v);
 }
 
@@ -690,7 +690,7 @@ cra_atomic_store_ptr(cra_atomic_ptr_t *p, void *v, CraMO_e mo)
 static inline void
 cra_atomic_store32(cra_atomic_int32_t *p, int32_t v, CraMO_e mo)
 {
-    CRA_UNUSED_VALUE(mo);
+    CRA_UNUSED(mo);
     (void)__sync_lock_test_and_set(p, v);
 }
 
@@ -698,7 +698,7 @@ cra_atomic_store32(cra_atomic_int32_t *p, int32_t v, CraMO_e mo)
 static inline void
 cra_atomic_store64(cra_atomic_int64_t *p, int64_t v, CraMO_e mo)
 {
-    CRA_UNUSED_VALUE(mo);
+    CRA_UNUSED(mo);
     (void)__sync_lock_test_and_set(p, v);
 }
 
@@ -706,7 +706,7 @@ cra_atomic_store64(cra_atomic_int64_t *p, int64_t v, CraMO_e mo)
 static inline int32_t
 cra_atomic_add32(cra_atomic_int32_t *p, int32_t v, CraMO_e mo)
 {
-    CRA_UNUSED_VALUE(mo);
+    CRA_UNUSED(mo);
     return __sync_fetch_and_add(p, v);
 }
 
@@ -714,7 +714,7 @@ cra_atomic_add32(cra_atomic_int32_t *p, int32_t v, CraMO_e mo)
 static inline int64_t
 cra_atomic_add64(cra_atomic_int64_t *p, int64_t v, CraMO_e mo)
 {
-    CRA_UNUSED_VALUE(mo);
+    CRA_UNUSED(mo);
     return __sync_fetch_and_add(p, v);
 }
 
@@ -722,7 +722,7 @@ cra_atomic_add64(cra_atomic_int64_t *p, int64_t v, CraMO_e mo)
 static inline int32_t
 cra_atomic_sub32(cra_atomic_int32_t *p, int32_t v, CraMO_e mo)
 {
-    CRA_UNUSED_VALUE(mo);
+    CRA_UNUSED(mo);
     return __sync_fetch_and_sub(p, v);
 }
 
@@ -730,7 +730,7 @@ cra_atomic_sub32(cra_atomic_int32_t *p, int32_t v, CraMO_e mo)
 static inline int64_t
 cra_atomic_sub64(cra_atomic_int64_t *p, int64_t v, CraMO_e mo)
 {
-    CRA_UNUSED_VALUE(mo);
+    CRA_UNUSED(mo);
     return __sync_fetch_and_sub(p, v);
 }
 
@@ -738,7 +738,7 @@ cra_atomic_sub64(cra_atomic_int64_t *p, int64_t v, CraMO_e mo)
 static inline int32_t
 cra_atomic_inc32(cra_atomic_int32_t *p, CraMO_e mo)
 {
-    CRA_UNUSED_VALUE(mo);
+    CRA_UNUSED(mo);
     return __sync_fetch_and_add(p, 1);
 }
 
@@ -746,7 +746,7 @@ cra_atomic_inc32(cra_atomic_int32_t *p, CraMO_e mo)
 static inline int64_t
 cra_atomic_inc64(cra_atomic_int64_t *p, CraMO_e mo)
 {
-    CRA_UNUSED_VALUE(mo);
+    CRA_UNUSED(mo);
     return __sync_fetch_and_add(p, 1);
 }
 
@@ -754,7 +754,7 @@ cra_atomic_inc64(cra_atomic_int64_t *p, CraMO_e mo)
 static inline int32_t
 cra_atomic_dec32(cra_atomic_int32_t *p, CraMO_e mo)
 {
-    CRA_UNUSED_VALUE(mo);
+    CRA_UNUSED(mo);
     return __sync_fetch_and_sub(p, 1);
 }
 
@@ -762,7 +762,7 @@ cra_atomic_dec32(cra_atomic_int32_t *p, CraMO_e mo)
 static inline int64_t
 cra_atomic_dec64(cra_atomic_int64_t *p, CraMO_e mo)
 {
-    CRA_UNUSED_VALUE(mo);
+    CRA_UNUSED(mo);
     return __sync_fetch_and_sub(p, 1);
 }
 
@@ -771,8 +771,8 @@ static inline bool
 cra_atomic_cas_weak_ptr(cra_atomic_ptr_t *p, void **expected, void *desired, CraMO_e succ_mo, CraMO_e fail_mo)
 {
     void *old;
-    CRA_UNUSED_VALUE(succ_mo);
-    CRA_UNUSED_VALUE(fail_mo);
+    CRA_UNUSED(succ_mo);
+    CRA_UNUSED(fail_mo);
     if ((old = __sync_val_compare_and_swap(p, *expected, desired)) != *expected)
     {
         *expected = old;
@@ -786,8 +786,8 @@ static inline bool
 cra_atomic_cas_weak32(cra_atomic_int32_t *p, int32_t *expected, int32_t desired, CraMO_e succ_mo, CraMO_e fail_mo)
 {
     int32_t old;
-    CRA_UNUSED_VALUE(succ_mo);
-    CRA_UNUSED_VALUE(fail_mo);
+    CRA_UNUSED(succ_mo);
+    CRA_UNUSED(fail_mo);
     if ((old = __sync_val_compare_and_swap(p, *expected, desired)) != *expected)
     {
         *expected = old;
@@ -801,8 +801,8 @@ static inline bool
 cra_atomic_cas_weak64(cra_atomic_int64_t *p, int64_t *expected, int64_t desired, CraMO_e succ_mo, CraMO_e fail_mo)
 {
     int64_t old;
-    CRA_UNUSED_VALUE(succ_mo);
-    CRA_UNUSED_VALUE(fail_mo);
+    CRA_UNUSED(succ_mo);
+    CRA_UNUSED(fail_mo);
     if ((old = __sync_val_compare_and_swap(p, *expected, desired)) != *expected)
     {
         *expected = old;
@@ -816,8 +816,8 @@ static inline bool
 cra_atomic_cas_strong_ptr(cra_atomic_ptr_t *p, void **expected, void *desired, CraMO_e succ_mo, CraMO_e fail_mo)
 {
     void *old;
-    CRA_UNUSED_VALUE(succ_mo);
-    CRA_UNUSED_VALUE(fail_mo);
+    CRA_UNUSED(succ_mo);
+    CRA_UNUSED(fail_mo);
     if ((old = __sync_val_compare_and_swap(p, *expected, desired)) != *expected)
     {
         *expected = old;
@@ -831,8 +831,8 @@ static inline bool
 cra_atomic_cas_strong32(cra_atomic_int32_t *p, int32_t *expected, int32_t desired, CraMO_e succ_mo, CraMO_e fail_mo)
 {
     int32_t old;
-    CRA_UNUSED_VALUE(succ_mo);
-    CRA_UNUSED_VALUE(fail_mo);
+    CRA_UNUSED(succ_mo);
+    CRA_UNUSED(fail_mo);
     if ((old = __sync_val_compare_and_swap(p, *expected, desired)) != *expected)
     {
         *expected = old;
@@ -846,8 +846,8 @@ static inline bool
 cra_atomic_cas_strong64(cra_atomic_int64_t *p, int64_t *expected, int64_t desired, CraMO_e succ_mo, CraMO_e fail_mo)
 {
     int64_t old;
-    CRA_UNUSED_VALUE(succ_mo);
-    CRA_UNUSED_VALUE(fail_mo);
+    CRA_UNUSED(succ_mo);
+    CRA_UNUSED(fail_mo);
     if ((old = __sync_val_compare_and_swap(p, *expected, desired)) != *expected)
     {
         *expected = old;
@@ -860,7 +860,7 @@ cra_atomic_cas_strong64(cra_atomic_int64_t *p, int64_t *expected, int64_t desire
 static inline bool
 cra_atomic_flag_test_and_set(cra_atomic_flag_t *p, CraMO_e mo)
 {
-    CRA_UNUSED_VALUE(mo);
+    CRA_UNUSED(mo);
     return __sync_lock_test_and_set(p, 1);
 }
 
@@ -868,7 +868,7 @@ cra_atomic_flag_test_and_set(cra_atomic_flag_t *p, CraMO_e mo)
 static inline void
 cra_atomic_flag_clear(cra_atomic_flag_t *p, CraMO_e mo)
 {
-    CRA_UNUSED_VALUE(mo);
+    CRA_UNUSED(mo);
     __sync_lock_release(p);
 }
 

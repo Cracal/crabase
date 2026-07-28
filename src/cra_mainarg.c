@@ -332,7 +332,7 @@ cra_mainarg_stob(CraMainArgVal_u *retval, const char *opval, void *_)
     assert(retval);
     assert(opval);
     assert(!_);
-    CRA_UNUSED_VALUE(_);
+    CRA_UNUSED(_);
     return cra_mainarg_stob_values(retval, opval, (char *[]){ "on", "off" });
 }
 
@@ -342,7 +342,7 @@ cra_mainarg_stoi(CraMainArgVal_u *retval, const char *opval, void *_)
     assert(retval);
     assert(opval);
     assert(!_);
-    CRA_UNUSED_VALUE(_);
+    CRA_UNUSED(_);
 
     char   *end = NULL;
     int64_t i = strtoll(opval, &end, 10);
@@ -360,7 +360,7 @@ cra_mainarg_stof(CraMainArgVal_u *retval, const char *opval, void *_)
     assert(retval);
     assert(opval);
     assert(!_);
-    CRA_UNUSED_VALUE(_);
+    CRA_UNUSED(_);
 
     char  *end = NULL;
     double f = strtod(opval, &end);
@@ -378,7 +378,7 @@ cra_mainarg_stos(CraMainArgVal_u *retval, const char *opval, void *_)
     assert(retval);
     assert(opval);
     assert(!_);
-    CRA_UNUSED_VALUE(_);
+    CRA_UNUSED(_);
 
     retval->s = (char *)opval;
     return true;

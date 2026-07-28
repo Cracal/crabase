@@ -74,8 +74,8 @@ __cra_realloc_dbg(void *ptr, size_t newsize, char *file, int line)
     CraMallocBlkNode *last;
     CraMallocBlkNode *node;
 
-    CRA_UNUSED_VALUE(file);
-    CRA_UNUSED_VALUE(line);
+    CRA_UNUSED(file);
+    CRA_UNUSED(line);
 
     ret = NULL;
     CRA_MALLOC_LOCK();

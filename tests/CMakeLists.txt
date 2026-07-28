@@ -40,6 +40,8 @@ add_executable(test_futils test_futils.c)
 target_link_libraries(test_futils ${LIBS})
 add_executable(test_mainarg test_mainarg.c)
 target_link_libraries(test_mainarg ${LIBS})
+add_executable(test_mutils test_mutils.c)
+target_link_libraries(test_mutils ${LIBS})
 
 add_executable(collections_performance collections_performance.c)
 target_link_libraries(collections_performance ${LIBS})

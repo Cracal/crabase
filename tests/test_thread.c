@@ -15,7 +15,7 @@
 
 static CRA_THRD_FUNC(thrd_func)
 {
-    CRA_UNUSED_VALUE(arg);
+    CRA_UNUSED(arg);
     for (int i = 0; i < 10; i++)
     {
         printf("Thread %lu is runing...\n", cra_thrd_get_current_tid());
@@ -45,7 +45,7 @@ static int         s_val = 0;
 
 static CRA_THRD_FUNC(thrd_locker_func)
 {
-    CRA_UNUSED_VALUE(arg);
+    CRA_UNUSED(arg);
 
     cra_mutex_lock(&s_mutex);
     printf("test-lock-thread: get s_val: %d\n", s_val);
@@ -140,7 +140,7 @@ test_mutex(void)
 
 static CRA_THRD_FUNC(thrd_condvar)
 {
-    CRA_UNUSED_VALUE(arg);
+    CRA_UNUSED(arg);
 
     while (true)
     {

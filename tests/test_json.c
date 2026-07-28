@@ -39,9 +39,9 @@ test_bool(void)
     in.b0 = false;
     in.b1 = true;
     ib2 = &in;
-    CRA_UNUSED_VALUE(ib2);
-    CRA_UNUSED_VALUE(rb2);
-    CRA_UNUSED_VALUE(out);
+    CRA_UNUSED(ib2);
+    CRA_UNUSED(rb2);
+    CRA_UNUSED(out);
 
     length = sizeof(buffer);
     assert_always(cra_json_stringify(buffer, &length, FORMAT, CRA_SERI_STRUCT(in, false, meta, NULL, NULL)));
@@ -1019,7 +1019,7 @@ CRA_TYPE_META_END();
 
 static CRA_INITIALIZABLE_INIT_FN(init_on)
 {
-    CRA_UNUSED_VALUE(params);
+    CRA_UNUSED(params);
     if (length == sizeof(struct O))
     {
         struct O *o = (struct O *)obj;
@@ -1048,7 +1048,7 @@ static CRA_INITIALIZABLE_INIT_FN(init_on)
 
 // static CRA_INITIALIZABLE_UNINIT_FN(uninit_on)
 // {
-//     CRA_UNUSED_VALUE(obj);
+//     CRA_UNUSED(obj);
 // }
 
 const CraInitializable_i oninit_i = { .init = init_on, .uninit = NULL /*uninit_on*/ };
@@ -1805,7 +1805,7 @@ CRA_INITIALIZABLE_UNINIT_FN(a_uninit)
     // 并且不要在这里free
     struct A *a = (struct A *)obj;
     // cra_free(a->str); // don't free this
-    CRA_UNUSED_VALUE(a);
+    CRA_UNUSED(a);
 }
 
 CraInitializable_i a_init_i = { .init = NULL, .uninit = a_uninit };
