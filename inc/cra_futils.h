@@ -33,7 +33,7 @@ cra_is_dir(const char *path)
 static inline int
 cra_mkdir(const char *path, cra_mode_t mode)
 {
-    CRA_UNUSED_VALUE(mode);
+    CRA_UNUSED(mode);
     return _mkdir(path);
 }
 

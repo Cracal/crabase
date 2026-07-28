@@ -21,7 +21,7 @@ cra_blkdeque_init(CraBlkDeque *que, size_t element_size, size_t que_max, bool ze
     cra_cond_init(&que->not_full);
     cra_cond_init(&que->not_empty);
     cra_mutex_init(&que->mutex);
-    CRA_UNUSED_VALUE(zero_memory);
+    CRA_UNUSED(zero_memory);
     return true;
 }
 

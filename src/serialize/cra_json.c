@@ -895,9 +895,6 @@ cra_json_write_key(CraSerializer *ser, void *val, const CraTypeMeta *meta)
 static bool
 cra_json_read_key(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
 {
-    char *buf;
-    CRA_UNUSED_VALUE(buf);
-
     // check key type
     CRA_SERIALIZER_CHECK_KEY(ser, meta);
 

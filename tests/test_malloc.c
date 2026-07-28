@@ -5,7 +5,7 @@ void
 test_error(void)
 {
     void *p;
-    CRA_UNUSED_VALUE(p);
+    CRA_UNUSED(p);
 
     // p = __cra_malloc(0);
 

@@ -534,7 +534,7 @@ cra_atomic_int32_t ref_multi_num = 0;
 static void
 ref_multi_check(void *pi)
 {
-    CRA_UNUSED_VALUE(pi);
+    CRA_UNUSED(pi);
     cra_atomic_inc(&ref_multi_num, CRA_MO_RELAXED);
 }
 
@@ -586,7 +586,7 @@ cra_atomic_int32_t weak_ref_multi_acquire_success_num = 0;
 static void
 weak_ref_multi_check(void *pi)
 {
-    CRA_UNUSED_VALUE(pi);
+    CRA_UNUSED(pi);
     cra_atomic_inc(&weak_ref_multi_num, CRA_MO_RELAXED);
 }
 

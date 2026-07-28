@@ -132,7 +132,7 @@ cra_set_last_error(int err)
 
 #define CRA_BITS(x) (1 << (x))
 
-#define CRA_UNUSED_VALUE(p) (void)(p)
+#define CRA_UNUSED(p) (void)(p)
 
 #define CRA_MAX(a, b)          ((a) > (b) ? (a) : (b))
 #define CRA_MIN(a, b)          ((a) < (b) ? (a) : (b))

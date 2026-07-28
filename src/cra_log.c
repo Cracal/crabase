@@ -225,7 +225,7 @@ static CRA_THRD_FUNC(cra_log_output_async_thread)
     CraLogBuf *buf;
     CraLogger *logger;
 
-    CRA_UNUSED_VALUE(arg);
+    CRA_UNUSED(arg);
 
     while (s_log_async.running)
     {
