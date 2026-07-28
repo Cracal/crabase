@@ -63,7 +63,7 @@ cra_mkdir(const char *path, cra_mode_t mode)
 
 #endif
 
-#define CRA_IS_PATH_SEP(_c) (_c == CRA_PATH_SEP1 || _c == CRA_PATH_SEP2)
+#define CRA_IS_PATH_SEP(c) (c == CRA_PATH_SEP1 || c == CRA_PATH_SEP2)
 
 // 0:     success
 // other: error code

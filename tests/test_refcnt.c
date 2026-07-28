@@ -635,9 +635,7 @@ test_weak_ref_multi(void)
     printf("weak_ref_multi_num = %d\n"
            "weak_ref_multi_acquire_fail_num = %d\n"
            "weak_ref_multi_acquire_success_num = %d\n",
-           weak_ref_multi_num,
-           weak_ref_multi_acquire_fail_num,
-           weak_ref_multi_acquire_success_num);
+           weak_ref_multi_num, weak_ref_multi_acquire_fail_num, weak_ref_multi_acquire_success_num);
     assert_always(weak_ref_multi_num == 1);
 
     cra_thrdpool_uninit(&pool);

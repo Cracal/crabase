@@ -74,7 +74,7 @@ cra_timer_base_init(CraTimer_base    *base,
     base->on_remove_timer = on_remove_timer;
 }
 
-#define CRA_TIMER_IN_NODE(_node) (*(CraTimer_base **)(_node)->val)
+#define CRA_TIMER_IN_NODE(node) (*(CraTimer_base **)(node)->val)
 
 static bool
 __cra_timewheel_init(CraTimewheel *wheel, uint32_t tick_ms, uint32_t wheel_size, CraLList *freenodelist)
@@ -116,8 +116,8 @@ cra_timewheel_add_node(CraTimewheel *wheel, CraLListNode *timernode)
             wheel->upper_wheel = cra_alloc(CraTimewheel);
             if (!wheel->upper_wheel)
                 return false;
-            if (!__cra_timewheel_init(
-                  wheel->upper_wheel, wheel->tick_ms * wheel->wheel_size, wheel->wheel_size, wheel->freenodelist))
+            if (!__cra_timewheel_init(wheel->upper_wheel, wheel->tick_ms * wheel->wheel_size, wheel->wheel_size,
+                                      wheel->freenodelist))
             {
                 cra_dealloc(wheel->upper_wheel);
                 wheel->upper_wheel = NULL;
@@ -173,8 +173,7 @@ cra_timewheel_tick_inner(CraTimewheel *wheel, CraTimewheel *lower_wheel)
                 {
                     fprintf(stderr,
                             "cra_timewheel_tick_inner: add TIMER(timeout_ms = %u, repeat = %u) to wheel failed\n",
-                            timer->timeout_ms,
-                            timer->repeat);
+                            timer->timeout_ms, timer->repeat);
                     goto release_timer;
                 }
             }
@@ -189,8 +188,7 @@ cra_timewheel_tick_inner(CraTimewheel *wheel, CraTimewheel *lower_wheel)
             {
                 fprintf(stderr,
                         "cra_timewheel_tick_inner: add TIMER(timeout_ms = %u, repeat = %u) to lower wheel failed\n",
-                        timer->timeout_ms,
-                        timer->repeat);
+                        timer->timeout_ms, timer->repeat);
                 goto release_timer;
             }
         }

@@ -13,7 +13,7 @@
 #include "cra_collects.h"
 #include "cra_ifs.h"
 
-#define CRA_DEQUE_CHECK_VAL(_deque, _val) assert(sizeof(*(_val)) == (_deque)->itemsize)
+#define CRA_DEQUE_CHECK_VAL(deque, val) assert(sizeof(*(val)) == (deque)->itemsize)
 
 typedef struct CraDeque CraDeque;
 struct CraDeque
@@ -33,10 +33,9 @@ struct CraDeque
 CRA_API bool
 cra_deque_init_with_size(CraDeque *deque, size_t itemsize, size_t init_capacity);
 // bool init_with_size<T>(CraDeque *deque, size_t init_capacity)
-#define cra_deque_init_with_size(_T, _deque, _init_capacity)     \
-    cra_deque_init_with_size(_deque, sizeof(_T), _init_capacity)
+#define cra_deque_init_with_size(T, deque, init_capacity) cra_deque_init_with_size(deque, sizeof(T), init_capacity)
 // bool init<T>(CraDeque *deque)
-#define cra_deque_init(_T, _deque) cra_deque_init_with_size(_T, _deque, 0)
+#define cra_deque_init(T, deque)                          cra_deque_init_with_size(T, deque, 0)
 
 CRA_API void
 cra_deque_uninit(CraDeque *deque);
@@ -51,12 +50,11 @@ cra_deque_prepend(CraDeque *deque, void *val);
 CRA_API bool
 cra_deque_append(CraDeque *deque, void *val);
 // bool insert(CraDeque *deque, size_t index, T *val)
-#define cra_deque_insert(_deque, _index, _val)                                  \
-    (CRA_DEQUE_CHECK_VAL(_deque, _val), cra_deque_insert(_deque, _index, _val))
+#define cra_deque_insert(deque, index, val) (CRA_DEQUE_CHECK_VAL(deque, val), cra_deque_insert(deque, index, val))
 // bool push_front(CraDeque *deque, T *val)
-#define cra_deque_prepend(_deque, _val) (CRA_DEQUE_CHECK_VAL(_deque, _val), cra_deque_prepend(_deque, _val))
+#define cra_deque_prepend(deque, val)       (CRA_DEQUE_CHECK_VAL(deque, val), cra_deque_prepend(deque, val))
 // bool push_back(CraDeque *deque, T *val)
-#define cra_deque_append(_deque, _val)  (CRA_DEQUE_CHECK_VAL(_deque, _val), cra_deque_append(_deque, _val))
+#define cra_deque_append(deque, val)        (CRA_DEQUE_CHECK_VAL(deque, val), cra_deque_append(deque, val))
 
 CRA_API bool
 cra_deque_pop_at(CraDeque *deque, size_t index, void *retval);
@@ -65,20 +63,19 @@ cra_deque_pop_front(CraDeque *deque, void *retval);
 CRA_API bool
 cra_deque_pop_back(CraDeque *deque, void *retval);
 // bool pop_at(CraDeque *deque, size_t index, out T *retval)
-#define cra_deque_pop_at(_deque, _index, _retval)                                     \
-    (CRA_DEQUE_CHECK_VAL(_deque, _retval), cra_deque_pop_at(_deque, _index, _retval))
+#define cra_deque_pop_at(deque, index, retval)                                   \
+    (CRA_DEQUE_CHECK_VAL(deque, retval), cra_deque_pop_at(deque, index, retval))
 // bool pop_front(CraDeque *deque, out T *retval)
-#define cra_deque_pop_front(_deque, _retval)                                     \
-    (CRA_DEQUE_CHECK_VAL(_deque, _retval), cra_deque_pop_front(_deque, _retval))
+#define cra_deque_pop_front(deque, retval) (CRA_DEQUE_CHECK_VAL(deque, retval), cra_deque_pop_front(deque, retval))
 // bool pop_back(CraDeque *deque, out T *retval)
-#define cra_deque_pop_back(_deque, _retval) (CRA_DEQUE_CHECK_VAL(_deque, _retval), cra_deque_pop_back(_deque, _retval))
+#define cra_deque_pop_back(deque, retval)  (CRA_DEQUE_CHECK_VAL(deque, retval), cra_deque_pop_back(deque, retval))
 
 // bool remove_at(CraDeque *deque, size_t index)
-#define cra_deque_remove_at(_deque, _index) (cra_deque_pop_at)(_deque, _index, NULL)
+#define cra_deque_remove_at(deque, index) (cra_deque_pop_at)(deque, index, NULL)
 // bool remove_left(CraDeque *deque)
-#define cra_deque_remove_front(_deque)      (cra_deque_pop_front)(_deque, NULL)
+#define cra_deque_remove_front(deque)     (cra_deque_pop_front)(deque, NULL)
 // bool remove(CraDeque *deque)
-#define cra_deque_remove_back(_deque)       (cra_deque_pop_back)(_deque, NULL)
+#define cra_deque_remove_back(deque)      (cra_deque_pop_back)(deque, NULL)
 
 CRA_API void *
 cra_deque_get_ref(CraDeque *deque, size_t index);
@@ -92,17 +89,16 @@ cra_deque_get(CraDeque *deque, size_t index, void *retval)
     return pval != NULL;
 }
 // bool get(CraDeque *deque, size_t index, out T *retval)
-#define cra_deque_get(_deque, _index, _retval)                                     \
-    (CRA_DEQUE_CHECK_VAL(_deque, _retval), cra_deque_get(_deque, _index, _retval))
+#define cra_deque_get(deque, index, retval) (CRA_DEQUE_CHECK_VAL(deque, retval), cra_deque_get(deque, index, retval))
 
 // bool peek_front(CraDeque *deque, out T *retval)
-#define cra_deque_peek_front(_deque, _retval) cra_deque_get(_deque, 0, _retval)
+#define cra_deque_peek_front(deque, retval) cra_deque_get(deque, 0, retval)
 // T *peek_front_ref(CraDeque *deque)
-#define cra_deque_peek_front_ref(_deque)      cra_deque_get_ref(_deque, 0)
+#define cra_deque_peek_front_ref(deque)     cra_deque_get_ref(deque, 0)
 // bool peek_back(CraDeque *deque, out T *retval)
-#define cra_deque_peek_back(_deque, _retval)  cra_deque_get(_deque, (_deque)->count - 1, _retval)
+#define cra_deque_peek_back(deque, retval)  cra_deque_get(deque, (deque)->count - 1, retval)
 // T *peek_back_ref(CraDeque *deque)
-#define cra_deque_peek_back_ref(_deque)       cra_deque_get_ref(_deque, (_deque)->count - 1)
+#define cra_deque_peek_back_ref(deque)      cra_deque_get_ref(deque, (deque)->count - 1)
 
 static inline bool
 cra_deque_get_and_set(CraDeque *deque, size_t index, void *newval, void *retoldval)
@@ -119,14 +115,13 @@ cra_deque_get_and_set(CraDeque *deque, size_t index, void *newval, void *retoldv
     return pval != NULL;
 }
 // bool get_and_set(CraDeque *deque, size_t index, T *newval, out T *retoldval)
-#define cra_deque_get_and_set(_deque, _index, _newval, _retoldval) \
-    (CRA_DEQUE_CHECK_VAL(_deque, _newval),                         \
-     CRA_DEQUE_CHECK_VAL(_deque, _retoldval),                      \
-     cra_deque_get_and_set(_deque, _index, _newval, _retoldval))
+#define cra_deque_get_and_set(deque, index, newval, retoldval)                  \
+    (CRA_DEQUE_CHECK_VAL(deque, newval), CRA_DEQUE_CHECK_VAL(deque, retoldval), \
+     cra_deque_get_and_set(deque, index, newval, retoldval))
 
 // bool set(CraDeque *deque, size_t index, T *val)
-#define cra_deque_set(_deque, _index, _val)                                                  \
-    (CRA_DEQUE_CHECK_VAL(_deque, _val), (cra_deque_get_and_set)(_deque, _index, _val, NULL))
+#define cra_deque_set(deque, index, val)                                                \
+    (CRA_DEQUE_CHECK_VAL(deque, val), (cra_deque_get_and_set)(deque, index, val, NULL))
 
 CRA_API bool
 cra_deque_reverse(CraDeque *deque);
@@ -139,10 +134,10 @@ typedef struct CraDequeInitializableParam
 {
     size_t itemsize;
 } CraDequeInitializableParam;
-#define CRA_DEQUE_INITIALIZABLE_PARAM_INIT(_T)        { sizeof(_T) }
-#define CRA_DEQUE_INITIALIZABLE_PARAM_DECL(_var_name) CraDequeInitializableParam _var_name
-#define CRA_DEQUE_INITIALIZABLE_PARAM_DEF(_var_name, _T)                                   \
-    CRA_DEQUE_INITIALIZABLE_PARAM_DECL(_var_name) = CRA_DEQUE_INITIALIZABLE_PARAM_INIT(_T)
+#define CRA_DEQUE_INITIALIZABLE_PARAM_INIT(T)        { sizeof(T) }
+#define CRA_DEQUE_INITIALIZABLE_PARAM_DECL(var_name) CraDequeInitializableParam var_name
+#define CRA_DEQUE_INITIALIZABLE_PARAM_DEF(var_name, T)                                   \
+    CRA_DEQUE_INITIALIZABLE_PARAM_DECL(var_name) = CRA_DEQUE_INITIALIZABLE_PARAM_INIT(T)
 
 CRA_API CRA_INITIALIZABLE_DEF(cra_g_deque_initializable_i);
 #define CRA_DEQUE_INITIALIZABLE_I (&cra_g_deque_initializable_i)

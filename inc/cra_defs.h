@@ -142,7 +142,7 @@ cra_set_last_error(int err)
 #define CRA_CAT(a, b)  _CRA_CAT(a, b)
 #define CRA_UCAT(a, b) CRA_CAT(a, CRA_CAT(_, b))
 
-#define CRA_NARRAY(_array) (sizeof(_array) / sizeof((_array)[0]))
+#define CRA_NARRAY(array) (sizeof(array) / sizeof((array)[0]))
 
 #ifndef offsetof
 #define offsetof(type, member) ((size_t)&((type *)0)->member)
@@ -171,13 +171,13 @@ typedef intptr_t ssize_t;
 
 #define bzero ZeroMemory
 
-#define cra_sleep(_sec)   Sleep((_sec) * 1000)
-#define cra_msleep(_msec) Sleep(_msec)
+#define cra_sleep(sec)   Sleep((sec) * 1000)
+#define cra_msleep(msec) Sleep(msec)
 
 #else
 
-#define cra_sleep         sleep
-#define cra_msleep(_msec) usleep((_msec) * 1000)
+#define cra_sleep        sleep
+#define cra_msleep(msec) usleep((msec) * 1000)
 
 #endif
 

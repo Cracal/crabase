@@ -876,31 +876,31 @@ cra_atomic_flag_clear(cra_atomic_flag_t *p, CraMO_e mo)
 
 // ========================== generic ==========================
 
-#define CRA_ATOMIC_GENERIC2(_p, _name)                                                                         \
-    _Generic((_p), cra_atomic_int32_t *: cra_atomic_##_name##32, cra_atomic_int64_t *: cra_atomic_##_name##64)
-#define CRA_ATOMIC_GENERIC3(_p, _name)              \
-    _Generic((_p),                                  \
-      cra_atomic_int32_t *: cra_atomic_##_name##32, \
-      cra_atomic_int64_t *: cra_atomic_##_name##64, \
-      cra_atomic_ptr_t *: cra_atomic_##_name##_ptr)
+#define CRA_ATOMIC_GENERIC2(p, name)                                                                        \
+    _Generic((p), cra_atomic_int32_t *: cra_atomic_##name##32, cra_atomic_int64_t *: cra_atomic_##name##64)
+#define CRA_ATOMIC_GENERIC3(p, name)               \
+    _Generic((p),                                  \
+      cra_atomic_int32_t *: cra_atomic_##name##32, \
+      cra_atomic_int64_t *: cra_atomic_##name##64, \
+      cra_atomic_ptr_t *: cra_atomic_##name##_ptr)
 
 // return *p
-#define cra_atomic_load(_p, _mo)      CRA_ATOMIC_GENERIC3(_p, load)(_p, _mo)
+#define cra_atomic_load(p, mo)     CRA_ATOMIC_GENERIC3(p, load)(p, mo)
 // *p = v
-#define cra_atomic_store(_p, _v, _mo) CRA_ATOMIC_GENERIC3(_p, store)(_p, _v, _mo)
+#define cra_atomic_store(p, v, mo) CRA_ATOMIC_GENERIC3(p, store)(p, v, mo)
 // o = *p; *p += v; return o;
-#define cra_atomic_add(_p, _v, _mo)   CRA_ATOMIC_GENERIC2(_p, add)(_p, _v, _mo)
+#define cra_atomic_add(p, v, mo)   CRA_ATOMIC_GENERIC2(p, add)(p, v, mo)
 // o = *p; *p -= v; return o;
-#define cra_atomic_sub(_p, _v, _mo)   CRA_ATOMIC_GENERIC2(_p, sub)(_p, _v, _mo)
+#define cra_atomic_sub(p, v, mo)   CRA_ATOMIC_GENERIC2(p, sub)(p, v, mo)
 // return (*p)++;
-#define cra_atomic_inc(_p, _mo)       CRA_ATOMIC_GENERIC2(_p, inc)(_p, _mo)
+#define cra_atomic_inc(p, mo)      CRA_ATOMIC_GENERIC2(p, inc)(p, mo)
 // return (*p)--;
-#define cra_atomic_dec(_p, _mo)       CRA_ATOMIC_GENERIC2(_p, dec)(_p, _mo)
+#define cra_atomic_dec(p, mo)      CRA_ATOMIC_GENERIC2(p, dec)(p, mo)
 // return (*p == *expected) ? (*p = desired, true) : false
-#define cra_atomic_cas_weak(_p, _expected, _desired, _succ_mo, _fail_mo)           \
-    CRA_ATOMIC_GENERIC3(_p, cas_weak)(_p, _expected, _desired, _succ_mo, _fail_mo)
+#define cra_atomic_cas_weak(p, expected, desired, succ_mo, fail_mo)          \
+    CRA_ATOMIC_GENERIC3(p, cas_weak)(p, expected, desired, succ_mo, fail_mo)
 // return (*p == *expected) ? (*p = desired, true) : false
-#define cra_atomic_cas_strong(_p, _expected, _desired, _succ_mo, _fail_mo)           \
-    CRA_ATOMIC_GENERIC3(_p, cas_strong)(_p, _expected, _desired, _succ_mo, _fail_mo)
+#define cra_atomic_cas_strong(p, expected, desired, succ_mo, fail_mo)          \
+    CRA_ATOMIC_GENERIC3(p, cas_strong)(p, expected, desired, succ_mo, fail_mo)
 
 #endif

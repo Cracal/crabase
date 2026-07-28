@@ -1,9 +1,9 @@
 #include "cra_assert.h"
 
 static void
-cra_assert_default_func(const char *condition, const char *fname, const char *file, int line)
+cra_assert_default_func(const char *expression, const char *fname, const char *file, int line)
 {
-    fprintf(stderr, "assert failed: `%s`, %s:%d:%s\n", condition, file, line, fname);
+    fprintf(stderr, "assert failed: `%s`, %s:%d:%s\n", expression, file, line, fname);
     fflush(stderr);
 
 #if defined(CRA_COMPILER_GNUC)
@@ -13,4 +13,4 @@ cra_assert_default_func(const char *condition, const char *fname, const char *fi
 #endif
 }
 
-void (*__cra_g_assert__)(const char *cond, const char *fname, const char *file, int line) = cra_assert_default_func;
+void (*__cra_g_assert__)(const char *, const char *, const char *, int) = cra_assert_default_func;

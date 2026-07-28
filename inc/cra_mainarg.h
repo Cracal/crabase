@@ -38,13 +38,11 @@ struct CraMainArgElement
     void          *arg;
 };
 
-#define CRA_MAINARG_ELEMENT_BEGIN(_name) CraMainArgElement _name[] = {
+#define CRA_MAINARG_ELEMENT_BEGIN(name) CraMainArgElement name[] = {
 #define CRA_MAINARG_ELEMENT_END() {0}}
-#define CRA_MAINARG_ELEMENT_SET(_op, _option, _valtip, _optip, _func, _arg) \
-    { _op, _option, _valtip, _optip, _func, _arg },
-#define CRA_MAINARG_ELEMENT_BOL(_op, _option, _optip) CRA_MAINARG_ELEMENT_SET(_op, _option, NULL, _optip, NULL, NULL)
-#define CRA_MAINARG_ELEMENT_VAL(_op, _option, _valtip, _optip, _func, _arg) \
-    CRA_MAINARG_ELEMENT_SET(_op, _option, _valtip, _optip, _func, _arg)
+#define CRA_MAINARG_ELEMENT_SET(op, option, valtip, optip, func, arg) { op, option, valtip, optip, func, arg },
+#define CRA_MAINARG_ELEMENT_BOL(op, option, optip) CRA_MAINARG_ELEMENT_SET(op, option, NULL, optip, NULL, NULL)
+#define CRA_MAINARG_ELEMENT_VAL                    CRA_MAINARG_ELEMENT_SET
 
 struct CraMainArg
 {
@@ -68,28 +66,28 @@ cra_mainarg_parse_args(CraMainArg *ma, int argc, char *argv[]);
 
 CRA_API CraMainArgVal_u
 cra_mainarg_get_val(CraMainArg *ma, char *option, CraMainArgVal_u default_val);
-#define cra_mainarg_get_b(_ma, _option, _default_val)                           \
-    cra_mainarg_get_val(_ma, _option, (CraMainArgVal_u){ .b = _default_val }).b
-#define cra_mainarg_get_i(_ma, _option, _default_val)                           \
-    cra_mainarg_get_val(_ma, _option, (CraMainArgVal_u){ .i = _default_val }).i
-#define cra_mainarg_get_f(_ma, _option, _default_val)                           \
-    cra_mainarg_get_val(_ma, _option, (CraMainArgVal_u){ .f = _default_val }).f
-#define cra_mainarg_get_s(_ma, _option, _default_val)                           \
-    cra_mainarg_get_val(_ma, _option, (CraMainArgVal_u){ .s = _default_val }).s
+#define cra_mainarg_get_b(ma, option, default_val)                           \
+    cra_mainarg_get_val(ma, option, (CraMainArgVal_u){ .b = default_val }).b
+#define cra_mainarg_get_i(ma, option, default_val)                           \
+    cra_mainarg_get_val(ma, option, (CraMainArgVal_u){ .i = default_val }).i
+#define cra_mainarg_get_f(ma, option, default_val)                           \
+    cra_mainarg_get_val(ma, option, (CraMainArgVal_u){ .f = default_val }).f
+#define cra_mainarg_get_s(ma, option, default_val)                           \
+    cra_mainarg_get_val(ma, option, (CraMainArgVal_u){ .s = default_val }).s
 
 CRA_API int
 cra_mainarg_get_pos_args_count(CraMainArg *ma);
 
 CRA_API CraMainArgVal_u
 cra_mainarg_get_pos_args_val(CraMainArg *ma, int index, CraMainArgVal_u default_val, cra_mainarg_fn func, void *arg);
-#define cra_mainarg_get_pos_args_b(_ma, _index, _default_val, _func, _arg)                           \
-    cra_mainarg_get_pos_args_val(_ma, _index, (CraMainArgVal_u){ .b = _default_val }, _func, _arg).b
-#define cra_mainarg_get_pos_args_i(_ma, _index, _default_val, _func, _arg)                           \
-    cra_mainarg_get_pos_args_val(_ma, _index, (CraMainArgVal_u){ .i = _default_val }, _func, _arg).i
-#define cra_mainarg_get_pos_args_f(_ma, _index, _default_val, _func, _arg)                           \
-    cra_mainarg_get_pos_args_val(_ma, _index, (CraMainArgVal_u){ .f = _default_val }, _func, _arg).f
-#define cra_mainarg_get_pos_args_s(_ma, _index, _default_val, _func, _arg)                           \
-    cra_mainarg_get_pos_args_val(_ma, _index, (CraMainArgVal_u){ .s = _default_val }, _func, _arg).s
+#define cra_mainarg_get_pos_args_b(ma, index, default_val, func, arg)                           \
+    cra_mainarg_get_pos_args_val(ma, index, (CraMainArgVal_u){ .b = default_val }, func, arg).b
+#define cra_mainarg_get_pos_args_i(ma, index, default_val, func, arg)                           \
+    cra_mainarg_get_pos_args_val(ma, index, (CraMainArgVal_u){ .i = default_val }, func, arg).i
+#define cra_mainarg_get_pos_args_f(ma, index, default_val, func, arg)                           \
+    cra_mainarg_get_pos_args_val(ma, index, (CraMainArgVal_u){ .f = default_val }, func, arg).f
+#define cra_mainarg_get_pos_args_s(ma, index, default_val, func, arg)                           \
+    cra_mainarg_get_pos_args_val(ma, index, (CraMainArgVal_u){ .s = default_val }, func, arg).s
 
 CRA_API void
 cra_mainarg_print_help(CraMainArg *ma);

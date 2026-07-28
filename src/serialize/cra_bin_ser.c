@@ -31,25 +31,20 @@
 #define CRA_BIN_MAX_LIST_COUNT          INT32_MAX
 #define CRA_BIN_MAX_DICT_COUNT          INT32_MAX
 
-#define CRA_BIN_CHECK_LENGTH(_ser, _meta, _name, _len, _max)                   \
-    do                                                                         \
-    {                                                                          \
-        if ((uint64_t)(_len) > (uint64_t)(_max))                               \
-        {                                                                      \
-            CRA_SERIALIZER_ERROR(_ser,                                         \
-                                 _meta,                                        \
-                                 CRA_SER_ERR_LENGTH,                           \
-                                 "%s must be between 0 and %zu. but got %zu.", \
-                                 _name,                                        \
-                                 (uint64_t)_max,                               \
-                                 (uint64_t)_len);                              \
-            return false;                                                      \
-        }                                                                      \
+#define CRA_BIN_CHECK_LENGTH(ser, meta, name, len, max)                                                             \
+    do                                                                                                              \
+    {                                                                                                               \
+        if ((uint64_t)(len) > (uint64_t)(max))                                                                      \
+        {                                                                                                           \
+            CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_LENGTH, "%s must be between 0 and %zu. but got %zu.", name, \
+                                 (uint64_t)max, (uint64_t)len);                                                     \
+            return false;                                                                                           \
+        }                                                                                                           \
     } while (0)
 
-#define CRA_BIN_MAKE_TYPE(_TYPE, _low) (((unsigned char)(_TYPE) << 4) | ((unsigned char)(_low) & 0x0f))
-#define CRA_BIN_GET_TYPE(_buf)         ((CraType_e)((*(_buf)) >> 4))
-#define CRA_BIN_GET_LOW(_buf)          ((size_t)(*(_buf) & 0x0f))
+#define CRA_BIN_MAKE_TYPE(TYPE, low) (((unsigned char)(TYPE) << 4) | ((unsigned char)(low) & 0x0f))
+#define CRA_BIN_GET_TYPE(buf)        ((CraType_e)((*(buf)) >> 4))
+#define CRA_BIN_GET_LOW(buf)         ((size_t)(*(buf) & 0x0f))
 
 static bool
 cra_bin_write_uint(CraSerializer *ser, void *val, const CraTypeMeta *meta)
@@ -148,8 +143,8 @@ __cra_bin_read_varuint(CraSerializer *ser, uint64_t *retval)
     return false;
 }
 
-#define cra_bin_zigzag_i2u(_i64) (uint64_t)(((_i64) << 1) ^ ((_i64) >> 63))
-#define cra_bin_zigzag_u2i(_u64) (int64_t)(((_u64) >> 1) ^ -(int64_t)((_u64) & 1))
+#define cra_bin_zigzag_i2u(i64) (uint64_t)(((i64) << 1) ^ ((i64) >> 63))
+#define cra_bin_zigzag_u2i(u64) (int64_t)(((u64) >> 1) ^ -(int64_t)((u64) & 1))
 
 static inline bool
 cra_bin_write_varint(CraSerializer *ser, void *val, const CraTypeMeta *meta)
@@ -278,10 +273,7 @@ __cra_bin_write_string(CraSerializer *ser, void *str, uint64_t len, const CraTyp
     // write length
     if (!__cra_bin_write_varuint(ser, len))
     {
-        CRA_SERIALIZER_ERROR(ser,
-                             meta,
-                             CRA_SER_ERR_LENGTH,
-                             "failed to write %s length",
+        CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_LENGTH, "failed to write %s length",
                              meta->type == CRA_TYPE_STRING ? "string" : "bytes");
         return false;
     }
@@ -302,10 +294,7 @@ __cra_bin_read_string(CraSerializer *ser, void *retval, uint64_t *retlen, const 
     // read length
     if (!__cra_bin_read_varuint(ser, &len))
     {
-        CRA_SERIALIZER_ERROR(ser,
-                             meta,
-                             CRA_SER_ERR_LENGTH,
-                             "failed to read %s length",
+        CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_LENGTH, "failed to read %s length",
                              meta->type == CRA_TYPE_STRING ? "string" : "bytes");
         return false;
     }
@@ -328,13 +317,8 @@ __cra_bin_read_string(CraSerializer *ser, void *retval, uint64_t *retlen, const 
         uint64_t l = len + (meta->type == CRA_TYPE_STRING ? 1 : 0);
         if (meta->size < l)
         {
-            CRA_SERIALIZER_ERROR(ser,
-                                 meta,
-                                 CRA_SER_ERR_TOO_SMALL,
-                                 "%s size too small(%zu < %zu)",
-                                 meta->type == CRA_TYPE_STRING ? "string" : "bytes",
-                                 meta->size,
-                                 l);
+            CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_TOO_SMALL, "%s size too small(%zu < %zu)",
+                                 meta->type == CRA_TYPE_STRING ? "string" : "bytes", meta->size, l);
             return false;
         }
     }
@@ -753,10 +737,7 @@ cra_bin_read_struct(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
             {
                 if (!cra_bin_skip_member(ser))
                 {
-                    CRA_SERIALIZER_ERROR1(ser,
-                                          ser->error.err,
-                                          "failed to skip the member. id: %d, type: %d",
-                                          id,
+                    CRA_SERIALIZER_ERROR1(ser, ser->error.err, "failed to skip the member. id: %d, type: %d", id,
                                           CRA_BIN_GET_TYPE(buf + 1));
                     return false;
                 }
@@ -859,8 +840,8 @@ cra_bin_read_array(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
         // enough?
         if (meta->size / slot < count)
         {
-            CRA_SERIALIZER_ERROR(
-              ser, meta, CRA_SER_ERR_TOO_SMALL, "array size too small(%zu < %zu)", meta->size / slot, count);
+            CRA_SERIALIZER_ERROR(ser, meta, CRA_SER_ERR_TOO_SMALL, "array size too small(%zu < %zu)", meta->size / slot,
+                                 count);
             return false;
         }
         size = meta->size;

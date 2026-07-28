@@ -11,8 +11,8 @@
 #include "collections/cra_llist.h"
 #include "cra_malloc.h"
 
-#define CRA_LLIST_CREATE_NODE(_itemsize) (CraLListNode *)cra_malloc(sizeof(CraLListNode) + (_itemsize))
-#define CRA_LLIST_DESTROY_NODE(_node)    cra_free(_node)
+#define CRA_LLIST_CREATE_NODE(itemsize) (CraLListNode *)cra_malloc(sizeof(CraLListNode) + (itemsize))
+#define CRA_LLIST_DESTROY_NODE(node)    cra_free(node)
 
 CraLListNode *
 cra_llist_create_node(size_t itemsize)
