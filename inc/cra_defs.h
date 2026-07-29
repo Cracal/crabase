@@ -19,14 +19,16 @@
 
 #if 1 // OS
 
-#if defined(_WIN64)
+#if defined(_WIN32) || defined(_WIN64)
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
 #include <Windows.h>
+
 #define CRA_OS_WIN
 #define CRA_OS_WINDOWS
+#define CRA_OS_NAME "Windows"
 
 #elif defined(__linux__)
 
@@ -34,43 +36,67 @@
 #include <unistd.h>
 
 #define CRA_OS_LINUX
+#define CRA_OS_NAME "Linux"
 
 #else
 
-#error "暂不支持该系统"
+#error "暂不支持该操作系统"
 
-#endif
-
-#if !defined(_M_X64) && !defined(__x86_64__)
-#error "只支持64位操作系统"
 #endif
 
 #endif // end OS
 
+#if 1 // ARCH
+
+#if defined(_M_X64) || defined(__x86_64__)
+
+#define CRA_ARCH_X86_64
+#define CRA_ARCH_NAME "x86_64"
+
+#elif defined(_M_IX86) || defined(__i386__)
+
+#error "不支持32位架构"
+
+#else
+
+#error "暂不支持该架构"
+
+#endif
+
+#endif // end ARCH
+
 #if 1 // compiler
 
-#ifdef _MSC_VER
+#if defined(__clang__)
+
+#error "TODO"
+
+#if defined(_MSC_VER)
+#define CRA_COMPILER_CLANG_CL
+#define CRA_COMPILER_NAME "Clang-cl"
+#else
+#define CRA_COMPILER_CLANG
+#define CRA_COMPILER_NAME "Clang"
+#endif
+
+#elif defined(__GNUC__) || defined(__GNUG__)
+
+#if __GNUC__ < 13
+#warning "没有在低于13的版本上测试过，可能会出错"
+#endif
+
+#define CRA_COMPILER_GCC
+#define CRA_COMPILER_GNUC
+#define CRA_COMPILER_NAME "GCC"
+
+#elif defined(_MSC_VER)
 
 #if _MSC_VER < 1939
 #warning "没有在低于1939的版本上测试过，可能会出错"
 #endif
 
 #define CRA_COMPILER_MSVC
-
-#elif defined(__GNUC__)
-
-#if __GNUC__ < 13
-#warning "没有在低于13的版本上测试过，可能会出错"
-#endif
-
-#define CRA_COMPILER_GNUC
-
-#ifdef __MINGW64__
-#include <limits.h>
-#include <unistd.h>
-
-#define CRA_COMPILER_MINGW
-#endif
+#define CRA_COMPILER_NAME "MSVC"
 
 #else
 
