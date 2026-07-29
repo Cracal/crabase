@@ -16,6 +16,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
+#include <inttypes.h>
 
 #if 1 // OS
 

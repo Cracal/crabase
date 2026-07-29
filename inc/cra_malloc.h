@@ -13,10 +13,10 @@
 #include "cra_assert.h"
 #include "cra_defs.h"
 
-CRA_API void *(*__cra_malloc_fn__)(size_t size);
-CRA_API void *(*__cra_calloc_fn__)(size_t num, size_t size);
-CRA_API void *(*__cra_reallo_fn__)(void *oldptr, size_t newsize);
-CRA_API void  (*__cra_freeee_fn__)(void *ptr);
+CRA_API void *(*__cra_malloc_fn__)(size_t);
+CRA_API void *(*__cra_calloc_fn__)(size_t, size_t);
+CRA_API void *(*__cra_reallo_fn__)(void *, size_t);
+CRA_API void  (*__cra_freeee_fn__)(void *);
 
 static inline void *
 __cra_malloc(size_t size)
@@ -111,8 +111,7 @@ __cra_memory_leak_report(void);
 #define cra_delete    cra_dealloc
 
 #define CRA_TEMP_NEW(name, size)        \
-    char *name;                         \
-    char  name##_small[1024];           \
+    char *name, name##_small[1024];     \
     if ((size) <= sizeof(name##_small)) \
         name = name##_small;            \
     else                                \
