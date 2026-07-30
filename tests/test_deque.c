@@ -104,9 +104,9 @@ test_insert(void)
 
     cra_deque_clear(deque);
     assert_always(deque->count == 0);
-    cra_deque_append(deque, &(int){ 1000 });
-    cra_deque_append(deque, &(int){ 2000 });
-    cra_deque_append(deque, &(int){ 3000 });
+    cra_deque_push_back(deque, &(int){ 1000 });
+    cra_deque_push_back(deque, &(int){ 2000 });
+    cra_deque_push_back(deque, &(int){ 3000 });
     for (i = 0; i < 50; i++)
         assert_always(cra_deque_insert(deque, 1, &(int){ i + 1 }));
     assert_always(deque->count == 53);
@@ -170,9 +170,9 @@ test_insert(void)
 
     cra_deque_clear(deque);
     assert_always(deque->count == 0);
-    cra_deque_append(deque, &(int){ 1000 });
-    cra_deque_append(deque, &(int){ 2000 });
-    cra_deque_append(deque, &(int){ 3000 });
+    cra_deque_push_back(deque, &(int){ 1000 });
+    cra_deque_push_back(deque, &(int){ 2000 });
+    cra_deque_push_back(deque, &(int){ 3000 });
     for (i = 0; i < 50; i++)
         assert_always(cra_deque_insert(deque, deque->count - 1, &(int){ i + 1 }));
     assert_always(deque->count == 53);
@@ -228,19 +228,19 @@ test_push(void)
     CraDeque *deque = cra_alloc(CraDeque);
     cra_deque_init(int, deque);
 
-    assert_always(cra_deque_append(deque, &(int){ 100 }));
+    assert_always(cra_deque_push_back(deque, &(int){ 100 }));
     assert_always(deque->count == 1);
     cra_deque_clear(deque);
-    assert_always(cra_deque_prepend(deque, &(int){ 200 }));
+    assert_always(cra_deque_push_front(deque, &(int){ 200 }));
     assert_always(deque->count == 1);
     cra_deque_clear(deque);
 
     for (i = 0; i < 1000; i++)
-        assert_always(cra_deque_append(deque, &i));
+        assert_always(cra_deque_push_back(deque, &i));
     assert_always(deque->count == 1000);
 
-    assert_always(cra_deque_prepend(deque, &(int){ -1 }));
-    assert_always(cra_deque_prepend(deque, &(int){ -2 }));
+    assert_always(cra_deque_push_front(deque, &(int){ -1 }));
+    assert_always(cra_deque_push_front(deque, &(int){ -2 }));
     assert_always(cra_deque_insert(deque, 4, &(int){ 4000 }));
     assert_always(cra_deque_insert(deque, 4, &(int){ 40000 }));
     CraPair mvals;
@@ -271,7 +271,7 @@ test_push(void)
     cra_deque_init(int, deque);
 
     for (i = 0; i < 1000; i++)
-        assert_always(cra_deque_prepend(deque, &i));
+        assert_always(cra_deque_push_front(deque, &i));
     assert_always(deque->count == 1000);
 
     i = 999;
@@ -300,7 +300,7 @@ test_pop_at(void)
     assert_always(!cra_deque_remove_at(deque, 10));
 
     for (i = 0; i < 1000; i++)
-        cra_deque_append(deque, &(int){ i + 1 });
+        cra_deque_push_back(deque, &(int){ i + 1 });
     assert_always(deque->count == 1000);
 
     // pop left
@@ -406,14 +406,14 @@ test_pop(void)
     assert_always(!cra_deque_remove_at(deque, deque->count - 1));
 
     for (i = 1; i <= 10000; i++)
-        cra_deque_append(deque, &i);
+        cra_deque_push_back(deque, &i);
     assert_always(deque->count == 10000);
 
     assert_always(cra_deque_pop_back(deque, &val) && val == 10000);
     assert_always(cra_deque_pop_front(deque, &val) && val == 1);
 
-    cra_deque_append(deque, &(int){ 200000 });
-    cra_deque_prepend(deque, &(int){ -100 });
+    cra_deque_push_back(deque, &(int){ 200000 });
+    cra_deque_push_front(deque, &(int){ -100 });
 
     assert_always(cra_deque_pop_back(deque, &val) && val == 200000);
     assert_always(cra_deque_pop_front(deque, &val) && val == -100);
@@ -429,7 +429,7 @@ test_pop(void)
     assert_always(!cra_deque_remove_front(deque));
 
     for (i = 1; i <= 10000; i++)
-        cra_deque_prepend(deque, &i);
+        cra_deque_push_front(deque, &i);
 
     i = 10000;
     while (deque->count > 0)
@@ -450,7 +450,7 @@ test_set(void)
     cra_deque_init(int, deque);
 
     for (i = 0; i < 10000; i++)
-        assert_always(cra_deque_append(deque, &i));
+        assert_always(cra_deque_push_back(deque, &i));
 
     assert_always(cra_deque_set(deque, 3, &(int){ 30000 }));
     assert_always(cra_deque_get(deque, 3, &val) && val == 30000);
@@ -488,7 +488,7 @@ test_get(void)
 
     cra_deque_init_with_size(int, &deque, 10000);
     for (i = 0; i < 10000; i++)
-        cra_deque_prepend(&deque, &i);
+        cra_deque_push_front(&deque, &i);
 
     i = 0;
     CRA_FOREACH(CRA_DEQUE_ITERABLE_I, &deque, vals)
@@ -515,9 +515,9 @@ test_peek(void)
     for (int i = 0; i < 200; i++)
     {
         if (i % 2 == 0)
-            cra_deque_append(deque, &i);
+            cra_deque_push_back(deque, &i);
         else
-            cra_deque_prepend(deque, &i);
+            cra_deque_push_front(deque, &i);
     }
 
     CRA_FOREACH(CRA_DEQUE_ITERABLE_I, deque, vals)
@@ -545,7 +545,7 @@ test_reverse(void)
     cra_deque_init(int, deque);
 
     for (i = 0; i < 2003; i++)
-        cra_deque_append(deque, &i);
+        cra_deque_push_back(deque, &i);
 
     // printf("before reverse: ");
     i = 0;
@@ -585,7 +585,7 @@ test_foreach(void)
     CRA_FOREACH_REVERSE(CRA_DEQUE_ITERABLE_I, deque, vals) assert_always(false);
 
     for (i = 0; i < 10; i++)
-        cra_deque_append(deque, &i);
+        cra_deque_push_back(deque, &i);
 
     i = 0;
     printf("foreach        : ");
@@ -631,7 +631,7 @@ test_test(void)
     {
         n = (rand() + 1) % 10000;
         for (j = 0; j < n; j++)
-            cra_deque_append(deque, &j);
+            cra_deque_push_back(deque, &j);
 
         n = deque->count == 0 ? 0 : (rand() + 1) % deque->count;
         for (j = 0; j < n; j++)
@@ -649,7 +649,7 @@ test_test(void)
     {
         n = (rand() + 1) % 10000;
         for (j = 0; j < n; j++)
-            cra_deque_prepend(deque, &j);
+            cra_deque_push_front(deque, &j);
 
         n = deque->count == 0 ? 0 : (rand() + 1) % deque->count;
         for (j = 0; j < n; j++)

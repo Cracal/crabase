@@ -1354,7 +1354,7 @@ test_list(void)
     {
         cra_alist_append(&in.alist, &i);
         cra_llist_append(in.llist, &s20);
-        cra_deque_append(in.deque, &sp);
+        cra_deque_push_back(in.deque, &sp);
     }
 
     length = sizeof(buffer);
@@ -1504,7 +1504,7 @@ test_array_list(void)
         if (i % 2 != 0)
             cra_llist_append(&inllist, &(int32_t){ i * 2 });
         if (i < 18)
-            cra_deque_append(&indeque, &(int32_t){ i * 8 });
+            cra_deque_push_back(&indeque, &(int32_t){ i * 8 });
     }
 
     CRA_ALIST_INITIALIZABLE_PARAM_DEF(alargs, int32_t);
@@ -1830,7 +1830,7 @@ test_deserialize_failed(void)
         a = cra_alloc(struct A);
         a->str = (char *)cra_malloc(30);
         snprintf(a->str, 30, "deque    %d.", i);
-        cra_deque_append(in.deque, &a);
+        cra_deque_push_back(in.deque, &a);
 
         str = (char *)cra_malloc(30);
         a = cra_alloc(struct A);
