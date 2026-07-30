@@ -1,6 +1,6 @@
 #include "collections/cra_collects.h"
-#include "cra_assert.h"
 #include "threads/cra_thrdpool.h"
+#include "cra_assert.h"
 #include <time.h>
 
 void
@@ -124,7 +124,7 @@ test_hash(void)
 }
 
 static void
-test_str_hashcode(const CraThrdPoolArgs0 *args)
+test_str_hashcode(void)
 {
     cra_hash_t hash1, hash2;
     char      *str = "hello world fdslkfjsodfjsdlkjdoi";
@@ -138,21 +138,20 @@ test_str_hashcode(const CraThrdPoolArgs0 *args)
         hash2 = cra_hash_string2(str);
         assert_always(hash1 == hash2);
     }
-    printf("test done. tid: %lu.\n", (unsigned long)args->tid);
+    printf("test done. tid: %lu.\n", (unsigned long)cra_thrd_get_current_tid());
 }
 
 void
 test_hash_str_dyn_init_hashcode(void)
 {
     CraThrdPool pool;
-    cra_thrdpool_init(&pool, 4, 4);
+
+    cra_thrdpool_init(&pool, 4);
 
     for (int i = 0; i < 4; i++)
         cra_thrdpool_add_task0(&pool, test_str_hashcode);
 
-    cra_thrdpool_wait(&pool);
-
-    cra_thrdpool_uninit(&pool);
+    cra_thrdpool_uninit(&pool, true);
 }
 
 int

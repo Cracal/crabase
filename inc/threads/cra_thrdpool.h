@@ -11,92 +11,38 @@
 #ifndef __CRA_THPOOL_H__
 #define __CRA_THPOOL_H__
 #include "cra_atomic.h"
-#include "cra_blk_deque.h"
-#include "cra_lock.h"
 #include "cra_thread.h"
 
-typedef enum CraThrdPoolDiscardPolicy_e
-{
-    CRA_TPTASK_DISCARD_SELF = 0,
-    CRA_TPTASK_DISCARD_FIRST,
-    CRA_TPTASK_DISCARD_LAST,
-} CraThrdPoolDiscardPolicy_e;
-
 typedef struct CraThrdPoolWorker CraThrdPoolWorker;
+typedef struct CraThrdPool       CraThrdPool;
+typedef struct CraBlockdq        CraBlockdq;
 
-typedef struct CraThrdPool
+struct CraThrdPool
 {
-    bool                       can_in;
-    bool                       is_running;
-    bool                       handle_exist_task;
-    CraThrdPoolDiscardPolicy_e discard_policy;
-    cra_atomic_int32_t         idle_threads;
-    int                        threadcnt;
-    size_t                     task_max;
-    CraBlkDeque                task_que; // BlkDeque<CraThrdPoolArgs2>
-    CraThrdPoolWorker         *threads;
-} CraThrdPool;
-
-#define CRA_THRDPOOL_ARGS0 \
-    struct                 \
-    {                      \
-        cra_tid_t tid;     \
-    }
-#define CRA_THRDPOOL_ARGS1  \
-    struct                  \
-    {                       \
-        CRA_THRDPOOL_ARGS0; \
-        void *arg1;         \
-    }
-#define CRA_THRDPOOL_ARGS2  \
-    struct                  \
-    {                       \
-        CRA_THRDPOOL_ARGS1; \
-        void *arg2;         \
-    }
-
-typedef CRA_THRDPOOL_ARGS0 CraThrdPoolArgs0;
-typedef CRA_THRDPOOL_ARGS1 CraThrdPoolArgs1;
-typedef CRA_THRDPOOL_ARGS2 CraThrdPoolArgs2;
-
-#undef CRA_THRDPOOL_ARGS0
-#undef CRA_THRDPOOL_ARGS1
-#undef CRA_THRDPOOL_ARGS2
-
-typedef void (*cra_thrdpool_task_fn0)(const CraThrdPoolArgs0 *);
-typedef void (*cra_thrdpool_task_fn1)(const CraThrdPoolArgs1 *);
-typedef void (*cra_thrdpool_task_fn2)(const CraThrdPoolArgs2 *);
-
-#define CRA_THRDPOOL_TASK_INFINITE CRA_BLK_DEQUE_INFINITE
+    bool               running;
+    cra_atomic_int32_t idlecnt;
+    int                nworker;
+    CraThrdPoolWorker *workers;
+    CraBlockdq        *taskque; // Blockdq<Task>
+};
 
 CRA_API void
-cra_thrdpool_init(CraThrdPool *pool, int threads, size_t task_max);
+cra_thrdpool_init(CraThrdPool *pool, int nthreads);
 
+// `wait_tasks`: Wait for all tasks to finish.
 CRA_API void
-cra_thrdpool_uninit(CraThrdPool *pool);
-
-CRA_API void
-cra_thrdpool_wait(CraThrdPool *pool);
-
-static inline void
-cra_thrdpool_set_discard_policy(CraThrdPool *pool, CraThrdPoolDiscardPolicy_e policy)
-{
-    pool->discard_policy = policy;
-}
+cra_thrdpool_uninit(CraThrdPool *pool, bool wait_tasks);
 
 CRA_API bool
-cra_thrdpool_add_task2(CraThrdPool *pool, cra_thrdpool_task_fn2 func, void *arg1, void *arg2);
+cra_thrdpool_add_task0(CraThrdPool *pool, void (*excute0)(void));
 
-static inline bool
-cra_thrdpool_add_task1(CraThrdPool *pool, cra_thrdpool_task_fn1 func, void *arg)
-{
-    return cra_thrdpool_add_task2(pool, (cra_thrdpool_task_fn2)func, arg, NULL);
-}
+CRA_API bool
+cra_thrdpool_add_task1(CraThrdPool *pool, void (*excute1)(void *), void *arg);
 
-static inline bool
-cra_thrdpool_add_task0(CraThrdPool *pool, cra_thrdpool_task_fn0 func)
-{
-    return cra_thrdpool_add_task2(pool, (cra_thrdpool_task_fn2)func, NULL, NULL);
-}
+CRA_API bool
+cra_thrdpool_add_task2(CraThrdPool *pool, void (*excute2)(void *, void *), void *arg1, void *arg2);
+
+CRA_API bool
+cra_thrdpool_add_task3(CraThrdPool *pool, void (*excute3)(void *, void *, void *), void *arg1, void *arg2, void *arg3);
 
 #endif
