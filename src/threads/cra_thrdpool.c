@@ -43,8 +43,6 @@ static CRA_THRD_FUNC(cra_thrdpool_worker)
     CraThrdPool       *pool = worker->pool;
     CraThrdPoolTask    task;
 
-    sizeof(task);
-
     cra_cdl_count_down(worker->cdl);
 
     while (pool->running)
