@@ -46,15 +46,15 @@ cra_deque_clear(CraDeque *deque);
 CRA_API bool
 cra_deque_insert(CraDeque *deque, size_t index, void *val);
 CRA_API bool
-cra_deque_prepend(CraDeque *deque, void *val);
+cra_deque_push_front(CraDeque *deque, void *val);
 CRA_API bool
-cra_deque_append(CraDeque *deque, void *val);
+cra_deque_push_back(CraDeque *deque, void *val);
 // bool insert(CraDeque *deque, size_t index, T *val)
 #define cra_deque_insert(deque, index, val) (CRA_DEQUE_CHECK_VAL(deque, val), cra_deque_insert(deque, index, val))
 // bool push_front(CraDeque *deque, T *val)
-#define cra_deque_prepend(deque, val)       (CRA_DEQUE_CHECK_VAL(deque, val), cra_deque_prepend(deque, val))
+#define cra_deque_push_front(deque, val)    (CRA_DEQUE_CHECK_VAL(deque, val), cra_deque_push_front(deque, val))
 // bool push_back(CraDeque *deque, T *val)
-#define cra_deque_append(deque, val)        (CRA_DEQUE_CHECK_VAL(deque, val), cra_deque_append(deque, val))
+#define cra_deque_push_back(deque, val)     (CRA_DEQUE_CHECK_VAL(deque, val), cra_deque_push_back(deque, val))
 
 CRA_API bool
 cra_deque_pop_at(CraDeque *deque, size_t index, void *retval);

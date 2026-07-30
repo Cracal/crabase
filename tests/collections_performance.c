@@ -264,7 +264,7 @@ test_deque_performance(int sizes[])
         // append
         start_ms = cra_tick_ms();
         for (int j = 0; j < sizes[i]; j++)
-            cra_deque_append(&deque, &j);
+            cra_deque_push_back(&deque, &j);
         end_ms = cra_tick_ms();
         printf("\tappend:        %lums.\n", end_ms - start_ms);
 
@@ -273,7 +273,7 @@ test_deque_performance(int sizes[])
         // prepend
         start_ms = cra_tick_ms();
         for (int j = 0; j < sizes[i]; j++)
-            cra_deque_prepend(&deque, &j);
+            cra_deque_push_front(&deque, &j);
         end_ms = cra_tick_ms();
         printf("\tprepend:       %lums.\n", end_ms - start_ms);
 

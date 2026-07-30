@@ -113,11 +113,11 @@ test_log_out_of_msg_buf(void)
 }
 
 static void
-write_log(const CraThrdPoolArgs1 *arg)
+write_log(void *arg)
 {
-    CraLogger *logger = (CraLogger *)arg->arg1;
+    CraLogger *logger = (CraLogger *)arg;
     for (int i = 0; i < 10000; i++)
-        cra_log_info(logger, "Hello world %d from %lu.", i, arg->tid);
+        cra_log_info(logger, "Hello world %d from %lu.", i, cra_thrd_get_current_tid());
 }
 
 #define N 8
@@ -130,20 +130,18 @@ test_log_multithreads_sync(void)
 
     log = cra_log_open("TestMultiThreadSync", CRA_LOG_LV_DEBUG, true, false);
 
-    cra_thrdpool_init(&pool, N, N);
+    cra_thrdpool_init(&pool, N);
 
     unsigned long start_ms = cra_tick_ms();
 
     for (int i = 0; i < N; i++)
         cra_thrdpool_add_task1(&pool, write_log, log);
 
-    cra_thrdpool_wait(&pool);
+    cra_thrdpool_uninit(&pool, true);
 
     cra_log_close(log);
 
     unsigned long end_ms = cra_tick_ms();
-
-    cra_thrdpool_uninit(&pool);
 
     printf("test_log_multithreads_sync()  takes %lums.\n", end_ms - start_ms);
 }
@@ -157,20 +155,18 @@ test_log_multithreads_async(void)
     log = cra_log_open("TestMultiThreadAsync", CRA_LOG_LV_DEBUG, true, true);
     cra_log_config(log, 4 * 1024 * 1024, "log/async/");
 
-    cra_thrdpool_init(&pool, N, N);
+    cra_thrdpool_init(&pool, N);
 
     unsigned long start_ms = cra_tick_ms();
 
     for (int i = 0; i < N; i++)
         cra_thrdpool_add_task1(&pool, write_log, log);
 
-    cra_thrdpool_wait(&pool);
+    cra_thrdpool_uninit(&pool, true);
 
     cra_log_close(log);
 
     unsigned long end_ms = cra_tick_ms();
-
-    cra_thrdpool_uninit(&pool);
 
     printf("test_log_multithreads_async() takes %lums.\n", end_ms - start_ms);
 }

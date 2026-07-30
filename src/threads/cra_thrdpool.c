@@ -8,161 +8,171 @@
  * @copyright Copyright (c) 2021
  *
  */
-#include "threads/cra_thrdpool.h"
 #include "cra_assert.h"
 #include "cra_malloc.h"
 #include "threads/cra_cdl.h"
+#include "threads/cra_blockdq.h"
+#include "threads/cra_thrdpool.h"
 
-typedef struct
-{
-    CraThrdPoolArgs2      args;
-    cra_thrdpool_task_fn2 func;
-} CraThrdPoolTask;
+typedef struct CraThrdPoolTask CraThrdPoolTask;
 
 struct CraThrdPoolWorker
 {
+    cra_thrd_t   th;
     CraCDL      *cdl;
     CraThrdPool *pool;
-    cra_thrd_t   thrd;
 };
 
-static CRA_THRD_FUNC(__cra_thrdpool_worker)
+struct CraThrdPoolTask
 {
-    CraThrdPoolTask    task;
+    union
+    {
+        void (*excute0)(void);
+        void (*excute1)(void *);
+        void (*excute2)(void *, void *);
+        void (*excute3)(void *, void *, void *);
+
+        void *user_data[4];
+    };
+    int count;
+};
+
+static CRA_THRD_FUNC(cra_thrdpool_worker)
+{
     CraThrdPoolWorker *worker = (CraThrdPoolWorker *)arg;
-    CraBlkDeque       *taskque = &worker->pool->task_que;
     CraThrdPool       *pool = worker->pool;
-    cra_tid_t          tid = cra_thrd_get_current_tid();
+    CraThrdPoolTask    task;
 
     cra_cdl_count_down(worker->cdl);
 
-    while (cra_blkdeque_pop_left(taskque, &task))
+    while (pool->running)
     {
-        cra_atomic_dec(&pool->idle_threads, CRA_MO_ACQUIRE);
-        task.args.tid = tid;
-        task.func(&task.args);
-        cra_atomic_inc(&pool->idle_threads, CRA_MO_RELEASE);
+        if ((cra_blockdq_pop_front)(pool->taskque, &task))
+        {
+            assert(task.excute0);
+            cra_atomic_dec(&pool->idlecnt, CRA_MO_RELAXED);
+            switch (task.count)
+            {
+                case 0:
+                    task.excute0();
+                    break;
+                case 1:
+                    task.excute1(task.user_data[1]);
+                    break;
+                case 2:
+                    task.excute2(task.user_data[1], task.user_data[2]);
+                    break;
+                case 3:
+                    task.excute3(task.user_data[1], task.user_data[2], task.user_data[3]);
+                    break;
+                default:
+                    fprintf(stderr, "cra_thrdpool_worker() -- Invalid task.\n");
+                    abort();
+                    break;
+            }
+            cra_atomic_inc(&pool->idlecnt, CRA_MO_RELAXED);
+        }
+        else
+        {
+            break;
+        }
     }
 
     return (cra_thrd_ret_t){ 0 };
 }
 
 void
-cra_thrdpool_init(CraThrdPool *pool, int threads, size_t task_max)
+cra_thrdpool_init(CraThrdPool *pool, int nthreads)
 {
-    assert(threads > 0 && task_max > 0);
-    pool->can_in = true;
-    pool->handle_exist_task = true;
-    pool->discard_policy = CRA_TPTASK_DISCARD_SELF;
-    pool->idle_threads = threads;
-    pool->threadcnt = 0;
-    pool->task_max = task_max;
-    if (!cra_blkdeque_init0(CraThrdPoolTask, &pool->task_que, task_max, false))
+    CraCDL cdl;
+
+    assert(pool);
+    assert(nthreads > 0);
+
+    pool->running = true;
+    pool->idlecnt = nthreads;
+    pool->nworker = nthreads;
+
+    pool->workers = (CraThrdPoolWorker *)cra_malloc(sizeof(CraThrdPoolWorker) * nthreads);
+    if (!pool->workers)
     {
-        fprintf(stderr, "Thread pool %p create task queue failed.\n", (void *)pool);
+        fprintf(stderr, "cra_thrdpool_init() -- Create workers failed.\n");
         exit(EXIT_FAILURE);
     }
-    pool->threads = (CraThrdPoolWorker *)cra_malloc(sizeof(CraThrdPoolWorker) * threads);
-    if (!pool->threads)
+    pool->taskque = cra_alloc(CraBlockdq);
+    if (!pool->taskque || !cra_blockdq_init(CraThrdPoolTask, pool->taskque))
     {
-        fprintf(stderr, "Thread pool %p malloc threads failed.\n", (void *)pool);
+        fprintf(stderr, "cra_thrdpool_init() -- Create taskque failed.\n");
         exit(EXIT_FAILURE);
     }
 
-#if 1 // create threads
-    CraCDL cdl;
-    cra_cdl_init(&cdl, threads);
-    pool->is_running = true;
-    for (int i = 0; i < threads; i++, pool->threadcnt++)
+    cra_cdl_init(&cdl, nthreads);
+
+    for (int i = 0; i < nthreads; i++)
     {
-        pool->threads[i].pool = pool;
-        pool->threads[i].cdl = &cdl;
-        if (!cra_thrd_create(&pool->threads[i].thrd, __cra_thrdpool_worker, &pool->threads[i]))
+        pool->workers[i].cdl = &cdl;
+        pool->workers[i].pool = pool;
+        if (!cra_thrd_create(&pool->workers[i].th, cra_thrdpool_worker, &pool->workers[i]))
         {
-            fprintf(stderr, "Thread pool %p create thread %d failed.\n", (void *)pool, i);
-            cra_cdl_uninit(&cdl);
-            cra_thrdpool_uninit(pool);
+            fprintf(stderr, "cra_thrdpool_init() -- Create thread %d failed.\n", i);
             exit(EXIT_FAILURE);
         }
     }
 
     cra_cdl_wait(&cdl);
     cra_cdl_uninit(&cdl);
-#endif // end create threads
 }
 
 void
-cra_thrdpool_uninit(CraThrdPool *pool)
+cra_thrdpool_uninit(CraThrdPool *pool, bool wait_tasks)
 {
     assert(pool);
-    assert(pool->threads);
 
-    pool->handle_exist_task = false;
-    if (pool->is_running)
-        cra_thrdpool_wait(pool);
-    cra_blkdeque_uninit(&pool->task_que);
-    cra_free(pool->threads);
-}
+    if (!wait_tasks)
+        pool->running = false;
 
-void
-cra_thrdpool_wait(CraThrdPool *pool)
-{
-    pool->can_in = false;
-    pool->is_running = false;
-    if (pool->handle_exist_task)
-        cra_blkdeque_terminate_wait_empty(&pool->task_que);
-    else
-        cra_blkdeque_terminate(&pool->task_que);
+    cra_blockdq_shutdown(pool->taskque);
 
-    for (int i = 0; i < pool->threadcnt; i++)
-    {
-        cra_thrd_join(pool->threads[i].thrd);
-    }
-}
+    for (int i = 0; i < pool->nworker; i++)
+        cra_thrd_join(pool->workers[i].th);
 
-static inline bool
-cra_thrdpool_discard_task(CraThrdPool *pool)
-{
-    if (cra_blkdeque_get_count(&pool->task_que) < pool->task_max)
-        return true;
+    cra_blockdq_uninit(pool->taskque);
+    cra_dealloc(pool->taskque);
+    cra_free(pool->workers);
 
-    switch (pool->discard_policy)
-    {
-        case CRA_TPTASK_DISCARD_FIRST:
-            cra_blkdeque_pop_left(&pool->task_que, NULL);
-            return true;
-        case CRA_TPTASK_DISCARD_LAST:
-            cra_blkdeque_pop(&pool->task_que, NULL);
-            return true;
-        case CRA_TPTASK_DISCARD_SELF:
-            break; // do nothing
-        default:
-            fprintf(stderr, "thread pool %p 不支持的策略.\n", (void *)pool);
-            break;
-    }
-    return false;
+    bzero(pool, sizeof(*pool));
 }
 
 bool
-cra_thrdpool_add_task2(CraThrdPool *pool, cra_thrdpool_task_fn2 func, void *arg1, void *arg2)
+cra_thrdpool_add_task0(CraThrdPool *pool, void (*excute0)(void))
 {
-    CraThrdPoolTask task;
+    CraThrdPoolTask task = { .excute0 = excute0, .count = 0 };
+    return (cra_blockdq_push_back)(pool->taskque, &task);
+}
 
-    if (pool == NULL || !pool->can_in)
-        goto end;
+bool
+cra_thrdpool_add_task1(CraThrdPool *pool, void (*excute1)(void *), void *arg)
+{
+    CraThrdPoolTask task = { .excute1 = excute1, .count = 1 };
+    task.user_data[1] = arg;
+    return (cra_blockdq_push_back)(pool->taskque, &task);
+}
 
-    task.func = func;
-    task.args.tid = 0;
-    task.args.arg1 = arg1;
-    task.args.arg2 = arg2;
+bool
+cra_thrdpool_add_task2(CraThrdPool *pool, void (*excute2)(void *, void *), void *arg1, void *arg2)
+{
+    CraThrdPoolTask task = { .excute2 = excute2, .count = 2 };
+    task.user_data[1] = arg1;
+    task.user_data[2] = arg2;
+    return (cra_blockdq_push_back)(pool->taskque, &task);
+}
 
-add_task:
-    if (cra_blkdeque_push_nonblocking(&pool->task_que, &task))
-        return true;
-    if (cra_thrdpool_discard_task(pool))
-        goto add_task;
-
-end:
-    fprintf(stderr, "cra_thrdpool_add_task() -- 任务被拒绝.\n");
-    return false;
+bool
+cra_thrdpool_add_task3(CraThrdPool *pool, void (*excute3)(void *, void *, void *), void *arg1, void *arg2, void *arg3)
+{
+    CraThrdPoolTask task = { .excute3 = excute3, .count = 3 };
+    task.user_data[1] = arg1;
+    task.user_data[2] = arg2;
+    task.user_data[3] = arg3;
+    return (cra_blockdq_push_back)(pool->taskque, &task);
 }

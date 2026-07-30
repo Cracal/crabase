@@ -349,7 +349,7 @@ bool(cra_deque_insert)(CraDeque *deque, size_t index, void *val)
     return false;
 }
 
-bool(cra_deque_prepend)(CraDeque *deque, void *val)
+bool(cra_deque_push_front)(CraDeque *deque, void *val)
 {
     assert(val);
     assert(deque);
@@ -365,7 +365,7 @@ bool(cra_deque_prepend)(CraDeque *deque, void *val)
     return false;
 }
 
-bool(cra_deque_append)(CraDeque *deque, void *val)
+bool(cra_deque_push_back)(CraDeque *deque, void *val)
 {
     assert(val);
     assert(deque);
@@ -576,7 +576,7 @@ static CRA_APPENDABLE_APPEND_FN(cra_deque_appendable_append)
     assert(val->val_ref);
     assert(deque->itemsize > 0);
 
-    return (cra_deque_append)(deque, val->val_ref);
+    return (cra_deque_push_back)(deque, val->val_ref);
 }
 
 CRA_APPENDABLE_DEF(cra_g_deque_appendable_i) = {

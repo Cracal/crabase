@@ -539,9 +539,9 @@ ref_multi_check(void *pi)
 }
 
 static void
-ref_multi_task_func(const CraThrdPoolArgs1 *args)
+ref_multi_task_func(void *arg)
 {
-    CraRef *ref = (CraRef *)args->arg1;
+    CraRef *ref = (CraRef *)arg;
 
     // cra_msleep(20);
 
@@ -557,7 +557,7 @@ test_ref_multi(void)
     ref = cra_ref_make(sizeof(int), ref_multi_check);
     assert_always(ref != NULL);
 
-    cra_thrdpool_init(&pool, 8, CRA_THRDPOOL_TASK_INFINITE);
+    cra_thrdpool_init(&pool, 8);
 
     for (int i = 0; i < 10000; i++)
     {
@@ -567,12 +567,10 @@ test_ref_multi(void)
 
     cra_ref_unref(ref);
 
-    cra_thrdpool_wait(&pool);
+    cra_thrdpool_uninit(&pool, true);
 
     printf("ref_multi_num = %d\n", ref_multi_num);
     assert_always(ref_multi_num == 1);
-
-    cra_thrdpool_uninit(&pool);
 }
 
 #endif // end ref(multi threads)
@@ -591,9 +589,9 @@ weak_ref_multi_check(void *pi)
 }
 
 static void
-weak_ref_multi_task_func(const CraThrdPoolArgs1 *args)
+weak_ref_multi_task_func(void *arg)
 {
-    CraWeakRef *ref = (CraWeakRef *)args->arg1;
+    CraWeakRef *ref = (CraWeakRef *)arg;
 
     if (cra_weak_ref_acquire(ref) == NULL)
     {
@@ -620,7 +618,7 @@ test_weak_ref_multi(void)
     ref = cra_weak_ref_make(sizeof(int), weak_ref_multi_check);
     assert_always(ref != NULL);
 
-    cra_thrdpool_init(&pool, 8, CRA_THRDPOOL_TASK_INFINITE);
+    cra_thrdpool_init(&pool, 8);
 
     for (int i = 0; i < 1000; i++)
     {
@@ -630,15 +628,13 @@ test_weak_ref_multi(void)
 
     cra_weak_ref_release_clear(&ref);
 
-    cra_thrdpool_wait(&pool);
+    cra_thrdpool_uninit(&pool, true);
 
     printf("weak_ref_multi_num = %d\n"
            "weak_ref_multi_acquire_fail_num = %d\n"
            "weak_ref_multi_acquire_success_num = %d\n",
            weak_ref_multi_num, weak_ref_multi_acquire_fail_num, weak_ref_multi_acquire_success_num);
     assert_always(weak_ref_multi_num == 1);
-
-    cra_thrdpool_uninit(&pool);
 }
 
 #endif // end weak ref(multi threads)
