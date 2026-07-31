@@ -130,7 +130,7 @@ test_log_multithreads_sync(void)
 
     log = cra_log_open("TestMultiThreadSync", CRA_LOG_LV_DEBUG, true, false);
 
-    cra_thrdpool_init(&pool, N);
+    cra_thrdpool_init(&pool, N, N, CRA_THRDPOOL_FULL_WAIT);
 
     unsigned long start_ms = cra_tick_ms();
 
@@ -155,7 +155,7 @@ test_log_multithreads_async(void)
     log = cra_log_open("TestMultiThreadAsync", CRA_LOG_LV_DEBUG, true, true);
     cra_log_config(log, 4 * 1024 * 1024, "log/async/");
 
-    cra_thrdpool_init(&pool, N);
+    cra_thrdpool_init(&pool, N, N, CRA_THRDPOOL_FULL_WAIT);
 
     unsigned long start_ms = cra_tick_ms();
 
