@@ -101,7 +101,7 @@ cra_deque_ensure_and_increment_left(CraDeque *deque)
         if (front == deque->rear)
         {
             if (!cra_deque_expand_array(deque, (deque)->narray << 1))
-                return 0;
+                return false;
             front = (deque->front - 1) & (deque->narray - 1);
         }
         deque->front = front;
@@ -147,7 +147,7 @@ cra_deque_ensure_and_increment_right(CraDeque *deque)
         if (rear == deque->front)
         {
             if (!cra_deque_expand_array(deque, (deque)->narray << 1))
-                return 0;
+                return false;
             rear = (deque->rear + 1) & (deque->narray - 1);
         }
         deque->rear = rear;
@@ -357,12 +357,10 @@ bool(cra_deque_push_front)(CraDeque *deque, void *val)
 
     if (!cra_deque_ensure_and_increment_left(deque))
         return false;
-    if (cra_deque_copy_value(deque, deque->front, deque->lindex, val))
-    {
-        ++deque->count;
-        return true;
-    }
-    return false;
+    if (!cra_deque_copy_value(deque, deque->front, deque->lindex, val))
+        return false;
+    ++deque->count;
+    return true;
 }
 
 bool(cra_deque_push_back)(CraDeque *deque, void *val)
@@ -373,12 +371,10 @@ bool(cra_deque_push_back)(CraDeque *deque, void *val)
 
     if (!cra_deque_ensure_and_increment_right(deque))
         return false;
-    if (cra_deque_copy_value(deque, deque->rear, deque->rindex, val))
-    {
-        ++deque->count;
-        return true;
-    }
-    return false;
+    if (!cra_deque_copy_value(deque, deque->rear, deque->rindex, val))
+        return false;
+    ++deque->count;
+    return true;
 }
 
 bool(cra_deque_pop_at)(CraDeque *deque, size_t index, void *retval)
