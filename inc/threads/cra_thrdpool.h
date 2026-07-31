@@ -13,10 +13,17 @@
 #include "cra_atomic.h"
 #include "cra_thread.h"
 
-typedef enum CraThrdPoolFull_e   CraThrdPoolFull_e;
 typedef struct CraThrdPoolWorker CraThrdPoolWorker;
 typedef struct CraThrdPool       CraThrdPool;
 typedef struct CraBlockdq        CraBlockdq;
+
+typedef enum CraThrdPoolFull_e
+{
+    CRA_THRDPOOL_FULL_WAIT,
+    CRA_THRDPOOL_FULL_DROP_NEWEST,
+    CRA_THRDPOOL_FULL_DROP_OLDEST,
+    CRA_THRDPOOL_FULL_RETURN_FALSE
+} CraThrdPoolFull_e;
 
 struct CraThrdPool
 {
@@ -27,18 +34,10 @@ struct CraThrdPool
     CraBlockdq        *taskque; // Blockdq<Task>
 };
 
-enum CraThrdPoolFull_e
-{
-    CRA_THRDPOOL_FULL_WAIT,
-    CRA_THRDPOOL_FULL_DROP_NEWEST,
-    CRA_THRDPOOL_FULL_DROP_OLDEST,
-    CRA_THRDPOOL_FULL_RETURN_FALSE
-};
-
 #define CRA_THRDPOOL_INFINITE_TASKS SIZE_MAX
 
 CRA_API void
-cra_thrdpool_init(CraThrdPool *pool, int nthreads, int max_tasks, CraThrdPoolFull_e full_policy);
+cra_thrdpool_init(CraThrdPool *pool, int nthreads, size_t max_tasks, CraThrdPoolFull_e full_policy);
 
 // `wait_tasks`: Wait for all tasks to finish.
 CRA_API void

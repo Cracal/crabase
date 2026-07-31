@@ -15,8 +15,15 @@
 
 #define CRA_BLOCKDQ_CHECK_VAL(deque_, val) assert(sizeof(*(val)) == (deque_)->deque.itemsize)
 
-typedef enum CraBlockdqFull_e CraBlockdqFull_e;
-typedef struct CraBlockdq     CraBlockdq;
+typedef struct CraBlockdq CraBlockdq;
+
+typedef enum CraBlockdqFull_e
+{
+    CRA_BLOCKDQ_FULL_WAIT,
+    CRA_BLOCKDQ_FULL_DROP_NEWEST,
+    CRA_BLOCKDQ_FULL_DROP_OLDEST,
+    CRA_BLOCKDQ_FULL_RETURN_FALSE
+} CraBlockdqFull_e;
 
 struct CraBlockdq
 {
@@ -28,14 +35,6 @@ struct CraBlockdq
     CraBlockdqFull_e full_policy;
     bool             en_colsed;
     bool             de_colsed;
-};
-
-enum CraBlockdqFull_e
-{
-    CRA_BLOCKDQ_FULL_WAIT,
-    CRA_BLOCKDQ_FULL_DROP_NEWEST,
-    CRA_BLOCKDQ_FULL_DROP_OLDEST,
-    CRA_BLOCKDQ_FULL_RETURN_FALSE
 };
 
 #define CRA_BLOCKDQ_INFINITE SIZE_MAX

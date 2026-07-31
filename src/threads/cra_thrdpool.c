@@ -93,7 +93,7 @@ static CRA_THRD_FUNC(cra_thrdpool_worker)
 }
 
 void
-cra_thrdpool_init(CraThrdPool *pool, int nthreads, int max_tasks, CraThrdPoolFull_e full_policy)
+cra_thrdpool_init(CraThrdPool *pool, int nthreads, size_t max_tasks, CraThrdPoolFull_e full_policy)
 {
     CraCDL cdl;
 
