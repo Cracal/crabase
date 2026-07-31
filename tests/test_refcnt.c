@@ -557,7 +557,7 @@ test_ref_multi(void)
     ref = cra_ref_make(sizeof(int), ref_multi_check);
     assert_always(ref != NULL);
 
-    cra_thrdpool_init(&pool, 8);
+    cra_thrdpool_init(&pool, 8, CRA_THRDPOOL_INFINITE_TASKS, CRA_THRDPOOL_FULL_WAIT);
 
     for (int i = 0; i < 10000; i++)
     {
@@ -618,9 +618,9 @@ test_weak_ref_multi(void)
     ref = cra_weak_ref_make(sizeof(int), weak_ref_multi_check);
     assert_always(ref != NULL);
 
-    cra_thrdpool_init(&pool, 8);
+    cra_thrdpool_init(&pool, 8, CRA_THRDPOOL_INFINITE_TASKS, CRA_THRDPOOL_FULL_WAIT);
 
-    for (int i = 0; i < 1000; i++)
+    for (int i = 0; i < 10000; i++)
     {
         cra_weak_ref_ref(ref);
         cra_thrdpool_add_task1(&pool, weak_ref_multi_task_func, ref);

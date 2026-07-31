@@ -14,6 +14,17 @@
 #include "threads/cra_blockdq.h"
 #include "threads/cra_thrdpool.h"
 
+static_assert((int)CRA_THRDPOOL_FULL_WAIT == (int)CRA_BLOCKDQ_FULL_WAIT,
+              "CRA_THRDPOOL_FULL_WAIT != CRA_BLOCKDQ_FULL_WAIT");
+static_assert((int)CRA_THRDPOOL_FULL_DROP_NEWEST == (int)CRA_BLOCKDQ_FULL_DROP_NEWEST,
+              "CRA_THRDPOOL_FULL_DROP_NEWEST != CRA_BLOCKDQ_FULL_DROP_NEWEST");
+static_assert((int)CRA_THRDPOOL_FULL_DROP_OLDEST == (int)CRA_BLOCKDQ_FULL_DROP_OLDEST,
+              "CRA_THRDPOOL_FULL_DROP_OLDEST != CRA_BLOCKDQ_FULL_DROP_OLDEST");
+static_assert((int)CRA_THRDPOOL_FULL_RETURN_FALSE == (int)CRA_BLOCKDQ_FULL_RETURN_FALSE,
+              "CRA_THRDPOOL_FULL_RETURN_FALSE != CRA_BLOCKDQ_FULL_RETURN_FALSE");
+static_assert(CRA_THRDPOOL_INFINITE_TASKS == CRA_BLOCKDQ_INFINITE,
+              "CRA_THRDPOOL_INFINITE_TASKS != CRA_BLOCKDQ_INFINITE");
+
 typedef struct CraThrdPoolTask CraThrdPoolTask;
 
 struct CraThrdPoolWorker
@@ -82,7 +93,7 @@ static CRA_THRD_FUNC(cra_thrdpool_worker)
 }
 
 void
-cra_thrdpool_init(CraThrdPool *pool, int nthreads)
+cra_thrdpool_init(CraThrdPool *pool, int nthreads, int max_tasks, CraThrdPoolFull_e full_policy)
 {
     CraCDL cdl;
 
@@ -100,7 +111,7 @@ cra_thrdpool_init(CraThrdPool *pool, int nthreads)
         exit(EXIT_FAILURE);
     }
     pool->taskque = cra_alloc(CraBlockdq);
-    if (!pool->taskque || !cra_blockdq_init(CraThrdPoolTask, pool->taskque))
+    if (!pool->taskque || !cra_blockdq_init(CraThrdPoolTask, pool->taskque, max_tasks, (CraBlockdqFull_e)full_policy))
     {
         fprintf(stderr, "cra_thrdpool_init() -- Create taskque failed.\n");
         exit(EXIT_FAILURE);
@@ -131,7 +142,7 @@ cra_thrdpool_uninit(CraThrdPool *pool, bool wait_tasks)
     if (!wait_tasks)
         pool->running = false;
 
-    cra_blockdq_shutdown(pool->taskque);
+    cra_blockdq_shutdown(pool->taskque, CRA_BLOCKDQ_CLOSE_ALL);
 
     for (int i = 0; i < pool->nworker; i++)
         cra_thrd_join(pool->workers[i].th);
@@ -146,33 +157,91 @@ cra_thrdpool_uninit(CraThrdPool *pool, bool wait_tasks)
 bool
 cra_thrdpool_add_task0(CraThrdPool *pool, void (*excute0)(void))
 {
+    assert(pool);
     CraThrdPoolTask task = { .excute0 = excute0, .count = 0 };
-    return (cra_blockdq_push_back)(pool->taskque, &task);
+    return (cra_blockdq_push_back)(pool->taskque, &task, NULL);
 }
 
 bool
 cra_thrdpool_add_task1(CraThrdPool *pool, void (*excute1)(void *), void *arg)
 {
+    assert(pool);
     CraThrdPoolTask task = { .excute1 = excute1, .count = 1 };
     task.user_data[1] = arg;
-    return (cra_blockdq_push_back)(pool->taskque, &task);
+    return (cra_blockdq_push_back)(pool->taskque, &task, NULL);
 }
 
 bool
 cra_thrdpool_add_task2(CraThrdPool *pool, void (*excute2)(void *, void *), void *arg1, void *arg2)
 {
+    assert(pool);
     CraThrdPoolTask task = { .excute2 = excute2, .count = 2 };
     task.user_data[1] = arg1;
     task.user_data[2] = arg2;
-    return (cra_blockdq_push_back)(pool->taskque, &task);
+    return (cra_blockdq_push_back)(pool->taskque, &task, NULL);
 }
 
 bool
 cra_thrdpool_add_task3(CraThrdPool *pool, void (*excute3)(void *, void *, void *), void *arg1, void *arg2, void *arg3)
 {
+    assert(pool);
     CraThrdPoolTask task = { .excute3 = excute3, .count = 3 };
     task.user_data[1] = arg1;
     task.user_data[2] = arg2;
     task.user_data[3] = arg3;
-    return (cra_blockdq_push_back)(pool->taskque, &task);
+    return (cra_blockdq_push_back)(pool->taskque, &task, NULL);
+}
+
+bool
+cra_thrdpool_add_task1_drop(CraThrdPool *pool, void (*drop_cb)(void *), void (*excute1)(void *), void *arg)
+{
+    assert(pool);
+    assert(drop_cb);
+    CraThrdPoolTask drop = { 0 };
+    CraThrdPoolTask task = { .excute1 = excute1, .count = 1 };
+    task.user_data[1] = arg;
+    bool ret = (cra_blockdq_push_back)(pool->taskque, &task, &drop);
+    if (drop.excute1)
+        drop_cb(drop.user_data[1]);
+    return ret;
+}
+
+bool
+cra_thrdpool_add_task2_drop(CraThrdPool *pool,
+                            void         (*drop_cb)(void *, void *),
+                            void         (*excute2)(void *, void *),
+                            void        *arg1,
+                            void        *arg2)
+{
+    assert(pool);
+    assert(drop_cb);
+    CraThrdPoolTask drop = { 0 };
+    CraThrdPoolTask task = { .excute2 = excute2, .count = 2 };
+    task.user_data[1] = arg1;
+    task.user_data[2] = arg2;
+    bool ret = (cra_blockdq_push_back)(pool->taskque, &task, &drop);
+    if (drop.excute2)
+        drop_cb(drop.user_data[1], drop.user_data[2]);
+    return ret;
+}
+
+bool
+cra_thrdpool_add_task3_drop(CraThrdPool *pool,
+                            void         (*drop_cb)(void *, void *, void *),
+                            void         (*excute3)(void *, void *, void *),
+                            void        *arg1,
+                            void        *arg2,
+                            void        *arg3)
+{
+    assert(pool);
+    assert(drop_cb);
+    CraThrdPoolTask drop = { 0 };
+    CraThrdPoolTask task = { .excute3 = excute3, .count = 3 };
+    task.user_data[1] = arg1;
+    task.user_data[2] = arg2;
+    task.user_data[3] = arg3;
+    bool ret = (cra_blockdq_push_back)(pool->taskque, &task, &drop);
+    if (drop.excute3)
+        drop_cb(drop.user_data[1], drop.user_data[2], drop.user_data[3]);
+    return ret;
 }

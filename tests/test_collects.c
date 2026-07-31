@@ -146,7 +146,7 @@ test_hash_str_dyn_init_hashcode(void)
 {
     CraThrdPool pool;
 
-    cra_thrdpool_init(&pool, 4);
+    cra_thrdpool_init(&pool, 4, CRA_THRDPOOL_INFINITE_TASKS, CRA_THRDPOOL_FULL_WAIT);
 
     for (int i = 0; i < 4; i++)
         cra_thrdpool_add_task0(&pool, test_str_hashcode);

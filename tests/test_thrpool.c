@@ -38,7 +38,7 @@ test_thread_pool(void)
 
     tp = cra_alloc(CraThrdPool);
     assert_always(!!tp);
-    cra_thrdpool_init(tp, num_threads);
+    cra_thrdpool_init(tp, num_threads, CRA_THRDPOOL_INFINITE_TASKS, CRA_THRDPOOL_FULL_WAIT);
 
     vals = (int *)cra_malloc(sizeof(*vals) * num_items);
     bzero(vals, sizeof(*vals) * num_items);
@@ -72,7 +72,7 @@ test_thread_pool2(void)
 
     tp = cra_alloc(CraThrdPool);
     assert_always(!!tp);
-    cra_thrdpool_init(tp, num_threads);
+    cra_thrdpool_init(tp, num_threads, CRA_THRDPOOL_INFINITE_TASKS, CRA_THRDPOOL_FULL_WAIT);
 
     vals = (int *)cra_malloc(sizeof(*vals) * num_items);
     bzero(vals, sizeof(*vals) * num_items);
@@ -99,6 +99,124 @@ test_thread_pool2(void)
     cra_free(vals);
 }
 
+static void
+test_thread_pool3(void)
+{
+    CraThrdPool tp;
+    int        *vals;
+    int         i;
+    int         num_threads = 10;
+    int         num_items = 100;
+
+    cra_thrdpool_init(&tp, num_threads, 10, CRA_THRDPOOL_FULL_WAIT);
+
+    vals = (int *)cra_malloc(sizeof(*vals) * num_items);
+    bzero(vals, sizeof(*vals) * num_items);
+
+    for (i = 0; i < num_items; i++)
+    {
+        vals[i] = i;
+        cra_thrdpool_add_task1(&tp, worker, vals + i);
+    }
+
+    cra_thrdpool_uninit(&tp, true);
+
+    int ncompleted = 0;
+    for (i = 0; i < num_items; i++)
+    {
+        assert_always(vals[i] == i + PLUS);
+        ++ncompleted;
+        // printf("main: %d\n", vals[i]);
+    }
+    printf("completed count: %d\n", ncompleted);
+
+    cra_free(vals);
+}
+
+int drop_cnt = 0;
+static void
+drop_fn(void *arg)
+{
+    CRA_UNUSED(arg);
+    // printf("drop: %d\n", *(int *)arg);
+    ++drop_cnt;
+}
+
+static void
+test_thread_pool4(void)
+{
+    CraThrdPool tp;
+    int        *vals;
+    int         i;
+    int         num_threads = 10;
+    int         num_items = 100;
+
+    cra_thrdpool_init(&tp, num_threads, 10, CRA_THRDPOOL_FULL_DROP_NEWEST);
+
+    vals = (int *)cra_malloc(sizeof(*vals) * num_items);
+    bzero(vals, sizeof(*vals) * num_items);
+    drop_cnt = 0;
+
+    for (i = 0; i < num_items; i++)
+    {
+        vals[i] = i;
+        cra_thrdpool_add_task1_drop(&tp, drop_fn, worker, vals + i);
+    }
+
+    cra_thrdpool_uninit(&tp, true);
+
+    int ncompleted = 0;
+    for (i = 0; i < num_items; i++)
+    {
+        // assert_always(vals[i] == i + PLUS);
+        if (vals[i] == i + PLUS)
+            ++ncompleted;
+        // printf("main: %d\n", vals[i]);
+    }
+    printf("completed count: %d, drop count: %d\n", ncompleted, drop_cnt);
+    assert_always(ncompleted >= 10);
+    assert_always(ncompleted + drop_cnt == num_items);
+
+    cra_free(vals);
+}
+
+static void
+test_thread_pool5(void)
+{
+    CraThrdPool tp;
+    int        *vals;
+    int         i;
+    int         num_threads = 10;
+    int         num_items = 100;
+
+    cra_thrdpool_init(&tp, num_threads, 20, CRA_THRDPOOL_FULL_DROP_OLDEST);
+
+    vals = (int *)cra_malloc(sizeof(*vals) * num_items);
+    bzero(vals, sizeof(*vals) * num_items);
+    drop_cnt = 0;
+
+    for (i = 0; i < num_items; i++)
+    {
+        vals[i] = i;
+        cra_thrdpool_add_task1_drop(&tp, drop_fn, worker, vals + i);
+    }
+
+    cra_thrdpool_uninit(&tp, true);
+
+    int ncompleted = 0;
+    for (i = 0; i < num_items; i++)
+    {
+        // assert_always(vals[i] == i + PLUS);
+        if (vals[i] == i + PLUS)
+            ++ncompleted;
+        // printf("main: %d\n", vals[i]);
+    }
+    printf("completed count: %d, drop count: %d\n", ncompleted, drop_cnt);
+    assert_always(ncompleted >= 20);
+    assert_always(ncompleted + drop_cnt == num_items);
+
+    cra_free(vals);
+}
 int
 main(void)
 {
@@ -108,6 +226,15 @@ main(void)
     printf("## start test thpool2...\n");
     test_thread_pool2();
     printf("## end   test thpool2...\n\n");
+    printf("## start test thpool3...\n");
+    test_thread_pool3();
+    printf("## end   test thpool3...\n\n");
+    printf("## start test thpool4...\n");
+    test_thread_pool4();
+    printf("## end   test thpool4...\n\n");
+    printf("## start test thpool5...\n");
+    test_thread_pool5();
+    printf("## end   test thpool5...\n\n");
 
     cra_memory_leak_report();
     return 0;
