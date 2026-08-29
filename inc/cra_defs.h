@@ -143,7 +143,7 @@
 #else
 #include <errno.h>
 static inline int
-cra_get_last_error()
+cra_get_last_error(void)
 {
     return errno;
 }
@@ -180,13 +180,13 @@ cra_set_last_error(int err)
 #endif
 
 #ifdef CRA_COMPILER_MSVC
-typedef intptr_t ssize_t;
+typedef ptrdiff_t ssize_t;
 #endif
 #ifndef SSIZE_MAX
-#define SSIZE_MAX INTPTR_MAX
+#define SSIZE_MAX PTRDIFF_MAX
 #endif
 #ifndef SSIZE_MIN
-#define SSIZE_MIN INTPTR_MIN
+#define SSIZE_MIN PTRDIFF_MIN
 #endif
 
 #ifdef CRA_COMPILER_MSVC
