@@ -1,4 +1,4 @@
-#include "cra_futils.h"
+#include "cra_filedir.h"
 
 #define IS_SLASH(c) CRA_IS_PATH_SEP(c)
 #define IS_ZERO(c)  (c == '\0')

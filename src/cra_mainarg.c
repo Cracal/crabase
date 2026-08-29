@@ -2,9 +2,9 @@
 #include "collections/cra_dict.h"
 #include "cra_mainarg.h"
 #include "cra_mempool.h"
+#include "cra_filedir.h"
 #include "cra_assert.h"
 #include "cra_malloc.h"
-#include "cra_futils.h"
 
 #define HELP_OPTION_LENGTH (sizeof("-h, --help") - 1)
 

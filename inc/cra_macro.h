@@ -1,5 +1,5 @@
 /**
- * @file cra_mutils.h
+ * @file cra_macro.h
  * @author Cracal
  * @brief macro utils
  * @version 0.1
@@ -8,8 +8,8 @@
  * @copyright Copyright (c) 2026
  *
  */
-#ifndef __CRA_MUTILS_H__
-#define __CRA_MUTILS_H__
+#ifndef __CRA_MACRO_H__
+#define __CRA_MACRO_H__
 #include "cra_assert.h"
 
 #define CRA_CNT_CAT(a, b) a b

@@ -1,15 +1,15 @@
 /**
- * @file cra_futils.h
+ * @file cra_filedir.h
  * @author Cracal
- * @brief file utils
+ * @brief file & directory utils
  * @version 0.1
  * @date 2026-07-26
  *
  * @copyright Copyright (c) 2026
  *
  */
-#ifndef __CRA_FUTILS_H__
-#define __CRA_FUTILS_H__
+#ifndef __CRA_FILEDIR_H__
+#define __CRA_FILEDIR_H__
 #include "cra_defs.h"
 
 #ifdef CRA_OS_WIN
