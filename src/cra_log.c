@@ -614,11 +614,16 @@ cra_log_sync_append(char *msg, size_t n, CraLogLv_e lv)
 
 void(cra_log_msg)(CraLogger *logger, CraLogLv_e lv, const char *fmt, ...)
 {
-    int         s;
-    int         n;
-    va_list     ap;
-    CraDateTime dt;
-    char        msg[CRA_LOG_LINE_MAX];
+    int      s;
+    int      n;
+    va_list  ap;
+    time_t   ns;
+    time_t   sec;
+    uint64_t epoch;
+    char     msg[CRA_LOG_LINE_MAX];
+
+    static cra_thrd_local time_t st_last_second = 0;
+    static cra_thrd_local char   st_cached_datetime_str[20] = { 0 };
 
     assert(logger);
     assert(sizeof(msg) > 100);
@@ -630,20 +635,33 @@ void(cra_log_msg)(CraLogger *logger, CraLogLv_e lv, const char *fmt, ...)
 
     // format time
 
-    cra_datetime_now(&dt, logger->use_zulu);
+    epoch = cra_datetime_epoch_ns();
+    cra_datetime_epoch_to_sec_and_ns(epoch, &sec, &ns);
+    if (sec != st_last_second)
+    {
+        struct tm t;
+        st_last_second = sec;
+        if (logger->use_zulu)
+            cra_gmtime(sec, &t);
+        else
+            cra_localtime(sec, &t);
+        strftime(st_cached_datetime_str, sizeof(st_cached_datetime_str), "%Y-%m-%dT%H:%M:%S", &t);
+        st_cached_datetime_str[19] = '.'; // non-null-terminated
+    }
+
     if (logger->use_zulu)
     {
-        n = snprintf(msg + 20, sizeof(msg) - 20, "%dZ", dt.usec);
+        n = snprintf(msg + 20, sizeof(msg) - 20, "%dZ", (int)(ns / 1000));
         s = 8 - n;
     }
     else
     {
-        n = snprintf(msg + 20, sizeof(msg) - 20, "%d%+03hd:00", dt.usec, logger->tz_hour);
+        n = snprintf(msg + 20, sizeof(msg) - 20, "%d%+03hd:00", (int)(ns / 1000), logger->tz_hour);
         s = 13 - n;
     }
-    n += snprintf(msg, 20, "%4d-%02d-%02dT%02d:%02d:%02d", dt.year, dt.mon, dt.day, dt.hour, dt.min, dt.sec);
-    msg[19] = '.';
-    ++n;
+
+    memcpy(msg, st_cached_datetime_str, 20);
+    n += 20;
 
     // format level & tid
     n +=
