@@ -13,37 +13,42 @@
 #include "cra_defs.h"
 #include <time.h>
 
+CRA_API uint64_t
+cra_monotonic_ns(void);
+
+CRA_API uint64_t
+cra_monotonic_us(void);
+
+CRA_API uint64_t
+cra_monotonic_ms(void);
+
 CRA_API double
 cra_monotonic_sec(void);
 
-CRA_API unsigned long
-cra_tick_ms(void);
-
-CRA_API unsigned long long
-cra_tick_us(void);
+// ======================================
 
 static inline void
-cra_gmtime(time_t secs, struct tm *_tm)
+cra_gmtime(time_t secs, struct tm *t)
 {
 #ifdef CRA_OS_WIN
-    gmtime_s(_tm, &secs);
+    gmtime_s(t, &secs);
 #else
-    gmtime_r(&secs, _tm);
+    gmtime_r(&secs, t);
 #endif
 }
 
 static inline void
-cra_localtime(time_t secs, struct tm *_tm)
+cra_localtime(time_t secs, struct tm *t)
 {
 #ifdef CRA_OS_WIN
-    localtime_s(_tm, &secs);
+    localtime_s(t, &secs);
 #else
-    localtime_r(&secs, _tm);
+    localtime_r(&secs, t);
 #endif
 }
 
 CRA_API void
-cra_print_tm(const struct tm *const _tm);
+cra_print_tm(const struct tm *const t);
 
 typedef struct CraDateTime
 {
@@ -53,14 +58,31 @@ typedef struct CraDateTime
     int hour;
     int min;
     int sec;
-    int ms;
+    int usec;
 } CraDateTime;
 
-CRA_API void
-cra_datetime_now_utc(CraDateTime *dt);
+static inline void
+cra_datetime_epoch_to_sec_and_ns(uint64_t utc_epoch, time_t *sec, time_t *ns)
+{
+    if (sec)
+        *sec = (time_t)(utc_epoch / 1000000000);
+    if (ns)
+        *ns = (time_t)(utc_epoch % 1000000000);
+}
+
+// retrun Unix epoch in nanoseconds
+CRA_API uint64_t
+cra_datetime_epoch_ns(void);
 
 CRA_API void
-cra_datetime_now_localtime(CraDateTime *dt);
+cra_datetime_from_epoch(CraDateTime *dt, uint64_t utc_epoch, bool tz_utc);
+
+static inline void
+cra_datetime_now(CraDateTime *dt, bool tz_utc)
+{
+    uint64_t epoch = cra_datetime_epoch_ns();
+    cra_datetime_from_epoch(dt, epoch, tz_utc);
+}
 
 CRA_API void
 cra_print_datetime(const CraDateTime *const dt);

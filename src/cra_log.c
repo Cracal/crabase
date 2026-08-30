@@ -141,13 +141,10 @@ cra_log_output_async_roll_file(CraLogger *log, time_t now, time_t day)
     // "path/to/logname_yyyyMMdd_hhmmss_SSSZ.log"
 
     CraDateTime dt;
-    if (log->use_zulu)
-        cra_datetime_now_utc(&dt);
-    else
-        cra_datetime_now_localtime(&dt);
+    cra_datetime_now(&dt, log->use_zulu);
 
     snprintf(log->filename + log->filename_time_start, sizeof(log->filename) - log->filename_time_start,
-             "%04d%02d%02d_%02d%02d%02d_%d%s.log", dt.year, dt.mon, dt.day, dt.hour, dt.min, dt.sec, dt.ms,
+             "%04d%02d%02d_%02d%02d%02d_%d%s.log", dt.year, dt.mon, dt.day, dt.hour, dt.min, dt.sec, dt.usec,
              log->use_zulu ? "Z" : "");
 
 // open new file
@@ -633,17 +630,16 @@ void(cra_log_msg)(CraLogger *logger, CraLogLv_e lv, const char *fmt, ...)
 
     // format time
 
+    cra_datetime_now(&dt, logger->use_zulu);
     if (logger->use_zulu)
     {
-        cra_datetime_now_utc(&dt);
-        n = snprintf(msg + 20, sizeof(msg) - 20, "%dZ", dt.ms);
-        s = 5 - n;
+        n = snprintf(msg + 20, sizeof(msg) - 20, "%dZ", dt.usec);
+        s = 8 - n;
     }
     else
     {
-        cra_datetime_now_localtime(&dt);
-        n = snprintf(msg + 20, sizeof(msg) - 20, "%d%+03hd:00", dt.ms, logger->tz_hour);
-        s = 10 - n;
+        n = snprintf(msg + 20, sizeof(msg) - 20, "%d%+03hd:00", dt.usec, logger->tz_hour);
+        s = 13 - n;
     }
     n += snprintf(msg, 20, "%4d-%02d-%02dT%02d:%02d:%02d", dt.year, dt.mon, dt.day, dt.hour, dt.min, dt.sec);
     msg[19] = '.';
