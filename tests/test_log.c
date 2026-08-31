@@ -84,10 +84,10 @@ test_log_out_of_msg_buf(void)
 {
 #ifdef CRA_LOG_FILE_LINE
 #define LEN                                                                                     \
-    CRA_LOG_LINE_MAX - 39 - (sizeof(" -- ") - 1) - (sizeof(__FILE__) - 1) - (sizeof(":") - 1) - \
+    CRA_LOG_LINE_MAX - 42 - (sizeof(" -- ") - 1) - (sizeof(__FILE__) - 1) - (sizeof(":") - 1) - \
       (__LINE__ >= 1000 ? 4 : (__LINE__ >= 100 ? 3 : (__LINE__ >= 10 ? 2 : 1))) - 1
 #else
-#define LEN CRA_LOG_LINE_MAX - 39 - 1
+#define LEN CRA_LOG_LINE_MAX - 42 - 1
 #endif
 
     CraLogger *logger;

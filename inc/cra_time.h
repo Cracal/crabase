@@ -16,14 +16,24 @@
 CRA_API uint64_t
 cra_monotonic_ns(void);
 
-CRA_API uint64_t
-cra_monotonic_us(void);
+static inline uint64_t
+cra_monotonic_us(void)
+{
+    return cra_monotonic_ns() / 1000;
+}
 
-CRA_API uint64_t
-cra_monotonic_ms(void);
+static inline uint64_t
+cra_monotonic_ms(void)
+{
+    return cra_monotonic_ns() / 1000000;
+}
 
-CRA_API double
-cra_monotonic_sec(void);
+static inline double
+cra_monotonic_sec(void)
+{
+    uint64_t ns = cra_monotonic_ns();
+    return (ns % 1000000000 == 0) ? (double)(ns / 1000000000) : ns / (double)1000000000;
+}
 
 // ======================================
 
@@ -59,28 +69,32 @@ typedef struct CraDateTime
     int min;
     int sec;
     int usec;
+    int isdst;
 } CraDateTime;
 
+// convert epoch(us) to seconds and microseconds
 static inline void
-cra_datetime_epoch_to_sec_and_ns(uint64_t utc_epoch, time_t *sec, time_t *ns)
+cra_datetime_epoch_to_sec_and_us(uint64_t utc_epoch, time_t *sec, int *us)
 {
     if (sec)
-        *sec = (time_t)(utc_epoch / 1000000000);
-    if (ns)
-        *ns = (time_t)(utc_epoch % 1000000000);
+        *sec = (time_t)(utc_epoch / 1000000);
+    if (us)
+        *us = (int)(utc_epoch % 1000000);
 }
 
-// retrun Unix epoch in nanoseconds
+// retrun Unix epoch(UTC) in microseconds
 CRA_API uint64_t
-cra_datetime_epoch_ns(void);
+cra_datetime_epoch_us(void);
 
+// convert epoch(UTC, us) to CraDateTime
+// @param tz_utc true -> to UTC, false -> to local time
 CRA_API void
 cra_datetime_from_epoch(CraDateTime *dt, uint64_t utc_epoch, bool tz_utc);
 
 static inline void
 cra_datetime_now(CraDateTime *dt, bool tz_utc)
 {
-    uint64_t epoch = cra_datetime_epoch_ns();
+    uint64_t epoch = cra_datetime_epoch_us();
     cra_datetime_from_epoch(dt, epoch, tz_utc);
 }
 

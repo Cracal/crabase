@@ -137,12 +137,11 @@ cra_log_output_async_roll_file(CraLogger *log, time_t now, time_t day)
     }
 
     // make new filename
-    // "path/to/logname_yyyyMMdd_hhmmss_SSS.log"
-    // "path/to/logname_yyyyMMdd_hhmmss_SSSZ.log"
+    // "path/to/logname_yyyyMMdd_hhmmss_SSSSSS.log"
+    // "path/to/logname_yyyyMMdd_hhmmss_SSSSSSZ.log"
 
     CraDateTime dt;
     cra_datetime_now(&dt, log->use_zulu);
-
     snprintf(log->filename + log->filename_time_start, sizeof(log->filename) - log->filename_time_start,
              "%04d%02d%02d_%02d%02d%02d_%d%s.log", dt.year, dt.mon, dt.day, dt.hour, dt.min, dt.sec, dt.usec,
              log->use_zulu ? "Z" : "");
@@ -617,7 +616,7 @@ void(cra_log_msg)(CraLogger *logger, CraLogLv_e lv, const char *fmt, ...)
     int      s;
     int      n;
     va_list  ap;
-    time_t   ns;
+    int      us;
     time_t   sec;
     uint64_t epoch;
     char     msg[CRA_LOG_LINE_MAX];
@@ -635,8 +634,8 @@ void(cra_log_msg)(CraLogger *logger, CraLogLv_e lv, const char *fmt, ...)
 
     // format time
 
-    epoch = cra_datetime_epoch_ns();
-    cra_datetime_epoch_to_sec_and_ns(epoch, &sec, &ns);
+    epoch = cra_datetime_epoch_us();
+    cra_datetime_epoch_to_sec_and_us(epoch, &sec, &us);
     if (sec != st_last_second)
     {
         struct tm t;
@@ -651,12 +650,12 @@ void(cra_log_msg)(CraLogger *logger, CraLogLv_e lv, const char *fmt, ...)
 
     if (logger->use_zulu)
     {
-        n = snprintf(msg + 20, sizeof(msg) - 20, "%dZ", (int)(ns / 1000));
+        n = snprintf(msg + 20, sizeof(msg) - 20, "%dZ", us);
         s = 8 - n;
     }
     else
     {
-        n = snprintf(msg + 20, sizeof(msg) - 20, "%d%+03hd:00", (int)(ns / 1000), logger->tz_hour);
+        n = snprintf(msg + 20, sizeof(msg) - 20, "%d%+03hd:00", us, logger->tz_hour);
         s = 13 - n;
     }
 
