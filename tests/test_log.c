@@ -117,7 +117,7 @@ write_log(void *arg)
 {
     CraLogger *logger = (CraLogger *)arg;
     for (int i = 0; i < 10000; i++)
-        cra_log_info(logger, "Hello world %d from %lu.", i, cra_thrd_get_current_tid());
+        cra_log_info(logger, "Hello world %d from %lu.", i, cra_get_current_tid());
 }
 
 #define N 8
@@ -189,7 +189,7 @@ test_async(void)
     {
         cra_log_debug(logger,
                       "This is a test message, it is the %dth message. Some extra info: {logname: %s, tid: %lu}", i + 1,
-                      cra_log_get_name(logger), cra_thrd_get_current_tid());
+                      cra_log_get_name(logger), cra_get_current_tid());
     }
 
     cra_log_close(logger);

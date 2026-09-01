@@ -89,6 +89,6 @@ cra_thrd_join(cra_thrd_t th)
 typedef unsigned long cra_tid_t;
 
 CRA_API cra_tid_t
-cra_thrd_get_current_tid(void);
+cra_get_current_tid(void);
 
 #endif

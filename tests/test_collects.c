@@ -138,7 +138,7 @@ test_str_hashcode(void)
         hash2 = cra_hash_string2(str);
         assert_always(hash1 == hash2);
     }
-    printf("test done. tid: %lu.\n", (unsigned long)cra_thrd_get_current_tid());
+    printf("test done. tid: %lu.\n", (unsigned long)cra_get_current_tid());
 }
 
 void

@@ -18,7 +18,7 @@ static CRA_THRD_FUNC(thrd_func)
     CRA_UNUSED(arg);
     for (int i = 0; i < 10; i++)
     {
-        printf("Thread %lu is runing...\n", cra_thrd_get_current_tid());
+        printf("Thread %lu is runing...\n", cra_get_current_tid());
         cra_sleep(1);
     }
     return (cra_thrd_ret_t){ 0 };

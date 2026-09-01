@@ -21,7 +21,7 @@ worker(void *arg)
     int  old = *val;
 
     *val += PLUS;
-    printf("Worker: tid=%lu, old=%d, val=%d\n", cra_thrd_get_current_tid(), old, *val);
+    printf("Worker: tid=%lu, old=%d, val=%d\n", cra_get_current_tid(), old, *val);
 
     // if (*val % 2)
     //     cra_msleep(100);

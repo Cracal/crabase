@@ -663,8 +663,7 @@ void(cra_log_msg)(CraLogger *logger, CraLogLv_e lv, const char *fmt, ...)
     n += 20;
 
     // format level & tid
-    n +=
-      snprintf(msg + n, sizeof(msg) - n, "%*.s%s %-8lu", s, "", cra_log_level_to_str(lv), cra_thrd_get_current_tid());
+    n += snprintf(msg + n, sizeof(msg) - n, "%*.s%s %-8lu", s, "", cra_log_level_to_str(lv), cra_get_current_tid());
 
     // format message
     va_start(ap, fmt);
