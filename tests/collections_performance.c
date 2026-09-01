@@ -9,9 +9,9 @@
  *
  */
 #include "collections/cra_alist.h"
+#include "collections/cra_llist.h"
 #include "collections/cra_deque.h"
 #include "collections/cra_dict.h"
-#include "collections/cra_llist.h"
 #include "cra_malloc.h"
 #include "cra_time.h"
 
@@ -88,10 +88,10 @@ test_alist_performance(int sizes[])
         sum = 0;
         nloop = 0;
         start_ms = cra_monotonic_ms();
-        CRA_FOREACH(CRA_ALIST_ITERABLE_I, &list, vals)
+        CRA_FOREACH(CraAList, &list, &val)
         {
             nloop++;
-            sum += *(int *)vals.val_ref;
+            sum += val;
         }
         end_ms = cra_monotonic_ms();
         printf("\titer:          %" PRIu64 "ms. loop times: %d. sum: %lld\n", end_ms - start_ms, nloop, sum);
@@ -196,10 +196,10 @@ test_llist_performance(int sizes[])
         sum = 0;
         nloop = 0;
         start_ms = cra_monotonic_ms();
-        CRA_FOREACH(CRA_LLIST_ITERABLE_I, &list, vals)
+        CRA_FOREACH(CraLList, &list, &val)
         {
             nloop++;
-            sum += *(int *)vals.val_ref;
+            sum += val;
         }
         end_ms = cra_monotonic_ms();
         printf("\titer:          %" PRIu64 "ms. loop times: %d. sum: %lld\n", end_ms - start_ms, nloop, sum);
@@ -304,10 +304,10 @@ test_deque_performance(int sizes[])
         sum = 0;
         nloop = 0;
         start_ms = cra_monotonic_ms();
-        CRA_FOREACH(CRA_DEQUE_ITERABLE_I, &deque, vals)
+        CRA_FOREACH(CraDeque, &deque, &val)
         {
             nloop++;
-            sum += *(int *)vals.val_ref;
+            sum += val;
         }
         end_ms = cra_monotonic_ms();
         printf("\titer:          %" PRIu64 "ms. loop times: %d. sum: %lld\n", end_ms - start_ms, nloop, sum);
@@ -387,10 +387,10 @@ test_dict_performance(int sizes[])
         sum = 0;
         nloop = 0;
         start_ms = cra_monotonic_ms();
-        CRA_FOREACH(CRA_DICT_ITERABLE_I, &dict, vals)
+        CRA_FOREACH(CraDict, &dict, NULL, &val)
         {
             nloop++;
-            sum += *(size_t *)vals.val_ref;
+            sum += val;
         }
         end_ms = cra_monotonic_ms();
         printf("\titer:          %" PRIu64 "ms. loop times: %d. sum: %lld\n", end_ms - start_ms, nloop, sum);

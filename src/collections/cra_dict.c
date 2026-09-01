@@ -402,116 +402,58 @@ void *(cra_dict_get_ref)(CraDict * dict, const void *key)
     return NULL;
 }
 
-// ====================================== interfaces ======================================
-
-// initializable
-
-static CRA_INITIALIZABLE_INIT_FN(cra_dict_initializable_init)
+CRA_FOREACH_NEXT_DEF2(CraDict)
 {
-    CraDict                   *dict = (CraDict *)obj;
-    CraDictInitializableParam *param = (CraDictInitializableParam *)params;
+    CraDictEntry *entry;
 
-    assert(dict);
-    assert(param);
-
-    return (cra_dict_init_with_size)(dict, param->key_size, param->val_size, param->key_align, param->val_align, length,
-                                     param->hash_key, param->compare_key);
-}
-
-CRA_INITIALIZABLE_DEF(cra_g_dict_initializable_i) = {
-    .init = cra_dict_initializable_init,
-    .uninit = (CRA_INITIALIZABLE_UNINIT_FN((*)))cra_dict_uninit,
-};
-
-// appendable
-
-static CRA_APPENDABLE_APPEND_FN(cra_dict_appendable_append)
-{
+    assert(it);
     assert(obj);
-    assert(val);
-    assert(val->key_ref);
-    assert(val->val_ref);
 
-    CraDict *dict = (CraDict *)obj;
-    return (cra_dict_put_and_return_kv)(dict, val->key_ref, val->val_ref, NULL, NULL, true);
-}
-
-CRA_APPENDABLE_DEF(cra_g_dict_appendable_i) = {
-    .append = cra_dict_appendable_append,
-};
-
-// iterable
-
-static CRA_ITERABLE_INIT_FN(cra_dict_iterable_init)
-{
-    CraDict *dict = (CraDict *)obj;
-
-    assert(it);
-    assert(dict);
-    assert(dict->buckets);
-    assert(dict->entries);
-
-    if (retcnt)
-        *retcnt = (size_t)dict->count;
-
-    it->obj = obj;
-    it->ic1.idx = reverse ? dict->next : 0;
-
-    return dict->count > 0;
-}
-
-static CRA_ITERABLE_NEXT_FN(cra_dict_iterable_next)
-{
-    CraDict      *dict;
-    CraDictEntry *entry;
-
-    assert(it);
-    assert(val);
-    assert(it->obj);
-
-    dict = (CraDict *)it->obj;
-
-    while ((ssize_t)it->ic1.idx < dict->next)
+    if (!it->initialized)
     {
-        entry = CRA_DICT_PENTRY(dict, it->ic1.idx);
-        ++it->ic1.idx;
+        it->initialized = true;
+        it->index = 0;
+    }
 
+    while (it->index < obj->next)
+    {
+        entry = CRA_DICT_PENTRY(obj, it->index++);
         if (entry->hash != -1)
         {
-            val->key_ref = CRA_DICT_PKEY(dict, entry);
-            val->val_ref = CRA_DICT_PVAL(dict, entry);
+            if (retkey)
+                memcpy(retkey, CRA_DICT_PKEY(obj, entry), obj->key_size);
+            if (retval)
+                memcpy(retval, CRA_DICT_PVAL(obj, entry), obj->val_size);
             return true;
         }
     }
     return false;
 }
 
-static CRA_ITERABLE_PREV_FN(cra_dict_iterable_prev)
+CRA_FOREACH_PREV_DEF2(CraDict)
 {
-    CraDict      *dict;
     CraDictEntry *entry;
 
     assert(it);
-    assert(val);
-    assert(it->obj);
+    assert(obj);
 
-    dict = (CraDict *)it->obj;
-
-    while ((ssize_t)it->ic1.idx > 0)
+    if (!it->initialized)
     {
-        entry = CRA_DICT_PENTRY(dict, --it->ic1.idx);
+        it->initialized = true;
+        it->index = obj->next;
+    }
+
+    while (it->index > 0)
+    {
+        entry = CRA_DICT_PENTRY(obj, --it->index);
         if (entry->hash != -1)
         {
-            val->key_ref = CRA_DICT_PKEY(dict, entry);
-            val->val_ref = CRA_DICT_PVAL(dict, entry);
+            if (retkey)
+                memcpy(retkey, CRA_DICT_PKEY(obj, entry), obj->key_size);
+            if (retval)
+                memcpy(retval, CRA_DICT_PVAL(obj, entry), obj->val_size);
             return true;
         }
     }
     return false;
 }
-
-CRA_ITERABLE_DEF(cra_g_dict_iterable_i) = {
-    .init = cra_dict_iterable_init,
-    .next = cra_dict_iterable_next,
-    .prev = cra_dict_iterable_prev,
-};

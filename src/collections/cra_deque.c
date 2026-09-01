@@ -539,152 +539,60 @@ cra_deque_reverse(CraDeque *deque)
     return true;
 }
 
-// ====================================== interfaces ======================================
-
-// initializable
-
-static CRA_INITIALIZABLE_INIT_FN(cra_deque_initializable_init)
+CRA_FOREACH_NEXT_DEF(CraDeque)
 {
-    CraDeque                   *deque;
-    CraDequeInitializableParam *param;
-
+    assert(it);
     assert(obj);
-    assert(params);
 
-    deque = (CraDeque *)obj;
-    param = (CraDequeInitializableParam *)params;
-    return (cra_deque_init_with_size)(deque, param->itemsize, length);
-}
-
-CRA_INITIALIZABLE_DEF(cra_g_deque_initializable_i) = {
-    .init = cra_deque_initializable_init,
-    .uninit = (CRA_INITIALIZABLE_UNINIT_FN((*)))cra_deque_uninit,
-};
-
-// appendable
-
-static CRA_APPENDABLE_APPEND_FN(cra_deque_appendable_append)
-{
-    CraDeque *deque = (CraDeque *)obj;
-
-    assert(val);
-    assert(deque);
-    assert(val->val_ref);
-    assert(deque->itemsize > 0);
-
-    return (cra_deque_push_back)(deque, val->val_ref);
-}
-
-CRA_APPENDABLE_DEF(cra_g_deque_appendable_i) = {
-    .append = cra_deque_appendable_append,
-};
-
-// iterable
-
-static CRA_ITERABLE_INIT_FN(cra_deque_iterable_init)
-{
-    CraDeque *deque = (CraDeque *)obj;
-
-    assert(it);
-    assert(deque);
-    assert(deque->itemsize > 0);
-    CRA_UNUSED(reverse);
-
-    if (retcnt)
-        *retcnt = deque->count;
-
-    if (deque->count == 0)
+    if (!it->initialized)
     {
-        it->obj = NULL;
-        return false;
+        it->initialized = true;
+        it->block_index = obj->front;
+        it->item_index = obj->lindex;
+        it->index = 0;
     }
 
-    it->obj = deque;
-    if (reverse)
-    {
-        it->ic1.idx = deque->rindex; // item index
-        it->ic2.idx = deque->rear;   // block index
-    }
-    else
-    {
-        it->ic1.idx = deque->lindex; // item index
-        it->ic2.idx = deque->front;  // block index
-    }
-    return true;
-}
-
-static CRA_ITERABLE_NEXT_FN(cra_deque_iterable_next)
-{
-    CraDeque *deque;
-
-    assert(it);
-    assert(val);
-
-    if (!it->obj)
+    if (it->index++ >= obj->count)
         return false;
 
-    deque = (CraDeque *)it->obj;
-    val->val_ref = CRA_DEQUE_ARRAY_PVAL(deque, deque->array[it->ic2.idx], it->ic1.idx);
+    if (retval)
+        memcpy(retval, CRA_DEQUE_ARRAY_PVAL(obj, obj->array[it->block_index], it->item_index), obj->itemsize);
 
-    // has next item?
-    if (it->ic2.idx == deque->rear && it->ic1.idx == deque->rindex)
+    if (it->item_index++ == CRA_DEQUE_ITEM_COUNT - 1)
     {
-        it->obj = NULL; // no more items
-        return true;
-    }
-
-    // update indexes
-    if (it->ic1.idx == CRA_DEQUE_ITEM_COUNT - 1)
-    {
-        it->ic1.idx = 0;
-        if (++it->ic2.idx == deque->narray)
-            it->ic2.idx = 0;
-    }
-    else
-    {
-        ++it->ic1.idx;
+        it->item_index = 0;
+        if (++it->block_index == obj->narray)
+            it->block_index = 0;
     }
 
     return true;
 }
 
-static CRA_ITERABLE_PREV_FN(cra_deque_iterable_prev)
+CRA_FOREACH_PREV_DEF(CraDeque)
 {
-    CraDeque *deque;
-
     assert(it);
-    assert(val);
+    assert(obj);
 
-    if (!it->obj)
+    if (!it->initialized)
+    {
+        it->initialized = true;
+        it->block_index = obj->rear;
+        it->item_index = obj->rindex;
+        it->index = obj->count;
+    }
+
+    if (it->index-- == 0)
         return false;
 
-    deque = (CraDeque *)it->obj;
-    val->val_ref = CRA_DEQUE_ARRAY_PVAL(deque, deque->array[it->ic2.idx], it->ic1.idx);
+    if (retval)
+        memcpy(retval, CRA_DEQUE_ARRAY_PVAL(obj, obj->array[it->block_index], it->item_index), obj->itemsize);
 
-    // has prev item?
-    if (it->ic2.idx == deque->front && it->ic1.idx == deque->lindex)
+    if (it->item_index-- == 0)
     {
-        it->obj = NULL; // no more items
-        return true;
-    }
-
-    // update indexes
-    if (it->ic1.idx == 0)
-    {
-        it->ic1.idx = CRA_DEQUE_ITEM_COUNT - 1;
-        if (it->ic2.idx-- == 0)
-            it->ic2.idx = deque->narray - 1;
-    }
-    else
-    {
-        --it->ic1.idx;
+        it->item_index = CRA_DEQUE_ITEM_COUNT - 1;
+        if (it->block_index-- == 0)
+            it->block_index = obj->narray - 1;
     }
 
     return true;
 }
-
-CRA_ITERABLE_DEF(cra_g_deque_iterable_i) = {
-    .init = cra_deque_iterable_init,
-    .next = cra_deque_iterable_next,
-    .prev = cra_deque_iterable_prev,
-};

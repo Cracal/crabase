@@ -8,10 +8,9 @@
  * @copyright Copyright (c) 2024
  *
  */
-#include "collections/cra_dict.h"
-#include "cra_assert.h"
-#include "cra_malloc.h"
 #include <time.h>
+#include "cra_malloc.h"
+#include "collections/cra_dict.h"
 
 void
 test_new_delete(void)
@@ -51,23 +50,6 @@ test_new_delete(void)
     cra_dict_uninit(&dict2);
     assert_always(memcmp(&dict2, &(CraDict){ 0 }, sizeof(CraDict)) == 0);
     cra_dealloc(dict1);
-
-    CRA_DICT_INITIALIZABLE_PARAM_DEF(param, double, char[3], cra_hash_double_p, cra_cmp_double_p);
-    assert_always(cra_initializable_init(CRA_DICT_INITIALIZABLE_I, &dict2, 0, &param));
-    assert_always(dict2.buckets);
-    assert_always(dict2.entries);
-    assert_always(dict2.next == 0);
-    assert_always(dict2.count == 0);
-    assert_always(dict2.capacity == CRA_DICT_DEAFULT_CAPACITY);
-    assert_always(dict2.freelist == -1);
-    assert_always(dict2.key_size == param.key_size);
-    assert_always(dict2.val_size == param.val_size);
-    assert_always(dict2.key_offset % 2 == 0);
-    assert_always(dict2.val_offset % 2 == 0);
-    assert_always(dict2.entry_size > dict2.val_offset && dict2.entry_size % 2 == 0);
-
-    cra_initializable_uninit(CRA_DICT_INITIALIZABLE_I, &dict2);
-    assert_always(memcmp(&dict2, &(CraDict){ 0 }, sizeof(CraDict)) == 0);
 }
 
 void
@@ -84,10 +66,8 @@ test_add(void)
     assert_always(dict->count == 1000);
 
     int i = 0;
-    CRA_FOREACH(CRA_DICT_ITERABLE_I, dict, vals)
+    CRA_FOREACH(CraDict, dict, &key, &val)
     {
-        memcpy(&key, vals.key_ref, sizeof(key));
-        memcpy(&val, vals.val_ref, sizeof(val));
         assert_always(i == key && cra_cmp_float(val, i + .5f) == 0);
         i++;
     }
@@ -99,10 +79,8 @@ test_add(void)
     assert_always(cra_dict_put_and_return_v(dict, &(int){ 3 }, &(float){ 3.5f }, &val) &&
                   cra_cmp_float(val, 30000.5f) == 0);
 
-    CRA_FOREACH(CRA_DICT_ITERABLE_I, dict, vals)
+    CRA_FOREACH(CraDict, dict, &key, &val)
     {
-        memcpy(&key, vals.key_ref, sizeof(key));
-        memcpy(&val, vals.val_ref, sizeof(val));
         // printf("{k: %d, v: %f}\n", key, val);
         assert_always(cra_cmp_float(val, key + .5f) == 0);
     }
@@ -155,10 +133,8 @@ test_get(void)
     for (int i = -5000; i <= 5000; i++)
         cra_dict_add(dict, &i, &(float){ i + .5f });
 
-    CRA_FOREACH(CRA_DICT_ITERABLE_I, dict, vals)
+    CRA_FOREACH(CraDict, dict, &key, &val)
     {
-        memcpy(&key, vals.key_ref, sizeof(key));
-        memcpy(&val, vals.val_ref, sizeof(val));
         // printf("{k: %d, v: %f}\n", key, val);
         assert_always(cra_cmp_float(val, key + .5f) == 0);
     }
@@ -184,27 +160,23 @@ test_foreach(void)
     cra_dict_init(int, double, dict, cra_hash_int_p, cra_cmp_int_p);
 
     // foreach(empty)
-    CRA_FOREACH(CRA_DICT_ITERABLE_I, dict, vals) assert_always(false);
-    CRA_FOREACH_REVERSE(CRA_DICT_ITERABLE_I, dict, vals) assert_always(false);
+    CRA_FOREACH(CraDict, dict, &key, &val) assert_always(false);
+    CRA_FOREACH_REVERSE(CraDict, dict, &key, &val) assert_always(false);
 
     for (int i = 0; i < 10; i++)
         cra_dict_add(dict, &i, &(double){ i });
 
     printf("foreach        : ");
-    CRA_FOREACH(CRA_DICT_ITERABLE_I, dict, vals)
+    CRA_FOREACH(CraDict, dict, &key, &val)
     {
-        memcpy(&key, vals.key_ref, sizeof(key));
-        memcpy(&val, vals.val_ref, sizeof(val));
         assert_always(cra_cmp_double(val, (double)key) == 0);
         printf("{%d: %.2lf}  ", key, val);
     }
     printf("\n");
 
     printf("foreach reverse: ");
-    CRA_FOREACH_REVERSE(CRA_DICT_ITERABLE_I, dict, vals)
+    CRA_FOREACH_REVERSE(CraDict, dict, &key, &val)
     {
-        memcpy(&key, vals.key_ref, sizeof(key));
-        memcpy(&val, vals.val_ref, sizeof(val));
         assert_always(cra_cmp_double(val, (double)key) == 0);
         printf("{%d: %.2lf}  ", key, val);
     }
@@ -213,8 +185,8 @@ test_foreach(void)
     cra_dict_clear(dict);
 
     // foreach(empty)
-    CRA_FOREACH(CRA_DICT_ITERABLE_I, dict, vals) assert_always(false);
-    CRA_FOREACH_REVERSE(CRA_DICT_ITERABLE_I, dict, vals) assert_always(false);
+    CRA_FOREACH(CraDict, dict, &key, &val) assert_always(false);
+    CRA_FOREACH_REVERSE(CraDict, dict, &key, &val) assert_always(false);
 
     cra_dict_uninit(dict);
     cra_dealloc(dict);
@@ -258,10 +230,8 @@ test_test(void)
             cra_dict_put(dict, &idx, &j);
             check[idx] = j;
         }
-        CRA_FOREACH(CRA_DICT_ITERABLE_I, dict, vals)
+        CRA_FOREACH(CraDict, dict, &key, &val)
         {
-            memcpy(&key, vals.key_ref, sizeof(key));
-            memcpy(&val, vals.val_ref, sizeof(val));
             assert_always(val == check[key]);
         }
 

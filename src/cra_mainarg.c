@@ -304,10 +304,8 @@ cra_mainarg_print_help(CraMainArg *ma)
     last = NULL;
     printf("Options:\n");
     printf("  -h, --help  %*.sShow options\n", ma->tipstart - (int)HELP_OPTION_LENGTH, "");
-    CRA_FOREACH(CRA_DICT_ITERABLE_I, ma->items, val)
+    CRA_FOREACH(CraDict, ma->items, NULL, &item)
     {
-        // memcpy(&item, val.val_ref, sizeof(item));
-        item = *(CraMainArgItem **)val.val_ref;
         if (item == last)
             continue;
 
