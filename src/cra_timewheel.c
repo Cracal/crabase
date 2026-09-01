@@ -228,10 +228,8 @@ cra_timewheel_uninit(CraTimewheel *wheel)
         if (list->itemsize > 0)
         {
             CraTimer_base *timer;
-            CRA_FOREACH(CRA_LLIST_ITERABLE_I, list, val)
+            CRA_FOREACH(CraLList, list, &timer)
             {
-                // memcpy(&timer, val.val_ref, sizeof(timer));
-                timer = *(CraTimer_base **)val.val_ref;
                 if (timer->on_remove_timer)
                     timer->on_remove_timer(timer);
             }

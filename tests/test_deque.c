@@ -8,10 +8,9 @@
  * @copyright Copyright (c) 2024
  *
  */
-#include "collections/cra_deque.h"
-#include "cra_assert.h"
-#include "cra_malloc.h"
 #include <time.h>
+#include "cra_malloc.h"
+#include "collections/cra_deque.h"
 
 void
 test_new_delete(void)
@@ -35,16 +34,6 @@ test_new_delete(void)
     cra_deque_uninit(&deque2);
     assert_always(memcmp(&deque2, &(CraDeque){ 0 }, sizeof(CraDeque)) == 0);
     cra_dealloc(deque);
-
-    CRA_DEQUE_INITIALIZABLE_PARAM_DEF(param, int);
-    assert_always(cra_initializable_init(CRA_DEQUE_INITIALIZABLE_I, &deque2, 513, &param));
-    assert_always(deque2.count == 0);
-    assert_always(deque2.itemsize == sizeof(int));
-    assert_always(deque2.narray == 16);
-    assert_always(deque2.array != NULL);
-
-    cra_initializable_uninit(CRA_DEQUE_INITIALIZABLE_I, &deque2);
-    assert_always(memcmp(&deque2, &(CraDeque){ 0 }, sizeof(CraDeque)) == 0);
 }
 
 void
@@ -75,9 +64,8 @@ test_insert(void)
     assert_always(deque->count == 6);
 
     i = 0;
-    CRA_FOREACH(CRA_DEQUE_ITERABLE_I, deque, vals)
+    CRA_FOREACH(CraDeque, deque, &val)
     {
-        memcpy(&val, vals.val_ref, sizeof(int));
         assert_always(i == val);
         printf("%d  ", val);
         i++;
@@ -92,9 +80,8 @@ test_insert(void)
     for (i = 0; i < 400; i++)
         assert_always(cra_deque_insert(deque, 0, &(int){ i + 1 }));
     assert_always(deque->count == 400);
-    CRA_FOREACH(CRA_DEQUE_ITERABLE_I, deque, vals)
+    CRA_FOREACH(CraDeque, deque, &val)
     {
-        memcpy(&val, vals.val_ref, sizeof(int));
         assert_always(i == val);
         i--;
     }
@@ -110,9 +97,8 @@ test_insert(void)
     for (i = 0; i < 50; i++)
         assert_always(cra_deque_insert(deque, 1, &(int){ i + 1 }));
     assert_always(deque->count == 53);
-    CRA_FOREACH(CRA_DEQUE_ITERABLE_I, deque, vals)
+    CRA_FOREACH(CraDeque, deque, &val)
     {
-        memcpy(&val, vals.val_ref, sizeof(int));
         if (val != 1000 && val != 2000 && val != 3000)
             assert_always(i-- == val);
         // printf("%d  ", val);
@@ -143,9 +129,8 @@ test_insert(void)
         5,    4,   3,   2,   1,   2000, 3000
     };
     i = 0;
-    CRA_FOREACH(CRA_DEQUE_ITERABLE_I, deque, vals)
+    CRA_FOREACH(CraDeque, deque, &val)
     {
-        memcpy(&val, vals.val_ref, sizeof(int));
         assert_always(check_ints[i++] == val);
         // printf("%d ", val);
     }
@@ -158,9 +143,8 @@ test_insert(void)
     for (i = 0; i < 400; i++)
         assert_always(cra_deque_insert(deque, deque->count, &(int){ i + 1 }));
     assert_always(deque->count == 400);
-    CRA_FOREACH_REVERSE(CRA_DEQUE_ITERABLE_I, deque, vals)
+    CRA_FOREACH_REVERSE(CraDeque, deque, &val)
     {
-        memcpy(&val, vals.val_ref, sizeof(int));
         assert_always(i == val);
         i--;
     }
@@ -176,9 +160,8 @@ test_insert(void)
     for (i = 0; i < 50; i++)
         assert_always(cra_deque_insert(deque, deque->count - 1, &(int){ i + 1 }));
     assert_always(deque->count == 53);
-    CRA_FOREACH_REVERSE(CRA_DEQUE_ITERABLE_I, deque, vals)
+    CRA_FOREACH_REVERSE(CraDeque, deque, &val)
     {
-        memcpy(&val, vals.val_ref, sizeof(int));
         if (val != 1000 && val != 2000 && val != 3000)
             assert_always(i-- == val);
         // printf("%d  ", val);
@@ -209,9 +192,8 @@ test_insert(void)
         45,   46,   47,  48,  49,  50,  3000
     };
     i = 0;
-    CRA_FOREACH(CRA_DEQUE_ITERABLE_I, deque, vals)
+    CRA_FOREACH(CraDeque, deque, &val)
     {
-        memcpy(&val, vals.val_ref, sizeof(int));
         assert_always(check_ints2[i++] == val);
         // printf("%d ", val);
     }
@@ -243,17 +225,13 @@ test_push(void)
     assert_always(cra_deque_push_front(deque, &(int){ -2 }));
     assert_always(cra_deque_insert(deque, 4, &(int){ 4000 }));
     assert_always(cra_deque_insert(deque, 4, &(int){ 40000 }));
-    CraPair mvals;
-    mvals.val_ref = &(int){ 11 };
-    assert_always(cra_appendable_append(CRA_DEQUE_APPENDABLE_I, deque, &mvals));
-    mvals.val_ref = &(int){ 12 };
-    assert_always(cra_appendable_append(CRA_DEQUE_APPENDABLE_I, deque, &mvals));
+    assert_always(cra_deque_push_back(deque, &(int){ 11 }));
+    assert_always(cra_deque_push_back(deque, &(int){ 12 }));
     assert_always(deque->count == 1006);
 
     i = -2;
-    CRA_FOREACH(CRA_DEQUE_ITERABLE_I, deque, vals)
+    CRA_FOREACH(CraDeque, deque, &val)
     {
-        memcpy(&val, vals.val_ref, sizeof(val));
         // printf("%d  ", val);
         if (i == 2)
             i = 40000;
@@ -275,9 +253,8 @@ test_push(void)
     assert_always(deque->count == 1000);
 
     i = 999;
-    CRA_FOREACH(CRA_DEQUE_ITERABLE_I, deque, vals)
+    CRA_FOREACH(CraDeque, deque, &val)
     {
-        memcpy(&val, vals.val_ref, sizeof(val));
         // printf("%d  ", val);
         assert_always(i-- == val);
     }
@@ -311,9 +288,8 @@ test_pop_at(void)
         // printf("%d ", val);
     }
     assert_always(deque->count == 900);
-    CRA_FOREACH(CRA_DEQUE_ITERABLE_I, deque, vals)
+    CRA_FOREACH(CraDeque, deque, &val)
     {
-        memcpy(&val, vals.val_ref, sizeof(int));
         assert_always(val == ++i);
         // printf("%d ", val);
     }
@@ -332,9 +308,8 @@ test_pop_at(void)
     }
     assert_always(deque->count == 800);
     i = 101;
-    CRA_FOREACH(CRA_DEQUE_ITERABLE_I, deque, vals)
+    CRA_FOREACH(CraDeque, deque, &val)
     {
-        memcpy(&val, vals.val_ref, sizeof(int));
         if (i == 501)
             i = 601;
         assert_always(val == i++);
@@ -353,9 +328,8 @@ test_pop_at(void)
     }
     assert_always(deque->count == 700);
     i = 101;
-    CRA_FOREACH(CRA_DEQUE_ITERABLE_I, deque, vals)
+    CRA_FOREACH(CraDeque, deque, &val)
     {
-        memcpy(&val, vals.val_ref, sizeof(int));
         if (i == 501)
             i = 601;
         assert_always(val == i++);
@@ -376,9 +350,8 @@ test_pop_at(void)
     }
     assert_always(deque->count == 600);
     i = 101;
-    CRA_FOREACH(CRA_DEQUE_ITERABLE_I, deque, vals)
+    CRA_FOREACH(CraDeque, deque, &val)
     {
-        memcpy(&val, vals.val_ref, sizeof(int));
         if (i == 402)
             i = 602;
         assert_always(val == i++);
@@ -460,9 +433,8 @@ test_set(void)
     assert_always(!cra_deque_get_and_set(deque, 100000, &(int){ 1000 }, &val));
 
     i = 0;
-    CRA_FOREACH(CRA_DEQUE_ITERABLE_I, deque, vals)
+    CRA_FOREACH(CraDeque, deque, &val)
     {
-        memcpy(&val, vals.val_ref, sizeof(int));
         // printf("%d  ", val);
         if (i == 3)
             i = 30000;
@@ -491,9 +463,8 @@ test_get(void)
         cra_deque_push_front(&deque, &i);
 
     i = 0;
-    CRA_FOREACH(CRA_DEQUE_ITERABLE_I, &deque, vals)
+    CRA_FOREACH(CraDeque, &deque, &val)
     {
-        memcpy(&val, vals.val_ref, sizeof(val));
         assert_always(cra_deque_get(&deque, i, &val2));
         assert_always(!!(pval = cra_deque_get_ref(&deque, i)));
         assert_always(val == *pval && val == val2);
@@ -520,9 +491,8 @@ test_peek(void)
             cra_deque_push_front(deque, &i);
     }
 
-    CRA_FOREACH(CRA_DEQUE_ITERABLE_I, deque, vals)
+    CRA_FOREACH(CraDeque, deque, &val)
     {
-        memcpy(&val, vals.val_ref, sizeof(int));
         printf("%d  ", val);
     }
     printf("\n");
@@ -549,9 +519,8 @@ test_reverse(void)
 
     // printf("before reverse: ");
     i = 0;
-    CRA_FOREACH(CRA_DEQUE_ITERABLE_I, deque, vals)
+    CRA_FOREACH(CraDeque, deque, &val)
     {
-        memcpy(&val, vals.val_ref, sizeof(val));
         assert_always(i++ == val);
         // printf("%d ", val);
     }
@@ -561,9 +530,8 @@ test_reverse(void)
 
     // printf("after  reverse: ");
     i = 0;
-    CRA_FOREACH_REVERSE(CRA_DEQUE_ITERABLE_I, deque, vals)
+    CRA_FOREACH_REVERSE(CraDeque, deque, &val)
     {
-        memcpy(&val, vals.val_ref, sizeof(val));
         assert_always(i++ == val);
         // printf("%d ", val);
     }
@@ -581,17 +549,16 @@ test_foreach(void)
     cra_deque_init(int, deque);
 
     // foreach(empty)
-    CRA_FOREACH(CRA_DEQUE_ITERABLE_I, deque, vals) assert_always(false);
-    CRA_FOREACH_REVERSE(CRA_DEQUE_ITERABLE_I, deque, vals) assert_always(false);
+    CRA_FOREACH(CraDeque, deque, &val) assert_always(false);
+    CRA_FOREACH_REVERSE(CraDeque, deque, &val) assert_always(false);
 
     for (i = 0; i < 10; i++)
         cra_deque_push_back(deque, &i);
 
     i = 0;
     printf("foreach        : ");
-    CRA_FOREACH(CRA_DEQUE_ITERABLE_I, deque, vals)
+    CRA_FOREACH(CraDeque, deque, &val)
     {
-        memcpy(&val, vals.val_ref, sizeof(int));
         assert_always(i == val);
         printf("%d  ", val);
         i++;
@@ -600,9 +567,8 @@ test_foreach(void)
 
     i = 9;
     printf("foreach reverse: ");
-    CRA_FOREACH_REVERSE(CRA_DEQUE_ITERABLE_I, deque, vals)
+    CRA_FOREACH_REVERSE(CraDeque, deque, &val)
     {
-        memcpy(&val, vals.val_ref, sizeof(int));
         assert_always(i == val);
         printf("%d  ", val);
         i--;
@@ -612,8 +578,8 @@ test_foreach(void)
     cra_deque_clear(deque);
 
     // foreach(empty)
-    CRA_FOREACH(CRA_DEQUE_ITERABLE_I, deque, vals) assert_always(false);
-    CRA_FOREACH_REVERSE(CRA_DEQUE_ITERABLE_I, deque, vals) assert_always(false);
+    CRA_FOREACH(CraDeque, deque, &val) assert_always(false);
+    CRA_FOREACH_REVERSE(CraDeque, deque, &val) assert_always(false);
 
     cra_deque_uninit(deque);
     cra_dealloc(deque);
@@ -687,9 +653,8 @@ test_test(void)
             check[idx] = j;
         }
         j = 0;
-        CRA_FOREACH(CRA_DEQUE_ITERABLE_I, deque, vals)
+        CRA_FOREACH(CraDeque, deque, &v)
         {
-            memcpy(&v, vals.val_ref, sizeof(v));
             assert_always(v == check[j++]);
         }
 

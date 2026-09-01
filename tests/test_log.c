@@ -84,10 +84,10 @@ test_log_out_of_msg_buf(void)
 {
 #ifdef CRA_LOG_FILE_LINE
 #define LEN                                                                                     \
-    CRA_LOG_LINE_MAX - 39 - (sizeof(" -- ") - 1) - (sizeof(__FILE__) - 1) - (sizeof(":") - 1) - \
+    CRA_LOG_LINE_MAX - 42 - (sizeof(" -- ") - 1) - (sizeof(__FILE__) - 1) - (sizeof(":") - 1) - \
       (__LINE__ >= 1000 ? 4 : (__LINE__ >= 100 ? 3 : (__LINE__ >= 10 ? 2 : 1))) - 1
 #else
-#define LEN CRA_LOG_LINE_MAX - 39 - 1
+#define LEN CRA_LOG_LINE_MAX - 42 - 1
 #endif
 
     CraLogger *logger;
@@ -117,7 +117,7 @@ write_log(void *arg)
 {
     CraLogger *logger = (CraLogger *)arg;
     for (int i = 0; i < 10000; i++)
-        cra_log_info(logger, "Hello world %d from %lu.", i, cra_thrd_get_current_tid());
+        cra_log_info(logger, "Hello world %d from %lu.", i, cra_get_current_tid());
 }
 
 #define N 8
@@ -132,7 +132,7 @@ test_log_multithreads_sync(void)
 
     cra_thrdpool_init(&pool, N, N, CRA_THRDPOOL_FULL_WAIT);
 
-    unsigned long start_ms = cra_tick_ms();
+    uint64_t start_ms = cra_monotonic_ms();
 
     for (int i = 0; i < N; i++)
         cra_thrdpool_add_task1(&pool, write_log, log);
@@ -141,9 +141,9 @@ test_log_multithreads_sync(void)
 
     cra_log_close(log);
 
-    unsigned long end_ms = cra_tick_ms();
+    uint64_t end_ms = cra_monotonic_ms();
 
-    printf("test_log_multithreads_sync()  takes %lums.\n", end_ms - start_ms);
+    printf("test_log_multithreads_sync()  takes %" PRIu64 "ms.\n", end_ms - start_ms);
 }
 
 void
@@ -157,7 +157,7 @@ test_log_multithreads_async(void)
 
     cra_thrdpool_init(&pool, N, N, CRA_THRDPOOL_FULL_WAIT);
 
-    unsigned long start_ms = cra_tick_ms();
+    uint64_t start_ms = cra_monotonic_ms();
 
     for (int i = 0; i < N; i++)
         cra_thrdpool_add_task1(&pool, write_log, log);
@@ -166,9 +166,9 @@ test_log_multithreads_async(void)
 
     cra_log_close(log);
 
-    unsigned long end_ms = cra_tick_ms();
+    uint64_t end_ms = cra_monotonic_ms();
 
-    printf("test_log_multithreads_async() takes %lums.\n", end_ms - start_ms);
+    printf("test_log_multithreads_async() takes %" PRIu64 "ms.\n", end_ms - start_ms);
 }
 
 #undef N
@@ -176,27 +176,27 @@ test_log_multithreads_async(void)
 void
 test_async(void)
 {
-    CraLogger    *logger;
-    unsigned long start, end;
-    int           n = 3000000;
+    CraLogger *logger;
+    uint64_t   start, end;
+    int        n = 3000000;
 
     logger = cra_log_open("TestAsync", CRA_LOG_LV_TRACE, false, true);
     cra_log_config(logger, 10 * 1024 * 1024, "log/test_async");
 
-    start = cra_tick_ms();
+    start = cra_monotonic_ms();
 
     for (int i = 0; i < n; i++)
     {
         cra_log_debug(logger,
                       "This is a test message, it is the %dth message. Some extra info: {logname: %s, tid: %lu}", i + 1,
-                      cra_log_get_name(logger), cra_thrd_get_current_tid());
+                      cra_log_get_name(logger), cra_get_current_tid());
     }
 
     cra_log_close(logger);
 
-    end = cra_tick_ms();
+    end = cra_monotonic_ms();
 
-    printf("test_async() takes %lums\t%.2fmsg/s\n", end - start, n / ((end - start) / 1000.0f));
+    printf("test_async() takes %" PRIu64 "ms\t%.2fmsg/s\n", end - start, n / ((end - start) / 1000.0f));
 }
 
 int

@@ -216,4 +216,18 @@ cra_swap_ptr(void **ptr1, void **ptr2)
     *ptr2 = temp;
 }
 
+#define CRA_FOREACH_NEXT_DEF(Type) bool CRA_CAT(Type, _iter_next)(CRA_CAT(Type, Iter) * it, Type * obj, void *retval)
+#define CRA_FOREACH_PREV_DEF(Type) bool CRA_CAT(Type, _iter_prev)(CRA_CAT(Type, Iter) * it, Type * obj, void *retval)
+#define CRA_FOREACH_NEXT_DEF2(Type)                                                                  \
+    bool CRA_CAT(Type, _iter_next)(CRA_CAT(Type, Iter) * it, Type * obj, void *retkey, void *retval)
+#define CRA_FOREACH_PREV_DEF2(Type)                                                                  \
+    bool CRA_CAT(Type, _iter_prev)(CRA_CAT(Type, Iter) * it, Type * obj, void *retkey, void *retval)
+
+#define CRA_FOREACH(Type, obj, ... /* vals */)                                 \
+    for (CRA_CAT(Type, Iter) CRA_CAT(it, __LINE__) = { 0 };                    \
+         CRA_CAT(Type, _iter_next)(&CRA_CAT(it, __LINE__), obj, __VA_ARGS__);)
+#define CRA_FOREACH_REVERSE(Type, obj, ... /* vals */)                         \
+    for (CRA_CAT(Type, Iter) CRA_CAT(it, __LINE__) = { 0 };                    \
+         CRA_CAT(Type, _iter_prev)(&CRA_CAT(it, __LINE__), obj, __VA_ARGS__);)
+
 #endif

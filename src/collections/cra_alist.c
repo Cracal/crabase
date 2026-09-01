@@ -259,88 +259,44 @@ bool(cra_alist_add_sort)(CraAList *list, cra_cmp_fn compare, void *val)
     return (cra_alist_insert)(list, index, val);
 }
 
-// ====================================== interfaces ======================================
-
-// initializable
-
-static CRA_INITIALIZABLE_INIT_FN(cra_alist_initializable_init)
-{
-    assert(obj);
-    assert(params);
-    CraAListInitializableParam *param = (CraAListInitializableParam *)params;
-    return (cra_alist_init_with_size)((CraAList *)obj, param->itemsize, length);
-}
-
-CRA_INITIALIZABLE_DEF(cra_g_alist_initializable_i) = {
-    .init = cra_alist_initializable_init,
-    .uninit = (CRA_INITIALIZABLE_UNINIT_FN((*)))cra_alist_uninit,
-};
-
-// appendable
-
-static CRA_APPENDABLE_APPEND_FN(cra_alist_appendable_append)
-{
-    assert(obj);
-    assert(val);
-    assert(val->val_ref);
-    CraAList *list = (CraAList *)obj;
-    return (cra_alist_insert)(list, list->count, val->val_ref);
-}
-
-CRA_APPENDABLE_DEF(cra_g_alist_appendable_i) = {
-    .append = cra_alist_appendable_append,
-};
-
-// iterable
-
-static CRA_ITERABLE_INIT_FN(cra_alist_iterable_init)
+CRA_FOREACH_NEXT_DEF(CraAList)
 {
     assert(it);
     assert(obj);
 
-    CraAList *list = (CraAList *)obj;
-
-    if (retcnt)
-        *retcnt = list->count;
-
-    it->ic1.idx = reverse ? list->count : 0;
-    it->obj = obj;
-
-    return list->count > 0;
-}
-
-static CRA_ITERABLE_NEXT_FN(cra_alist_iterable_next)
-{
-    assert(it);
-    assert(val);
-    assert(it->obj);
-
-    CraAList *list = (CraAList *)it->obj;
-    if (it->ic1.idx < list->count)
+    if (!it->initialized)
     {
-        val->val_ref = CRA_ALIST_PVAL(list, it->ic1.idx++);
+        it->initialized = true;
+        it->index = 0;
+    }
+
+    if (it->index < obj->count)
+    {
+        void *pv = CRA_ALIST_PVAL(obj, it->index++);
+        if (retval)
+            memcpy(retval, pv, obj->itemsize);
         return true;
     }
     return false;
 }
 
-static CRA_ITERABLE_PREV_FN(cra_alist_iterable_prev)
+CRA_FOREACH_PREV_DEF(CraAList)
 {
     assert(it);
-    assert(val);
-    assert(it->obj);
+    assert(obj);
 
-    CraAList *list = (CraAList *)it->obj;
-    if (it->ic1.idx > 0)
+    if (!it->initialized)
     {
-        val->val_ref = CRA_ALIST_PVAL(list, --it->ic1.idx);
+        it->initialized = true;
+        it->index = obj->count;
+    }
+
+    if (it->index > 0)
+    {
+        void *pv = CRA_ALIST_PVAL(obj, --it->index);
+        if (retval)
+            memcpy(retval, pv, obj->itemsize);
         return true;
     }
     return false;
 }
-
-CRA_ITERABLE_DEF(cra_g_alist_iterable_i) = {
-    .init = cra_alist_iterable_init,
-    .next = cra_alist_iterable_next,
-    .prev = cra_alist_iterable_prev,
-};

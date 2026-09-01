@@ -12,7 +12,6 @@
 #define __CRA_DICT_H__
 #include <stdalign.h>
 #include "cra_collects.h"
-#include "cra_ifs.h"
 
 #define CRA_DICT_DEAFULT_CAPACITY 11
 
@@ -20,7 +19,14 @@
 #define CRA_DICT_CHECK_VAL(dict, val) assert((dict)->val_size == sizeof(*(val)))
 
 typedef struct CraDictEntry CraDictEntry;
+typedef struct CraDictIter  CraDictIter;
 typedef struct CraDict      CraDict;
+
+struct CraDictIter
+{
+    bool    initialized;
+    ssize_t index;
+};
 
 struct CraDict
 {
@@ -130,44 +136,7 @@ cra_dict_get(CraDict *dict, const void *key, void *retval)
 #define cra_dict_get(dict, key, retval)                                                                \
     (CRA_DICT_CHECK_KEY(dict, key), CRA_DICT_CHECK_VAL(dict, retval), cra_dict_get(dict, key, retval))
 
-// ====================================== interfaces ======================================
-
-// initializable
-
-typedef struct CraDictInitializableParam
-{
-    size_t      key_size;
-    size_t      val_size;
-    size_t      key_align;
-    size_t      val_align;
-    cra_cmp_fn  compare_key;
-    cra_hash_fn hash_key;
-} CraDictInitializableParam;
-#define CRA_DICT_INITIALIZABLE_PARAM_INIT(TKey, TVal, hash_key_fn, compare_key_fn) \
-    {                                                                              \
-        sizeof(TKey),                                                              \
-        sizeof(TVal),                                                              \
-        alignof(TKey),                                                             \
-        alignof(TVal),                                                             \
-        (cra_cmp_fn)(compare_key_fn),                                              \
-        (cra_hash_fn)(hash_key_fn)                                                 \
-    }
-#define CRA_DICT_INITIALIZABLE_PARAM_DECL(var_name) CraDictInitializableParam var_name
-#define CRA_DICT_INITIALIZABLE_PARAM_DEF(var_name, TKey, TVal, hash_key_fn, compare_key_fn) \
-    CRA_DICT_INITIALIZABLE_PARAM_DECL(var_name) =                                           \
-      CRA_DICT_INITIALIZABLE_PARAM_INIT(TKey, TVal, hash_key_fn, compare_key_fn)
-
-CRA_API CRA_INITIALIZABLE_DEF(cra_g_dict_initializable_i);
-#define CRA_DICT_INITIALIZABLE_I (&cra_g_dict_initializable_i)
-
-// appendable
-
-CRA_API CRA_APPENDABLE_DEF(cra_g_dict_appendable_i);
-#define CRA_DICT_APPENDABLE_I (&cra_g_dict_appendable_i)
-
-// iterable
-
-CRA_API CRA_ITERABLE_DEF(cra_g_dict_iterable_i);
-#define CRA_DICT_ITERABLE_I (&cra_g_dict_iterable_i)
+CRA_API CRA_FOREACH_NEXT_DEF2(CraDict);
+CRA_API CRA_FOREACH_PREV_DEF2(CraDict);
 
 #endif

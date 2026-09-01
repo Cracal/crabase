@@ -11,7 +11,7 @@
 #ifndef __CRA_SERIALIZE_H__
 #define __CRA_SERIALIZE_H__
 #include "cra_defs.h"
-#include "cra_ifs.h"
+#include "cra_collections_i.h"
 
 typedef struct CraSeriObject CraSeriObject;
 typedef struct CraTypeMeta   CraTypeMeta;

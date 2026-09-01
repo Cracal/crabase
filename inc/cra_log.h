@@ -45,19 +45,19 @@ cra_log_level_to_str(CraLogLv_e lv)
     switch (lv)
     {
         case CRA_LOG_LV_TRACE:
-            return "TRACE";
+            return "TRACE ";
         case CRA_LOG_LV_DEBUG:
-            return "DEBUG";
+            return "DEBUG ";
         case CRA_LOG_LV_INFO:
-            return "INFO ";
+            return "INFO  ";
         case CRA_LOG_LV_WARN:
-            return "WARN ";
+            return "WARN  ";
         case CRA_LOG_LV_ERROR:
-            return "ERROR";
+            return "ERROR ";
         case CRA_LOG_LV_FATAL:
-            return "FATAL";
+            return "FATAL ";
         default:
-            return "INVAL";
+            return "INVAL ";
     }
 }
 

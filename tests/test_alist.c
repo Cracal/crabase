@@ -8,9 +8,9 @@
  * @copyright Copyright (c) 2024
  *
  */
-#include "collections/cra_alist.h"
-#include "cra_malloc.h"
 #include <time.h>
+#include "cra_malloc.h"
+#include "collections/cra_alist.h"
 
 void
 test_new_delete(void)
@@ -43,19 +43,6 @@ test_new_delete(void)
     assert_always(list2.array == NULL);
     assert_always(list2.capacity == 0);
     assert_always(list2.itemsize == 0);
-
-    CRA_ALIST_INITIALIZABLE_PARAM_DEF(param, int);
-    assert_always(cra_initializable_init(CRA_ALIST_INITIALIZABLE_I, &list2, 16, &param));
-    assert_always(list2.count == 0);
-    assert_always(list2.array != NULL);
-    assert_always(list2.capacity == 16);
-    assert_always(list2.itemsize == sizeof(int));
-
-    cra_initializable_uninit(CRA_ALIST_INITIALIZABLE_I, &list2);
-    assert_always(list2.count == 0);
-    assert_always(list2.array == NULL);
-    assert_always(list2.capacity == 0);
-    assert_always(list2.itemsize == 0);
 }
 
 void
@@ -82,13 +69,8 @@ test_add(void)
     assert_always(cra_alist_prepend(list, &(int){ -2 }));
     assert_always(cra_alist_insert(list, 4, &(int){ 4000 }));
     assert_always(cra_alist_insert(list, 4, &(int){ 40000 }));
-    CraPair vals;
-    vals.val_ref = &(int){ 11 };
-    assert_always(cra_appendable_append(CRA_ALIST_APPENDABLE_I, list, &vals));
-    assert_always(cra_alist_get(list, list->count - 1, &val) && val == 11);
-    vals.val_ref = &(int){ 12 };
-    assert_always(cra_appendable_append(CRA_ALIST_APPENDABLE_I, list, &vals));
-    assert_always(cra_alist_get(list, list->count - 1, &val) && val == 12);
+    assert_always(cra_alist_append(list, &(int){ 11 }));
+    assert_always(cra_alist_append(list, &(int){ 12 }));
     assert_always(list->count == 1006);
 
     assert_always(!cra_alist_insert(list, 10000, &(int){ 1 }));
@@ -264,10 +246,10 @@ test_reverse(void)
     cra_alist_reverse(&list);
 
     i = 0;
-    CRA_FOREACH(CRA_ALIST_ITERABLE_I, &list, vals)
+    // CRA_FOREACH(CRA_ALIST_ITERABLE_I, &list, vals)
+    CRA_FOREACH(CraAList, &list, &val)
     {
         assert_always(cra_alist_get(&list2, i, &val2));
-        memcpy(&val, vals.val_ref, sizeof(val));
         assert_always(val == val2);
         i++;
     }
@@ -308,9 +290,8 @@ test_sort(void)
     assert_always(cra_alist_append(&list, &(int){ 2 }));
 
     printf("before sort     : ");
-    CRA_FOREACH(CRA_ALIST_ITERABLE_I, &list, vals)
+    CRA_FOREACH_REVERSE(CraAList, &list, &val)
     {
-        memcpy(&val, vals.val_ref, list.itemsize);
         printf("%d  ", val);
     }
     printf("\n");
@@ -318,9 +299,8 @@ test_sort(void)
     assert_always(cra_alist_sort(&list, comare_int1));
     printf("after sort(ASC) : ");
     i = 0;
-    CRA_FOREACH(CRA_ALIST_ITERABLE_I, &list, vals)
+    CRA_FOREACH(CraAList, &list, &val)
     {
-        memcpy(&val, vals.val_ref, list.itemsize);
         assert_always(i == val);
         printf("%d  ", val);
         i++;
@@ -330,9 +310,8 @@ test_sort(void)
     assert_always(cra_alist_sort(&list, comare_int2));
     printf("after sort(DESC): ");
     i = 9;
-    CRA_FOREACH(CRA_ALIST_ITERABLE_I, &list, vals)
+    CRA_FOREACH(CraAList, &list, &val)
     {
-        memcpy(&val, vals.val_ref, list.itemsize);
         assert_always(i == val);
         printf("%d  ", val);
         i--;
@@ -354,9 +333,8 @@ test_sort(void)
     assert_always(cra_alist_add_sort(&list, comare_int1, &(int){ 2 }));
     printf("add sort(ASC)   : ");
     i = 0;
-    CRA_FOREACH(CRA_ALIST_ITERABLE_I, &list, vals)
+    CRA_FOREACH(CraAList, &list, &val)
     {
-        memcpy(&val, vals.val_ref, list.itemsize);
         assert_always(i == val);
         printf("%d  ", val);
         i++;
@@ -376,9 +354,8 @@ test_sort(void)
     assert_always(cra_alist_add_sort(&list, comare_int2, &(int){ 2 }));
     printf("add sort(DESC)  : ");
     i = 9;
-    CRA_FOREACH(CRA_ALIST_ITERABLE_I, &list, vals)
+    CRA_FOREACH(CraAList, &list, &val)
     {
-        memcpy(&val, vals.val_ref, list.itemsize);
         assert_always(i == val);
         printf("%d  ", val);
         i--;
@@ -394,9 +371,8 @@ test_sort(void)
     assert_always(cra_alist_sort(&list, comare_int1));
 
     i = 0;
-    CRA_FOREACH(CRA_ALIST_ITERABLE_I, &list, vals)
+    CRA_FOREACH(CraAList, &list, &val)
     {
-        memcpy(&val, vals.val_ref, list.itemsize);
         assert_always(i <= val);
         i = val;
     }
@@ -412,8 +388,8 @@ test_foreach(void)
     assert_always(cra_alist_init(int, list));
 
     // foreach(empty)
-    CRA_FOREACH(CRA_ALIST_ITERABLE_I, list, vals) assert_always(false);
-    CRA_FOREACH_REVERSE(CRA_ALIST_ITERABLE_I, list, vals) assert_always(false);
+    CRA_FOREACH(CraAList, list, &val) assert_always(false);
+    CRA_FOREACH_REVERSE(CraAList, list, &val) assert_always(false);
 
     for (i = 0; i < 10; i++)
         cra_alist_append(list, &i);
@@ -421,9 +397,8 @@ test_foreach(void)
 
     i = 0;
     printf("foreach        : ");
-    CRA_FOREACH(CRA_ALIST_ITERABLE_I, list, vals)
+    CRA_FOREACH(CraAList, list, &val)
     {
-        memcpy(&val, vals.val_ref, list->itemsize);
         assert_always(i == val);
         printf("%d  ", val);
         i++;
@@ -432,9 +407,8 @@ test_foreach(void)
 
     i = 9;
     printf("foreach reverse: ");
-    CRA_FOREACH_REVERSE(CRA_ALIST_ITERABLE_I, list, vals)
+    CRA_FOREACH_REVERSE(CraAList, list, &val)
     {
-        memcpy(&val, vals.val_ref, list->itemsize);
         assert_always(i == val);
         printf("%d  ", val);
         i--;
@@ -444,8 +418,8 @@ test_foreach(void)
     cra_alist_clear(list);
 
     // foreach(empty)
-    CRA_FOREACH(CRA_ALIST_ITERABLE_I, list, vals) assert_always(false);
-    CRA_FOREACH_REVERSE(CRA_ALIST_ITERABLE_I, list, vals) assert_always(false);
+    CRA_FOREACH(CraAList, list, &val) assert_always(false);
+    CRA_FOREACH_REVERSE(CraAList, list, &val) assert_always(false);
 
     cra_alist_uninit(list);
     cra_dealloc(list);
@@ -519,9 +493,8 @@ test_test(void)
             check[idx] = j;
         }
         j = 0;
-        CRA_FOREACH(CRA_ALIST_ITERABLE_I, list, vals)
+        CRA_FOREACH(CraAList, list, &v)
         {
-            memcpy(&v, vals.val_ref, list->itemsize);
             assert_always(v == check[j++]);
         }
 

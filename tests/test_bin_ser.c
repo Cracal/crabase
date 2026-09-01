@@ -8,14 +8,15 @@
  * @copyright Copyright (c) 2024
  *
  */
+#include <float.h>
 #include "cra_assert.h"
 #include "cra_malloc.h"
 #include "serialize/cra_bin_ser.h"
+#include "serialize/cra_collections_i.h"
 #include "collections/cra_alist.h"
 #include "collections/cra_llist.h"
 #include "collections/cra_deque.h"
 #include "collections/cra_dict.h"
-#include <float.h>
 
 void
 test_bool(void)
@@ -1552,14 +1553,14 @@ test_dict(void)
     assert_always(in.ds.count == out.ds.count);
     assert_always(in.dp->count == out.dp->count);
     assert_always(in.dempty->count == out.dempty->count);
-    CRA_FOREACH(CRA_DICT_ITERABLE_I, &in.ds, vals)
+    OLDCRA_FOREACH(CRA_DICT_ITERABLE_I, &in.ds, vals)
     {
         memcpy(&i1, vals.key_ref, sizeof(i1));
         memcpy(&f1, vals.val_ref, sizeof(f1));
         cra_dict_get(&out.ds, &i1, &f2);
         assert_always(cra_cmp_float(f1, f2) == 0);
     }
-    CRA_FOREACH(CRA_DICT_ITERABLE_I, in.dp, vals)
+    OLDCRA_FOREACH(CRA_DICT_ITERABLE_I, in.dp, vals)
     {
         memcpy(&d1, vals.key_ref, sizeof(d1));
         memcpy(&u1, vals.val_ref, sizeof(u1));
@@ -1781,7 +1782,7 @@ test_deserialize_failed(void)
     }
 
     char *key, *key2;
-    CRA_FOREACH(CRA_DICT_ITERABLE_I, in.dict, vals)
+    OLDCRA_FOREACH(CRA_DICT_ITERABLE_I, in.dict, vals)
     {
         memcpy(&key, vals.key_ref, sizeof(key));
         memcpy(&val1, vals.val_ref, sizeof(val1));

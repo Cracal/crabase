@@ -11,14 +11,21 @@
 #ifndef __CRA_ALIST_H__
 #define __CRA_ALIST_H__
 #include "cra_collects.h"
-#include "cra_ifs.h"
 
 #define CRA_ALIST_DEFAULT_CAPACITY 8
 
 #define CRA_ALIST_CHECK_VAL(list, val) assert(sizeof(*(val)) == (list)->itemsize)
 #define CRA_ALIST_PVAL(list, index)    ((list)->array + (index) * (list)->itemsize)
 
-typedef struct CraAList CraAList;
+typedef struct CraAListIter CraAListIter;
+typedef struct CraAList     CraAList;
+
+struct CraAListIter
+{
+    bool   initialized;
+    size_t index;
+};
+
 struct CraAList
 {
     unsigned char *array;
@@ -131,30 +138,7 @@ cra_alist_add_sort(struct CraAList *list, cra_cmp_fn compare, void *val);
 #define cra_alist_add_sort(list, compare, val)                                             \
     (CRA_ALIST_CHECK_VAL(list, val), cra_alist_add_sort(list, (cra_cmp_fn)(compare), val))
 
-// ====================================== interfaces ======================================
-
-// initializable
-
-typedef struct CraAListInitializableParam
-{
-    size_t itemsize;
-} CraAListInitializableParam;
-#define CRA_ALIST_INITIALIZABLE_PARAM_INIT(T)        { sizeof(T) }
-#define CRA_ALIST_INITIALIZABLE_PARAM_DECL(var_name) CraAListInitializableParam var_name
-#define CRA_ALIST_INITIALIZABLE_PARAM_DEF(var_name, T)                                   \
-    CRA_ALIST_INITIALIZABLE_PARAM_DECL(var_name) = CRA_ALIST_INITIALIZABLE_PARAM_INIT(T)
-
-CRA_API CRA_INITIALIZABLE_DEF(cra_g_alist_initializable_i);
-#define CRA_ALIST_INITIALIZABLE_I (&cra_g_alist_initializable_i)
-
-// appendable
-
-CRA_API CRA_APPENDABLE_DEF(cra_g_alist_appendable_i);
-#define CRA_ALIST_APPENDABLE_I (&cra_g_alist_appendable_i)
-
-// iterable
-
-CRA_API CRA_ITERABLE_DEF(cra_g_alist_iterable_i);
-#define CRA_ALIST_ITERABLE_I (&cra_g_alist_iterable_i)
+CRA_API CRA_FOREACH_NEXT_DEF(CraAList);
+CRA_API CRA_FOREACH_PREV_DEF(CraAList);
 
 #endif

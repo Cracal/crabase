@@ -11,11 +11,20 @@
 #ifndef __CRA_DEQUE_H__
 #define __CRA_DEQUE_H__
 #include "cra_collects.h"
-#include "cra_ifs.h"
 
 #define CRA_DEQUE_CHECK_VAL(deque, val) assert(sizeof(*(val)) == (deque)->itemsize)
 
-typedef struct CraDeque CraDeque;
+typedef struct CraDequeIter CraDequeIter;
+typedef struct CraDeque     CraDeque;
+
+struct CraDequeIter
+{
+    bool   initialized;
+    size_t block_index;
+    size_t item_index;
+    size_t index;
+};
+
 struct CraDeque
 {
     // === ring queue ===
@@ -126,30 +135,7 @@ cra_deque_get_and_set(CraDeque *deque, size_t index, void *newval, void *retoldv
 CRA_API bool
 cra_deque_reverse(CraDeque *deque);
 
-// ====================================== interfaces ======================================
-
-// initializable
-
-typedef struct CraDequeInitializableParam
-{
-    size_t itemsize;
-} CraDequeInitializableParam;
-#define CRA_DEQUE_INITIALIZABLE_PARAM_INIT(T)        { sizeof(T) }
-#define CRA_DEQUE_INITIALIZABLE_PARAM_DECL(var_name) CraDequeInitializableParam var_name
-#define CRA_DEQUE_INITIALIZABLE_PARAM_DEF(var_name, T)                                   \
-    CRA_DEQUE_INITIALIZABLE_PARAM_DECL(var_name) = CRA_DEQUE_INITIALIZABLE_PARAM_INIT(T)
-
-CRA_API CRA_INITIALIZABLE_DEF(cra_g_deque_initializable_i);
-#define CRA_DEQUE_INITIALIZABLE_I (&cra_g_deque_initializable_i)
-
-// appendable
-
-CRA_API CRA_APPENDABLE_DEF(cra_g_deque_appendable_i);
-#define CRA_DEQUE_APPENDABLE_I (&cra_g_deque_appendable_i)
-
-// iterable
-
-CRA_API CRA_ITERABLE_DEF(cra_g_deque_iterable_i);
-#define CRA_DEQUE_ITERABLE_I (&cra_g_deque_iterable_i)
+CRA_API CRA_FOREACH_NEXT_DEF(CraDeque);
+CRA_API CRA_FOREACH_PREV_DEF(CraDeque);
 
 #endif

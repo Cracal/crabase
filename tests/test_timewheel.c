@@ -11,9 +11,9 @@ printt(const char *fmt, ...)
     va_list     ap;
     CraDateTime dt;
 
-    cra_datetime_now_localtime(&dt);
+    cra_datetime_now(&dt, false);
 
-    printf("%4d-%02d-%02d %02d:%02d:%02d.%-3d ", dt.year, dt.mon, dt.day, dt.hour, dt.min, dt.sec, dt.ms);
+    printf("%4d-%02d-%02d %02d:%02d:%02d.%-6d ", dt.year, dt.mon, dt.day, dt.hour, dt.min, dt.sec, dt.usec);
     va_start(ap, fmt);
     vprintf(fmt, ap);
     va_end(ap);

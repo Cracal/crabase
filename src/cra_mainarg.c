@@ -2,9 +2,9 @@
 #include "collections/cra_dict.h"
 #include "cra_mainarg.h"
 #include "cra_mempool.h"
+#include "cra_filedir.h"
 #include "cra_assert.h"
 #include "cra_malloc.h"
-#include "cra_futils.h"
 
 #define HELP_OPTION_LENGTH (sizeof("-h, --help") - 1)
 
@@ -304,10 +304,8 @@ cra_mainarg_print_help(CraMainArg *ma)
     last = NULL;
     printf("Options:\n");
     printf("  -h, --help  %*.sShow options\n", ma->tipstart - (int)HELP_OPTION_LENGTH, "");
-    CRA_FOREACH(CRA_DICT_ITERABLE_I, ma->items, val)
+    CRA_FOREACH(CraDict, ma->items, NULL, &item)
     {
-        // memcpy(&item, val.val_ref, sizeof(item));
-        item = *(CraMainArgItem **)val.val_ref;
         if (item == last)
             continue;
 

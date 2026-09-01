@@ -1,18 +1,16 @@
-#define __CRA_BUFFER_IMPL__
 #include "cra_buffer.h"
 #include "cra_malloc.h"
 
 bool
-cra_buffer_init(CraBuffer *buffer, unsigned int init_size, unsigned int head_size)
+cra_buffer_init(CraBuffer *buffer, size_t init_size)
 {
     assert(buffer);
     assert(init_size > 0);
 
     buffer->size = init_size;
-    buffer->head = head_size;
     buffer->ridx = 0;
     buffer->widx = 0;
-    return !!(buffer->data = cra_malloc(init_size + head_size));
+    return !!(buffer->data = cra_malloc(init_size));
 }
 
 void
@@ -26,23 +24,9 @@ cra_buffer_uninit(CraBuffer *buffer)
 }
 
 bool
-cra_buffer_write_head(CraBuffer *buffer, const void *head)
+cra_buffer_append(CraBuffer *buffer, const void *data, size_t len)
 {
-    assert(buffer);
-    assert(buffer->data);
-
-    if (buffer->head > 0)
-    {
-        memcpy(CRA_BUFFER_HEAD_PTR(buffer) + buffer->ridx, head, buffer->head);
-        return true;
-    }
-    return false;
-}
-
-bool
-cra_buffer_append(CraBuffer *buffer, const void *data, unsigned int len)
-{
-    unsigned int nwritable;
+    size_t nwritable;
 
     assert(data);
     assert(buffer);
@@ -56,17 +40,17 @@ cra_buffer_append(CraBuffer *buffer, const void *data, unsigned int len)
     {
         if (nwritable + buffer->ridx >= len)
         {
-            unsigned int   nreadable = cra_buffer_get_readable_size(buffer);
-            unsigned char *dst = CRA_BUFFER_DATA_PTR(buffer);
-            unsigned char *src = dst + buffer->ridx;
+            size_t         nreadable = cra_buffer_get_readable_size(buffer);
+            unsigned char *dst = buffer->data;
+            unsigned char *src = buffer->data + buffer->ridx;
             memmove(dst, src, nreadable);
             buffer->widx -= buffer->ridx;
             buffer->ridx = 0;
         }
         else
         {
-            unsigned int   new_size = CRA_MAX(buffer->widx + len, buffer->size * 2);
-            unsigned char *new_buff = cra_realloc(buffer->data, new_size + buffer->head);
+            size_t         new_size = CRA_MAX(buffer->widx + len, buffer->size * 2);
+            unsigned char *new_buff = cra_realloc(buffer->data, new_size);
             if (!new_buff)
                 return false;
             buffer->data = new_buff;
@@ -74,16 +58,16 @@ cra_buffer_append(CraBuffer *buffer, const void *data, unsigned int len)
         }
     }
 
-    memcpy(CRA_BUFFER_DATA_PTR(buffer) + buffer->widx, data, len);
+    memcpy(buffer->data + buffer->widx, data, len);
     buffer->widx += len;
     return true;
 }
 
-unsigned int
-cra_buffer_retrieve(CraBuffer *buffer, void *data, unsigned int len)
+size_t
+cra_buffer_retrieve(CraBuffer *buffer, void *data, size_t len)
 {
-    unsigned int readed;
-    void        *read_start;
+    size_t readed;
+    void  *read_start;
 
     assert(data);
     assert(buffer);
