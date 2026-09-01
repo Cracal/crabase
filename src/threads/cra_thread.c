@@ -28,3 +28,15 @@ cra_get_current_tid(void)
     }
     return s_tid;
 }
+
+const char *
+cra_get_current_tid_str(int *retlen)
+{
+    static cra_thrd_local int  s_tid_len = 0;
+    static cra_thrd_local char s_tid_str[32] = { 0 };
+    if (s_tid_len == 0)
+        s_tid_len = snprintf(s_tid_str, sizeof(s_tid_str), "%lu", cra_get_current_tid());
+    if (retlen)
+        *retlen = s_tid_len;
+    return s_tid_str;
+}

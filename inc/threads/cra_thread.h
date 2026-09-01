@@ -91,4 +91,8 @@ typedef unsigned long cra_tid_t;
 CRA_API cra_tid_t
 cra_get_current_tid(void);
 
+CRA_API
+const char *
+cra_get_current_tid_str(int *retlen);
+
 #endif
