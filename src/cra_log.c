@@ -613,14 +613,13 @@ cra_log_sync_append(char *msg, size_t n, CraLogLv_e lv)
 
 void(cra_log_msg)(CraLogger *logger, CraLogLv_e lv, const char *fmt, ...)
 {
-    int         s;
     int         n;
     va_list     ap;
     int         us;
     time_t      sec;
+    int         len;
+    const char *str;
     uint64_t    epoch;
-    int         tid_len;
-    const char *tid_str;
     char        msg[CRA_LOG_LINE_MAX];
 
     static cra_thrd_local time_t st_last_second = 0;
@@ -653,23 +652,33 @@ void(cra_log_msg)(CraLogger *logger, CraLogLv_e lv, const char *fmt, ...)
     if (logger->use_zulu)
     {
         n = snprintf(msg + 20, sizeof(msg) - 20, "%dZ", us);
-        s = 8 - n;
+        memset(msg + 20 + n, ' ', 8 - n);
+        n += (8 - n);
     }
     else
     {
         n = snprintf(msg + 20, sizeof(msg) - 20, "%d%+03hd:00", us, logger->tz_hour);
-        s = 13 - n;
+        memset(msg + 20 + n, ' ', 13 - n);
+        n += (13 - n);
     }
 
     memcpy(msg, st_cached_datetime_str, 20);
     n += 20;
 
-    // format level
-    n += snprintf(msg + n, sizeof(msg) - n, "%*.s%s ", s, "", cra_log_level_to_str(lv));
+    // format level & tid
+
+    // copy level string
+    str = cra_log_level_to_str(lv);
+    assert(strlen(str) == 6);
+    memcpy(msg + n, str, 6);
+    n += 6;
+
     // copy tid string
-    tid_str = cra_get_current_tid_str(&tid_len);
-    memcpy(msg + n, tid_str, tid_len);
-    n += tid_len;
+    str = cra_get_current_tid_str(&len);
+    memcpy(msg + n, str, len);
+    n += len;
+
+    assert((size_t)n < sizeof(msg));
 
     // format message
     va_start(ap, fmt);
