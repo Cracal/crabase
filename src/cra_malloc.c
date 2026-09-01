@@ -11,10 +11,50 @@
 #include "cra_malloc.h"
 #include "cra_atomic.h"
 
-void *(*__cra_malloc_fn__)(size_t) = NULL;
-void *(*__cra_calloc_fn__)(size_t, size_t) = NULL;
-void *(*__cra_reallo_fn__)(void *, size_t) = NULL;
-void  (*__cra_freeee_fn__)(void *) = NULL;
+#ifdef CRA_OS_WIN
+
+static void *
+cra_wrap_malloc(size_t size)
+{
+    return malloc(size);
+}
+
+static void *
+cra_wrap_calloc(size_t num, size_t size)
+{
+    return calloc(num, size);
+}
+
+static void *
+cra_wrap_realloc(void *oldptr, size_t newsize)
+{
+    return realloc(oldptr, newsize);
+}
+
+static void
+cra_wrap_free(void *ptr)
+{
+    free(ptr);
+}
+
+#define MALLOC cra_wrap_malloc
+#define CALLOC cra_wrap_calloc
+#define REALLO cra_wrap_realloc
+#define FREEEE cra_wrap_free
+
+#else
+
+#define MALLOC malloc
+#define CALLOC calloc
+#define REALLO realloc
+#define FREEEE free
+
+#endif
+
+void *(*__cra_malloc_fn__)(size_t) = MALLOC;
+void *(*__cra_calloc_fn__)(size_t, size_t) = CALLOC;
+void *(*__cra_reallo_fn__)(void *, size_t) = REALLO;
+void  (*__cra_freeee_fn__)(void *) = FREEEE;
 
 // ===========================================
 

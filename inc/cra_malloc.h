@@ -22,18 +22,16 @@ static inline void *
 __cra_malloc(size_t size)
 {
     assert(size > 0);
-    if (__cra_malloc_fn__)
-        return __cra_malloc_fn__(size);
-    return malloc(size);
+    assert(__cra_malloc_fn__);
+    return __cra_malloc_fn__(size);
 }
 
 static inline void *
 __cra_calloc(size_t num, size_t size)
 {
+    assert(__cra_calloc_fn__);
     assert(num > 0 && size > 0);
-    if (__cra_calloc_fn__)
-        return __cra_calloc_fn__(num, size);
-    return calloc(num, size);
+    return __cra_calloc_fn__(num, size);
 }
 
 static inline void *
@@ -41,19 +39,16 @@ __cra_realloc(void *oldptr, size_t newsize)
 {
     assert(newsize > 0);
     assert(oldptr != NULL);
-    if (__cra_reallo_fn__)
-        return __cra_reallo_fn__(oldptr, newsize);
-    return realloc(oldptr, newsize);
+    assert(__cra_reallo_fn__);
+    return __cra_reallo_fn__(oldptr, newsize);
 }
 
 static inline void
 __cra_free(void *ptr)
 {
     assert(ptr != NULL);
-    if (__cra_freeee_fn__)
-        __cra_freeee_fn__(ptr);
-    else
-        free(ptr);
+    assert(__cra_freeee_fn__);
+    __cra_freeee_fn__(ptr);
 }
 
 static inline void
@@ -115,10 +110,10 @@ __cra_memory_leak_report(void);
     if ((size) <= sizeof(name##_small)) \
         name = name##_small;            \
     else                                \
-        name = cra_malloc(size);
+        name = cra_malloc(size)
 
 #define CRA_TEMP_DEL(name, size)       \
     if ((size) > sizeof(name##_small)) \
-        cra_free(name);
+        cra_free(name)
 
 #endif
