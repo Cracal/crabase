@@ -4,6 +4,7 @@ static void
 new_assert(const char *condition, const char *fname, const char *file, int line)
 {
     printf("new assert failed: (%s), function: %s, file: %s, line: %d\n", condition, fname, file, line);
+    // abort();
 }
 
 int

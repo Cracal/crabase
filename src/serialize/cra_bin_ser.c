@@ -70,7 +70,7 @@ cra_bin_write_uint(CraSerializer *ser, void *val, const CraTypeMeta *meta)
             return true;
 
         default:
-            assert_always(false);
+            abort();
     }
 }
 
@@ -100,7 +100,7 @@ cra_bin_read_uint(CraSerializer *ser, void *retval, const CraTypeMeta *meta, siz
             return true;
 
         default:
-            assert_always(false);
+            abort();
     }
 }
 
@@ -225,7 +225,7 @@ cra_bin_write_float(CraSerializer *ser, void *val, const CraTypeMeta *meta)
             return true;
 
         default:
-            assert_always(false);
+            abort();
     }
 }
 
@@ -258,7 +258,7 @@ cra_bin_read_float(CraSerializer *ser, void *retval, const CraTypeMeta *meta, si
             return true;
 
         default:
-            assert_always(false);
+            abort();
     }
 }
 
@@ -470,7 +470,7 @@ cra_bin_write_value(CraSerializer *ser, void *val, const CraTypeMeta *meta)
             return cra_bin_write_dict(ser, val, meta);
 
         default:
-            assert_always(false);
+            abort();
     }
 }
 
@@ -526,7 +526,7 @@ cra_bin_read_value(CraSerializer *ser, void *retval, const CraTypeMeta *meta)
             return cra_bin_read_dict(ser, retval, meta);
 
         default:
-            assert_always(false);
+            abort();
     }
 }
 
@@ -1196,6 +1196,6 @@ cra_bin_read_len(unsigned char *buf, size_t len_size)
             return CRA_SER_SWAP64(*(uint64_t *)buf);
 
         default:
-            assert_always(false);
+            abort();
     }
 }

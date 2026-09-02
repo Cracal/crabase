@@ -21,7 +21,7 @@ cra_assert_set_func(void (*func)(const char *, const char *, const char *, int))
     __cra_g_assert__ = func;
 }
 
-#define assert_always(expr) ((void)(!!(expr) || (__cra_g_assert__(#expr, __func__, __FILE__, __LINE__), abort(), 0)))
+#define assert_always(expr) ((void)(!!(expr) || (__cra_g_assert__(#expr, __func__, __FILE__, __LINE__), 0)))
 
 #undef assert
 #ifdef NDEBUG

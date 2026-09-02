@@ -591,7 +591,7 @@ cra_json_write_float(CraSerializer *ser, void *val, const CraTypeMeta *meta)
             dbl = *(double *)val;
             break;
         default:
-            assert_always(false);
+            abort();
     }
 
     if (isnan(dbl) || isinf(dbl))
@@ -707,7 +707,7 @@ cra_json_write_value(CraSerializer *ser, void *val, const CraTypeMeta *meta)
             return cra_json_write_dict(ser, val, meta);
 
         default:
-            assert_always(false);
+            abort();
     }
 }
 

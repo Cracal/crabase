@@ -11,6 +11,7 @@ cra_assert_default_func(const char *expression, const char *fname, const char *f
 #elif defined(CRA_COMPILER_MSVC)
     __debugbreak();
 #endif
+    abort();
 }
 
 void (*__cra_g_assert__)(const char *, const char *, const char *, int) = cra_assert_default_func;
