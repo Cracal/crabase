@@ -10,9 +10,9 @@
  */
 #define __CRA_SER_INNER
 #include "serialize/cra_serialize.h"
-#include "cra_assert.h"
 #include "cra_malloc.h"
 
+#if 0
 void
 cra_release_mgr_uninit(CraReleaseMgr *mgr, bool free_ptr)
 {
@@ -86,3 +86,4 @@ cra_check_id_unique(const CraTypeMeta *meta)
     }
     return -1;
 }
+#endif

@@ -9,12 +9,12 @@
  *
  */
 #define __CRA_SER_INNER
-#include "serialize/cra_serialize.h"
 #include "serialize/cra_json.h"
 #include "cra_malloc.h"
 #include <float.h>
 #include <math.h>
 
+#if 0
 static inline int
 __cra_hex2int(unsigned char c)
 {
@@ -1725,3 +1725,4 @@ cra_json_parse_err(char *buf, size_t len, CraSeriObject *retobj, CraSerErr *err)
     cra_serializer_uninit(&ser, ret);
     return ret;
 }
+#endif

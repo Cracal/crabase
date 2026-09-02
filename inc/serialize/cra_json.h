@@ -16,6 +16,7 @@
 #define CRA_MIN_SAFE_INT        (-CRA_MAX_SAFE_INT) // -(2^53 - 1)
 #define CRA_MAX_JSON_KEY_LENGTH 1024
 
+#if 0
 CRA_API bool
 cra_json_stringify_err(char *buf, size_t *len, bool format, CraSeriObject *obj, CraSerErr *err);
 
@@ -33,5 +34,6 @@ cra_json_parse(char *buf, size_t len, CraSeriObject *retobj)
 {
     return cra_json_parse_err(buf, len, retobj, NULL);
 }
+#endif
 
 #endif

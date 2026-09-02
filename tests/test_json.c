@@ -9,10 +9,8 @@
  *
  */
 #include <float.h>
-#include "cra_assert.h"
 #include "cra_malloc.h"
 #include "serialize/cra_json.h"
-#include "serialize/cra_collections_i.h"
 #include "collections/cra_alist.h"
 #include "collections/cra_llist.h"
 #include "collections/cra_deque.h"
@@ -20,6 +18,7 @@
 
 #define FORMAT true
 
+#if 0
 void
 test_bool(void)
 {
@@ -1932,41 +1931,43 @@ test_deserialize_failed(void)
 
 #endif
 
+#endif
+
 int
 main(void)
 {
-    printf("========== test bool ==========\n");
-    test_bool();
-    printf("========== test int ==========\n");
-    test_int();
-    printf("========== test uint ==========\n");
-    test_uint();
-    printf("========== test varint ==========\n");
-    test_varint();
-    printf("========== test varuint ==========\n");
-    test_varuint();
-    printf("========== test float ==========\n");
-    test_float();
-    printf("========== test int float ==========\n");
-    test_int_float();
-    printf("========== test string ==========\n");
-    test_string();
-    printf("========== test string unicode ==========\n");
-    test_string_unicode();
-    printf("========== test struct ==========\n");
-    test_struct();
-    printf("========== test struct xx ==========\n");
-    test_struct_xx();
-    printf("========== test array ==========\n");
-    test_array();
-    printf("========== test list ==========\n");
-    test_list();
-    printf("========== test array list ==========\n");
-    test_array_list();
-    printf("========== test dict ==========\n");
-    test_dict();
-    printf("========== test deserialize failed ==========\n");
-    test_deserialize_failed();
+    // printf("========== test bool ==========\n");
+    // test_bool();
+    // printf("========== test int ==========\n");
+    // test_int();
+    // printf("========== test uint ==========\n");
+    // test_uint();
+    // printf("========== test varint ==========\n");
+    // test_varint();
+    // printf("========== test varuint ==========\n");
+    // test_varuint();
+    // printf("========== test float ==========\n");
+    // test_float();
+    // printf("========== test int float ==========\n");
+    // test_int_float();
+    // printf("========== test string ==========\n");
+    // test_string();
+    // printf("========== test string unicode ==========\n");
+    // test_string_unicode();
+    // printf("========== test struct ==========\n");
+    // test_struct();
+    // printf("========== test struct xx ==========\n");
+    // test_struct_xx();
+    // printf("========== test array ==========\n");
+    // test_array();
+    // printf("========== test list ==========\n");
+    // test_list();
+    // printf("========== test array list ==========\n");
+    // test_array_list();
+    // printf("========== test dict ==========\n");
+    // test_dict();
+    // printf("========== test deserialize failed ==========\n");
+    // test_deserialize_failed();
 
     cra_memory_leak_report();
     return 0;

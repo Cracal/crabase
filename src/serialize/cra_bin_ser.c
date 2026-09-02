@@ -10,11 +10,11 @@
  */
 #define __CRA_SER_INNER
 #define __CRA_BUFFER_UNSIGNED
-#include "serialize/cra_serialize.h"
 #include "serialize/cra_bin_ser.h"
 #include "cra_endian.h"
 #include "cra_malloc.h"
 
+#if 0
 #if CRA_IS_BIG_ENDIAN
 #define CRA_SER_SWAP16 CRA_BSWAP_UINT16
 #define CRA_SER_SWAP32 CRA_BSWAP_UINT32
@@ -1199,3 +1199,4 @@ cra_bin_read_len(unsigned char *buf, size_t len_size)
             abort();
     }
 }
+#endif

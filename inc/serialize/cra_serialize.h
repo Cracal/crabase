@@ -11,6 +11,8 @@
 #ifndef __CRA_SERIALIZE_H__
 #define __CRA_SERIALIZE_H__
 #include "cra_defs.h"
+
+#if 0
 #include "cra_collections_i.h"
 
 typedef struct CraSeriObject CraSeriObject;
@@ -521,6 +523,8 @@ cra_serializer_u2p(uint64_t val, void *ptr, const CraTypeMeta *meta)
             assert_always(false);
     }
 }
+
+#endif
 
 #endif
 
