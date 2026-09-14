@@ -266,14 +266,152 @@ test_string_view(void)
     {
         len = CRA_SV_BYTES_FOR_UTF8[(uint8_t)sv1.data[0]];
         sv2 = cra_string_view_split_left(&sv1, len);
-        printf("%zu : "CRA_SV_FMT "\n", len, CRA_SV_ARG(sv2));
+        printf("%zu : " CRA_SV_FMT "\n", len, CRA_SV_ARG(sv2));
     }
+}
+
+void
+test_string(void)
+{
+    CraString str;
+    size_t    len;
+    char     *cstr;
+
+    // init
+
+    cra_string_init(&str, NULL, 0);
+    cstr = cra_string_data(&str);
+    len = cra_string_size(&str);
+    assert_always(len == 0);
+    assert_always(cstr != NULL);
+    assert_always(cra_string_is_short(&str));
+    cra_string_uninit(&str);
+
+    cra_string_init(&str, "hello string", sizeof("hello string") - 1);
+    cstr = cra_string_data(&str);
+    len = cra_string_size(&str);
+    assert_always(len == sizeof("hello string") - 1);
+    assert_always(strcmp(cstr, "hello string") == 0);
+    assert_always(cra_string_is_short(&str));
+    cra_string_uninit(&str);
+
+    cra_string_init(&str, "1234567890123456789012", sizeof("1234567890123456789012") - 1);
+    cstr = cra_string_data(&str);
+    len = cra_string_size(&str);
+    assert_always(len == sizeof("1234567890123456789012") - 1);
+    assert_always(strcmp(cstr, "1234567890123456789012") == 0);
+    assert_always(cra_string_is_short(&str));
+    cra_string_uninit(&str);
+
+    cra_string_init(&str, "1234567890123456789012x", sizeof("1234567890123456789012x") - 1);
+    cstr = cra_string_data(&str);
+    len = cra_string_size(&str);
+    assert_always(len == sizeof("1234567890123456789012x") - 1);
+    assert_always(strcmp(cstr, "1234567890123456789012x") == 0);
+    assert_always(!cra_string_is_short(&str));
+    cra_string_uninit(&str);
+
+    // init fmt
+
+    assert_always(cra_string_init_fmt(&str, "hello %s", "world"));
+    cstr = cra_string_data(&str);
+    len = cra_string_size(&str);
+    assert_always(len == sizeof("hello world") - 1);
+    assert_always(strcmp(cstr, "hello world") == 0);
+    assert_always(cra_string_is_short(&str));
+    cra_string_uninit(&str);
+
+    assert_always(cra_string_init_fmt(&str, "aaaaaaadddddddddddddssssss hello %d, %.3f, %s.", 123, 456.789, "world"));
+    cstr = cra_string_data(&str);
+    len = cra_string_size(&str);
+    assert_always(len == sizeof("aaaaaaadddddddddddddssssss hello 123, 456.789, world.") - 1);
+    assert_always(strcmp(cstr, "aaaaaaadddddddddddddssssss hello 123, 456.789, world.") == 0);
+    assert_always(!cra_string_is_short(&str));
+    cra_string_uninit(&str);
+
+    // reserve
+
+    assert_always(cra_string_init(&str, NULL, CRA_STRING_SHORT_MAX - 1));
+    assert_always(cra_string_is_short(&str));
+    assert_always(cra_string_size(&str) == 0);
+    assert_always(strcmp(cra_string_data(&str), "") == 0);
+    cra_string_uninit(&str);
+
+    assert_always(cra_string_init(&str, NULL, CRA_STRING_SHORT_MAX));
+    assert_always(!cra_string_is_short(&str));
+    assert_always(cra_string_size(&str) == 0);
+    assert_always(strcmp(cra_string_data(&str), "") == 0);
+    assert_always(str._long.capacity == CRA_STRING_SHORT_MAX);
+    cra_string_uninit(&str);
+
+    assert_always(cra_string_init(&str, NULL, CRA_STRING_SHORT_MAX + 100));
+    assert_always(!cra_string_is_short(&str));
+    assert_always(cra_string_size(&str) == 0);
+    assert_always(strcmp(cra_string_data(&str), "") == 0);
+    assert_always(str._long.capacity == CRA_STRING_SHORT_MAX + 100);
+    cra_string_uninit(&str);
+
+    // append
+
+    cra_string_init(&str, "hello", sizeof("hello") - 1);
+
+    assert_always(cra_string_append(&str, " world", sizeof(" world") - 1));
+    assert_always(cra_string_size(&str) == sizeof("hello world") - 1);
+    assert_always(strcmp(cra_string_data(&str), "hello world") == 0);
+    assert_always(cra_string_is_short(&str));
+
+    assert_always(cra_string_append(&str, ". good morning", sizeof(". good morning") - 1));
+    assert_always(cra_string_size(&str) == sizeof("hello world. good morning") - 1);
+    assert_always(strcmp(cra_string_data(&str), "hello world. good morning") == 0);
+    assert_always(!cra_string_is_short(&str));
+
+    char buf[128];
+    buf[127] = '\0';
+    memset(buf, 'A', sizeof(buf) - 1);
+    assert_always(cra_string_append(&str, buf, sizeof(buf) - 1));
+    assert_always(cra_string_size(&str) == sizeof("hello world. good morning") + sizeof(buf) - 2);
+    assert_always(strcmp(cra_string_data(&str) + sizeof("hello world. good morning") - 1, buf) == 0);
+    assert_always(!cra_string_is_short(&str));
+
+    cra_string_uninit(&str);
+
+    // append fmt
+
+    cra_string_init(&str, NULL, 0);
+
+    assert_always(cra_string_append_fmt(&str, "hello %s", "world"));
+    assert_always(cra_string_size(&str) == sizeof("hello world") - 1);
+    assert_always(strcmp(cra_string_data(&str), "hello world") == 0);
+    assert_always(cra_string_is_short(&str));
+
+    assert_always(cra_string_append_fmt(&str, ". good morning"));
+    assert_always(cra_string_size(&str) == sizeof("hello world. good morning") - 1);
+    assert_always(strcmp(cra_string_data(&str), "hello world. good morning") == 0);
+    assert_always(!cra_string_is_short(&str));
+
+    assert_always(cra_string_append_fmt(&str, "%s", buf));
+    assert_always(cra_string_size(&str) == sizeof("hello world. good morning") + sizeof(buf) - 2);
+    assert_always(strcmp(cra_string_data(&str) + sizeof("hello world. good morning") - 1, buf) == 0);
+    assert_always(!cra_string_is_short(&str));
+
+    cra_string_uninit(&str);
+
+    // string view from string
+
+    cra_string_init_fmt(&str, "hello string %s.", "view");
+    CraStringView sv = cra_string_view_from_str(&str);
+    cstr = cra_string_data(&str);
+    len = cra_string_size(&str);
+    assert_always(len == sv.size);
+    assert_always(cstr == sv.data);
+    cra_string_uninit(&str);
 }
 
 int
 main(void)
 {
     test_string_view();
+    test_string();
 
     cra_memory_leak_report();
     return 0;

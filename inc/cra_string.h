@@ -23,28 +23,44 @@ struct CraString
     {
         struct
         {
-            uint8_t size;
+            uint8_t is_short : 1;
+            uint8_t padding  : 7;
+        };
+        struct
+        {
+            uint8_t flag : 1;
+            uint8_t size : 7;
             char    data[sizeof(void *) * 3 - 1];
         } _short;
         struct
         {
-            size_t capacity;
+            size_t flag     : 1;
+            size_t capacity : sizeof(size_t) * 8 - 1;
             size_t size;
             char  *data;
         } _long;
     };
 };
 
+#define CRA_STRING_MAX_LEN   SSIZE_MAX
+#define CRA_STRING_SHORT_MAX sizeof(((CraString *)0)->_short.data)
+
+static inline bool
+cra_string_is_short(CraString *str)
+{
+    return str->is_short;
+}
+
 static inline size_t
 cra_string_size(CraString *str)
 {
-    return (str->_short.size & 0x80) ? (str->_short.size & 0x7F) : str->_long.size;
+    return cra_string_is_short(str) ? str->_short.size : str->_long.size;
 }
 
 static inline char *
 cra_string_data(CraString *str)
 {
-    return (str->_short.size & 0x80) ? str->_short.data : str->_long.data;
+    return cra_string_is_short(str) ? str->_short.data : str->_long.data;
 }
 
 static inline const char *
@@ -61,6 +77,12 @@ cra_string_init_fmt(CraString *str, const char *fmt, ...);
 
 CRA_API void
 cra_string_uninit(CraString *str);
+
+CRA_API bool
+cra_string_append(CraString *str, const char *data, size_t size);
+
+CRA_API bool
+cra_string_append_fmt(CraString *str, const char *fmt, ...);
 
 #endif // end SSO string
 
