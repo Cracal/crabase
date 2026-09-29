@@ -117,6 +117,7 @@ test_string_view(void)
                                     sizeof("YYY k kk kkl kkls kklsd  fdsllkklsdl") - 1);
     assert_always(cra_string_view_find_cstr(&sv1, "kklsd", sizeof("kklsd") - 1, &index));
     assert_always(index == 18);
+    assert_always(strncmp(sv1.data + index, "kklsd", sizeof("kklsd") - 1) == 0);
     assert_always(!cra_string_view_find_cstr(&sv1, "ok", sizeof("ok") - 1, &index));
     assert_always(cra_string_view_find_cstr(&sv1, "", 0, &index));
     assert_always(index == 0);
@@ -124,6 +125,7 @@ test_string_view(void)
     sv2 = cra_string_view_from_cstr(" WOR", sizeof(" WOR") - 1);
     assert_always(cra_string_view_find(&sv1, &sv2, &index));
     assert_always(index == 5);
+    assert_always(strncmp(sv1.data + index, " WOR", sizeof(" WOR") - 1) == 0);
     sv2 = cra_string_view_from_cstr("NOOOOO", sizeof("NOOOOO") - 1);
     assert_always(!cra_string_view_find(&sv1, &sv2, &index));
     sv2 = cra_string_view_from_cstr("", 0);
@@ -134,6 +136,7 @@ test_string_view(void)
                                     sizeof("YYY k kk kkl kkls kklsd  fdsllkklsdl") - 1);
     assert_always(cra_string_view_rfind_cstr(&sv1, "kklsd", sizeof("kklsd") - 1, &index));
     assert_always(index == 30);
+    assert_always(strncmp(sv1.data + index, "kklsd", sizeof("kklsd") - 1) == 0);
     assert_always(!cra_string_view_rfind_cstr(&sv1, "ok", sizeof("ok") - 1, &index));
     assert_always(cra_string_view_rfind_cstr(&sv1, "", 0, &index));
     assert_always(index == 0);
@@ -141,6 +144,7 @@ test_string_view(void)
     sv2 = cra_string_view_from_cstr("abc", sizeof("abc") - 1);
     assert_always(cra_string_view_rfind(&sv1, &sv2, &index));
     assert_always(index == 9);
+    assert_always(strncmp(sv1.data + index, "abc", sizeof("abc") - 1) == 0);
     sv2 = cra_string_view_from_cstr("NOOOOO", sizeof("NOOOOO") - 1);
     assert_always(!cra_string_view_rfind(&sv1, &sv2, &index));
     sv2 = cra_string_view_from_cstr("", 0);

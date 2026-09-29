@@ -229,37 +229,26 @@ cra_string_view_find_cstr(const CraStringView *sv, const char *seq, size_t size,
     next = (size_t *)temp;
 
     next[0] = 0;
-    for (j = 0, i = 1; i < m;)
+    for (j = 0, i = 1; i < m; ++i)
     {
-        if (seq[j] == seq[i])
-            next[i++] = ++j;
-        else if (j > 0)
+        while (j > 0 && seq[j] != seq[i])
             j = next[j - 1];
-        else
-            next[i++] = 0;
+        if (seq[j] == seq[i])
+            ++j;
+        next[i] = j;
     }
 
-    for (j = 0, i = 0; i < n;)
+    for (j = 0, i = 0; i < n; ++i)
     {
-        if (seq[j] == sv->data[i])
-        {
-            ++i;
-            ++j;
-
-            if (j == m)
-            {
-                CRA_TEMP_DEL(temp, m * sizeof(size_t));
-                *retindex = i - m;
-                return true;
-            }
-        }
-        else if (j > 0)
-        {
+        while (j > 0 && seq[j] != sv->data[i])
             j = next[j - 1];
-        }
-        else
+        if (seq[j] == sv->data[i])
+            ++j;
+        if (j == m)
         {
-            ++i;
+            CRA_TEMP_DEL(temp, m * sizeof(size_t));
+            *retindex = i - m + 1;
+            return true;
         }
     }
     CRA_TEMP_DEL(temp, m * sizeof(size_t));
