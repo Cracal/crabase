@@ -205,9 +205,8 @@ cra_string_append_fmt(CraString *str, const char *fmt, ...)
 bool
 cra_string_view_find_cstr(const CraStringView *sv, const char *seq, size_t size, size_t *retindex)
 {
-    size_t *next;
-    size_t  i, j;
-    size_t  n, m;
+    size_t i, j;
+    size_t n, m;
 
     assert(seq);
     assert(retindex);
@@ -223,10 +222,9 @@ cra_string_view_find_cstr(const CraStringView *sv, const char *seq, size_t size,
     if (m > n)
         return false;
 
-    CRA_TEMP_NEW(temp, m * sizeof(size_t));
-    if (temp == NULL)
+    CRA_TEMP_NEW(size_t, next, m);
+    if (next == NULL)
         return false; // memory allocation failed
-    next = (size_t *)temp;
 
     next[0] = 0;
     for (j = 0, i = 1; i < m; ++i)
@@ -246,21 +244,20 @@ cra_string_view_find_cstr(const CraStringView *sv, const char *seq, size_t size,
             ++j;
         if (j == m)
         {
-            CRA_TEMP_DEL(temp, m * sizeof(size_t));
+            CRA_TEMP_DEL(size_t, next, m);
             *retindex = i - m + 1;
             return true;
         }
     }
-    CRA_TEMP_DEL(temp, m * sizeof(size_t));
+    CRA_TEMP_DEL(size_t, next, m);
     return false;
 }
 
 bool
 cra_string_view_rfind_cstr(const CraStringView *sv, const char *seq, size_t size, size_t *retindex)
 {
-    size_t *next;
-    size_t  i, j;
-    size_t  n, m;
+    size_t i, j;
+    size_t n, m;
 
     assert(seq);
     assert(retindex);
@@ -276,10 +273,9 @@ cra_string_view_rfind_cstr(const CraStringView *sv, const char *seq, size_t size
     if (m > n)
         return false;
 
-    CRA_TEMP_NEW(temp, m * sizeof(size_t));
-    if (temp == NULL)
+    CRA_TEMP_NEW(size_t, next, m);
+    if (next == NULL)
         return false; // memory allocation failed
-    next = (size_t *)temp;
 
     next[0] = 0;
     for (j = 0, i = 1; i < m; ++i)
@@ -300,12 +296,12 @@ cra_string_view_rfind_cstr(const CraStringView *sv, const char *seq, size_t size
             ++j;
         if (j == m)
         {
-            CRA_TEMP_DEL(temp, m * sizeof(size_t));
+            CRA_TEMP_DEL(size_t, next, m);
             *retindex = i - 1;
             return true;
         }
     }
-    CRA_TEMP_DEL(temp, m * sizeof(size_t));
+    CRA_TEMP_DEL(size_t, next, m);
     return false;
 }
 
