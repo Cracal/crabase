@@ -34,1090 +34,425 @@
                     _114, _115, _116, _117, _118, _119, _120, _121, _122, _123, _124, _125, _126, _127, _128, _N, ...) \
     _N
 
+// count arguments
 #define CRA_CNT(...) CRA_APPLY(CRA_CNT_GET, (0, ##__VA_ARGS__, CRA_128_NUM, 0))
+
+// get i-th argument
+#define CRA_GET_I(i, ...) CRA_CAT(CRA_GET_I, i)(__VA_ARGS__)
+
+// get n arguments
+#define CRA_GET_N(n, ...) CRA_CAT(CRA_GET_N, n)(__VA_ARGS__)
+
+// foreach macro(2 methods):
+//     CRA_ITER_FM(FUNC, METHOD, xx1, xx2, ...xxn) => FUNC(METHOD, xx1) FUNC(METHOD, xx2) ...FUNC(METHOD, xxn)
+#define CRA_ITER_FM(F, M, ...) CRA_CAT(CRA_ITER_FM, CRA_CNT(__VA_ARGS__))(F, M, __VA_ARGS__)
+// foreach macro(1 method):
+//     CRA_ITER(FUNC, (xx1, X, x), (xx2, a, b), ... (xxn, o)) => FUNC(xx1, X, x) FUNC(xx2, a, b) ...FUNC(xxn, o)
+#define CRA_ITER(F, ...)       CRA_ITER_FM(CRA_TUPLE_F, F, __VA_ARGS__)
 
 static_assert(CRA_CNT() == 0, "CRA_CNT() failed for 0 arguments");
 static_assert(CRA_CNT(a) == 1, "CRA_CNT() failed for 1 argument");
 static_assert(CRA_CNT(a, b) == 2, "CRA_CNT() failed for 2 arguments");
 static_assert(CRA_CNT(CRA_128_NUM) == 128, "CRA_CNT() failed for 128 arguments");
 
+#if 1 // GET_I()
+
+#define CRA_GET_I00(x, ...)  x
+#define CRA_GET_I0(...)      CRA_GET_I00(__VA_ARGS__, YOU_WILL_NEVER_GET_THIS)
+#define CRA_GET_I1(x, ...)   CRA_GET_I0(__VA_ARGS__)
+#define CRA_GET_I2(x, ...)   CRA_GET_I1(__VA_ARGS__)
+#define CRA_GET_I3(x, ...)   CRA_GET_I2(__VA_ARGS__)
+#define CRA_GET_I4(x, ...)   CRA_GET_I3(__VA_ARGS__)
+#define CRA_GET_I5(x, ...)   CRA_GET_I4(__VA_ARGS__)
+#define CRA_GET_I6(x, ...)   CRA_GET_I5(__VA_ARGS__)
+#define CRA_GET_I7(x, ...)   CRA_GET_I6(__VA_ARGS__)
+#define CRA_GET_I8(x, ...)   CRA_GET_I7(__VA_ARGS__)
+#define CRA_GET_I9(x, ...)   CRA_GET_I8(__VA_ARGS__)
+#define CRA_GET_I10(x, ...)  CRA_GET_I9(__VA_ARGS__)
+#define CRA_GET_I11(x, ...)  CRA_GET_I10(__VA_ARGS__)
+#define CRA_GET_I12(x, ...)  CRA_GET_I11(__VA_ARGS__)
+#define CRA_GET_I13(x, ...)  CRA_GET_I12(__VA_ARGS__)
+#define CRA_GET_I14(x, ...)  CRA_GET_I13(__VA_ARGS__)
+#define CRA_GET_I15(x, ...)  CRA_GET_I14(__VA_ARGS__)
+#define CRA_GET_I16(x, ...)  CRA_GET_I15(__VA_ARGS__)
+#define CRA_GET_I17(x, ...)  CRA_GET_I16(__VA_ARGS__)
+#define CRA_GET_I18(x, ...)  CRA_GET_I17(__VA_ARGS__)
+#define CRA_GET_I19(x, ...)  CRA_GET_I18(__VA_ARGS__)
+#define CRA_GET_I20(x, ...)  CRA_GET_I19(__VA_ARGS__)
+#define CRA_GET_I21(x, ...)  CRA_GET_I20(__VA_ARGS__)
+#define CRA_GET_I22(x, ...)  CRA_GET_I21(__VA_ARGS__)
+#define CRA_GET_I23(x, ...)  CRA_GET_I22(__VA_ARGS__)
+#define CRA_GET_I24(x, ...)  CRA_GET_I23(__VA_ARGS__)
+#define CRA_GET_I25(x, ...)  CRA_GET_I24(__VA_ARGS__)
+#define CRA_GET_I26(x, ...)  CRA_GET_I25(__VA_ARGS__)
+#define CRA_GET_I27(x, ...)  CRA_GET_I26(__VA_ARGS__)
+#define CRA_GET_I28(x, ...)  CRA_GET_I27(__VA_ARGS__)
+#define CRA_GET_I29(x, ...)  CRA_GET_I28(__VA_ARGS__)
+#define CRA_GET_I30(x, ...)  CRA_GET_I29(__VA_ARGS__)
+#define CRA_GET_I31(x, ...)  CRA_GET_I30(__VA_ARGS__)
+#define CRA_GET_I32(x, ...)  CRA_GET_I31(__VA_ARGS__)
+#define CRA_GET_I33(x, ...)  CRA_GET_I32(__VA_ARGS__)
+#define CRA_GET_I34(x, ...)  CRA_GET_I33(__VA_ARGS__)
+#define CRA_GET_I35(x, ...)  CRA_GET_I34(__VA_ARGS__)
+#define CRA_GET_I36(x, ...)  CRA_GET_I35(__VA_ARGS__)
+#define CRA_GET_I37(x, ...)  CRA_GET_I36(__VA_ARGS__)
+#define CRA_GET_I38(x, ...)  CRA_GET_I37(__VA_ARGS__)
+#define CRA_GET_I39(x, ...)  CRA_GET_I38(__VA_ARGS__)
+#define CRA_GET_I40(x, ...)  CRA_GET_I39(__VA_ARGS__)
+#define CRA_GET_I41(x, ...)  CRA_GET_I40(__VA_ARGS__)
+#define CRA_GET_I42(x, ...)  CRA_GET_I41(__VA_ARGS__)
+#define CRA_GET_I43(x, ...)  CRA_GET_I42(__VA_ARGS__)
+#define CRA_GET_I44(x, ...)  CRA_GET_I43(__VA_ARGS__)
+#define CRA_GET_I45(x, ...)  CRA_GET_I44(__VA_ARGS__)
+#define CRA_GET_I46(x, ...)  CRA_GET_I45(__VA_ARGS__)
+#define CRA_GET_I47(x, ...)  CRA_GET_I46(__VA_ARGS__)
+#define CRA_GET_I48(x, ...)  CRA_GET_I47(__VA_ARGS__)
+#define CRA_GET_I49(x, ...)  CRA_GET_I48(__VA_ARGS__)
+#define CRA_GET_I50(x, ...)  CRA_GET_I49(__VA_ARGS__)
+#define CRA_GET_I51(x, ...)  CRA_GET_I50(__VA_ARGS__)
+#define CRA_GET_I52(x, ...)  CRA_GET_I51(__VA_ARGS__)
+#define CRA_GET_I53(x, ...)  CRA_GET_I52(__VA_ARGS__)
+#define CRA_GET_I54(x, ...)  CRA_GET_I53(__VA_ARGS__)
+#define CRA_GET_I55(x, ...)  CRA_GET_I54(__VA_ARGS__)
+#define CRA_GET_I56(x, ...)  CRA_GET_I55(__VA_ARGS__)
+#define CRA_GET_I57(x, ...)  CRA_GET_I56(__VA_ARGS__)
+#define CRA_GET_I58(x, ...)  CRA_GET_I57(__VA_ARGS__)
+#define CRA_GET_I59(x, ...)  CRA_GET_I58(__VA_ARGS__)
+#define CRA_GET_I60(x, ...)  CRA_GET_I59(__VA_ARGS__)
+#define CRA_GET_I61(x, ...)  CRA_GET_I60(__VA_ARGS__)
+#define CRA_GET_I62(x, ...)  CRA_GET_I61(__VA_ARGS__)
+#define CRA_GET_I63(x, ...)  CRA_GET_I62(__VA_ARGS__)
+#define CRA_GET_I64(x, ...)  CRA_GET_I63(__VA_ARGS__)
+#define CRA_GET_I65(x, ...)  CRA_GET_I64(__VA_ARGS__)
+#define CRA_GET_I66(x, ...)  CRA_GET_I65(__VA_ARGS__)
+#define CRA_GET_I67(x, ...)  CRA_GET_I66(__VA_ARGS__)
+#define CRA_GET_I68(x, ...)  CRA_GET_I67(__VA_ARGS__)
+#define CRA_GET_I69(x, ...)  CRA_GET_I68(__VA_ARGS__)
+#define CRA_GET_I70(x, ...)  CRA_GET_I69(__VA_ARGS__)
+#define CRA_GET_I71(x, ...)  CRA_GET_I70(__VA_ARGS__)
+#define CRA_GET_I72(x, ...)  CRA_GET_I71(__VA_ARGS__)
+#define CRA_GET_I73(x, ...)  CRA_GET_I72(__VA_ARGS__)
+#define CRA_GET_I74(x, ...)  CRA_GET_I73(__VA_ARGS__)
+#define CRA_GET_I75(x, ...)  CRA_GET_I74(__VA_ARGS__)
+#define CRA_GET_I76(x, ...)  CRA_GET_I75(__VA_ARGS__)
+#define CRA_GET_I77(x, ...)  CRA_GET_I76(__VA_ARGS__)
+#define CRA_GET_I78(x, ...)  CRA_GET_I77(__VA_ARGS__)
+#define CRA_GET_I79(x, ...)  CRA_GET_I78(__VA_ARGS__)
+#define CRA_GET_I80(x, ...)  CRA_GET_I79(__VA_ARGS__)
+#define CRA_GET_I81(x, ...)  CRA_GET_I80(__VA_ARGS__)
+#define CRA_GET_I82(x, ...)  CRA_GET_I81(__VA_ARGS__)
+#define CRA_GET_I83(x, ...)  CRA_GET_I82(__VA_ARGS__)
+#define CRA_GET_I84(x, ...)  CRA_GET_I83(__VA_ARGS__)
+#define CRA_GET_I85(x, ...)  CRA_GET_I84(__VA_ARGS__)
+#define CRA_GET_I86(x, ...)  CRA_GET_I85(__VA_ARGS__)
+#define CRA_GET_I87(x, ...)  CRA_GET_I86(__VA_ARGS__)
+#define CRA_GET_I88(x, ...)  CRA_GET_I87(__VA_ARGS__)
+#define CRA_GET_I89(x, ...)  CRA_GET_I88(__VA_ARGS__)
+#define CRA_GET_I90(x, ...)  CRA_GET_I89(__VA_ARGS__)
+#define CRA_GET_I91(x, ...)  CRA_GET_I90(__VA_ARGS__)
+#define CRA_GET_I92(x, ...)  CRA_GET_I91(__VA_ARGS__)
+#define CRA_GET_I93(x, ...)  CRA_GET_I92(__VA_ARGS__)
+#define CRA_GET_I94(x, ...)  CRA_GET_I93(__VA_ARGS__)
+#define CRA_GET_I95(x, ...)  CRA_GET_I94(__VA_ARGS__)
+#define CRA_GET_I96(x, ...)  CRA_GET_I95(__VA_ARGS__)
+#define CRA_GET_I97(x, ...)  CRA_GET_I96(__VA_ARGS__)
+#define CRA_GET_I98(x, ...)  CRA_GET_I97(__VA_ARGS__)
+#define CRA_GET_I99(x, ...)  CRA_GET_I98(__VA_ARGS__)
+#define CRA_GET_I100(x, ...) CRA_GET_I99(__VA_ARGS__)
+#define CRA_GET_I101(x, ...) CRA_GET_I100(__VA_ARGS__)
+#define CRA_GET_I102(x, ...) CRA_GET_I101(__VA_ARGS__)
+#define CRA_GET_I103(x, ...) CRA_GET_I102(__VA_ARGS__)
+#define CRA_GET_I104(x, ...) CRA_GET_I103(__VA_ARGS__)
+#define CRA_GET_I105(x, ...) CRA_GET_I104(__VA_ARGS__)
+#define CRA_GET_I106(x, ...) CRA_GET_I105(__VA_ARGS__)
+#define CRA_GET_I107(x, ...) CRA_GET_I106(__VA_ARGS__)
+#define CRA_GET_I108(x, ...) CRA_GET_I107(__VA_ARGS__)
+#define CRA_GET_I109(x, ...) CRA_GET_I108(__VA_ARGS__)
+#define CRA_GET_I110(x, ...) CRA_GET_I109(__VA_ARGS__)
+#define CRA_GET_I111(x, ...) CRA_GET_I110(__VA_ARGS__)
+#define CRA_GET_I112(x, ...) CRA_GET_I111(__VA_ARGS__)
+#define CRA_GET_I113(x, ...) CRA_GET_I112(__VA_ARGS__)
+#define CRA_GET_I114(x, ...) CRA_GET_I113(__VA_ARGS__)
+#define CRA_GET_I115(x, ...) CRA_GET_I114(__VA_ARGS__)
+#define CRA_GET_I116(x, ...) CRA_GET_I115(__VA_ARGS__)
+#define CRA_GET_I117(x, ...) CRA_GET_I116(__VA_ARGS__)
+#define CRA_GET_I118(x, ...) CRA_GET_I117(__VA_ARGS__)
+#define CRA_GET_I119(x, ...) CRA_GET_I118(__VA_ARGS__)
+#define CRA_GET_I120(x, ...) CRA_GET_I119(__VA_ARGS__)
+#define CRA_GET_I121(x, ...) CRA_GET_I120(__VA_ARGS__)
+#define CRA_GET_I122(x, ...) CRA_GET_I121(__VA_ARGS__)
+#define CRA_GET_I123(x, ...) CRA_GET_I122(__VA_ARGS__)
+#define CRA_GET_I124(x, ...) CRA_GET_I123(__VA_ARGS__)
+#define CRA_GET_I125(x, ...) CRA_GET_I124(__VA_ARGS__)
+#define CRA_GET_I126(x, ...) CRA_GET_I125(__VA_ARGS__)
+#define CRA_GET_I127(x, ...) CRA_GET_I126(__VA_ARGS__)
+#define CRA_GET_I128(x, ...) CRA_GET_I127(__VA_ARGS__)
+
+#endif // end GET_I()
+
+#if 1 // GET_N()
+
+#define CRA_GET_N1           CRA_GET_I0
+#define CRA_GET_N2(x, ...)   x, CRA_GET_N1(__VA_ARGS__)
+#define CRA_GET_N3(x, ...)   x, CRA_GET_N2(__VA_ARGS__)
+#define CRA_GET_N4(x, ...)   x, CRA_GET_N3(__VA_ARGS__)
+#define CRA_GET_N5(x, ...)   x, CRA_GET_N4(__VA_ARGS__)
+#define CRA_GET_N6(x, ...)   x, CRA_GET_N5(__VA_ARGS__)
+#define CRA_GET_N7(x, ...)   x, CRA_GET_N6(__VA_ARGS__)
+#define CRA_GET_N8(x, ...)   x, CRA_GET_N7(__VA_ARGS__)
+#define CRA_GET_N9(x, ...)   x, CRA_GET_N8(__VA_ARGS__)
+#define CRA_GET_N10(x, ...)  x, CRA_GET_N9(__VA_ARGS__)
+#define CRA_GET_N11(x, ...)  x, CRA_GET_N10(__VA_ARGS__)
+#define CRA_GET_N12(x, ...)  x, CRA_GET_N11(__VA_ARGS__)
+#define CRA_GET_N13(x, ...)  x, CRA_GET_N12(__VA_ARGS__)
+#define CRA_GET_N14(x, ...)  x, CRA_GET_N13(__VA_ARGS__)
+#define CRA_GET_N15(x, ...)  x, CRA_GET_N14(__VA_ARGS__)
+#define CRA_GET_N16(x, ...)  x, CRA_GET_N15(__VA_ARGS__)
+#define CRA_GET_N17(x, ...)  x, CRA_GET_N16(__VA_ARGS__)
+#define CRA_GET_N18(x, ...)  x, CRA_GET_N17(__VA_ARGS__)
+#define CRA_GET_N19(x, ...)  x, CRA_GET_N18(__VA_ARGS__)
+#define CRA_GET_N20(x, ...)  x, CRA_GET_N19(__VA_ARGS__)
+#define CRA_GET_N21(x, ...)  x, CRA_GET_N20(__VA_ARGS__)
+#define CRA_GET_N22(x, ...)  x, CRA_GET_N21(__VA_ARGS__)
+#define CRA_GET_N23(x, ...)  x, CRA_GET_N22(__VA_ARGS__)
+#define CRA_GET_N24(x, ...)  x, CRA_GET_N23(__VA_ARGS__)
+#define CRA_GET_N25(x, ...)  x, CRA_GET_N24(__VA_ARGS__)
+#define CRA_GET_N26(x, ...)  x, CRA_GET_N25(__VA_ARGS__)
+#define CRA_GET_N27(x, ...)  x, CRA_GET_N26(__VA_ARGS__)
+#define CRA_GET_N28(x, ...)  x, CRA_GET_N27(__VA_ARGS__)
+#define CRA_GET_N29(x, ...)  x, CRA_GET_N28(__VA_ARGS__)
+#define CRA_GET_N30(x, ...)  x, CRA_GET_N29(__VA_ARGS__)
+#define CRA_GET_N31(x, ...)  x, CRA_GET_N30(__VA_ARGS__)
+#define CRA_GET_N32(x, ...)  x, CRA_GET_N31(__VA_ARGS__)
+#define CRA_GET_N33(x, ...)  x, CRA_GET_N32(__VA_ARGS__)
+#define CRA_GET_N34(x, ...)  x, CRA_GET_N33(__VA_ARGS__)
+#define CRA_GET_N35(x, ...)  x, CRA_GET_N34(__VA_ARGS__)
+#define CRA_GET_N36(x, ...)  x, CRA_GET_N35(__VA_ARGS__)
+#define CRA_GET_N37(x, ...)  x, CRA_GET_N36(__VA_ARGS__)
+#define CRA_GET_N38(x, ...)  x, CRA_GET_N37(__VA_ARGS__)
+#define CRA_GET_N39(x, ...)  x, CRA_GET_N38(__VA_ARGS__)
+#define CRA_GET_N40(x, ...)  x, CRA_GET_N39(__VA_ARGS__)
+#define CRA_GET_N41(x, ...)  x, CRA_GET_N40(__VA_ARGS__)
+#define CRA_GET_N42(x, ...)  x, CRA_GET_N41(__VA_ARGS__)
+#define CRA_GET_N43(x, ...)  x, CRA_GET_N42(__VA_ARGS__)
+#define CRA_GET_N44(x, ...)  x, CRA_GET_N43(__VA_ARGS__)
+#define CRA_GET_N45(x, ...)  x, CRA_GET_N44(__VA_ARGS__)
+#define CRA_GET_N46(x, ...)  x, CRA_GET_N45(__VA_ARGS__)
+#define CRA_GET_N47(x, ...)  x, CRA_GET_N46(__VA_ARGS__)
+#define CRA_GET_N48(x, ...)  x, CRA_GET_N47(__VA_ARGS__)
+#define CRA_GET_N49(x, ...)  x, CRA_GET_N48(__VA_ARGS__)
+#define CRA_GET_N50(x, ...)  x, CRA_GET_N49(__VA_ARGS__)
+#define CRA_GET_N51(x, ...)  x, CRA_GET_N50(__VA_ARGS__)
+#define CRA_GET_N52(x, ...)  x, CRA_GET_N51(__VA_ARGS__)
+#define CRA_GET_N53(x, ...)  x, CRA_GET_N52(__VA_ARGS__)
+#define CRA_GET_N54(x, ...)  x, CRA_GET_N53(__VA_ARGS__)
+#define CRA_GET_N55(x, ...)  x, CRA_GET_N54(__VA_ARGS__)
+#define CRA_GET_N56(x, ...)  x, CRA_GET_N55(__VA_ARGS__)
+#define CRA_GET_N57(x, ...)  x, CRA_GET_N56(__VA_ARGS__)
+#define CRA_GET_N58(x, ...)  x, CRA_GET_N57(__VA_ARGS__)
+#define CRA_GET_N59(x, ...)  x, CRA_GET_N58(__VA_ARGS__)
+#define CRA_GET_N60(x, ...)  x, CRA_GET_N59(__VA_ARGS__)
+#define CRA_GET_N61(x, ...)  x, CRA_GET_N60(__VA_ARGS__)
+#define CRA_GET_N62(x, ...)  x, CRA_GET_N61(__VA_ARGS__)
+#define CRA_GET_N63(x, ...)  x, CRA_GET_N62(__VA_ARGS__)
+#define CRA_GET_N64(x, ...)  x, CRA_GET_N63(__VA_ARGS__)
+#define CRA_GET_N65(x, ...)  x, CRA_GET_N64(__VA_ARGS__)
+#define CRA_GET_N66(x, ...)  x, CRA_GET_N65(__VA_ARGS__)
+#define CRA_GET_N67(x, ...)  x, CRA_GET_N66(__VA_ARGS__)
+#define CRA_GET_N68(x, ...)  x, CRA_GET_N67(__VA_ARGS__)
+#define CRA_GET_N69(x, ...)  x, CRA_GET_N68(__VA_ARGS__)
+#define CRA_GET_N70(x, ...)  x, CRA_GET_N69(__VA_ARGS__)
+#define CRA_GET_N71(x, ...)  x, CRA_GET_N70(__VA_ARGS__)
+#define CRA_GET_N72(x, ...)  x, CRA_GET_N71(__VA_ARGS__)
+#define CRA_GET_N73(x, ...)  x, CRA_GET_N72(__VA_ARGS__)
+#define CRA_GET_N74(x, ...)  x, CRA_GET_N73(__VA_ARGS__)
+#define CRA_GET_N75(x, ...)  x, CRA_GET_N74(__VA_ARGS__)
+#define CRA_GET_N76(x, ...)  x, CRA_GET_N75(__VA_ARGS__)
+#define CRA_GET_N77(x, ...)  x, CRA_GET_N76(__VA_ARGS__)
+#define CRA_GET_N78(x, ...)  x, CRA_GET_N77(__VA_ARGS__)
+#define CRA_GET_N79(x, ...)  x, CRA_GET_N78(__VA_ARGS__)
+#define CRA_GET_N80(x, ...)  x, CRA_GET_N79(__VA_ARGS__)
+#define CRA_GET_N81(x, ...)  x, CRA_GET_N80(__VA_ARGS__)
+#define CRA_GET_N82(x, ...)  x, CRA_GET_N81(__VA_ARGS__)
+#define CRA_GET_N83(x, ...)  x, CRA_GET_N82(__VA_ARGS__)
+#define CRA_GET_N84(x, ...)  x, CRA_GET_N83(__VA_ARGS__)
+#define CRA_GET_N85(x, ...)  x, CRA_GET_N84(__VA_ARGS__)
+#define CRA_GET_N86(x, ...)  x, CRA_GET_N85(__VA_ARGS__)
+#define CRA_GET_N87(x, ...)  x, CRA_GET_N86(__VA_ARGS__)
+#define CRA_GET_N88(x, ...)  x, CRA_GET_N87(__VA_ARGS__)
+#define CRA_GET_N89(x, ...)  x, CRA_GET_N88(__VA_ARGS__)
+#define CRA_GET_N90(x, ...)  x, CRA_GET_N89(__VA_ARGS__)
+#define CRA_GET_N91(x, ...)  x, CRA_GET_N90(__VA_ARGS__)
+#define CRA_GET_N92(x, ...)  x, CRA_GET_N91(__VA_ARGS__)
+#define CRA_GET_N93(x, ...)  x, CRA_GET_N92(__VA_ARGS__)
+#define CRA_GET_N94(x, ...)  x, CRA_GET_N93(__VA_ARGS__)
+#define CRA_GET_N95(x, ...)  x, CRA_GET_N94(__VA_ARGS__)
+#define CRA_GET_N96(x, ...)  x, CRA_GET_N95(__VA_ARGS__)
+#define CRA_GET_N97(x, ...)  x, CRA_GET_N96(__VA_ARGS__)
+#define CRA_GET_N98(x, ...)  x, CRA_GET_N97(__VA_ARGS__)
+#define CRA_GET_N99(x, ...)  x, CRA_GET_N98(__VA_ARGS__)
+#define CRA_GET_N100(x, ...) x, CRA_GET_N99(__VA_ARGS__)
+#define CRA_GET_N101(x, ...) x, CRA_GET_N100(__VA_ARGS__)
+#define CRA_GET_N102(x, ...) x, CRA_GET_N101(__VA_ARGS__)
+#define CRA_GET_N103(x, ...) x, CRA_GET_N102(__VA_ARGS__)
+#define CRA_GET_N104(x, ...) x, CRA_GET_N103(__VA_ARGS__)
+#define CRA_GET_N105(x, ...) x, CRA_GET_N104(__VA_ARGS__)
+#define CRA_GET_N106(x, ...) x, CRA_GET_N105(__VA_ARGS__)
+#define CRA_GET_N107(x, ...) x, CRA_GET_N106(__VA_ARGS__)
+#define CRA_GET_N108(x, ...) x, CRA_GET_N107(__VA_ARGS__)
+#define CRA_GET_N109(x, ...) x, CRA_GET_N108(__VA_ARGS__)
+#define CRA_GET_N110(x, ...) x, CRA_GET_N109(__VA_ARGS__)
+#define CRA_GET_N111(x, ...) x, CRA_GET_N110(__VA_ARGS__)
+#define CRA_GET_N112(x, ...) x, CRA_GET_N111(__VA_ARGS__)
+#define CRA_GET_N113(x, ...) x, CRA_GET_N112(__VA_ARGS__)
+#define CRA_GET_N114(x, ...) x, CRA_GET_N113(__VA_ARGS__)
+#define CRA_GET_N115(x, ...) x, CRA_GET_N114(__VA_ARGS__)
+#define CRA_GET_N116(x, ...) x, CRA_GET_N115(__VA_ARGS__)
+#define CRA_GET_N117(x, ...) x, CRA_GET_N116(__VA_ARGS__)
+#define CRA_GET_N118(x, ...) x, CRA_GET_N117(__VA_ARGS__)
+#define CRA_GET_N119(x, ...) x, CRA_GET_N118(__VA_ARGS__)
+#define CRA_GET_N120(x, ...) x, CRA_GET_N119(__VA_ARGS__)
+#define CRA_GET_N121(x, ...) x, CRA_GET_N120(__VA_ARGS__)
+#define CRA_GET_N122(x, ...) x, CRA_GET_N121(__VA_ARGS__)
+#define CRA_GET_N123(x, ...) x, CRA_GET_N122(__VA_ARGS__)
+#define CRA_GET_N124(x, ...) x, CRA_GET_N123(__VA_ARGS__)
+#define CRA_GET_N125(x, ...) x, CRA_GET_N124(__VA_ARGS__)
+#define CRA_GET_N126(x, ...) x, CRA_GET_N125(__VA_ARGS__)
+#define CRA_GET_N127(x, ...) x, CRA_GET_N126(__VA_ARGS__)
+#define CRA_GET_N128(x, ...) x, CRA_GET_N127(__VA_ARGS__)
+
+#endif // end GET_N()
+
 #if 1 // ITER(FOREACH)
 
-#define CRA_ITER_FM0(F, M, _0)
-#define CRA_ITER_FM1(F, M, _1)                             F(M, _1)
-#define CRA_ITER_FM2(F, M, _1, _2)                         CRA_ITER_FM1(F, M, _1) F(M, _2)
-#define CRA_ITER_FM3(F, M, _1, _2, _3)                     CRA_ITER_FM2(F, M, _1, _2) F(M, _3)
-#define CRA_ITER_FM4(F, M, _1, _2, _3, _4)                 CRA_ITER_FM3(F, M, _1, _2, _3) F(M, _4)
-#define CRA_ITER_FM5(F, M, _1, _2, _3, _4, _5)             CRA_ITER_FM4(F, M, _1, _2, _3, _4) F(M, _5)
-#define CRA_ITER_FM6(F, M, _1, _2, _3, _4, _5, _6)         CRA_ITER_FM5(F, M, _1, _2, _3, _4, _5) F(M, _6)
-#define CRA_ITER_FM7(F, M, _1, _2, _3, _4, _5, _6, _7)     CRA_ITER_FM6(F, M, _1, _2, _3, _4, _5, _6) F(M, _7)
-#define CRA_ITER_FM8(F, M, _1, _2, _3, _4, _5, _6, _7, _8) CRA_ITER_FM7(F, M, _1, _2, _3, _4, _5, _6, _7) F(M, _8)
-#define CRA_ITER_FM9(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9)  \
-    CRA_ITER_FM8(F, M, _1, _2, _3, _4, _5, _6, _7, _8) F(M, _9)
-#define CRA_ITER_FM10(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10) \
-    CRA_ITER_FM9(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9) F(M, _10)
-#define CRA_ITER_FM11(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11)  \
-    CRA_ITER_FM10(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10) F(M, _11)
-#define CRA_ITER_FM12(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12)  \
-    CRA_ITER_FM11(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11) F(M, _12)
-#define CRA_ITER_FM13(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13)  \
-    CRA_ITER_FM12(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12) F(M, _13)
-#define CRA_ITER_FM14(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14)  \
-    CRA_ITER_FM13(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13) F(M, _14)
-#define CRA_ITER_FM15(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15)  \
-    CRA_ITER_FM14(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14) F(M, _15)
-#define CRA_ITER_FM16(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16)  \
-    CRA_ITER_FM15(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15) F(M, _16)
-#define CRA_ITER_FM17(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17)  \
-    CRA_ITER_FM16(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16) F(M, _17)
-#define CRA_ITER_FM18(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18)  \
-    CRA_ITER_FM17(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17) F(M, _18)
-#define CRA_ITER_FM19(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19)  \
-    CRA_ITER_FM18(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18) F(M, _19)
-#define CRA_ITER_FM20(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20) \
-    CRA_ITER_FM19(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19) F(M, _20)
-#define CRA_ITER_FM21(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21)                                                                                             \
-    CRA_ITER_FM20(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20)     \
-    F(M, _21)
-#define CRA_ITER_FM22(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22)                                                                                        \
-    CRA_ITER_FM21(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21)                                                                                                 \
-    F(M, _22)
-#define CRA_ITER_FM23(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23)                                                                                   \
-    CRA_ITER_FM22(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22)                                                                                            \
-    F(M, _23)
-#define CRA_ITER_FM24(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24)                                                                              \
-    CRA_ITER_FM23(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23)                                                                                       \
-    F(M, _24)
-#define CRA_ITER_FM25(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25)                                                                         \
-    CRA_ITER_FM24(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24)                                                                                  \
-    F(M, _25)
-#define CRA_ITER_FM26(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26)                                                                    \
-    CRA_ITER_FM25(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25)                                                                             \
-    F(M, _26)
-#define CRA_ITER_FM27(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27)                                                               \
-    CRA_ITER_FM26(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26)                                                                        \
-    F(M, _27)
-#define CRA_ITER_FM28(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28)                                                          \
-    CRA_ITER_FM27(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27)                                                                   \
-    F(M, _28)
-#define CRA_ITER_FM29(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29)                                                     \
-    CRA_ITER_FM28(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28)                                                              \
-    F(M, _29)
-#define CRA_ITER_FM30(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30)                                                \
-    CRA_ITER_FM29(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29)                                                         \
-    F(M, _30)
-#define CRA_ITER_FM31(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31)                                           \
-    CRA_ITER_FM30(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30)                                                    \
-    F(M, _31)
-#define CRA_ITER_FM32(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32)                                      \
-    CRA_ITER_FM31(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31)                                               \
-    F(M, _32)
-#define CRA_ITER_FM33(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33)                                 \
-    CRA_ITER_FM32(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32)                                          \
-    F(M, _33)
-#define CRA_ITER_FM34(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34)                            \
-    CRA_ITER_FM33(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33)                                     \
-    F(M, _34)
-#define CRA_ITER_FM35(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35)                       \
-    CRA_ITER_FM34(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34)                                \
-    F(M, _35)
-#define CRA_ITER_FM36(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36)                  \
-    CRA_ITER_FM35(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35)                           \
-    F(M, _36)
-#define CRA_ITER_FM37(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37)             \
-    CRA_ITER_FM36(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36)                      \
-    F(M, _37)
-#define CRA_ITER_FM38(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38)        \
-    CRA_ITER_FM37(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37)                 \
-    F(M, _38)
-#define CRA_ITER_FM39(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39)   \
-    CRA_ITER_FM38(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38)            \
-    F(M, _39)
-#define CRA_ITER_FM40(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40)                                                                                             \
-    CRA_ITER_FM39(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39)       \
-    F(M, _40)
-#define CRA_ITER_FM41(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41)                                                                                        \
-    CRA_ITER_FM40(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40)  \
-    F(M, _41)
-#define CRA_ITER_FM42(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42)                                                                                   \
-    CRA_ITER_FM41(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41)                                                                                                 \
-    F(M, _42)
-#define CRA_ITER_FM43(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43)                                                                              \
-    CRA_ITER_FM42(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42)                                                                                            \
-    F(M, _43)
-#define CRA_ITER_FM44(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44)                                                                         \
-    CRA_ITER_FM43(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43)                                                                                       \
-    F(M, _44)
-#define CRA_ITER_FM45(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45)                                                                    \
-    CRA_ITER_FM44(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44)                                                                                  \
-    F(M, _45)
-#define CRA_ITER_FM46(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46)                                                               \
-    CRA_ITER_FM45(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45)                                                                             \
-    F(M, _46)
-#define CRA_ITER_FM47(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47)                                                          \
-    CRA_ITER_FM46(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46)                                                                        \
-    F(M, _47)
-#define CRA_ITER_FM48(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48)                                                     \
-    CRA_ITER_FM47(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47)                                                                   \
-    F(M, _48)
-#define CRA_ITER_FM49(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49)                                                \
-    CRA_ITER_FM48(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48)                                                              \
-    F(M, _49)
-#define CRA_ITER_FM50(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50)                                           \
-    CRA_ITER_FM49(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49)                                                         \
-    F(M, _50)
-#define CRA_ITER_FM51(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51)                                      \
-    CRA_ITER_FM50(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50)                                                    \
-    F(M, _51)
-#define CRA_ITER_FM52(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52)                                 \
-    CRA_ITER_FM51(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51)                                               \
-    F(M, _52)
-#define CRA_ITER_FM53(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53)                            \
-    CRA_ITER_FM52(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52)                                          \
-    F(M, _53)
-#define CRA_ITER_FM54(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54)                       \
-    CRA_ITER_FM53(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53)                                     \
-    F(M, _54)
-#define CRA_ITER_FM55(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55)                  \
-    CRA_ITER_FM54(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54)                                \
-    F(M, _55)
-#define CRA_ITER_FM56(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56)             \
-    CRA_ITER_FM55(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55)                           \
-    F(M, _56)
-#define CRA_ITER_FM57(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57)        \
-    CRA_ITER_FM56(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56)                      \
-    F(M, _57)
-#define CRA_ITER_FM58(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58)   \
-    CRA_ITER_FM57(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57)                 \
-    F(M, _58)
-#define CRA_ITER_FM59(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59)                                                                                             \
-    CRA_ITER_FM58(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58)            \
-    F(M, _59)
-#define CRA_ITER_FM60(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60)                                                                                        \
-    CRA_ITER_FM59(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59)       \
-    F(M, _60)
-#define CRA_ITER_FM61(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61)                                                                                   \
-    CRA_ITER_FM60(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60)  \
-    F(M, _61)
-#define CRA_ITER_FM62(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62)                                                                              \
-    CRA_ITER_FM61(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61)                                                                                                 \
-    F(M, _62)
-#define CRA_ITER_FM63(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63)                                                                         \
-    CRA_ITER_FM62(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62)                                                                                            \
-    F(M, _63)
-#define CRA_ITER_FM64(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64)                                                                    \
-    CRA_ITER_FM63(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63)                                                                                       \
-    F(M, _64)
-#define CRA_ITER_FM65(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65)                                                               \
-    CRA_ITER_FM64(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64)                                                                                  \
-    F(M, _65)
-#define CRA_ITER_FM66(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66)                                                          \
-    CRA_ITER_FM65(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65)                                                                             \
-    F(M, _66)
-#define CRA_ITER_FM67(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66, _67)                                                     \
-    CRA_ITER_FM66(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65, _66)                                                                        \
-    F(M, _67)
-#define CRA_ITER_FM68(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66, _67, _68)                                                \
-    CRA_ITER_FM67(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65, _66, _67)                                                                   \
-    F(M, _68)
-#define CRA_ITER_FM69(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69)                                           \
-    CRA_ITER_FM68(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65, _66, _67, _68)                                                              \
-    F(M, _69)
-#define CRA_ITER_FM70(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70)                                      \
-    CRA_ITER_FM69(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65, _66, _67, _68, _69)                                                         \
-    F(M, _70)
-#define CRA_ITER_FM71(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71)                                 \
-    CRA_ITER_FM70(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65, _66, _67, _68, _69, _70)                                                    \
-    F(M, _71)
-#define CRA_ITER_FM72(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72)                            \
-    CRA_ITER_FM71(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71)                                               \
-    F(M, _72)
-#define CRA_ITER_FM73(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73)                       \
-    CRA_ITER_FM72(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72)                                          \
-    F(M, _73)
-#define CRA_ITER_FM74(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74)                  \
-    CRA_ITER_FM73(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73)                                     \
-    F(M, _74)
-#define CRA_ITER_FM75(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75)             \
-    CRA_ITER_FM74(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74)                                \
-    F(M, _75)
-#define CRA_ITER_FM76(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76)        \
-    CRA_ITER_FM75(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75)                           \
-    F(M, _76)
-#define CRA_ITER_FM77(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77)   \
-    CRA_ITER_FM76(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76)                      \
-    F(M, _77)
-#define CRA_ITER_FM78(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77,   \
-                      _78)                                                                                             \
-    CRA_ITER_FM77(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77)                 \
-    F(M, _78)
-#define CRA_ITER_FM79(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77,   \
-                      _78, _79)                                                                                        \
-    CRA_ITER_FM78(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78)            \
-    F(M, _79)
-#define CRA_ITER_FM80(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77,   \
-                      _78, _79, _80)                                                                                   \
-    CRA_ITER_FM79(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79)       \
-    F(M, _80)
-#define CRA_ITER_FM81(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77,   \
-                      _78, _79, _80, _81)                                                                              \
-    CRA_ITER_FM80(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80)  \
-    F(M, _81)
-#define CRA_ITER_FM82(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77,   \
-                      _78, _79, _80, _81, _82)                                                                         \
-    CRA_ITER_FM81(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80,  \
-                  _81)                                                                                                 \
-    F(M, _82)
-#define CRA_ITER_FM83(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77,   \
-                      _78, _79, _80, _81, _82, _83)                                                                    \
-    CRA_ITER_FM82(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80,  \
-                  _81, _82)                                                                                            \
-    F(M, _83)
-#define CRA_ITER_FM84(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77,   \
-                      _78, _79, _80, _81, _82, _83, _84)                                                               \
-    CRA_ITER_FM83(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80,  \
-                  _81, _82, _83)                                                                                       \
-    F(M, _84)
-#define CRA_ITER_FM85(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77,   \
-                      _78, _79, _80, _81, _82, _83, _84, _85)                                                          \
-    CRA_ITER_FM84(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80,  \
-                  _81, _82, _83, _84)                                                                                  \
-    F(M, _85)
-#define CRA_ITER_FM86(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77,   \
-                      _78, _79, _80, _81, _82, _83, _84, _85, _86)                                                     \
-    CRA_ITER_FM85(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80,  \
-                  _81, _82, _83, _84, _85)                                                                             \
-    F(M, _86)
-#define CRA_ITER_FM87(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77,   \
-                      _78, _79, _80, _81, _82, _83, _84, _85, _86, _87)                                                \
-    CRA_ITER_FM86(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80,  \
-                  _81, _82, _83, _84, _85, _86)                                                                        \
-    F(M, _87)
-#define CRA_ITER_FM88(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77,   \
-                      _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88)                                           \
-    CRA_ITER_FM87(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80,  \
-                  _81, _82, _83, _84, _85, _86, _87)                                                                   \
-    F(M, _88)
-#define CRA_ITER_FM89(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77,   \
-                      _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89)                                      \
-    CRA_ITER_FM88(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80,  \
-                  _81, _82, _83, _84, _85, _86, _87, _88)                                                              \
-    F(M, _89)
-#define CRA_ITER_FM90(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77,   \
-                      _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90)                                 \
-    CRA_ITER_FM89(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80,  \
-                  _81, _82, _83, _84, _85, _86, _87, _88, _89)                                                         \
-    F(M, _90)
-#define CRA_ITER_FM91(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77,   \
-                      _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91)                            \
-    CRA_ITER_FM90(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80,  \
-                  _81, _82, _83, _84, _85, _86, _87, _88, _89, _90)                                                    \
-    F(M, _91)
-#define CRA_ITER_FM92(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77,   \
-                      _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92)                       \
-    CRA_ITER_FM91(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80,  \
-                  _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91)                                               \
-    F(M, _92)
-#define CRA_ITER_FM93(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77,   \
-                      _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93)                  \
-    CRA_ITER_FM92(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80,  \
-                  _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92)                                          \
-    F(M, _93)
-#define CRA_ITER_FM94(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77,   \
-                      _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94)             \
-    CRA_ITER_FM93(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80,  \
-                  _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93)                                     \
-    F(M, _94)
-#define CRA_ITER_FM95(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77,   \
-                      _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95)        \
-    CRA_ITER_FM94(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80,  \
-                  _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94)                                \
-    F(M, _95)
-#define CRA_ITER_FM96(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77,   \
-                      _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96)   \
-    CRA_ITER_FM95(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80,  \
-                  _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95)                           \
-    F(M, _96)
-#define CRA_ITER_FM97(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77,   \
-                      _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96,   \
-                      _97)                                                                                             \
-    CRA_ITER_FM96(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80,  \
-                  _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96)                      \
-    F(M, _97)
-#define CRA_ITER_FM98(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77,   \
-                      _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96,   \
-                      _97, _98)                                                                                        \
-    CRA_ITER_FM97(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80,  \
-                  _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, _97)                 \
-    F(M, _98)
-#define CRA_ITER_FM99(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-                      _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,   \
-                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,   \
-                      _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77,   \
-                      _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96,   \
-                      _97, _98, _99)                                                                                   \
-    CRA_ITER_FM98(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \
-                  _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80,  \
-                  _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, _97, _98)            \
-    F(M, _99)
-#define CRA_ITER_FM100(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19,    \
-                       _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, \
-                       _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, \
-                       _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, \
-                       _77, _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, \
-                       _96, _97, _98, _99, _100)                                                                      \
-    CRA_ITER_FM99(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,    \
-                  _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, \
-                  _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, \
-                  _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80, \
-                  _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, _97, _98, _99)      \
-    F(M, _100)
-#define CRA_ITER_FM101(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19,     \
-                       _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38,  \
-                       _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57,  \
-                       _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76,  \
-                       _77, _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95,  \
-                       _96, _97, _98, _99, _100, _101)                                                                 \
-    CRA_ITER_FM100(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,    \
-                   _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, \
-                   _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, \
-                   _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80, \
-                   _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, _97, _98, _99,      \
-                   _100)                                                                                               \
-    F(M, _101)
-#define CRA_ITER_FM102(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19,     \
-                       _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38,  \
-                       _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57,  \
-                       _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76,  \
-                       _77, _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95,  \
-                       _96, _97, _98, _99, _100, _101, _102)                                                           \
-    CRA_ITER_FM101(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,    \
-                   _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, \
-                   _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, \
-                   _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80, \
-                   _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, _97, _98, _99,      \
-                   _100, _101)                                                                                         \
-    F(M, _102)
-#define CRA_ITER_FM103(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19,     \
-                       _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38,  \
-                       _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57,  \
-                       _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76,  \
-                       _77, _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95,  \
-                       _96, _97, _98, _99, _100, _101, _102, _103)                                                     \
-    CRA_ITER_FM102(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,    \
-                   _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, \
-                   _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, \
-                   _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80, \
-                   _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, _97, _98, _99,      \
-                   _100, _101, _102)                                                                                   \
-    F(M, _103)
-#define CRA_ITER_FM104(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19,     \
-                       _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38,  \
-                       _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57,  \
-                       _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76,  \
-                       _77, _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95,  \
-                       _96, _97, _98, _99, _100, _101, _102, _103, _104)                                               \
-    CRA_ITER_FM103(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,    \
-                   _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, \
-                   _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, \
-                   _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80, \
-                   _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, _97, _98, _99,      \
-                   _100, _101, _102, _103)                                                                             \
-    F(M, _104)
-#define CRA_ITER_FM105(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19,     \
-                       _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38,  \
-                       _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57,  \
-                       _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76,  \
-                       _77, _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95,  \
-                       _96, _97, _98, _99, _100, _101, _102, _103, _104, _105)                                         \
-    CRA_ITER_FM104(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,    \
-                   _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, \
-                   _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, \
-                   _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80, \
-                   _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, _97, _98, _99,      \
-                   _100, _101, _102, _103, _104)                                                                       \
-    F(M, _105)
-#define CRA_ITER_FM106(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19,     \
-                       _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38,  \
-                       _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57,  \
-                       _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76,  \
-                       _77, _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95,  \
-                       _96, _97, _98, _99, _100, _101, _102, _103, _104, _105, _106)                                   \
-    CRA_ITER_FM105(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,    \
-                   _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, \
-                   _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, \
-                   _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80, \
-                   _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, _97, _98, _99,      \
-                   _100, _101, _102, _103, _104, _105)                                                                 \
-    F(M, _106)
-#define CRA_ITER_FM107(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19,     \
-                       _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38,  \
-                       _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57,  \
-                       _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76,  \
-                       _77, _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95,  \
-                       _96, _97, _98, _99, _100, _101, _102, _103, _104, _105, _106, _107)                             \
-    CRA_ITER_FM106(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,    \
-                   _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, \
-                   _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, \
-                   _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80, \
-                   _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, _97, _98, _99,      \
-                   _100, _101, _102, _103, _104, _105, _106)                                                           \
-    F(M, _107)
-#define CRA_ITER_FM108(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19,     \
-                       _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38,  \
-                       _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57,  \
-                       _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76,  \
-                       _77, _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95,  \
-                       _96, _97, _98, _99, _100, _101, _102, _103, _104, _105, _106, _107, _108)                       \
-    CRA_ITER_FM107(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,    \
-                   _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, \
-                   _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, \
-                   _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80, \
-                   _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, _97, _98, _99,      \
-                   _100, _101, _102, _103, _104, _105, _106, _107)                                                     \
-    F(M, _108)
-#define CRA_ITER_FM109(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19,     \
-                       _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38,  \
-                       _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57,  \
-                       _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76,  \
-                       _77, _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95,  \
-                       _96, _97, _98, _99, _100, _101, _102, _103, _104, _105, _106, _107, _108, _109)                 \
-    CRA_ITER_FM108(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,    \
-                   _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, \
-                   _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, \
-                   _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80, \
-                   _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, _97, _98, _99,      \
-                   _100, _101, _102, _103, _104, _105, _106, _107, _108)                                               \
-    F(M, _109)
-#define CRA_ITER_FM110(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19,     \
-                       _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38,  \
-                       _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57,  \
-                       _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76,  \
-                       _77, _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95,  \
-                       _96, _97, _98, _99, _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110)           \
-    CRA_ITER_FM109(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,    \
-                   _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, \
-                   _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, \
-                   _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80, \
-                   _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, _97, _98, _99,      \
-                   _100, _101, _102, _103, _104, _105, _106, _107, _108, _109)                                         \
-    F(M, _110)
-#define CRA_ITER_FM111(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19,     \
-                       _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38,  \
-                       _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57,  \
-                       _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76,  \
-                       _77, _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95,  \
-                       _96, _97, _98, _99, _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111)     \
-    CRA_ITER_FM110(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,    \
-                   _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, \
-                   _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, \
-                   _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80, \
-                   _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, _97, _98, _99,      \
-                   _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110)                                   \
-    F(M, _111)
-#define CRA_ITER_FM112(                                                                                                \
-  F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, _21, _22, _23, _24, \
-  _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, _41, _42, _43, _44, _45, _46, _47,   \
-  _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70,   \
-  _71, _72, _73, _74, _75, _76, _77, _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93,   \
-  _94, _95, _96, _97, _98, _99, _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111, _112)          \
-    CRA_ITER_FM111(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,    \
-                   _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, \
-                   _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, \
-                   _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80, \
-                   _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, _97, _98, _99,      \
-                   _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111)                             \
-    F(M, _112)
-#define CRA_ITER_FM113(                                                                                                \
-  F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, _21, _22, _23, _24, \
-  _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, _41, _42, _43, _44, _45, _46, _47,   \
-  _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70,   \
-  _71, _72, _73, _74, _75, _76, _77, _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93,   \
-  _94, _95, _96, _97, _98, _99, _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111, _112, _113)    \
-    CRA_ITER_FM112(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,    \
-                   _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, \
-                   _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, \
-                   _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80, \
-                   _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, _97, _98, _99,      \
-                   _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111, _112)                       \
-    F(M, _113)
-#define CRA_ITER_FM114(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19,     \
-                       _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38,  \
-                       _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57,  \
-                       _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76,  \
-                       _77, _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95,  \
-                       _96, _97, _98, _99, _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111,     \
-                       _112, _113, _114)                                                                               \
-    CRA_ITER_FM113(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,    \
-                   _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, \
-                   _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, \
-                   _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80, \
-                   _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, _97, _98, _99,      \
-                   _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111, _112, _113)                 \
-    F(M, _114)
-#define CRA_ITER_FM115(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19,     \
-                       _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38,  \
-                       _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57,  \
-                       _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76,  \
-                       _77, _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95,  \
-                       _96, _97, _98, _99, _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111,     \
-                       _112, _113, _114, _115)                                                                         \
-    CRA_ITER_FM114(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,    \
-                   _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, \
-                   _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, \
-                   _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80, \
-                   _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, _97, _98, _99,      \
-                   _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111, _112, _113, _114)           \
-    F(M, _115)
-#define CRA_ITER_FM116(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19,     \
-                       _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38,  \
-                       _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57,  \
-                       _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76,  \
-                       _77, _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95,  \
-                       _96, _97, _98, _99, _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111,     \
-                       _112, _113, _114, _115, _116)                                                                   \
-    CRA_ITER_FM115(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,    \
-                   _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, \
-                   _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, \
-                   _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80, \
-                   _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, _97, _98, _99,      \
-                   _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111, _112, _113, _114, _115)     \
-    F(M, _116)
-#define CRA_ITER_FM117(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19,     \
-                       _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38,  \
-                       _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57,  \
-                       _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76,  \
-                       _77, _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95,  \
-                       _96, _97, _98, _99, _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111,     \
-                       _112, _113, _114, _115, _116, _117)                                                             \
-    CRA_ITER_FM116(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,    \
-                   _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, \
-                   _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, \
-                   _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80, \
-                   _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, _97, _98, _99,      \
-                   _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111, _112, _113, _114, _115,     \
-                   _116)                                                                                               \
-    F(M, _117)
-#define CRA_ITER_FM118(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19,     \
-                       _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38,  \
-                       _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57,  \
-                       _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76,  \
-                       _77, _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95,  \
-                       _96, _97, _98, _99, _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111,     \
-                       _112, _113, _114, _115, _116, _117, _118)                                                       \
-    CRA_ITER_FM117(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,    \
-                   _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, \
-                   _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, \
-                   _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80, \
-                   _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, _97, _98, _99,      \
-                   _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111, _112, _113, _114, _115,     \
-                   _116, _117)                                                                                         \
-    F(M, _118)
-#define CRA_ITER_FM119(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19,     \
-                       _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38,  \
-                       _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57,  \
-                       _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76,  \
-                       _77, _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95,  \
-                       _96, _97, _98, _99, _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111,     \
-                       _112, _113, _114, _115, _116, _117, _118, _119)                                                 \
-    CRA_ITER_FM118(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,    \
-                   _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, \
-                   _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, \
-                   _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80, \
-                   _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, _97, _98, _99,      \
-                   _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111, _112, _113, _114, _115,     \
-                   _116, _117, _118)                                                                                   \
-    F(M, _119)
-#define CRA_ITER_FM120(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19,     \
-                       _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38,  \
-                       _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57,  \
-                       _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76,  \
-                       _77, _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95,  \
-                       _96, _97, _98, _99, _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111,     \
-                       _112, _113, _114, _115, _116, _117, _118, _119, _120)                                           \
-    CRA_ITER_FM119(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,    \
-                   _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, \
-                   _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, \
-                   _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80, \
-                   _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, _97, _98, _99,      \
-                   _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111, _112, _113, _114, _115,     \
-                   _116, _117, _118, _119)                                                                             \
-    F(M, _120)
-#define CRA_ITER_FM121(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19,     \
-                       _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38,  \
-                       _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57,  \
-                       _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76,  \
-                       _77, _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95,  \
-                       _96, _97, _98, _99, _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111,     \
-                       _112, _113, _114, _115, _116, _117, _118, _119, _120, _121)                                     \
-    CRA_ITER_FM120(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,    \
-                   _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, \
-                   _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, \
-                   _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80, \
-                   _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, _97, _98, _99,      \
-                   _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111, _112, _113, _114, _115,     \
-                   _116, _117, _118, _119, _120)                                                                       \
-    F(M, _121)
-#define CRA_ITER_FM122(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19,     \
-                       _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38,  \
-                       _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57,  \
-                       _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76,  \
-                       _77, _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95,  \
-                       _96, _97, _98, _99, _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111,     \
-                       _112, _113, _114, _115, _116, _117, _118, _119, _120, _121, _122)                               \
-    CRA_ITER_FM121(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,    \
-                   _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, \
-                   _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, \
-                   _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80, \
-                   _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, _97, _98, _99,      \
-                   _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111, _112, _113, _114, _115,     \
-                   _116, _117, _118, _119, _120, _121)                                                                 \
-    F(M, _122)
-#define CRA_ITER_FM123(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19,     \
-                       _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38,  \
-                       _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57,  \
-                       _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76,  \
-                       _77, _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95,  \
-                       _96, _97, _98, _99, _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111,     \
-                       _112, _113, _114, _115, _116, _117, _118, _119, _120, _121, _122, _123)                         \
-    CRA_ITER_FM122(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,    \
-                   _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, \
-                   _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, \
-                   _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80, \
-                   _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, _97, _98, _99,      \
-                   _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111, _112, _113, _114, _115,     \
-                   _116, _117, _118, _119, _120, _121, _122)                                                           \
-    F(M, _123)
-#define CRA_ITER_FM124(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19,     \
-                       _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38,  \
-                       _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57,  \
-                       _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76,  \
-                       _77, _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95,  \
-                       _96, _97, _98, _99, _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111,     \
-                       _112, _113, _114, _115, _116, _117, _118, _119, _120, _121, _122, _123, _124)                   \
-    CRA_ITER_FM123(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,    \
-                   _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, \
-                   _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, \
-                   _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80, \
-                   _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, _97, _98, _99,      \
-                   _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111, _112, _113, _114, _115,     \
-                   _116, _117, _118, _119, _120, _121, _122, _123)                                                     \
-    F(M, _124)
-#define CRA_ITER_FM125(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19,     \
-                       _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38,  \
-                       _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57,  \
-                       _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76,  \
-                       _77, _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95,  \
-                       _96, _97, _98, _99, _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111,     \
-                       _112, _113, _114, _115, _116, _117, _118, _119, _120, _121, _122, _123, _124, _125)             \
-    CRA_ITER_FM124(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,    \
-                   _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, \
-                   _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, \
-                   _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80, \
-                   _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, _97, _98, _99,      \
-                   _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111, _112, _113, _114, _115,     \
-                   _116, _117, _118, _119, _120, _121, _122, _123, _124)                                               \
-    F(M, _125)
-#define CRA_ITER_FM126(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19,     \
-                       _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38,  \
-                       _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57,  \
-                       _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76,  \
-                       _77, _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95,  \
-                       _96, _97, _98, _99, _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111,     \
-                       _112, _113, _114, _115, _116, _117, _118, _119, _120, _121, _122, _123, _124, _125, _126)       \
-    CRA_ITER_FM125(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,    \
-                   _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, \
-                   _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, \
-                   _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80, \
-                   _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, _97, _98, _99,      \
-                   _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111, _112, _113, _114, _115,     \
-                   _116, _117, _118, _119, _120, _121, _122, _123, _124, _125)                                         \
-    F(M, _126)
-#define CRA_ITER_FM127(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19,     \
-                       _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38,  \
-                       _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57,  \
-                       _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76,  \
-                       _77, _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95,  \
-                       _96, _97, _98, _99, _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111,     \
-                       _112, _113, _114, _115, _116, _117, _118, _119, _120, _121, _122, _123, _124, _125, _126, _127) \
-    CRA_ITER_FM126(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,    \
-                   _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, \
-                   _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, \
-                   _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80, \
-                   _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, _97, _98, _99,      \
-                   _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111, _112, _113, _114, _115,     \
-                   _116, _117, _118, _119, _120, _121, _122, _123, _124, _125, _126)                                   \
-    F(M, _127)
-#define CRA_ITER_FM128(                                                                                                \
-  F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, _21, _22, _23, _24, \
-  _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, _41, _42, _43, _44, _45, _46, _47,   \
-  _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70,   \
-  _71, _72, _73, _74, _75, _76, _77, _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93,   \
-  _94, _95, _96, _97, _98, _99, _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111, _112, _113,    \
-  _114, _115, _116, _117, _118, _119, _120, _121, _122, _123, _124, _125, _126, _127, _128)                            \
-    CRA_ITER_FM127(F, M, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,    \
-                   _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, \
-                   _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, \
-                   _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80, \
-                   _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, _97, _98, _99,      \
-                   _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111, _112, _113, _114, _115,     \
-                   _116, _117, _118, _119, _120, _121, _122, _123, _124, _125, _126, _127)                             \
-    F(M, _128)
-
-#define CRA_ITER_FM_INNER(n, F, M, ...) CRA_CAT(CRA_ITER_FM, n)(F, M, __VA_ARGS__)
-#define CRA_ITER_FM(F, M, ...)          CRA_ITER_FM_INNER(CRA_CNT(__VA_ARGS__), F, M, __VA_ARGS__)
-
-#define CRA_ITER(F, ...) CRA_ITER_FM(CRA_TUPLE_F, F, __VA_ARGS__)
+#define CRA_ITER_FM1(F, M, ...)      F(M, __VA_ARGS__)
+#define CRA_ITER_FM2(F, M, x, ...)   F(M, x) CRA_ITER_FM1(F, M, __VA_ARGS__)
+#define CRA_ITER_FM3(F, M, x, ...)   F(M, x) CRA_ITER_FM2(F, M, __VA_ARGS__)
+#define CRA_ITER_FM4(F, M, x, ...)   F(M, x) CRA_ITER_FM3(F, M, __VA_ARGS__)
+#define CRA_ITER_FM5(F, M, x, ...)   F(M, x) CRA_ITER_FM4(F, M, __VA_ARGS__)
+#define CRA_ITER_FM6(F, M, x, ...)   F(M, x) CRA_ITER_FM5(F, M, __VA_ARGS__)
+#define CRA_ITER_FM7(F, M, x, ...)   F(M, x) CRA_ITER_FM6(F, M, __VA_ARGS__)
+#define CRA_ITER_FM8(F, M, x, ...)   F(M, x) CRA_ITER_FM7(F, M, __VA_ARGS__)
+#define CRA_ITER_FM9(F, M, x, ...)   F(M, x) CRA_ITER_FM8(F, M, __VA_ARGS__)
+#define CRA_ITER_FM10(F, M, x, ...)  F(M, x) CRA_ITER_FM9(F, M, __VA_ARGS__)
+#define CRA_ITER_FM11(F, M, x, ...)  F(M, x) CRA_ITER_FM10(F, M, __VA_ARGS__)
+#define CRA_ITER_FM12(F, M, x, ...)  F(M, x) CRA_ITER_FM11(F, M, __VA_ARGS__)
+#define CRA_ITER_FM13(F, M, x, ...)  F(M, x) CRA_ITER_FM12(F, M, __VA_ARGS__)
+#define CRA_ITER_FM14(F, M, x, ...)  F(M, x) CRA_ITER_FM13(F, M, __VA_ARGS__)
+#define CRA_ITER_FM15(F, M, x, ...)  F(M, x) CRA_ITER_FM14(F, M, __VA_ARGS__)
+#define CRA_ITER_FM16(F, M, x, ...)  F(M, x) CRA_ITER_FM15(F, M, __VA_ARGS__)
+#define CRA_ITER_FM17(F, M, x, ...)  F(M, x) CRA_ITER_FM16(F, M, __VA_ARGS__)
+#define CRA_ITER_FM18(F, M, x, ...)  F(M, x) CRA_ITER_FM17(F, M, __VA_ARGS__)
+#define CRA_ITER_FM19(F, M, x, ...)  F(M, x) CRA_ITER_FM18(F, M, __VA_ARGS__)
+#define CRA_ITER_FM20(F, M, x, ...)  F(M, x) CRA_ITER_FM19(F, M, __VA_ARGS__)
+#define CRA_ITER_FM21(F, M, x, ...)  F(M, x) CRA_ITER_FM20(F, M, __VA_ARGS__)
+#define CRA_ITER_FM22(F, M, x, ...)  F(M, x) CRA_ITER_FM21(F, M, __VA_ARGS__)
+#define CRA_ITER_FM23(F, M, x, ...)  F(M, x) CRA_ITER_FM22(F, M, __VA_ARGS__)
+#define CRA_ITER_FM24(F, M, x, ...)  F(M, x) CRA_ITER_FM23(F, M, __VA_ARGS__)
+#define CRA_ITER_FM25(F, M, x, ...)  F(M, x) CRA_ITER_FM24(F, M, __VA_ARGS__)
+#define CRA_ITER_FM26(F, M, x, ...)  F(M, x) CRA_ITER_FM25(F, M, __VA_ARGS__)
+#define CRA_ITER_FM27(F, M, x, ...)  F(M, x) CRA_ITER_FM26(F, M, __VA_ARGS__)
+#define CRA_ITER_FM28(F, M, x, ...)  F(M, x) CRA_ITER_FM27(F, M, __VA_ARGS__)
+#define CRA_ITER_FM29(F, M, x, ...)  F(M, x) CRA_ITER_FM28(F, M, __VA_ARGS__)
+#define CRA_ITER_FM30(F, M, x, ...)  F(M, x) CRA_ITER_FM29(F, M, __VA_ARGS__)
+#define CRA_ITER_FM31(F, M, x, ...)  F(M, x) CRA_ITER_FM30(F, M, __VA_ARGS__)
+#define CRA_ITER_FM32(F, M, x, ...)  F(M, x) CRA_ITER_FM31(F, M, __VA_ARGS__)
+#define CRA_ITER_FM33(F, M, x, ...)  F(M, x) CRA_ITER_FM32(F, M, __VA_ARGS__)
+#define CRA_ITER_FM34(F, M, x, ...)  F(M, x) CRA_ITER_FM33(F, M, __VA_ARGS__)
+#define CRA_ITER_FM35(F, M, x, ...)  F(M, x) CRA_ITER_FM34(F, M, __VA_ARGS__)
+#define CRA_ITER_FM36(F, M, x, ...)  F(M, x) CRA_ITER_FM35(F, M, __VA_ARGS__)
+#define CRA_ITER_FM37(F, M, x, ...)  F(M, x) CRA_ITER_FM36(F, M, __VA_ARGS__)
+#define CRA_ITER_FM38(F, M, x, ...)  F(M, x) CRA_ITER_FM37(F, M, __VA_ARGS__)
+#define CRA_ITER_FM39(F, M, x, ...)  F(M, x) CRA_ITER_FM38(F, M, __VA_ARGS__)
+#define CRA_ITER_FM40(F, M, x, ...)  F(M, x) CRA_ITER_FM39(F, M, __VA_ARGS__)
+#define CRA_ITER_FM41(F, M, x, ...)  F(M, x) CRA_ITER_FM40(F, M, __VA_ARGS__)
+#define CRA_ITER_FM42(F, M, x, ...)  F(M, x) CRA_ITER_FM41(F, M, __VA_ARGS__)
+#define CRA_ITER_FM43(F, M, x, ...)  F(M, x) CRA_ITER_FM42(F, M, __VA_ARGS__)
+#define CRA_ITER_FM44(F, M, x, ...)  F(M, x) CRA_ITER_FM43(F, M, __VA_ARGS__)
+#define CRA_ITER_FM45(F, M, x, ...)  F(M, x) CRA_ITER_FM44(F, M, __VA_ARGS__)
+#define CRA_ITER_FM46(F, M, x, ...)  F(M, x) CRA_ITER_FM45(F, M, __VA_ARGS__)
+#define CRA_ITER_FM47(F, M, x, ...)  F(M, x) CRA_ITER_FM46(F, M, __VA_ARGS__)
+#define CRA_ITER_FM48(F, M, x, ...)  F(M, x) CRA_ITER_FM47(F, M, __VA_ARGS__)
+#define CRA_ITER_FM49(F, M, x, ...)  F(M, x) CRA_ITER_FM48(F, M, __VA_ARGS__)
+#define CRA_ITER_FM50(F, M, x, ...)  F(M, x) CRA_ITER_FM49(F, M, __VA_ARGS__)
+#define CRA_ITER_FM51(F, M, x, ...)  F(M, x) CRA_ITER_FM50(F, M, __VA_ARGS__)
+#define CRA_ITER_FM52(F, M, x, ...)  F(M, x) CRA_ITER_FM51(F, M, __VA_ARGS__)
+#define CRA_ITER_FM53(F, M, x, ...)  F(M, x) CRA_ITER_FM52(F, M, __VA_ARGS__)
+#define CRA_ITER_FM54(F, M, x, ...)  F(M, x) CRA_ITER_FM53(F, M, __VA_ARGS__)
+#define CRA_ITER_FM55(F, M, x, ...)  F(M, x) CRA_ITER_FM54(F, M, __VA_ARGS__)
+#define CRA_ITER_FM56(F, M, x, ...)  F(M, x) CRA_ITER_FM55(F, M, __VA_ARGS__)
+#define CRA_ITER_FM57(F, M, x, ...)  F(M, x) CRA_ITER_FM56(F, M, __VA_ARGS__)
+#define CRA_ITER_FM58(F, M, x, ...)  F(M, x) CRA_ITER_FM57(F, M, __VA_ARGS__)
+#define CRA_ITER_FM59(F, M, x, ...)  F(M, x) CRA_ITER_FM58(F, M, __VA_ARGS__)
+#define CRA_ITER_FM60(F, M, x, ...)  F(M, x) CRA_ITER_FM59(F, M, __VA_ARGS__)
+#define CRA_ITER_FM61(F, M, x, ...)  F(M, x) CRA_ITER_FM60(F, M, __VA_ARGS__)
+#define CRA_ITER_FM62(F, M, x, ...)  F(M, x) CRA_ITER_FM61(F, M, __VA_ARGS__)
+#define CRA_ITER_FM63(F, M, x, ...)  F(M, x) CRA_ITER_FM62(F, M, __VA_ARGS__)
+#define CRA_ITER_FM64(F, M, x, ...)  F(M, x) CRA_ITER_FM63(F, M, __VA_ARGS__)
+#define CRA_ITER_FM65(F, M, x, ...)  F(M, x) CRA_ITER_FM64(F, M, __VA_ARGS__)
+#define CRA_ITER_FM66(F, M, x, ...)  F(M, x) CRA_ITER_FM65(F, M, __VA_ARGS__)
+#define CRA_ITER_FM67(F, M, x, ...)  F(M, x) CRA_ITER_FM66(F, M, __VA_ARGS__)
+#define CRA_ITER_FM68(F, M, x, ...)  F(M, x) CRA_ITER_FM67(F, M, __VA_ARGS__)
+#define CRA_ITER_FM69(F, M, x, ...)  F(M, x) CRA_ITER_FM68(F, M, __VA_ARGS__)
+#define CRA_ITER_FM70(F, M, x, ...)  F(M, x) CRA_ITER_FM69(F, M, __VA_ARGS__)
+#define CRA_ITER_FM71(F, M, x, ...)  F(M, x) CRA_ITER_FM70(F, M, __VA_ARGS__)
+#define CRA_ITER_FM72(F, M, x, ...)  F(M, x) CRA_ITER_FM71(F, M, __VA_ARGS__)
+#define CRA_ITER_FM73(F, M, x, ...)  F(M, x) CRA_ITER_FM72(F, M, __VA_ARGS__)
+#define CRA_ITER_FM74(F, M, x, ...)  F(M, x) CRA_ITER_FM73(F, M, __VA_ARGS__)
+#define CRA_ITER_FM75(F, M, x, ...)  F(M, x) CRA_ITER_FM74(F, M, __VA_ARGS__)
+#define CRA_ITER_FM76(F, M, x, ...)  F(M, x) CRA_ITER_FM75(F, M, __VA_ARGS__)
+#define CRA_ITER_FM77(F, M, x, ...)  F(M, x) CRA_ITER_FM76(F, M, __VA_ARGS__)
+#define CRA_ITER_FM78(F, M, x, ...)  F(M, x) CRA_ITER_FM77(F, M, __VA_ARGS__)
+#define CRA_ITER_FM79(F, M, x, ...)  F(M, x) CRA_ITER_FM78(F, M, __VA_ARGS__)
+#define CRA_ITER_FM80(F, M, x, ...)  F(M, x) CRA_ITER_FM79(F, M, __VA_ARGS__)
+#define CRA_ITER_FM81(F, M, x, ...)  F(M, x) CRA_ITER_FM80(F, M, __VA_ARGS__)
+#define CRA_ITER_FM82(F, M, x, ...)  F(M, x) CRA_ITER_FM81(F, M, __VA_ARGS__)
+#define CRA_ITER_FM83(F, M, x, ...)  F(M, x) CRA_ITER_FM82(F, M, __VA_ARGS__)
+#define CRA_ITER_FM84(F, M, x, ...)  F(M, x) CRA_ITER_FM83(F, M, __VA_ARGS__)
+#define CRA_ITER_FM85(F, M, x, ...)  F(M, x) CRA_ITER_FM84(F, M, __VA_ARGS__)
+#define CRA_ITER_FM86(F, M, x, ...)  F(M, x) CRA_ITER_FM85(F, M, __VA_ARGS__)
+#define CRA_ITER_FM87(F, M, x, ...)  F(M, x) CRA_ITER_FM86(F, M, __VA_ARGS__)
+#define CRA_ITER_FM88(F, M, x, ...)  F(M, x) CRA_ITER_FM87(F, M, __VA_ARGS__)
+#define CRA_ITER_FM89(F, M, x, ...)  F(M, x) CRA_ITER_FM88(F, M, __VA_ARGS__)
+#define CRA_ITER_FM90(F, M, x, ...)  F(M, x) CRA_ITER_FM89(F, M, __VA_ARGS__)
+#define CRA_ITER_FM91(F, M, x, ...)  F(M, x) CRA_ITER_FM90(F, M, __VA_ARGS__)
+#define CRA_ITER_FM92(F, M, x, ...)  F(M, x) CRA_ITER_FM91(F, M, __VA_ARGS__)
+#define CRA_ITER_FM93(F, M, x, ...)  F(M, x) CRA_ITER_FM92(F, M, __VA_ARGS__)
+#define CRA_ITER_FM94(F, M, x, ...)  F(M, x) CRA_ITER_FM93(F, M, __VA_ARGS__)
+#define CRA_ITER_FM95(F, M, x, ...)  F(M, x) CRA_ITER_FM94(F, M, __VA_ARGS__)
+#define CRA_ITER_FM96(F, M, x, ...)  F(M, x) CRA_ITER_FM95(F, M, __VA_ARGS__)
+#define CRA_ITER_FM97(F, M, x, ...)  F(M, x) CRA_ITER_FM96(F, M, __VA_ARGS__)
+#define CRA_ITER_FM98(F, M, x, ...)  F(M, x) CRA_ITER_FM97(F, M, __VA_ARGS__)
+#define CRA_ITER_FM99(F, M, x, ...)  F(M, x) CRA_ITER_FM98(F, M, __VA_ARGS__)
+#define CRA_ITER_FM100(F, M, x, ...) F(M, x) CRA_ITER_FM99(F, M, __VA_ARGS__)
+#define CRA_ITER_FM101(F, M, x, ...) F(M, x) CRA_ITER_FM100(F, M, __VA_ARGS__)
+#define CRA_ITER_FM102(F, M, x, ...) F(M, x) CRA_ITER_FM101(F, M, __VA_ARGS__)
+#define CRA_ITER_FM103(F, M, x, ...) F(M, x) CRA_ITER_FM102(F, M, __VA_ARGS__)
+#define CRA_ITER_FM104(F, M, x, ...) F(M, x) CRA_ITER_FM103(F, M, __VA_ARGS__)
+#define CRA_ITER_FM105(F, M, x, ...) F(M, x) CRA_ITER_FM104(F, M, __VA_ARGS__)
+#define CRA_ITER_FM106(F, M, x, ...) F(M, x) CRA_ITER_FM105(F, M, __VA_ARGS__)
+#define CRA_ITER_FM107(F, M, x, ...) F(M, x) CRA_ITER_FM106(F, M, __VA_ARGS__)
+#define CRA_ITER_FM108(F, M, x, ...) F(M, x) CRA_ITER_FM107(F, M, __VA_ARGS__)
+#define CRA_ITER_FM109(F, M, x, ...) F(M, x) CRA_ITER_FM108(F, M, __VA_ARGS__)
+#define CRA_ITER_FM110(F, M, x, ...) F(M, x) CRA_ITER_FM109(F, M, __VA_ARGS__)
+#define CRA_ITER_FM111(F, M, x, ...) F(M, x) CRA_ITER_FM110(F, M, __VA_ARGS__)
+#define CRA_ITER_FM112(F, M, x, ...) F(M, x) CRA_ITER_FM111(F, M, __VA_ARGS__)
+#define CRA_ITER_FM113(F, M, x, ...) F(M, x) CRA_ITER_FM112(F, M, __VA_ARGS__)
+#define CRA_ITER_FM114(F, M, x, ...) F(M, x) CRA_ITER_FM113(F, M, __VA_ARGS__)
+#define CRA_ITER_FM115(F, M, x, ...) F(M, x) CRA_ITER_FM114(F, M, __VA_ARGS__)
+#define CRA_ITER_FM116(F, M, x, ...) F(M, x) CRA_ITER_FM115(F, M, __VA_ARGS__)
+#define CRA_ITER_FM117(F, M, x, ...) F(M, x) CRA_ITER_FM116(F, M, __VA_ARGS__)
+#define CRA_ITER_FM118(F, M, x, ...) F(M, x) CRA_ITER_FM117(F, M, __VA_ARGS__)
+#define CRA_ITER_FM119(F, M, x, ...) F(M, x) CRA_ITER_FM118(F, M, __VA_ARGS__)
+#define CRA_ITER_FM120(F, M, x, ...) F(M, x) CRA_ITER_FM119(F, M, __VA_ARGS__)
+#define CRA_ITER_FM121(F, M, x, ...) F(M, x) CRA_ITER_FM120(F, M, __VA_ARGS__)
+#define CRA_ITER_FM122(F, M, x, ...) F(M, x) CRA_ITER_FM121(F, M, __VA_ARGS__)
+#define CRA_ITER_FM123(F, M, x, ...) F(M, x) CRA_ITER_FM122(F, M, __VA_ARGS__)
+#define CRA_ITER_FM124(F, M, x, ...) F(M, x) CRA_ITER_FM123(F, M, __VA_ARGS__)
+#define CRA_ITER_FM125(F, M, x, ...) F(M, x) CRA_ITER_FM124(F, M, __VA_ARGS__)
+#define CRA_ITER_FM126(F, M, x, ...) F(M, x) CRA_ITER_FM125(F, M, __VA_ARGS__)
+#define CRA_ITER_FM127(F, M, x, ...) F(M, x) CRA_ITER_FM126(F, M, __VA_ARGS__)
+#define CRA_ITER_FM128(F, M, x, ...) F(M, x) CRA_ITER_FM127(F, M, __VA_ARGS__)
 
 #endif // end ITER(FOREACH)
 
