@@ -5683,9 +5683,9 @@ main(void)
     // make_test_iter_code(128);
     // make_test_get_i_code(128);
     // make_test_get_n_code(128);
-    // test_repeat();
-    // test_iter();
-    // test_get_i();
-    // test_get_n();
+    test_repeat();
+    test_iter();
+    test_get_i();
+    test_get_n();
     test_inc_dec();
 }
