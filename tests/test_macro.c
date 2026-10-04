@@ -1,30 +1,61 @@
 #include "cra_macro.h"
 
 void
-make_iter_code(int n)
+make_repeat_code(int n)
 {
-    printf("#define CRA_ITER_FM1(F, M, ...)    F(M, __VA_ARGS__)\n");
+    printf("#define CRA_REPEAT1(M, p) M(0, p)\n");
     for (int i = 2; i <= n; i++)
     {
-        printf("#define CRA_ITER_FM%d(F, M, x, ...) F(M, x) CRA_ITER_FM%d(F, M, __VA_ARGS__)\n", i, i - 1);
+        printf("#define CRA_REPEAT%d(M, p) CRA_REPEAT%d(M, p) M(%d, p)\n", i, i - 1, i - 1);
+    }
+}
+
+void
+make_test_repeat_code(int n)
+{
+    printf("#define XX(i, x) (indexes[i] = i, n += x);\n");
+
+    printf("int n;\n");
+    printf("int indexes[%d];\n", n);
+
+    for (int i = 0; i < n; i++)
+    {
+        printf("n = 0;\n");
+        printf("CRA_REPEAT(XX, 1, %d)\n", i + 1);
+        printf("assert_always(n == %d);\n", i + 1);
+        printf("for (int i = 0; i < %d; i++)\n", i + 1);
+        printf("assert_always(indexes[i] == i);\n");
+    }
+
+    printf("#undef XX\n");
+}
+
+void
+make_iter_code(int n)
+{
+    printf("#define CRA_ITER1(M, p, ...)    M(p, __VA_ARGS__)\n");
+    for (int i = 2; i <= n; i++)
+    {
+        printf("#define CRA_ITER%d(M, p, x, ...) M(p, x) CRA_ITER%d(M, p, __VA_ARGS__)\n", i, i - 1);
     }
 }
 
 void
 make_test_iter_code(int n)
 {
-    printf("#define INC(n) +1\n\n");
+    printf("#define INC(_, x) +1\n\n");
     printf("int n = 0;\n");
     printf("assert_always(n == 0);\n");
 
     for (int i = 1; i <= n; i++)
     {
-        printf("n = CRA_ITER(INC");
+        printf("n = CRA_ITER(INC, _");
         for (int j = 1; j <= i; j++)
-            printf(", n");
+            printf(", x");
         printf(");\n");
         printf("assert_always(n == %d);\n", i);
     }
+    printf("#undef INC\n");
 }
 
 void
@@ -85,454 +116,1104 @@ make_test_get_n_code(int n)
 }
 
 void
+test_repeat(void)
+{
+#define XX(i, x) (indexes[i] = i, n += x);
+    int n;
+    int indexes[128];
+    n = 0;
+    CRA_REPEAT(XX, 1, 1)
+    assert_always(n == 1);
+    for (int i = 0; i < 1; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 2)
+    assert_always(n == 2);
+    for (int i = 0; i < 2; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 3)
+    assert_always(n == 3);
+    for (int i = 0; i < 3; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 4)
+    assert_always(n == 4);
+    for (int i = 0; i < 4; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 5)
+    assert_always(n == 5);
+    for (int i = 0; i < 5; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 6)
+    assert_always(n == 6);
+    for (int i = 0; i < 6; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 7)
+    assert_always(n == 7);
+    for (int i = 0; i < 7; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 8)
+    assert_always(n == 8);
+    for (int i = 0; i < 8; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 9)
+    assert_always(n == 9);
+    for (int i = 0; i < 9; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 10)
+    assert_always(n == 10);
+    for (int i = 0; i < 10; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 11)
+    assert_always(n == 11);
+    for (int i = 0; i < 11; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 12)
+    assert_always(n == 12);
+    for (int i = 0; i < 12; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 13)
+    assert_always(n == 13);
+    for (int i = 0; i < 13; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 14)
+    assert_always(n == 14);
+    for (int i = 0; i < 14; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 15)
+    assert_always(n == 15);
+    for (int i = 0; i < 15; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 16)
+    assert_always(n == 16);
+    for (int i = 0; i < 16; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 17)
+    assert_always(n == 17);
+    for (int i = 0; i < 17; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 18)
+    assert_always(n == 18);
+    for (int i = 0; i < 18; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 19)
+    assert_always(n == 19);
+    for (int i = 0; i < 19; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 20)
+    assert_always(n == 20);
+    for (int i = 0; i < 20; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 21)
+    assert_always(n == 21);
+    for (int i = 0; i < 21; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 22)
+    assert_always(n == 22);
+    for (int i = 0; i < 22; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 23)
+    assert_always(n == 23);
+    for (int i = 0; i < 23; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 24)
+    assert_always(n == 24);
+    for (int i = 0; i < 24; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 25)
+    assert_always(n == 25);
+    for (int i = 0; i < 25; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 26)
+    assert_always(n == 26);
+    for (int i = 0; i < 26; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 27)
+    assert_always(n == 27);
+    for (int i = 0; i < 27; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 28)
+    assert_always(n == 28);
+    for (int i = 0; i < 28; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 29)
+    assert_always(n == 29);
+    for (int i = 0; i < 29; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 30)
+    assert_always(n == 30);
+    for (int i = 0; i < 30; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 31)
+    assert_always(n == 31);
+    for (int i = 0; i < 31; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 32)
+    assert_always(n == 32);
+    for (int i = 0; i < 32; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 33)
+    assert_always(n == 33);
+    for (int i = 0; i < 33; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 34)
+    assert_always(n == 34);
+    for (int i = 0; i < 34; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 35)
+    assert_always(n == 35);
+    for (int i = 0; i < 35; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 36)
+    assert_always(n == 36);
+    for (int i = 0; i < 36; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 37)
+    assert_always(n == 37);
+    for (int i = 0; i < 37; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 38)
+    assert_always(n == 38);
+    for (int i = 0; i < 38; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 39)
+    assert_always(n == 39);
+    for (int i = 0; i < 39; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 40)
+    assert_always(n == 40);
+    for (int i = 0; i < 40; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 41)
+    assert_always(n == 41);
+    for (int i = 0; i < 41; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 42)
+    assert_always(n == 42);
+    for (int i = 0; i < 42; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 43)
+    assert_always(n == 43);
+    for (int i = 0; i < 43; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 44)
+    assert_always(n == 44);
+    for (int i = 0; i < 44; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 45)
+    assert_always(n == 45);
+    for (int i = 0; i < 45; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 46)
+    assert_always(n == 46);
+    for (int i = 0; i < 46; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 47)
+    assert_always(n == 47);
+    for (int i = 0; i < 47; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 48)
+    assert_always(n == 48);
+    for (int i = 0; i < 48; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 49)
+    assert_always(n == 49);
+    for (int i = 0; i < 49; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 50)
+    assert_always(n == 50);
+    for (int i = 0; i < 50; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 51)
+    assert_always(n == 51);
+    for (int i = 0; i < 51; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 52)
+    assert_always(n == 52);
+    for (int i = 0; i < 52; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 53)
+    assert_always(n == 53);
+    for (int i = 0; i < 53; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 54)
+    assert_always(n == 54);
+    for (int i = 0; i < 54; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 55)
+    assert_always(n == 55);
+    for (int i = 0; i < 55; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 56)
+    assert_always(n == 56);
+    for (int i = 0; i < 56; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 57)
+    assert_always(n == 57);
+    for (int i = 0; i < 57; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 58)
+    assert_always(n == 58);
+    for (int i = 0; i < 58; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 59)
+    assert_always(n == 59);
+    for (int i = 0; i < 59; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 60)
+    assert_always(n == 60);
+    for (int i = 0; i < 60; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 61)
+    assert_always(n == 61);
+    for (int i = 0; i < 61; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 62)
+    assert_always(n == 62);
+    for (int i = 0; i < 62; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 63)
+    assert_always(n == 63);
+    for (int i = 0; i < 63; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 64)
+    assert_always(n == 64);
+    for (int i = 0; i < 64; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 65)
+    assert_always(n == 65);
+    for (int i = 0; i < 65; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 66)
+    assert_always(n == 66);
+    for (int i = 0; i < 66; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 67)
+    assert_always(n == 67);
+    for (int i = 0; i < 67; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 68)
+    assert_always(n == 68);
+    for (int i = 0; i < 68; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 69)
+    assert_always(n == 69);
+    for (int i = 0; i < 69; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 70)
+    assert_always(n == 70);
+    for (int i = 0; i < 70; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 71)
+    assert_always(n == 71);
+    for (int i = 0; i < 71; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 72)
+    assert_always(n == 72);
+    for (int i = 0; i < 72; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 73)
+    assert_always(n == 73);
+    for (int i = 0; i < 73; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 74)
+    assert_always(n == 74);
+    for (int i = 0; i < 74; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 75)
+    assert_always(n == 75);
+    for (int i = 0; i < 75; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 76)
+    assert_always(n == 76);
+    for (int i = 0; i < 76; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 77)
+    assert_always(n == 77);
+    for (int i = 0; i < 77; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 78)
+    assert_always(n == 78);
+    for (int i = 0; i < 78; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 79)
+    assert_always(n == 79);
+    for (int i = 0; i < 79; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 80)
+    assert_always(n == 80);
+    for (int i = 0; i < 80; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 81)
+    assert_always(n == 81);
+    for (int i = 0; i < 81; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 82)
+    assert_always(n == 82);
+    for (int i = 0; i < 82; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 83)
+    assert_always(n == 83);
+    for (int i = 0; i < 83; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 84)
+    assert_always(n == 84);
+    for (int i = 0; i < 84; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 85)
+    assert_always(n == 85);
+    for (int i = 0; i < 85; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 86)
+    assert_always(n == 86);
+    for (int i = 0; i < 86; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 87)
+    assert_always(n == 87);
+    for (int i = 0; i < 87; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 88)
+    assert_always(n == 88);
+    for (int i = 0; i < 88; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 89)
+    assert_always(n == 89);
+    for (int i = 0; i < 89; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 90)
+    assert_always(n == 90);
+    for (int i = 0; i < 90; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 91)
+    assert_always(n == 91);
+    for (int i = 0; i < 91; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 92)
+    assert_always(n == 92);
+    for (int i = 0; i < 92; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 93)
+    assert_always(n == 93);
+    for (int i = 0; i < 93; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 94)
+    assert_always(n == 94);
+    for (int i = 0; i < 94; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 95)
+    assert_always(n == 95);
+    for (int i = 0; i < 95; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 96)
+    assert_always(n == 96);
+    for (int i = 0; i < 96; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 97)
+    assert_always(n == 97);
+    for (int i = 0; i < 97; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 98)
+    assert_always(n == 98);
+    for (int i = 0; i < 98; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 99)
+    assert_always(n == 99);
+    for (int i = 0; i < 99; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 100)
+    assert_always(n == 100);
+    for (int i = 0; i < 100; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 101)
+    assert_always(n == 101);
+    for (int i = 0; i < 101; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 102)
+    assert_always(n == 102);
+    for (int i = 0; i < 102; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 103)
+    assert_always(n == 103);
+    for (int i = 0; i < 103; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 104)
+    assert_always(n == 104);
+    for (int i = 0; i < 104; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 105)
+    assert_always(n == 105);
+    for (int i = 0; i < 105; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 106)
+    assert_always(n == 106);
+    for (int i = 0; i < 106; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 107)
+    assert_always(n == 107);
+    for (int i = 0; i < 107; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 108)
+    assert_always(n == 108);
+    for (int i = 0; i < 108; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 109)
+    assert_always(n == 109);
+    for (int i = 0; i < 109; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 110)
+    assert_always(n == 110);
+    for (int i = 0; i < 110; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 111)
+    assert_always(n == 111);
+    for (int i = 0; i < 111; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 112)
+    assert_always(n == 112);
+    for (int i = 0; i < 112; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 113)
+    assert_always(n == 113);
+    for (int i = 0; i < 113; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 114)
+    assert_always(n == 114);
+    for (int i = 0; i < 114; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 115)
+    assert_always(n == 115);
+    for (int i = 0; i < 115; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 116)
+    assert_always(n == 116);
+    for (int i = 0; i < 116; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 117)
+    assert_always(n == 117);
+    for (int i = 0; i < 117; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 118)
+    assert_always(n == 118);
+    for (int i = 0; i < 118; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 119)
+    assert_always(n == 119);
+    for (int i = 0; i < 119; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 120)
+    assert_always(n == 120);
+    for (int i = 0; i < 120; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 121)
+    assert_always(n == 121);
+    for (int i = 0; i < 121; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 122)
+    assert_always(n == 122);
+    for (int i = 0; i < 122; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 123)
+    assert_always(n == 123);
+    for (int i = 0; i < 123; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 124)
+    assert_always(n == 124);
+    for (int i = 0; i < 124; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 125)
+    assert_always(n == 125);
+    for (int i = 0; i < 125; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 126)
+    assert_always(n == 126);
+    for (int i = 0; i < 126; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 127)
+    assert_always(n == 127);
+    for (int i = 0; i < 127; i++)
+        assert_always(indexes[i] == i);
+    n = 0;
+    CRA_REPEAT(XX, 1, 128)
+    assert_always(n == 128);
+    for (int i = 0; i < 128; i++)
+        assert_always(indexes[i] == i);
+#undef XX
+}
+
+void
 test_iter(void)
 {
-#define INC(n) +1
-
+#define INC(_, x) +1
     int n = 0;
     assert_always(n == 0);
-    n = CRA_ITER(INC, n);
+    n = CRA_ITER(INC, _, x);
     assert_always(n == 1);
-    n = CRA_ITER(INC, n, n);
+    n = CRA_ITER(INC, _, x, x);
     assert_always(n == 2);
-    n = CRA_ITER(INC, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x);
     assert_always(n == 3);
-    n = CRA_ITER(INC, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x);
     assert_always(n == 4);
-    n = CRA_ITER(INC, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x);
     assert_always(n == 5);
-    n = CRA_ITER(INC, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x);
     assert_always(n == 6);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x);
     assert_always(n == 7);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x);
     assert_always(n == 8);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x);
     assert_always(n == 9);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 10);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 11);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 12);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 13);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 14);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 15);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 16);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 17);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 18);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 19);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 20);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 21);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 22);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 23);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 24);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 25);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 26);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 27);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 28);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 29);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 30);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 31);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n =
+      CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 32);
-    n =
-      CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x);
     assert_always(n == 33);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x);
     assert_always(n == 34);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x);
     assert_always(n == 35);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x);
     assert_always(n == 36);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x);
     assert_always(n == 37);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x);
     assert_always(n == 38);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x);
     assert_always(n == 39);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x);
     assert_always(n == 40);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x);
     assert_always(n == 41);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 42);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 43);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 44);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 45);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 46);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 47);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 48);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 49);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 50);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 51);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 52);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 53);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 54);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 55);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 56);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 57);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 58);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 59);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 60);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 61);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 62);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 63);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 64);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 65);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 66);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
-    assert_always(n == 67);
     n =
-      CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-               n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+      CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+               x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
+    assert_always(n == 67);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x);
     assert_always(n == 68);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x);
     assert_always(n == 69);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x);
     assert_always(n == 70);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x);
     assert_always(n == 71);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x);
     assert_always(n == 72);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x);
     assert_always(n == 73);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x);
     assert_always(n == 74);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x);
     assert_always(n == 75);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 76);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 77);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 78);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 79);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 80);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 81);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 82);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 83);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 84);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 85);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 86);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 87);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 88);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 89);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 90);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 91);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 92);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 93);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 94);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 95);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 96);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 97);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 98);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 99);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 100);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n =
+      CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+               x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+               x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 101);
     n =
-      CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-               n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-               n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+      CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+               x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+               x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 102);
-    n =
-      CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-               n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-               n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x);
     assert_always(n == 103);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x);
     assert_always(n == 104);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x);
     assert_always(n == 105);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x);
     assert_always(n == 106);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x);
     assert_always(n == 107);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x);
     assert_always(n == 108);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x);
     assert_always(n == 109);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 110);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 111);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 112);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 113);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 114);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 115);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 116);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 117);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 118);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 119);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 120);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 121);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 122);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 123);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 124);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 125);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 126);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 127);
-    n = CRA_ITER(INC, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n,
-                 n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n);
+    n = CRA_ITER(INC, _, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,
+                 x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x);
     assert_always(n == 128);
-
-    printf("n = %d\n", n);
+#undef INC
 }
 
 void
@@ -4970,12 +5651,15 @@ test_get_n(void)
 int
 main(void)
 {
+    // make_repeat_code(128);
     // make_iter_code(128);
     // make_get_i_code(128);
     // make_get_n_code(128);
+    // make_test_repeat_code(128);
     // make_test_iter_code(128);
     // make_test_get_i_code(128);
     // make_test_get_n_code(128);
+    test_repeat();
     test_iter();
     test_get_i();
     test_get_n();
