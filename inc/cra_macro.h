@@ -15,8 +15,8 @@
 #define CRA_APPLY(a, b)       a b
 #define CRA_TUPLE(...)        (__VA_ARGS__)
 #define CRA_UNTUPLE(...)      __VA_ARGS__
-#define CRA_TUPLE_F(F, ...)   F(__VA_ARGS__)
-#define CRA_UNTUPLE_F(F, ...) F __VA_ARGS__
+#define CRA_TUPLE_M(M, ...)   M(__VA_ARGS__)
+#define CRA_UNTUPLE_M(M, ...) M __VA_ARGS__
 
 #define CRA_128_NUM                                                                                                    \
     128, 127, 126, 125, 124, 123, 122, 121, 120, 119, 118, 117, 116, 115, 114, 113, 112, 111, 110, 109, 108, 107, 106, \
