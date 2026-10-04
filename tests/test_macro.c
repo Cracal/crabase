@@ -116,6 +116,20 @@ make_test_get_n_code(int n)
 }
 
 void
+make_inc_dec_code(int n)
+{
+    for (int i = 0; i < n; i++)
+    {
+        printf("#define CRA_INC%d %d\n", i, i + 1);
+    }
+    printf("\n");
+    for (int i = n; i > 0; i--)
+    {
+        printf("#define CRA_DEC%d %d\n", i, i - 1);
+    }
+}
+
+void
 test_repeat(void)
 {
 #define XX(i, x) (indexes[i] = i, n += x);
@@ -5648,6 +5662,15 @@ test_get_n(void)
     }
 }
 
+void
+test_inc_dec(void)
+{
+    assert_always(CRA_INC(0) == 1);
+    assert_always(CRA_INC(127) == 128);
+    assert_always(CRA_DEC(128) == 127);
+    assert_always(CRA_DEC(1) == 0);
+}
+
 int
 main(void)
 {
@@ -5655,12 +5678,14 @@ main(void)
     // make_iter_code(128);
     // make_get_i_code(128);
     // make_get_n_code(128);
+    // make_inc_dec_code(128);
     // make_test_repeat_code(128);
     // make_test_iter_code(128);
     // make_test_get_i_code(128);
     // make_test_get_n_code(128);
-    test_repeat();
-    test_iter();
-    test_get_i();
-    test_get_n();
+    // test_repeat();
+    // test_iter();
+    // test_get_i();
+    // test_get_n();
+    test_inc_dec();
 }
