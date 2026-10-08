@@ -12,7 +12,6 @@
 #define __CRA_MACRO_H__
 #include "cra_assert.h"
 
-#define CRA_APPLY(a, b)       a b
 #define CRA_TUPLE(...)        (__VA_ARGS__)
 #define CRA_UNTUPLE(...)      __VA_ARGS__
 #define CRA_TUPLE_M(M, ...)   M(__VA_ARGS__)
@@ -25,17 +24,17 @@
       51, 50, 49, 48, 47, 46, 45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25, 24,  \
       23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1
 
-#define CRA_CNT_GET(_0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,     \
-                    _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,     \
-                    _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58,     \
-                    _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77,     \
-                    _78, _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96,     \
-                    _97, _98, _99, _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111, _112, _113, \
+#define CRA_CNT_GET(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, _21,    \
+                    _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,     \
+                    _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59,     \
+                    _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71, _72, _73, _74, _75, _76, _77, _78,     \
+                    _79, _80, _81, _82, _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, _97,     \
+                    _98, _99, _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, _110, _111, _112, _113,      \
                     _114, _115, _116, _117, _118, _119, _120, _121, _122, _123, _124, _125, _126, _127, _128, _N, ...) \
     _N
 
 // count arguments
-#define CRA_CNT(...) CRA_APPLY(CRA_CNT_GET, (0, ##__VA_ARGS__, CRA_128_NUM, 0))
+#define CRA_CNT(...) CRA_APPLY(CRA_CNT_GET, (__VA_ARGS__, CRA_128_NUM, 0))
 
 // get i-th argument
 #define CRA_GET_I(i, ...) CRA_CAT(CRA_GET_I, i)(__VA_ARGS__)
@@ -55,6 +54,15 @@
 // foreach:
 //     CRA_ITER(MACRO, param, xx1, xx2, ...xxn) => MACRO(param, xx1) MACRO(param, xx2) ...MACRO(param, xxn)
 #define CRA_ITER(M, p, ...) CRA_CAT(CRA_ITER, CRA_CNT(__VA_ARGS__))(M, p, __VA_ARGS__)
+
+// cond ? t : f
+#define CRA_IIF(cond) CRA_CAT(CRA_IIF, cond)
+
+// auto recursive
+#define CRA_AUTO_REC(p, n) CRA_CAT(CRA_AUTO_REC, n)(p)
+
+// apply(a, b) => a b
+#define CRA_APPLY CRA_CAT(CRA_APPLY, CRA_AUTO_REC(CRA_APPLY_P, 4))
 
 #if 1 // GET_I
 
@@ -852,7 +860,39 @@
 
 #endif // end ITERATE(FOREACH)
 
-static_assert(CRA_CNT() == 0, "CRA_CNT() failed for 0 arguments");
+#if 1 // CRA_IIF
+
+#define CRA_IIF0(t, f) f
+#define CRA_IIF1(t, f) t
+
+#endif // end CRA_IIF
+
+#if 1 // CRA_AUTO_REC
+
+#define CRA_AUTO_REC1(p) 1
+#define CRA_AUTO_REC2(p) CRA_IIF(p(1))(1, 2)
+#define CRA_AUTO_REC4(p) CRA_IIF(p(2))(CRA_IIF(p(1))(1, 2), CRA_IIF(p(3))(3, 4))
+
+#endif // end CRA_AUTO_REC
+
+#if 1 // CRA_APPLY
+
+#define CRA_APPLY1(a, b) a b
+#define CRA_APPLY2(a, b) a b
+#define CRA_APPLY3(a, b) a b
+#define CRA_APPLY4(a, b) a b
+
+#define CRA_APPLY_P_MARK            1
+#define CRA_APPLY_P_CRA_APPLY1(...) 0
+#define CRA_APPLY_P_CRA_APPLY2(...) 0
+#define CRA_APPLY_P_CRA_APPLY3(...) 0
+#define CRA_APPLY_P_CRA_APPLY4(...) 0
+
+#define CRA_APPLY_P(n) CRA_CAT(CRA_APPLY_P_, CRA_APPLY##n(MARK, ))
+
+#endif // end CRA_APPLY
+
+// static_assert(CRA_CNT() == 0, "CRA_CNT() failed for 0 arguments"); // not supported
 static_assert(CRA_CNT(a) == 1, "CRA_CNT() failed for 1 argument");
 static_assert(CRA_CNT(a, b) == 2, "CRA_CNT() failed for 2 arguments");
 static_assert(CRA_CNT(CRA_128_NUM) == 128, "CRA_CNT() failed for 128 arguments");
