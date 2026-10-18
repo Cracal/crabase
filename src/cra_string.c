@@ -408,18 +408,8 @@ cra_string_view_is_valid_utf8_cstr(const char *str, size_t size)
     return true;
 }
 
-bool
-cra_string_view_unicode_escape_bytes(const CraStringView *sv, size_t *retbytes)
-{
-    assert(sv);
-    assert(sv->data);
-    assert(retbytes);
-    // TODO: implement
-    return false;
-}
-
-bool
-cra_string_view_unicode_escape(const CraStringView *from, CraStringView *to)
+size_t
+cra_string_view_unicode_escape_encode(const CraStringView *from, CraStringView *to)
 {
     assert(from);
     assert(from->data);
@@ -427,7 +417,23 @@ cra_string_view_unicode_escape(const CraStringView *from, CraStringView *to)
     assert(to->data);
     assert(to->size >= from->size);
     // TODO: implement
-    return false;
+    CRA_UNUSED(from);
+    CRA_UNUSED(to);
+    return 0;
+}
+
+size_t
+cra_string_view_unicode_escape_decode(const CraStringView *from, CraStringView *to)
+{
+    assert(from);
+    assert(from->data);
+    assert(to);
+    assert(to->data);
+    assert(to->size >= from->size);
+    // TODO: implement
+    CRA_UNUSED(from);
+    CRA_UNUSED(to);
+    return 0;
 }
 
 #endif // end string view
