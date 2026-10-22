@@ -182,8 +182,8 @@ test_meta_with_array(void)
     assert_always(_type##_meta.metas == _type##_metas);                                  \
     assert_always(_type##_meta.infos == _type##_infos);                                  \
     assert_always(_type##_meta.count == max_count);                                      \
-    /*if (_type##_meta.count > 0)                                                          \
-        assert_always(_type##_meta.count == CRA_NARRAY(((_type *)0)->data));*/             \
+    /*if (_type##_meta.count > 0)                                                        \
+        assert_always(_type##_meta.count == CRA_NARRAY(((_type *)0)->data));*/           \
     assert_always(_type##_meta.flags == CRA_SER_FLAG_ARRAY);                             \
     assert_always(_type##_meta.type == CRA_SER_TYPE_LIST);                               \
     assert_always(_type##_meta.size == sizeof(_type));                                   \

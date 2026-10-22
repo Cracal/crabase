@@ -205,7 +205,7 @@ cra_deque_srlz_uninit_wrap(void *list)
 
 #else
 
-#define CRA_DEQUE_SRLZ_WITH_UNINIT(uninit_fn)                                          \
+#define CRA_DEQUE_SRLZ_WITH_UNINIT(uninit_fn)                                                                 \
     cra_deque_srlz_init, uninit_fn, cra_deque_srlz_append, cra_deque_srlz_iter_init, cra_deque_srlz_iter_next
 #define CRA_DEQUE_SRLZ CRA_DEQUE_SRLZ_WITH_UNINIT((void (*)(void *))cra_deque_uninit)
 
