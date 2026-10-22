@@ -38,9 +38,8 @@ bool(cra_alist_init_with_size)(CraAList *list, size_t itemsize, size_t init_capa
 void(cra_alist_uninit)(CraAList *list)
 {
     assert(list);
-    assert(list->array);
-
-    cra_free(list->array);
+    if (list->array)
+        cra_free(list->array);
     bzero(list, sizeof(*list));
 }
 

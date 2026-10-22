@@ -181,9 +181,10 @@ void
 cra_dict_uninit(CraDict *dict)
 {
     assert(dict);
-
-    cra_free(dict->buckets);
-    cra_free(dict->entries);
+    if (dict->buckets)
+        cra_free(dict->buckets);
+    if (dict->entries)
+        cra_free(dict->entries);
     bzero(dict, sizeof(*dict));
 }
 

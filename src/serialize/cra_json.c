@@ -8,7 +8,6 @@
  * @copyright Copyright (c) 2024
  *
  */
-#define __CRA_SER_INNER
 #include "serialize/cra_json.h"
 #include "cra_malloc.h"
 #include <float.h>
