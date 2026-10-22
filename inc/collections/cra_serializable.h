@@ -145,8 +145,8 @@ cra_llist_srlz_uninit_wrap(void *list)
 
 #else
 
-#define CRA_LLIST_SRLZ_WITH_UNINIT(uninit_fn)                                                                      \
-    cra_llist_srlz_init_wrap, uninit_fn, cra_llist_srlz_append, cra_llist_srlz_iter_init, cra_llist_srlz_iter_next
+#define CRA_LLIST_SRLZ_WITH_UNINIT(uninit_fn)                                                                 \
+    cra_llist_srlz_init, uninit_fn, cra_llist_srlz_append, cra_llist_srlz_iter_init, cra_llist_srlz_iter_next
 #define CRA_LLIST_SRLZ CRA_LLIST_SRLZ_WITH_UNINIT((void (*)(void *))cra_llist_uninit)
 
 #endif
@@ -205,8 +205,8 @@ cra_deque_srlz_uninit_wrap(void *list)
 
 #else
 
-#define CRA_DEQUE_SRLZ_WITH_UNINIT(uninit_fn)                                               \
-    cra_deque_srlz_init_wrap, uninit_fn, cra_deque_srlz_iter_init, cra_deque_srlz_iter_next
+#define CRA_DEQUE_SRLZ_WITH_UNINIT(uninit_fn)                                          \
+    cra_deque_srlz_init, uninit_fn, cra_deque_srlz_append, cra_deque_srlz_iter_init, cra_deque_srlz_iter_next
 #define CRA_DEQUE_SRLZ CRA_DEQUE_SRLZ_WITH_UNINIT((void (*)(void *))cra_deque_uninit)
 
 #endif

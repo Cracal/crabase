@@ -11,6 +11,7 @@
 #ifndef __CRA_STRING_H__
 #define __CRA_STRING_H__
 #include "cra_defs.h"
+#include <ctype.h>
 
 typedef struct CraStringView CraStringView;
 typedef struct CraString     CraString;

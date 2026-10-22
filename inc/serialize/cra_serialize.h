@@ -510,7 +510,7 @@ static_assert(false, "Please undefine `DICT` before including this header");
         CRA_ITER(CRA_UNTUPLE_M, CRA_SER_FIELD_DEF, __VA_ARGS__)                            \
     } name;                                                                                \
     sc void CRA_CAT(name, _uninit)(name * stru);                                           \
-    CRA_SER_DEF_STRUCT_META(sc, name, init_fn, CRA_CAT(name, _uninit), __VA_ARGS__);       \
+    CRA_SER_DEF_STRUCT_META(sc, name, init_fn, (void(*)(void *))CRA_CAT(name, _uninit), __VA_ARGS__);       \
                                                                                            \
     sc void CRA_CAT(name, _uninit)(name * stru)                                            \
     {                                                                                      \
@@ -547,16 +547,15 @@ static_assert(false, "Please undefine `DICT` before including this header");
 
 #if 1 // array def
 
-#define CRA_SER_DEF_ARRAY_META_AND_ARRAY_AND_UNINIT_(sc, array_def, item_def, fn_name1, semicolon, fn_name2, fn_impl) \
+#define CRA_SER_DEF_ARRAY(array_def, item_def) \
     typedef struct CRA_GET_I(0, CRA_UNTUPLE array_def)                                                                \
     {                                                                                                                 \
         CRA_APPLY(CRA_CAT(CRA_SER_ARRAY_ITEM_DEF, CRA_CNT array_def), (array_def, CRA_UNTUPLE item_def, NIL))         \
         uint16_t len;                                                                                                 \
-    } CRA_GET_I(0, CRA_UNTUPLE array_def);                                                                            \
-                                                                                                                      \
-    fn_name2 semicolon                                                                                                \
-                                                                                                                      \
-      sc const CraSerMeta *CRA_CAT(CRA_GET_I(0, CRA_UNTUPLE array_def),                                               \
+    } CRA_GET_I(0, CRA_UNTUPLE array_def);\
+    static_assert(sizeof(CRA_GET_I(0, CRA_UNTUPLE array_def)) <= UINT16_MAX, "ARRAY is too large")
+#define CRA_SER_DEF_ARRAY_META(sc, array_def, item_def, uninit_fn) \
+    sc const CraSerMeta *CRA_CAT(CRA_GET_I(0, CRA_UNTUPLE array_def),                                                 \
                                    _metas)[] = { CRA_SER_ITEM_META_DEF(CRA_UNTUPLE item_def) };                       \
     sc const CraSerInfo    CRA_CAT(CRA_GET_I(0, CRA_UNTUPLE array_def),                                               \
                                    _infos)[] = { CRA_SER_ITEM_INFO_DEF(CRA_UNTUPLE item_def) };                       \
@@ -568,10 +567,8 @@ static_assert(false, "Please undefine `DICT` before including this header");
         .type = CRA_SER_TYPE_LIST,                                                                                    \
         .size = sizeof(CRA_GET_I(0, CRA_UNTUPLE array_def)),                                                          \
         .for_array = { sizeof(((CRA_GET_I(0, CRA_UNTUPLE array_def) *)0)->data[0]),                                   \
-                       offsetof(CRA_GET_I(0, CRA_UNTUPLE array_def), len), fn_name1 },                                \
-    };                                                                                                                \
-                                                                                                                      \
-    fn_name2 fn_impl static_assert(sizeof(CRA_GET_I(0, CRA_UNTUPLE array_def)) <= UINT16_MAX, "ARRAY is too large")
+                       offsetof(CRA_GET_I(0, CRA_UNTUPLE array_def), len), uninit_fn },                               \
+    }                                                                                                                
 
 #define CRA_SER_FREE_ARRAY_DATA1() \
     if (array->data)               \
@@ -583,12 +580,13 @@ static_assert(false, "Please undefine `DICT` before including this header");
 // @see tests/test_bin_ser.c#test_meta_with_array
 // @see CRA_SER_DEF_ARRAY_META_AND_ARRAY
 #define CRA_SER_DEF_ARRAY_META_AND_ARRAY_AND_UNINIT(sc, array_def, item_def)                                          \
-    CRA_SER_DEF_ARRAY_META_AND_ARRAY_AND_UNINIT_(                                                                     \
-      sc, array_def, item_def, CRA_CAT(CRA_GET_I(0, CRA_UNTUPLE array_def), _uninit), ;                               \
-      , sc void CRA_CAT(CRA_GET_I(0, CRA_UNTUPLE array_def), _uninit)(CRA_GET_I(0, CRA_UNTUPLE array_def) * array), { \
+    CRA_SER_DEF_ARRAY(array_def, item_def);\
+    sc void CRA_CAT(CRA_GET_I(0, CRA_UNTUPLE array_def), _uninit)(CRA_GET_I(0, CRA_UNTUPLE array_def) * array);       \
+    sc void CRA_CAT(CRA_GET_I(0, CRA_UNTUPLE array_def), _uninit)(CRA_GET_I(0, CRA_UNTUPLE array_def) * array) { \
           CRA_SER_FREE_ARRAY_ITEM(CRA_UNTUPLE item_def)                                                               \
           CRA_CAT(CRA_SER_FREE_ARRAY_DATA, CRA_CNT(CRA_UNTUPLE array_def))() array->len = 0;                          \
-      })
+      }\
+    CRA_SER_DEF_ARRAY_META(sc, array_def, item_def, (void(*)(void *))CRA_CAT(CRA_GET_I(0, CRA_UNTUPLE array_def), _uninit))
 
 // sc = storage-class specifiers
 // array_def = (name, max_items) => typedef struct { T data[max_items]; uint32_t len; } name;
@@ -605,7 +603,8 @@ static_assert(false, "Please undefine `DICT` before including this header");
 //      dict:       (DICT,     dict_type,   dict_meta[, is_ptr=false])
 // @see tests/test_bin_ser.c#test_meta_with_array
 #define CRA_SER_DEF_ARRAY_META_AND_ARRAY(sc, array_def, item_def)                 \
-    CRA_SER_DEF_ARRAY_META_AND_ARRAY_AND_UNINIT_(sc, array_def, item_def, , , , )
+    CRA_SER_DEF_ARRAY(array_def, item_def);\
+    CRA_SER_DEF_ARRAY_META(sc, array_def, item_def, NULL)
 
 #endif // end array def
 

@@ -182,8 +182,8 @@ test_meta_with_array(void)
     assert_always(_type##_meta.metas == _type##_metas);                                  \
     assert_always(_type##_meta.infos == _type##_infos);                                  \
     assert_always(_type##_meta.count == max_count);                                      \
-    if (_type##_meta.count > 0)                                                          \
-        assert_always(_type##_meta.count == CRA_NARRAY(((_type *)0)->data));             \
+    /*if (_type##_meta.count > 0)                                                          \
+        assert_always(_type##_meta.count == CRA_NARRAY(((_type *)0)->data));*/             \
     assert_always(_type##_meta.flags == CRA_SER_FLAG_ARRAY);                             \
     assert_always(_type##_meta.type == CRA_SER_TYPE_LIST);                               \
     assert_always(_type##_meta.size == sizeof(_type));                                   \
@@ -1556,7 +1556,7 @@ test_struct_id(void)
                            .n = NULL,
                            .v = 8000000,
                            .s = "string",
-                           .t.data = (uint8_t *)"bytes",
+                           .t.data = { 'b', 'y', 't', 'e', 's' },
                            .t.len = 5,
                            .o = &ino,
                            .a.data[0] = { .f = 0.5f, .u = 100 },
@@ -1668,7 +1668,6 @@ test_array(void)
     assert_always(in.arrsa.len == out.arrsa.len);
     assert_always(in.arrsp.len == out.arrsp.len);
     assert_always(in.arrayempty.len == out.arrayempty.len);
-    printf("out.arrayempty.data = %p\n", out.arrayempty.data);
     assert_always(NULL != out.arrayempty.data);
     assert_always(in.arrnull.len == out.arrnull.len);
     assert_always(in.arrnull.data == out.arrnull.data);

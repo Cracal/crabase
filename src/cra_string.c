@@ -1,3 +1,4 @@
+#include <stdarg.h>
 #include "cra_string.h"
 #include "cra_malloc.h"
 
@@ -53,7 +54,7 @@ cra_string_init_fmt(CraString *str, const char *fmt, ...)
     if (n < 0)
         return false;
 
-    if (n < CRA_STRING_SHORT_MAX)
+    if (n < (int)CRA_STRING_SHORT_MAX)
     {
         data = str->_short.data;
         str->is_short = true;
@@ -170,7 +171,7 @@ bool
 cra_string_append_fmt(CraString *str, const char *fmt, ...)
 {
     char   *s;
-    size_t  n;
+    int     n;
     size_t  l;
     va_list ap;
 

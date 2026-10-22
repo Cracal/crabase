@@ -231,26 +231,26 @@ test_string_view(void)
     assert_always(cra_string_view_is_valid_utf8_cstr("😀", sizeof("😀") - 1));
     assert_always(cra_string_view_is_valid_utf8_cstr("🫰🏽", sizeof("🫰🏽") - 1));
 
-    char str1[] = { 0xC0, 0x80, 0 }; // overlong encoding of U+0000
-    assert_always(!cra_string_view_is_valid_utf8_cstr(str1, sizeof(str1) - 1));
-    char str2[] = { 0xC1, 0xBF, 0 }; // overlong encoding
-    assert_always(!cra_string_view_is_valid_utf8_cstr(str2, sizeof(str2) - 1));
-    char str3[] = { 0xE0, 0x80, 0x80, 0 }; // overlong encoding
-    assert_always(!cra_string_view_is_valid_utf8_cstr(str3, sizeof(str3) - 1));
-    char str4[] = { 0xED, 0xA0, 0x80, 0 }; // UTF-16 surrogate U+D800
-    assert_always(!cra_string_view_is_valid_utf8_cstr(str4, sizeof(str4) - 1));
-    char str5[] = { 0xF0, 0x80, 0x80, 0x80, 0 }; // overlong encoding
-    assert_always(!cra_string_view_is_valid_utf8_cstr(str5, sizeof(str5) - 1));
-    char str6[] = { 0xF4, 0x90, 0x80, 0x80, 0 }; // > U+10FFFF
-    assert_always(!cra_string_view_is_valid_utf8_cstr(str6, sizeof(str6) - 1));
-    char str7[] = { 0xF5, 0x80, 0x80, 0x80, 0 }; // invalid
-    assert_always(!cra_string_view_is_valid_utf8_cstr(str7, sizeof(str7) - 1));
-    char str8[] = { 0x80, 0 }; // single continuation byte
-    assert_always(!cra_string_view_is_valid_utf8_cstr(str8, sizeof(str8) - 1));
-    char str9[] = { 0xE2, 0x82, 0 }; // cut off
-    assert_always(!cra_string_view_is_valid_utf8_cstr(str9, sizeof(str9) - 1));
-    char stra[] = { 0xE2, 0x28, 0xA1, 0 }; // continuation byte error
-    assert_always(!cra_string_view_is_valid_utf8_cstr(stra, sizeof(stra) - 1));
+    unsigned char str1[] = { 0xC0, 0x80, 0 }; // overlong encoding of U+0000
+    assert_always(!cra_string_view_is_valid_utf8_cstr((char *)str1, sizeof(str1) - 1));
+    unsigned char str2[] = { 0xC1, 0xBF, 0 }; // overlong encoding
+    assert_always(!cra_string_view_is_valid_utf8_cstr((char *)str2, sizeof(str2) - 1));
+    unsigned char str3[] = { 0xE0, 0x80, 0x80, 0 }; // overlong encoding
+    assert_always(!cra_string_view_is_valid_utf8_cstr((char *)str3, sizeof(str3) - 1));
+    unsigned char str4[] = { 0xED, 0xA0, 0x80, 0 }; // UTF-16 surrogate U+D800
+    assert_always(!cra_string_view_is_valid_utf8_cstr((char *)str4, sizeof(str4) - 1));
+    unsigned char str5[] = { 0xF0, 0x80, 0x80, 0x80, 0 }; // overlong encoding
+    assert_always(!cra_string_view_is_valid_utf8_cstr((char *)str5, sizeof(str5) - 1));
+    unsigned char str6[] = { 0xF4, 0x90, 0x80, 0x80, 0 }; // > U+10FFFF
+    assert_always(!cra_string_view_is_valid_utf8_cstr((char *)str6, sizeof(str6) - 1));
+    unsigned char str7[] = { 0xF5, 0x80, 0x80, 0x80, 0 }; // invalid
+    assert_always(!cra_string_view_is_valid_utf8_cstr((char *)str7, sizeof(str7) - 1));
+    unsigned char str8[] = { 0x80, 0 }; // single continuation byte
+    assert_always(!cra_string_view_is_valid_utf8_cstr((char *)str8, sizeof(str8) - 1));
+    unsigned char str9[] = { 0xE2, 0x82, 0 }; // cut off
+    assert_always(!cra_string_view_is_valid_utf8_cstr((char *)str9, sizeof(str9) - 1));
+    unsigned char stra[] = { 0xE2, 0x28, 0xA1, 0 }; // continuation byte error
+    assert_always(!cra_string_view_is_valid_utf8_cstr((char *)stra, sizeof(stra) - 1));
 
     // utf8 len
     size_t bytes_overrun = 0;
@@ -364,9 +364,11 @@ test_string(void)
     assert_always(strcmp(cra_string_data(&str), "hello world") == 0);
     assert_always(cra_string_is_short(&str));
 
+    char carray[1000];
     assert_always(cra_string_append(&str, ". good morning", sizeof(". good morning") - 1));
     assert_always(cra_string_size(&str) == sizeof("hello world. good morning") - 1);
-    assert_always(strcmp(cra_string_data(&str), "hello world. good morning") == 0);
+    memcpy(carray, cra_string_data(&str), cra_string_size(&str) + 1);
+    assert_always(strcmp(carray, "hello world. good morning") == 0);
     assert_always(!cra_string_is_short(&str));
 
     char buf[128];
@@ -374,7 +376,8 @@ test_string(void)
     memset(buf, 'A', sizeof(buf) - 1);
     assert_always(cra_string_append(&str, buf, sizeof(buf) - 1));
     assert_always(cra_string_size(&str) == sizeof("hello world. good morning") + sizeof(buf) - 2);
-    assert_always(strcmp(cra_string_data(&str) + sizeof("hello world. good morning") - 1, buf) == 0);
+    memcpy(carray, cra_string_data(&str), cra_string_size(&str) + 1);
+    assert_always(strcmp(carray + sizeof("hello world. good morning") - 1, buf) == 0);
     assert_always(!cra_string_is_short(&str));
 
     cra_string_uninit(&str);
@@ -390,12 +393,14 @@ test_string(void)
 
     assert_always(cra_string_append_fmt(&str, ". good morning"));
     assert_always(cra_string_size(&str) == sizeof("hello world. good morning") - 1);
-    assert_always(strcmp(cra_string_data(&str), "hello world. good morning") == 0);
+    memcpy(carray, cra_string_data(&str), cra_string_size(&str) + 1);
+    assert_always(strcmp(carray, "hello world. good morning") == 0);
     assert_always(!cra_string_is_short(&str));
 
     assert_always(cra_string_append_fmt(&str, "%s", buf));
     assert_always(cra_string_size(&str) == sizeof("hello world. good morning") + sizeof(buf) - 2);
-    assert_always(strcmp(cra_string_data(&str) + sizeof("hello world. good morning") - 1, buf) == 0);
+    memcpy(carray, cra_string_data(&str), cra_string_size(&str) + 1);
+    assert_always(strcmp(carray + sizeof("hello world. good morning") - 1, buf) == 0);
     assert_always(!cra_string_is_short(&str));
 
     cra_string_uninit(&str);

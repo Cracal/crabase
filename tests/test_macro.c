@@ -110,7 +110,7 @@ make_test_get_n_code(int n)
         printf("int array%db[] = {CRA_GET_N(%d%s)};\n", i, i, n128);
         printf("assert_always(CRA_NARRAY(array%da) == %d);\n", i, i);
         printf("assert_always(CRA_NARRAY(array%db) == %d);\n", i, i);
-        printf("for (int i = 0; i < CRA_NARRAY(array%da); i++)\n", i);
+        printf("for (int i = 0; i < (int)CRA_NARRAY(array%da); i++)\n", i);
         printf("{\nassert_always(array%da[i] == (i+1)*100);\nassert_always(array%da[i] == array%db[i]);\n}\n", i, i, i);
     }
 }
@@ -3026,7 +3026,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array1a) == 1);
     assert_always(CRA_NARRAY(array1b) == 1);
-    for (int i = 0; i < CRA_NARRAY(array1a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array1a); i++)
     {
         assert_always(array1a[i] == (i + 1) * 100);
         assert_always(array1a[i] == array1b[i]);
@@ -3043,7 +3043,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array2a) == 2);
     assert_always(CRA_NARRAY(array2b) == 2);
-    for (int i = 0; i < CRA_NARRAY(array2a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array2a); i++)
     {
         assert_always(array2a[i] == (i + 1) * 100);
         assert_always(array2a[i] == array2b[i]);
@@ -3060,7 +3060,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array3a) == 3);
     assert_always(CRA_NARRAY(array3b) == 3);
-    for (int i = 0; i < CRA_NARRAY(array3a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array3a); i++)
     {
         assert_always(array3a[i] == (i + 1) * 100);
         assert_always(array3a[i] == array3b[i]);
@@ -3077,7 +3077,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array4a) == 4);
     assert_always(CRA_NARRAY(array4b) == 4);
-    for (int i = 0; i < CRA_NARRAY(array4a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array4a); i++)
     {
         assert_always(array4a[i] == (i + 1) * 100);
         assert_always(array4a[i] == array4b[i]);
@@ -3094,7 +3094,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array5a) == 5);
     assert_always(CRA_NARRAY(array5b) == 5);
-    for (int i = 0; i < CRA_NARRAY(array5a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array5a); i++)
     {
         assert_always(array5a[i] == (i + 1) * 100);
         assert_always(array5a[i] == array5b[i]);
@@ -3111,7 +3111,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array6a) == 6);
     assert_always(CRA_NARRAY(array6b) == 6);
-    for (int i = 0; i < CRA_NARRAY(array6a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array6a); i++)
     {
         assert_always(array6a[i] == (i + 1) * 100);
         assert_always(array6a[i] == array6b[i]);
@@ -3128,7 +3128,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array7a) == 7);
     assert_always(CRA_NARRAY(array7b) == 7);
-    for (int i = 0; i < CRA_NARRAY(array7a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array7a); i++)
     {
         assert_always(array7a[i] == (i + 1) * 100);
         assert_always(array7a[i] == array7b[i]);
@@ -3145,7 +3145,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array8a) == 8);
     assert_always(CRA_NARRAY(array8b) == 8);
-    for (int i = 0; i < CRA_NARRAY(array8a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array8a); i++)
     {
         assert_always(array8a[i] == (i + 1) * 100);
         assert_always(array8a[i] == array8b[i]);
@@ -3162,7 +3162,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array9a) == 9);
     assert_always(CRA_NARRAY(array9b) == 9);
-    for (int i = 0; i < CRA_NARRAY(array9a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array9a); i++)
     {
         assert_always(array9a[i] == (i + 1) * 100);
         assert_always(array9a[i] == array9b[i]);
@@ -3179,7 +3179,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array10a) == 10);
     assert_always(CRA_NARRAY(array10b) == 10);
-    for (int i = 0; i < CRA_NARRAY(array10a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array10a); i++)
     {
         assert_always(array10a[i] == (i + 1) * 100);
         assert_always(array10a[i] == array10b[i]);
@@ -3196,7 +3196,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array11a) == 11);
     assert_always(CRA_NARRAY(array11b) == 11);
-    for (int i = 0; i < CRA_NARRAY(array11a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array11a); i++)
     {
         assert_always(array11a[i] == (i + 1) * 100);
         assert_always(array11a[i] == array11b[i]);
@@ -3213,7 +3213,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array12a) == 12);
     assert_always(CRA_NARRAY(array12b) == 12);
-    for (int i = 0; i < CRA_NARRAY(array12a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array12a); i++)
     {
         assert_always(array12a[i] == (i + 1) * 100);
         assert_always(array12a[i] == array12b[i]);
@@ -3230,7 +3230,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array13a) == 13);
     assert_always(CRA_NARRAY(array13b) == 13);
-    for (int i = 0; i < CRA_NARRAY(array13a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array13a); i++)
     {
         assert_always(array13a[i] == (i + 1) * 100);
         assert_always(array13a[i] == array13b[i]);
@@ -3247,7 +3247,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array14a) == 14);
     assert_always(CRA_NARRAY(array14b) == 14);
-    for (int i = 0; i < CRA_NARRAY(array14a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array14a); i++)
     {
         assert_always(array14a[i] == (i + 1) * 100);
         assert_always(array14a[i] == array14b[i]);
@@ -3264,7 +3264,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array15a) == 15);
     assert_always(CRA_NARRAY(array15b) == 15);
-    for (int i = 0; i < CRA_NARRAY(array15a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array15a); i++)
     {
         assert_always(array15a[i] == (i + 1) * 100);
         assert_always(array15a[i] == array15b[i]);
@@ -3282,7 +3282,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array16a) == 16);
     assert_always(CRA_NARRAY(array16b) == 16);
-    for (int i = 0; i < CRA_NARRAY(array16a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array16a); i++)
     {
         assert_always(array16a[i] == (i + 1) * 100);
         assert_always(array16a[i] == array16b[i]);
@@ -3300,7 +3300,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array17a) == 17);
     assert_always(CRA_NARRAY(array17b) == 17);
-    for (int i = 0; i < CRA_NARRAY(array17a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array17a); i++)
     {
         assert_always(array17a[i] == (i + 1) * 100);
         assert_always(array17a[i] == array17b[i]);
@@ -3318,7 +3318,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array18a) == 18);
     assert_always(CRA_NARRAY(array18b) == 18);
-    for (int i = 0; i < CRA_NARRAY(array18a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array18a); i++)
     {
         assert_always(array18a[i] == (i + 1) * 100);
         assert_always(array18a[i] == array18b[i]);
@@ -3336,7 +3336,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array19a) == 19);
     assert_always(CRA_NARRAY(array19b) == 19);
-    for (int i = 0; i < CRA_NARRAY(array19a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array19a); i++)
     {
         assert_always(array19a[i] == (i + 1) * 100);
         assert_always(array19a[i] == array19b[i]);
@@ -3354,7 +3354,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array20a) == 20);
     assert_always(CRA_NARRAY(array20b) == 20);
-    for (int i = 0; i < CRA_NARRAY(array20a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array20a); i++)
     {
         assert_always(array20a[i] == (i + 1) * 100);
         assert_always(array20a[i] == array20b[i]);
@@ -3372,7 +3372,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array21a) == 21);
     assert_always(CRA_NARRAY(array21b) == 21);
-    for (int i = 0; i < CRA_NARRAY(array21a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array21a); i++)
     {
         assert_always(array21a[i] == (i + 1) * 100);
         assert_always(array21a[i] == array21b[i]);
@@ -3390,7 +3390,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array22a) == 22);
     assert_always(CRA_NARRAY(array22b) == 22);
-    for (int i = 0; i < CRA_NARRAY(array22a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array22a); i++)
     {
         assert_always(array22a[i] == (i + 1) * 100);
         assert_always(array22a[i] == array22b[i]);
@@ -3408,7 +3408,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array23a) == 23);
     assert_always(CRA_NARRAY(array23b) == 23);
-    for (int i = 0; i < CRA_NARRAY(array23a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array23a); i++)
     {
         assert_always(array23a[i] == (i + 1) * 100);
         assert_always(array23a[i] == array23b[i]);
@@ -3426,7 +3426,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array24a) == 24);
     assert_always(CRA_NARRAY(array24b) == 24);
-    for (int i = 0; i < CRA_NARRAY(array24a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array24a); i++)
     {
         assert_always(array24a[i] == (i + 1) * 100);
         assert_always(array24a[i] == array24b[i]);
@@ -3444,7 +3444,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array25a) == 25);
     assert_always(CRA_NARRAY(array25b) == 25);
-    for (int i = 0; i < CRA_NARRAY(array25a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array25a); i++)
     {
         assert_always(array25a[i] == (i + 1) * 100);
         assert_always(array25a[i] == array25b[i]);
@@ -3462,7 +3462,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array26a) == 26);
     assert_always(CRA_NARRAY(array26b) == 26);
-    for (int i = 0; i < CRA_NARRAY(array26a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array26a); i++)
     {
         assert_always(array26a[i] == (i + 1) * 100);
         assert_always(array26a[i] == array26b[i]);
@@ -3480,7 +3480,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array27a) == 27);
     assert_always(CRA_NARRAY(array27b) == 27);
-    for (int i = 0; i < CRA_NARRAY(array27a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array27a); i++)
     {
         assert_always(array27a[i] == (i + 1) * 100);
         assert_always(array27a[i] == array27b[i]);
@@ -3498,7 +3498,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array28a) == 28);
     assert_always(CRA_NARRAY(array28b) == 28);
-    for (int i = 0; i < CRA_NARRAY(array28a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array28a); i++)
     {
         assert_always(array28a[i] == (i + 1) * 100);
         assert_always(array28a[i] == array28b[i]);
@@ -3516,7 +3516,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array29a) == 29);
     assert_always(CRA_NARRAY(array29b) == 29);
-    for (int i = 0; i < CRA_NARRAY(array29a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array29a); i++)
     {
         assert_always(array29a[i] == (i + 1) * 100);
         assert_always(array29a[i] == array29b[i]);
@@ -3535,7 +3535,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array30a) == 30);
     assert_always(CRA_NARRAY(array30b) == 30);
-    for (int i = 0; i < CRA_NARRAY(array30a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array30a); i++)
     {
         assert_always(array30a[i] == (i + 1) * 100);
         assert_always(array30a[i] == array30b[i]);
@@ -3554,7 +3554,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array31a) == 31);
     assert_always(CRA_NARRAY(array31b) == 31);
-    for (int i = 0; i < CRA_NARRAY(array31a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array31a); i++)
     {
         assert_always(array31a[i] == (i + 1) * 100);
         assert_always(array31a[i] == array31b[i]);
@@ -3573,7 +3573,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array32a) == 32);
     assert_always(CRA_NARRAY(array32b) == 32);
-    for (int i = 0; i < CRA_NARRAY(array32a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array32a); i++)
     {
         assert_always(array32a[i] == (i + 1) * 100);
         assert_always(array32a[i] == array32b[i]);
@@ -3592,7 +3592,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array33a) == 33);
     assert_always(CRA_NARRAY(array33b) == 33);
-    for (int i = 0; i < CRA_NARRAY(array33a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array33a); i++)
     {
         assert_always(array33a[i] == (i + 1) * 100);
         assert_always(array33a[i] == array33b[i]);
@@ -3611,7 +3611,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array34a) == 34);
     assert_always(CRA_NARRAY(array34b) == 34);
-    for (int i = 0; i < CRA_NARRAY(array34a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array34a); i++)
     {
         assert_always(array34a[i] == (i + 1) * 100);
         assert_always(array34a[i] == array34b[i]);
@@ -3630,7 +3630,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array35a) == 35);
     assert_always(CRA_NARRAY(array35b) == 35);
-    for (int i = 0; i < CRA_NARRAY(array35a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array35a); i++)
     {
         assert_always(array35a[i] == (i + 1) * 100);
         assert_always(array35a[i] == array35b[i]);
@@ -3649,7 +3649,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array36a) == 36);
     assert_always(CRA_NARRAY(array36b) == 36);
-    for (int i = 0; i < CRA_NARRAY(array36a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array36a); i++)
     {
         assert_always(array36a[i] == (i + 1) * 100);
         assert_always(array36a[i] == array36b[i]);
@@ -3668,7 +3668,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array37a) == 37);
     assert_always(CRA_NARRAY(array37b) == 37);
-    for (int i = 0; i < CRA_NARRAY(array37a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array37a); i++)
     {
         assert_always(array37a[i] == (i + 1) * 100);
         assert_always(array37a[i] == array37b[i]);
@@ -3687,7 +3687,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array38a) == 38);
     assert_always(CRA_NARRAY(array38b) == 38);
-    for (int i = 0; i < CRA_NARRAY(array38a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array38a); i++)
     {
         assert_always(array38a[i] == (i + 1) * 100);
         assert_always(array38a[i] == array38b[i]);
@@ -3706,7 +3706,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array39a) == 39);
     assert_always(CRA_NARRAY(array39b) == 39);
-    for (int i = 0; i < CRA_NARRAY(array39a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array39a); i++)
     {
         assert_always(array39a[i] == (i + 1) * 100);
         assert_always(array39a[i] == array39b[i]);
@@ -3725,7 +3725,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array40a) == 40);
     assert_always(CRA_NARRAY(array40b) == 40);
-    for (int i = 0; i < CRA_NARRAY(array40a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array40a); i++)
     {
         assert_always(array40a[i] == (i + 1) * 100);
         assert_always(array40a[i] == array40b[i]);
@@ -3744,7 +3744,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array41a) == 41);
     assert_always(CRA_NARRAY(array41b) == 41);
-    for (int i = 0; i < CRA_NARRAY(array41a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array41a); i++)
     {
         assert_always(array41a[i] == (i + 1) * 100);
         assert_always(array41a[i] == array41b[i]);
@@ -3763,7 +3763,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array42a) == 42);
     assert_always(CRA_NARRAY(array42b) == 42);
-    for (int i = 0; i < CRA_NARRAY(array42a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array42a); i++)
     {
         assert_always(array42a[i] == (i + 1) * 100);
         assert_always(array42a[i] == array42b[i]);
@@ -3782,7 +3782,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array43a) == 43);
     assert_always(CRA_NARRAY(array43b) == 43);
-    for (int i = 0; i < CRA_NARRAY(array43a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array43a); i++)
     {
         assert_always(array43a[i] == (i + 1) * 100);
         assert_always(array43a[i] == array43b[i]);
@@ -3802,7 +3802,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array44a) == 44);
     assert_always(CRA_NARRAY(array44b) == 44);
-    for (int i = 0; i < CRA_NARRAY(array44a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array44a); i++)
     {
         assert_always(array44a[i] == (i + 1) * 100);
         assert_always(array44a[i] == array44b[i]);
@@ -3822,7 +3822,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array45a) == 45);
     assert_always(CRA_NARRAY(array45b) == 45);
-    for (int i = 0; i < CRA_NARRAY(array45a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array45a); i++)
     {
         assert_always(array45a[i] == (i + 1) * 100);
         assert_always(array45a[i] == array45b[i]);
@@ -3842,7 +3842,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array46a) == 46);
     assert_always(CRA_NARRAY(array46b) == 46);
-    for (int i = 0; i < CRA_NARRAY(array46a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array46a); i++)
     {
         assert_always(array46a[i] == (i + 1) * 100);
         assert_always(array46a[i] == array46b[i]);
@@ -3862,7 +3862,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array47a) == 47);
     assert_always(CRA_NARRAY(array47b) == 47);
-    for (int i = 0; i < CRA_NARRAY(array47a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array47a); i++)
     {
         assert_always(array47a[i] == (i + 1) * 100);
         assert_always(array47a[i] == array47b[i]);
@@ -3882,7 +3882,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array48a) == 48);
     assert_always(CRA_NARRAY(array48b) == 48);
-    for (int i = 0; i < CRA_NARRAY(array48a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array48a); i++)
     {
         assert_always(array48a[i] == (i + 1) * 100);
         assert_always(array48a[i] == array48b[i]);
@@ -3902,7 +3902,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array49a) == 49);
     assert_always(CRA_NARRAY(array49b) == 49);
-    for (int i = 0; i < CRA_NARRAY(array49a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array49a); i++)
     {
         assert_always(array49a[i] == (i + 1) * 100);
         assert_always(array49a[i] == array49b[i]);
@@ -3922,7 +3922,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array50a) == 50);
     assert_always(CRA_NARRAY(array50b) == 50);
-    for (int i = 0; i < CRA_NARRAY(array50a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array50a); i++)
     {
         assert_always(array50a[i] == (i + 1) * 100);
         assert_always(array50a[i] == array50b[i]);
@@ -3942,7 +3942,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array51a) == 51);
     assert_always(CRA_NARRAY(array51b) == 51);
-    for (int i = 0; i < CRA_NARRAY(array51a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array51a); i++)
     {
         assert_always(array51a[i] == (i + 1) * 100);
         assert_always(array51a[i] == array51b[i]);
@@ -3962,7 +3962,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array52a) == 52);
     assert_always(CRA_NARRAY(array52b) == 52);
-    for (int i = 0; i < CRA_NARRAY(array52a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array52a); i++)
     {
         assert_always(array52a[i] == (i + 1) * 100);
         assert_always(array52a[i] == array52b[i]);
@@ -3982,7 +3982,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array53a) == 53);
     assert_always(CRA_NARRAY(array53b) == 53);
-    for (int i = 0; i < CRA_NARRAY(array53a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array53a); i++)
     {
         assert_always(array53a[i] == (i + 1) * 100);
         assert_always(array53a[i] == array53b[i]);
@@ -4002,7 +4002,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array54a) == 54);
     assert_always(CRA_NARRAY(array54b) == 54);
-    for (int i = 0; i < CRA_NARRAY(array54a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array54a); i++)
     {
         assert_always(array54a[i] == (i + 1) * 100);
         assert_always(array54a[i] == array54b[i]);
@@ -4022,7 +4022,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array55a) == 55);
     assert_always(CRA_NARRAY(array55b) == 55);
-    for (int i = 0; i < CRA_NARRAY(array55a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array55a); i++)
     {
         assert_always(array55a[i] == (i + 1) * 100);
         assert_always(array55a[i] == array55b[i]);
@@ -4042,7 +4042,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array56a) == 56);
     assert_always(CRA_NARRAY(array56b) == 56);
-    for (int i = 0; i < CRA_NARRAY(array56a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array56a); i++)
     {
         assert_always(array56a[i] == (i + 1) * 100);
         assert_always(array56a[i] == array56b[i]);
@@ -4062,7 +4062,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array57a) == 57);
     assert_always(CRA_NARRAY(array57b) == 57);
-    for (int i = 0; i < CRA_NARRAY(array57a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array57a); i++)
     {
         assert_always(array57a[i] == (i + 1) * 100);
         assert_always(array57a[i] == array57b[i]);
@@ -4083,7 +4083,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array58a) == 58);
     assert_always(CRA_NARRAY(array58b) == 58);
-    for (int i = 0; i < CRA_NARRAY(array58a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array58a); i++)
     {
         assert_always(array58a[i] == (i + 1) * 100);
         assert_always(array58a[i] == array58b[i]);
@@ -4104,7 +4104,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array59a) == 59);
     assert_always(CRA_NARRAY(array59b) == 59);
-    for (int i = 0; i < CRA_NARRAY(array59a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array59a); i++)
     {
         assert_always(array59a[i] == (i + 1) * 100);
         assert_always(array59a[i] == array59b[i]);
@@ -4125,7 +4125,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array60a) == 60);
     assert_always(CRA_NARRAY(array60b) == 60);
-    for (int i = 0; i < CRA_NARRAY(array60a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array60a); i++)
     {
         assert_always(array60a[i] == (i + 1) * 100);
         assert_always(array60a[i] == array60b[i]);
@@ -4146,7 +4146,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array61a) == 61);
     assert_always(CRA_NARRAY(array61b) == 61);
-    for (int i = 0; i < CRA_NARRAY(array61a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array61a); i++)
     {
         assert_always(array61a[i] == (i + 1) * 100);
         assert_always(array61a[i] == array61b[i]);
@@ -4167,7 +4167,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array62a) == 62);
     assert_always(CRA_NARRAY(array62b) == 62);
-    for (int i = 0; i < CRA_NARRAY(array62a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array62a); i++)
     {
         assert_always(array62a[i] == (i + 1) * 100);
         assert_always(array62a[i] == array62b[i]);
@@ -4188,7 +4188,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array63a) == 63);
     assert_always(CRA_NARRAY(array63b) == 63);
-    for (int i = 0; i < CRA_NARRAY(array63a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array63a); i++)
     {
         assert_always(array63a[i] == (i + 1) * 100);
         assert_always(array63a[i] == array63b[i]);
@@ -4209,7 +4209,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array64a) == 64);
     assert_always(CRA_NARRAY(array64b) == 64);
-    for (int i = 0; i < CRA_NARRAY(array64a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array64a); i++)
     {
         assert_always(array64a[i] == (i + 1) * 100);
         assert_always(array64a[i] == array64b[i]);
@@ -4230,7 +4230,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array65a) == 65);
     assert_always(CRA_NARRAY(array65b) == 65);
-    for (int i = 0; i < CRA_NARRAY(array65a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array65a); i++)
     {
         assert_always(array65a[i] == (i + 1) * 100);
         assert_always(array65a[i] == array65b[i]);
@@ -4251,7 +4251,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array66a) == 66);
     assert_always(CRA_NARRAY(array66b) == 66);
-    for (int i = 0; i < CRA_NARRAY(array66a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array66a); i++)
     {
         assert_always(array66a[i] == (i + 1) * 100);
         assert_always(array66a[i] == array66b[i]);
@@ -4272,7 +4272,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array67a) == 67);
     assert_always(CRA_NARRAY(array67b) == 67);
-    for (int i = 0; i < CRA_NARRAY(array67a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array67a); i++)
     {
         assert_always(array67a[i] == (i + 1) * 100);
         assert_always(array67a[i] == array67b[i]);
@@ -4293,7 +4293,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array68a) == 68);
     assert_always(CRA_NARRAY(array68b) == 68);
-    for (int i = 0; i < CRA_NARRAY(array68a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array68a); i++)
     {
         assert_always(array68a[i] == (i + 1) * 100);
         assert_always(array68a[i] == array68b[i]);
@@ -4314,7 +4314,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array69a) == 69);
     assert_always(CRA_NARRAY(array69b) == 69);
-    for (int i = 0; i < CRA_NARRAY(array69a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array69a); i++)
     {
         assert_always(array69a[i] == (i + 1) * 100);
         assert_always(array69a[i] == array69b[i]);
@@ -4335,7 +4335,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array70a) == 70);
     assert_always(CRA_NARRAY(array70b) == 70);
-    for (int i = 0; i < CRA_NARRAY(array70a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array70a); i++)
     {
         assert_always(array70a[i] == (i + 1) * 100);
         assert_always(array70a[i] == array70b[i]);
@@ -4356,7 +4356,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array71a) == 71);
     assert_always(CRA_NARRAY(array71b) == 71);
-    for (int i = 0; i < CRA_NARRAY(array71a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array71a); i++)
     {
         assert_always(array71a[i] == (i + 1) * 100);
         assert_always(array71a[i] == array71b[i]);
@@ -4377,7 +4377,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array72a) == 72);
     assert_always(CRA_NARRAY(array72b) == 72);
-    for (int i = 0; i < CRA_NARRAY(array72a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array72a); i++)
     {
         assert_always(array72a[i] == (i + 1) * 100);
         assert_always(array72a[i] == array72b[i]);
@@ -4398,7 +4398,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array73a) == 73);
     assert_always(CRA_NARRAY(array73b) == 73);
-    for (int i = 0; i < CRA_NARRAY(array73a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array73a); i++)
     {
         assert_always(array73a[i] == (i + 1) * 100);
         assert_always(array73a[i] == array73b[i]);
@@ -4419,7 +4419,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array74a) == 74);
     assert_always(CRA_NARRAY(array74b) == 74);
-    for (int i = 0; i < CRA_NARRAY(array74a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array74a); i++)
     {
         assert_always(array74a[i] == (i + 1) * 100);
         assert_always(array74a[i] == array74b[i]);
@@ -4440,7 +4440,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array75a) == 75);
     assert_always(CRA_NARRAY(array75b) == 75);
-    for (int i = 0; i < CRA_NARRAY(array75a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array75a); i++)
     {
         assert_always(array75a[i] == (i + 1) * 100);
         assert_always(array75a[i] == array75b[i]);
@@ -4461,7 +4461,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array76a) == 76);
     assert_always(CRA_NARRAY(array76b) == 76);
-    for (int i = 0; i < CRA_NARRAY(array76a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array76a); i++)
     {
         assert_always(array76a[i] == (i + 1) * 100);
         assert_always(array76a[i] == array76b[i]);
@@ -4483,7 +4483,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array77a) == 77);
     assert_always(CRA_NARRAY(array77b) == 77);
-    for (int i = 0; i < CRA_NARRAY(array77a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array77a); i++)
     {
         assert_always(array77a[i] == (i + 1) * 100);
         assert_always(array77a[i] == array77b[i]);
@@ -4505,7 +4505,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array78a) == 78);
     assert_always(CRA_NARRAY(array78b) == 78);
-    for (int i = 0; i < CRA_NARRAY(array78a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array78a); i++)
     {
         assert_always(array78a[i] == (i + 1) * 100);
         assert_always(array78a[i] == array78b[i]);
@@ -4527,7 +4527,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array79a) == 79);
     assert_always(CRA_NARRAY(array79b) == 79);
-    for (int i = 0; i < CRA_NARRAY(array79a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array79a); i++)
     {
         assert_always(array79a[i] == (i + 1) * 100);
         assert_always(array79a[i] == array79b[i]);
@@ -4549,7 +4549,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array80a) == 80);
     assert_always(CRA_NARRAY(array80b) == 80);
-    for (int i = 0; i < CRA_NARRAY(array80a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array80a); i++)
     {
         assert_always(array80a[i] == (i + 1) * 100);
         assert_always(array80a[i] == array80b[i]);
@@ -4571,7 +4571,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array81a) == 81);
     assert_always(CRA_NARRAY(array81b) == 81);
-    for (int i = 0; i < CRA_NARRAY(array81a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array81a); i++)
     {
         assert_always(array81a[i] == (i + 1) * 100);
         assert_always(array81a[i] == array81b[i]);
@@ -4593,7 +4593,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array82a) == 82);
     assert_always(CRA_NARRAY(array82b) == 82);
-    for (int i = 0; i < CRA_NARRAY(array82a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array82a); i++)
     {
         assert_always(array82a[i] == (i + 1) * 100);
         assert_always(array82a[i] == array82b[i]);
@@ -4615,7 +4615,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array83a) == 83);
     assert_always(CRA_NARRAY(array83b) == 83);
-    for (int i = 0; i < CRA_NARRAY(array83a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array83a); i++)
     {
         assert_always(array83a[i] == (i + 1) * 100);
         assert_always(array83a[i] == array83b[i]);
@@ -4637,7 +4637,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array84a) == 84);
     assert_always(CRA_NARRAY(array84b) == 84);
-    for (int i = 0; i < CRA_NARRAY(array84a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array84a); i++)
     {
         assert_always(array84a[i] == (i + 1) * 100);
         assert_always(array84a[i] == array84b[i]);
@@ -4659,7 +4659,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array85a) == 85);
     assert_always(CRA_NARRAY(array85b) == 85);
-    for (int i = 0; i < CRA_NARRAY(array85a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array85a); i++)
     {
         assert_always(array85a[i] == (i + 1) * 100);
         assert_always(array85a[i] == array85b[i]);
@@ -4681,7 +4681,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array86a) == 86);
     assert_always(CRA_NARRAY(array86b) == 86);
-    for (int i = 0; i < CRA_NARRAY(array86a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array86a); i++)
     {
         assert_always(array86a[i] == (i + 1) * 100);
         assert_always(array86a[i] == array86b[i]);
@@ -4703,7 +4703,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array87a) == 87);
     assert_always(CRA_NARRAY(array87b) == 87);
-    for (int i = 0; i < CRA_NARRAY(array87a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array87a); i++)
     {
         assert_always(array87a[i] == (i + 1) * 100);
         assert_always(array87a[i] == array87b[i]);
@@ -4725,7 +4725,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array88a) == 88);
     assert_always(CRA_NARRAY(array88b) == 88);
-    for (int i = 0; i < CRA_NARRAY(array88a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array88a); i++)
     {
         assert_always(array88a[i] == (i + 1) * 100);
         assert_always(array88a[i] == array88b[i]);
@@ -4747,7 +4747,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array89a) == 89);
     assert_always(CRA_NARRAY(array89b) == 89);
-    for (int i = 0; i < CRA_NARRAY(array89a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array89a); i++)
     {
         assert_always(array89a[i] == (i + 1) * 100);
         assert_always(array89a[i] == array89b[i]);
@@ -4769,7 +4769,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array90a) == 90);
     assert_always(CRA_NARRAY(array90b) == 90);
-    for (int i = 0; i < CRA_NARRAY(array90a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array90a); i++)
     {
         assert_always(array90a[i] == (i + 1) * 100);
         assert_always(array90a[i] == array90b[i]);
@@ -4791,7 +4791,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array91a) == 91);
     assert_always(CRA_NARRAY(array91b) == 91);
-    for (int i = 0; i < CRA_NARRAY(array91a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array91a); i++)
     {
         assert_always(array91a[i] == (i + 1) * 100);
         assert_always(array91a[i] == array91b[i]);
@@ -4813,7 +4813,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array92a) == 92);
     assert_always(CRA_NARRAY(array92b) == 92);
-    for (int i = 0; i < CRA_NARRAY(array92a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array92a); i++)
     {
         assert_always(array92a[i] == (i + 1) * 100);
         assert_always(array92a[i] == array92b[i]);
@@ -4835,7 +4835,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array93a) == 93);
     assert_always(CRA_NARRAY(array93b) == 93);
-    for (int i = 0; i < CRA_NARRAY(array93a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array93a); i++)
     {
         assert_always(array93a[i] == (i + 1) * 100);
         assert_always(array93a[i] == array93b[i]);
@@ -4857,7 +4857,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array94a) == 94);
     assert_always(CRA_NARRAY(array94b) == 94);
-    for (int i = 0; i < CRA_NARRAY(array94a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array94a); i++)
     {
         assert_always(array94a[i] == (i + 1) * 100);
         assert_always(array94a[i] == array94b[i]);
@@ -4879,7 +4879,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array95a) == 95);
     assert_always(CRA_NARRAY(array95b) == 95);
-    for (int i = 0; i < CRA_NARRAY(array95a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array95a); i++)
     {
         assert_always(array95a[i] == (i + 1) * 100);
         assert_always(array95a[i] == array95b[i]);
@@ -4902,7 +4902,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array96a) == 96);
     assert_always(CRA_NARRAY(array96b) == 96);
-    for (int i = 0; i < CRA_NARRAY(array96a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array96a); i++)
     {
         assert_always(array96a[i] == (i + 1) * 100);
         assert_always(array96a[i] == array96b[i]);
@@ -4925,7 +4925,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array97a) == 97);
     assert_always(CRA_NARRAY(array97b) == 97);
-    for (int i = 0; i < CRA_NARRAY(array97a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array97a); i++)
     {
         assert_always(array97a[i] == (i + 1) * 100);
         assert_always(array97a[i] == array97b[i]);
@@ -4948,7 +4948,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array98a) == 98);
     assert_always(CRA_NARRAY(array98b) == 98);
-    for (int i = 0; i < CRA_NARRAY(array98a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array98a); i++)
     {
         assert_always(array98a[i] == (i + 1) * 100);
         assert_always(array98a[i] == array98b[i]);
@@ -4971,7 +4971,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array99a) == 99);
     assert_always(CRA_NARRAY(array99b) == 99);
-    for (int i = 0; i < CRA_NARRAY(array99a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array99a); i++)
     {
         assert_always(array99a[i] == (i + 1) * 100);
         assert_always(array99a[i] == array99b[i]);
@@ -4994,7 +4994,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array100a) == 100);
     assert_always(CRA_NARRAY(array100b) == 100);
-    for (int i = 0; i < CRA_NARRAY(array100a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array100a); i++)
     {
         assert_always(array100a[i] == (i + 1) * 100);
         assert_always(array100a[i] == array100b[i]);
@@ -5017,7 +5017,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array101a) == 101);
     assert_always(CRA_NARRAY(array101b) == 101);
-    for (int i = 0; i < CRA_NARRAY(array101a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array101a); i++)
     {
         assert_always(array101a[i] == (i + 1) * 100);
         assert_always(array101a[i] == array101b[i]);
@@ -5040,7 +5040,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array102a) == 102);
     assert_always(CRA_NARRAY(array102b) == 102);
-    for (int i = 0; i < CRA_NARRAY(array102a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array102a); i++)
     {
         assert_always(array102a[i] == (i + 1) * 100);
         assert_always(array102a[i] == array102b[i]);
@@ -5063,7 +5063,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array103a) == 103);
     assert_always(CRA_NARRAY(array103b) == 103);
-    for (int i = 0; i < CRA_NARRAY(array103a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array103a); i++)
     {
         assert_always(array103a[i] == (i + 1) * 100);
         assert_always(array103a[i] == array103b[i]);
@@ -5086,7 +5086,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array104a) == 104);
     assert_always(CRA_NARRAY(array104b) == 104);
-    for (int i = 0; i < CRA_NARRAY(array104a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array104a); i++)
     {
         assert_always(array104a[i] == (i + 1) * 100);
         assert_always(array104a[i] == array104b[i]);
@@ -5109,7 +5109,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array105a) == 105);
     assert_always(CRA_NARRAY(array105b) == 105);
-    for (int i = 0; i < CRA_NARRAY(array105a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array105a); i++)
     {
         assert_always(array105a[i] == (i + 1) * 100);
         assert_always(array105a[i] == array105b[i]);
@@ -5132,7 +5132,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array106a) == 106);
     assert_always(CRA_NARRAY(array106b) == 106);
-    for (int i = 0; i < CRA_NARRAY(array106a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array106a); i++)
     {
         assert_always(array106a[i] == (i + 1) * 100);
         assert_always(array106a[i] == array106b[i]);
@@ -5155,7 +5155,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array107a) == 107);
     assert_always(CRA_NARRAY(array107b) == 107);
-    for (int i = 0; i < CRA_NARRAY(array107a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array107a); i++)
     {
         assert_always(array107a[i] == (i + 1) * 100);
         assert_always(array107a[i] == array107b[i]);
@@ -5178,7 +5178,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array108a) == 108);
     assert_always(CRA_NARRAY(array108b) == 108);
-    for (int i = 0; i < CRA_NARRAY(array108a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array108a); i++)
     {
         assert_always(array108a[i] == (i + 1) * 100);
         assert_always(array108a[i] == array108b[i]);
@@ -5201,7 +5201,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array109a) == 109);
     assert_always(CRA_NARRAY(array109b) == 109);
-    for (int i = 0; i < CRA_NARRAY(array109a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array109a); i++)
     {
         assert_always(array109a[i] == (i + 1) * 100);
         assert_always(array109a[i] == array109b[i]);
@@ -5224,7 +5224,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array110a) == 110);
     assert_always(CRA_NARRAY(array110b) == 110);
-    for (int i = 0; i < CRA_NARRAY(array110a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array110a); i++)
     {
         assert_always(array110a[i] == (i + 1) * 100);
         assert_always(array110a[i] == array110b[i]);
@@ -5247,7 +5247,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array111a) == 111);
     assert_always(CRA_NARRAY(array111b) == 111);
-    for (int i = 0; i < CRA_NARRAY(array111a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array111a); i++)
     {
         assert_always(array111a[i] == (i + 1) * 100);
         assert_always(array111a[i] == array111b[i]);
@@ -5271,7 +5271,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array112a) == 112);
     assert_always(CRA_NARRAY(array112b) == 112);
-    for (int i = 0; i < CRA_NARRAY(array112a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array112a); i++)
     {
         assert_always(array112a[i] == (i + 1) * 100);
         assert_always(array112a[i] == array112b[i]);
@@ -5295,7 +5295,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array113a) == 113);
     assert_always(CRA_NARRAY(array113b) == 113);
-    for (int i = 0; i < CRA_NARRAY(array113a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array113a); i++)
     {
         assert_always(array113a[i] == (i + 1) * 100);
         assert_always(array113a[i] == array113b[i]);
@@ -5319,7 +5319,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array114a) == 114);
     assert_always(CRA_NARRAY(array114b) == 114);
-    for (int i = 0; i < CRA_NARRAY(array114a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array114a); i++)
     {
         assert_always(array114a[i] == (i + 1) * 100);
         assert_always(array114a[i] == array114b[i]);
@@ -5343,7 +5343,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array115a) == 115);
     assert_always(CRA_NARRAY(array115b) == 115);
-    for (int i = 0; i < CRA_NARRAY(array115a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array115a); i++)
     {
         assert_always(array115a[i] == (i + 1) * 100);
         assert_always(array115a[i] == array115b[i]);
@@ -5367,7 +5367,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array116a) == 116);
     assert_always(CRA_NARRAY(array116b) == 116);
-    for (int i = 0; i < CRA_NARRAY(array116a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array116a); i++)
     {
         assert_always(array116a[i] == (i + 1) * 100);
         assert_always(array116a[i] == array116b[i]);
@@ -5391,7 +5391,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array117a) == 117);
     assert_always(CRA_NARRAY(array117b) == 117);
-    for (int i = 0; i < CRA_NARRAY(array117a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array117a); i++)
     {
         assert_always(array117a[i] == (i + 1) * 100);
         assert_always(array117a[i] == array117b[i]);
@@ -5415,7 +5415,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array118a) == 118);
     assert_always(CRA_NARRAY(array118b) == 118);
-    for (int i = 0; i < CRA_NARRAY(array118a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array118a); i++)
     {
         assert_always(array118a[i] == (i + 1) * 100);
         assert_always(array118a[i] == array118b[i]);
@@ -5439,7 +5439,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array119a) == 119);
     assert_always(CRA_NARRAY(array119b) == 119);
-    for (int i = 0; i < CRA_NARRAY(array119a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array119a); i++)
     {
         assert_always(array119a[i] == (i + 1) * 100);
         assert_always(array119a[i] == array119b[i]);
@@ -5463,7 +5463,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array120a) == 120);
     assert_always(CRA_NARRAY(array120b) == 120);
-    for (int i = 0; i < CRA_NARRAY(array120a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array120a); i++)
     {
         assert_always(array120a[i] == (i + 1) * 100);
         assert_always(array120a[i] == array120b[i]);
@@ -5487,7 +5487,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array121a) == 121);
     assert_always(CRA_NARRAY(array121b) == 121);
-    for (int i = 0; i < CRA_NARRAY(array121a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array121a); i++)
     {
         assert_always(array121a[i] == (i + 1) * 100);
         assert_always(array121a[i] == array121b[i]);
@@ -5511,7 +5511,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array122a) == 122);
     assert_always(CRA_NARRAY(array122b) == 122);
-    for (int i = 0; i < CRA_NARRAY(array122a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array122a); i++)
     {
         assert_always(array122a[i] == (i + 1) * 100);
         assert_always(array122a[i] == array122b[i]);
@@ -5535,7 +5535,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array123a) == 123);
     assert_always(CRA_NARRAY(array123b) == 123);
-    for (int i = 0; i < CRA_NARRAY(array123a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array123a); i++)
     {
         assert_always(array123a[i] == (i + 1) * 100);
         assert_always(array123a[i] == array123b[i]);
@@ -5559,7 +5559,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array124a) == 124);
     assert_always(CRA_NARRAY(array124b) == 124);
-    for (int i = 0; i < CRA_NARRAY(array124a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array124a); i++)
     {
         assert_always(array124a[i] == (i + 1) * 100);
         assert_always(array124a[i] == array124b[i]);
@@ -5583,7 +5583,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array125a) == 125);
     assert_always(CRA_NARRAY(array125b) == 125);
-    for (int i = 0; i < CRA_NARRAY(array125a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array125a); i++)
     {
         assert_always(array125a[i] == (i + 1) * 100);
         assert_always(array125a[i] == array125b[i]);
@@ -5607,7 +5607,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array126a) == 126);
     assert_always(CRA_NARRAY(array126b) == 126);
-    for (int i = 0; i < CRA_NARRAY(array126a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array126a); i++)
     {
         assert_always(array126a[i] == (i + 1) * 100);
         assert_always(array126a[i] == array126b[i]);
@@ -5631,7 +5631,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array127a) == 127);
     assert_always(CRA_NARRAY(array127b) == 127);
-    for (int i = 0; i < CRA_NARRAY(array127a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array127a); i++)
     {
         assert_always(array127a[i] == (i + 1) * 100);
         assert_always(array127a[i] == array127b[i]);
@@ -5655,7 +5655,7 @@ test_get_n(void)
       12900) };
     assert_always(CRA_NARRAY(array128a) == 128);
     assert_always(CRA_NARRAY(array128b) == 128);
-    for (int i = 0; i < CRA_NARRAY(array128a); i++)
+    for (int i = 0; i < (int)CRA_NARRAY(array128a); i++)
     {
         assert_always(array128a[i] == (i + 1) * 100);
         assert_always(array128a[i] == array128b[i]);

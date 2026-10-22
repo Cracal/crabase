@@ -501,6 +501,8 @@ cra_bin_skip_member(CraSerializer *szer, CraSerType_e type)
     CraSerType_e typ2;
     size_t       u64;
 
+    CRA_UNUSED(id);
+
     switch (type)
     {
 #define XX(TYPE, size)                  \
@@ -635,6 +637,7 @@ cra_bin_read_struct(CraSerializer *szer, unsigned char *val, bool is_ptr, const 
     uint64_t          u64;
     unsigned char    *stru;
     unsigned char    *item;
+    CraStringView     sv;
 
     CRA_SER_DEF_IDS_BITMAP(id_bitmap);
 
@@ -706,7 +709,7 @@ cra_bin_read_struct(CraSerializer *szer, unsigned char *val, bool is_ptr, const 
         if (!cra_bin_read_value(szer, item, meta, info, k))
         {
         fail:
-            CraStringView sv = cra_ser_get_field_name(meta, k);
+            sv = cra_ser_get_field_name(meta, k);
             cra_ser_error_append(szer, &sv);
         fail2:
             CRA_SER_DEL_STRUCT(val, stru, meta, is_ptr);
@@ -783,6 +786,7 @@ cra_bin_read_array(CraSerializer *szer, unsigned char *val, const CraSerMeta *me
 
     assert(val);
     assert(meta);
+    CRA_UNUSED(id);
 
     CRA_SER_NESTING_INC(szer);
 
@@ -820,7 +824,7 @@ cra_bin_read_array(CraSerializer *szer, unsigned char *val, const CraSerMeta *me
     }
 
     // update array count
-    memcpy(val + meta->for_array.offsetof_len, &index, sizeof(uint32_t));
+    memcpy(val + meta->for_array.offsetof_len, &index, sizeof(index));
 
     CRA_SER_NESTING_DEC(szer);
 
@@ -918,6 +922,7 @@ cra_bin_read_list(CraSerializer *szer, unsigned char *val, bool is_ptr, const Cr
     assert(meta);
     assert(meta->for_list.init);
     assert(meta->for_list.append);
+    CRA_UNUSED(id);
 
     CRA_SER_NESTING_INC(szer);
 
@@ -1077,6 +1082,7 @@ cra_bin_read_dict(CraSerializer *szer, unsigned char *val, bool is_ptr, const Cr
     assert(meta->for_dict.init);
     assert(meta->for_dict.append);
     assert(meta->infos[0].type <= CRA_SER_TYPE_STRING);
+    CRA_UNUSED(id);
 
     CRA_SER_NESTING_INC(szer);
 
@@ -1207,6 +1213,7 @@ cra_bin_deserialize_err(const unsigned char *buf, size_t len, void *obj, const C
     assert(meta);
     assert(meta->infos);
     assert(meta->infos->offset == 0);
+    CRA_UNUSED(id);
 
     cra_serializer_init(&szer, (void *)buf, len);
 
