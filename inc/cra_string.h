@@ -307,12 +307,6 @@ cra_string_view_utf8_len(const CraStringView *sv, size_t *bytes_overrun)
     return 0;
 }
 
-CRA_API size_t
-cra_string_view_unicode_escape_encode(const CraStringView *from, CraStringView *to);
-
-CRA_API size_t
-cra_string_view_unicode_escape_decode(const CraStringView *from, CraStringView *to);
-
 #endif // end string view
 
 #endif
