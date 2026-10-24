@@ -29,6 +29,7 @@ struct CraSerializer
     size_t curr;
 
     uint32_t nesting;
+    bool     format;
 
     CraSerErr error;
 };
@@ -36,7 +37,7 @@ struct CraSerializer
 #define CRA_SER_DEF_IDS_BITMAP(name) uint8_t name[(UINT16_MAX + 1) / 8] = { 0 }
 
 #define CRA_SER_ENOUGH(szer, needed) ((szer)->curr + (needed) <= (szer)->size)
-#define CRA_SER_ENSURE(szer, needed, buf)                \
+#define CRA_SER_ENSURE0(szer, needed, buff, sub)         \
     do                                                   \
     {                                                    \
         if (!CRA_SER_ENOUGH(szer, needed))               \
@@ -44,9 +45,11 @@ struct CraSerializer
             cra_ser_error_set(szer, CRA_SER_ERR_NO_BUF); \
             return false;                                \
         }                                                \
-        buf = (szer)->buf + (szer)->curr;                \
-        (szer)->curr += (needed);                        \
+        buff = (szer)->buf + (szer)->curr;               \
+        (szer)->curr += (needed) - (sub);                \
     } while (0)
+#define CRA_SER_ENSURE(szer, needed, buff)  CRA_SER_ENSURE0(szer, needed, buff, 0)
+#define CRA_SER_ENSURE2(szer, needed, buff) CRA_SER_ENSURE0(szer, needed, buff, 1)
 
 #define CRA_SER_NESTING_INC(szer)                         \
     do                                                    \
@@ -119,6 +122,13 @@ struct CraSerializer
         }                                        \
     } while (0)
 
+#define CRA_SER_CHECK_NULLABLE(szer, is_null)                \
+    if (is_null)                                             \
+    {                                                        \
+        cra_ser_error_set(szer, CRA_SER_ERR_CANNOT_BE_NULL); \
+        return false;                                        \
+    }
+
 #define CRA_SER_NEW_STRING(szer, pstr, str, info, len1, len2)                \
     do                                                                       \
     {                                                                        \
@@ -137,6 +147,7 @@ struct CraSerializer
         }                                                                    \
         else /* char[N] */                                                   \
         {                                                                    \
+            CRA_SER_CHECK_NULLABLE(szer, len1 == 0)                          \
             CRA_SER_CHECK_RANGE(szer, len2, >=, (info)->size);               \
             str = (char *)pstr;                                              \
             str[len2] = '\0';                                                \
@@ -156,6 +167,7 @@ struct CraSerializer
         }                                                                                      \
         else                                                                                   \
         {                                                                                      \
+            CRA_SER_CHECK_NULLABLE(szer, is_null)                                              \
             stru = pstru;                                                                      \
         }                                                                                      \
                                                                                                \
@@ -183,6 +195,7 @@ struct CraSerializer
         }                                                                                     \
         else                                                                                  \
         {                                                                                     \
+            CRA_SER_CHECK_NULLABLE(szer, len1 == 0)                                           \
             CRA_SER_CHECK_RANGE(szer, len2, >, (meta)->count);                                \
             arr = parr;                                                                       \
         }                                                                                     \
@@ -207,6 +220,7 @@ struct CraSerializer
         }                                                                                  \
         else                                                                               \
         {                                                                                  \
+            CRA_SER_CHECK_NULLABLE(szer, len1 == 0)                                        \
             list = plist;                                                                  \
         }                                                                                  \
                                                                                            \
@@ -228,6 +242,7 @@ struct CraSerializer
         }                                                                                          \
         else                                                                                       \
         {                                                                                          \
+            CRA_SER_CHECK_NULLABLE(szer, len1 == 0)                                                \
             dict = pdict;                                                                          \
         }                                                                                          \
                                                                                                    \
@@ -257,12 +272,13 @@ void
 cra_ser_error_append(CraSerializer *szer, const CraStringView *name);
 
 static inline void
-cra_serializer_init(CraSerializer *szer, void *buf, size_t size)
+cra_serializer_init(CraSerializer *szer, void *buf, size_t size, bool format)
 {
     szer->buf = buf;
     szer->size = size;
     szer->curr = 0;
     szer->nesting = 0;
+    szer->format = format;
     szer->error.err = CRA_SER_ERR_OK;
     memcpy(szer->error.msg, CRA_SER_ERR_OK_INIT, sizeof(CRA_SER_ERR_OK_INIT));
 }

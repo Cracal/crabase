@@ -1166,7 +1166,7 @@ cra_bin_serialize_err(unsigned char *buf, size_t *len, const void *obj, const Cr
     assert(meta->infos);
     assert(meta->infos->offset == 0);
 
-    cra_serializer_init(&szer, buf, *len);
+    cra_serializer_init(&szer, buf, *len, false);
 
     // write root meta data
     WRITE_META(&szer, 0, meta->type);
@@ -1215,7 +1215,7 @@ cra_bin_deserialize_err(const unsigned char *buf, size_t len, void *obj, const C
     assert(meta->infos->offset == 0);
     CRA_UNUSED(id);
 
-    cra_serializer_init(&szer, (void *)buf, len);
+    cra_serializer_init(&szer, (void *)buf, len, false);
 
     // read root meta data
     READ_META(&szer, id, type);

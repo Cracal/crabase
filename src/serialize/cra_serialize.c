@@ -36,6 +36,8 @@ cra_ser_errcode_to_string(CraSerErr_e errcode)
             return "Invalid value";
         case CRA_SER_ERR_TYPE_MISMATCH:
             return "Type mismatch";
+        case CRA_SER_ERR_CANNOT_BE_NULL:
+            return "Value object cannot be null";
         case CRA_SER_ERR_DUPLICATE_MEMBER:
             return "Duplicate struct members";
         case CRA_SER_ERR_SKIP_MEMBER_FAILED:
