@@ -14,19 +14,15 @@
 #include "cra_string.h"
 #include "cra_assert.h"
 
-#define CRA_SER_NESTING_MAX 128
+#define CRA_SER_NESTING_MAX 100
 
 typedef struct CraSerializer CraSerializer;
 
 struct CraSerializer
 {
-#ifdef __CRA_SER_UNSIGNED_BUF__
     unsigned char *buf;
-#else
-    char *buf;
-#endif
-    size_t size;
-    size_t curr;
+    size_t         size;
+    size_t         curr;
 
     uint32_t nesting;
     bool     format;
@@ -149,7 +145,7 @@ struct CraSerializer
         {                                                                    \
             CRA_SER_CHECK_NULLABLE(szer, len1 == 0)                          \
             CRA_SER_CHECK_RANGE(szer, len2, >=, (info)->size);               \
-            str = (char *)pstr;                                              \
+            str = pstr;                                                      \
             str[len2] = '\0';                                                \
         }                                                                    \
     } while (0)

@@ -8,7 +8,6 @@
  * @copyright Copyright (c) 2024
  *
  */
-#define __CRA_SER_UNSIGNED_BUF__
 #include "serialize/cra_bin_ser.h"
 #include "cra_serialize_inner.h"
 #include "cra_endian.h"
@@ -358,7 +357,7 @@ cra_bin_read_string(CraSerializer *szer, unsigned char *val, const CraSerInfo *i
 {
     uint64_t       u64;
     size_t         len;
-    char          *str;
+    unsigned char *str;
     unsigned char *buf;
 
     // read length
@@ -410,6 +409,12 @@ cra_bin_write_value(CraSerializer       *szer,
                     const CraSerInfo    *info,
                     uint16_t             index)
 {
+    assert(val);
+    assert(info);
+    assert(meta);
+    assert(meta->metas);
+    assert(!meta->metas[index] || info->size == meta->metas[index]->size);
+
     switch (info->type)
     {
         case CRA_SER_TYPE_BOOL:
@@ -426,11 +431,9 @@ cra_bin_write_value(CraSerializer       *szer,
             CRA_SER_CHECK(cra_bin_write_string(szer, val, info));
             break;
         case CRA_SER_TYPE_STRUCT:
-            assert(info->size == meta->metas[index]->size);
             CRA_SER_CHECK(cra_bin_write_struct(szer, val, info->flags & CRA_SER_FLAG_PTR, meta->metas[index]));
             break;
         case CRA_SER_TYPE_LIST:
-            assert(info->size == meta->metas[index]->size);
             if (info->flags & CRA_SER_FLAG_ARRAY)
                 CRA_SER_CHECK(cra_bin_write_array(szer, val, meta->metas[index]));
             else
@@ -455,6 +458,12 @@ cra_bin_read_value(CraSerializer    *szer,
                    const CraSerInfo *info,
                    uint16_t          index)
 {
+    assert(val);
+    assert(info);
+    assert(meta);
+    assert(meta->metas);
+    assert(!meta->metas[index] || info->size == meta->metas[index]->size);
+
     switch (info->type)
     {
         case CRA_SER_TYPE_BOOL:
@@ -471,11 +480,9 @@ cra_bin_read_value(CraSerializer    *szer,
             CRA_SER_CHECK(cra_bin_read_string(szer, val, info));
             break;
         case CRA_SER_TYPE_STRUCT:
-            assert(info->size == meta->metas[index]->size);
             CRA_SER_CHECK(cra_bin_read_struct(szer, val, info->flags & CRA_SER_FLAG_PTR, meta->metas[index]));
             break;
         case CRA_SER_TYPE_LIST:
-            assert(info->size == meta->metas[index]->size);
             if (info->flags & CRA_SER_FLAG_ARRAY)
                 CRA_SER_CHECK(cra_bin_read_array(szer, val, meta->metas[index]));
             else
