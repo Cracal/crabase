@@ -86,6 +86,17 @@ __cra_memory_leak_report(void);
 #define cra_realloc __cra_realloc
 #define cra_free    __cra_free
 
+#define CRA_TEMP_NEW(T, name, num)                   \
+    T            *name;                              \
+    unsigned char name##_small[1024];                \
+    if ((sizeof(T) * (num)) <= sizeof(name##_small)) \
+        name = (T *)name##_small;                    \
+    else                                             \
+        name = cra_malloc(sizeof(T) * (num))
+#define CRA_TEMP_DEL(T, name, num)                  \
+    if ((sizeof(T) * (num)) > sizeof(name##_small)) \
+    cra_free(name)
+
 #define cra_memory_leak_report()
 
 #else
@@ -94,6 +105,9 @@ __cra_memory_leak_report(void);
 #define cra_calloc(num, size)     __cra_calloc_dbg(num, size, __FILE__, __LINE__)
 #define cra_realloc(ptr, newsize) __cra_realloc_dbg(ptr, newsize, __FILE__, __LINE__)
 #define cra_free                  __cra_free_dbg
+
+#define CRA_TEMP_NEW(T, name, num) T *name = cra_malloc(sizeof(T) * (num))
+#define CRA_TEMP_DEL(T, name, num) cra_free(name)
 
 #define cra_memory_leak_report __cra_memory_leak_report
 
@@ -104,17 +118,5 @@ __cra_memory_leak_report(void);
 
 #define cra_new(Type) (Type *)cra_alloc(Type)
 #define cra_delete    cra_dealloc
-
-#define CRA_TEMP_NEW(T, name, num)                   \
-    T            *name;                              \
-    unsigned char name##_small[1024];                \
-    if ((sizeof(T) * (num)) <= sizeof(name##_small)) \
-        name = (T *)name##_small;                    \
-    else                                             \
-        name = cra_malloc(sizeof(T) * (num))
-
-#define CRA_TEMP_DEL(T, name, num)                  \
-    if ((sizeof(T) * (num)) > sizeof(name##_small)) \
-    cra_free(name)
 
 #endif
