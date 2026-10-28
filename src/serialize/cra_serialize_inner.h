@@ -196,11 +196,11 @@ struct CraSerializer
             arr = parr;                                                                       \
         }                                                                                     \
     } while (0)
-#define CRA_SER_DEL_ARRAY(parr, arr, meta, count_) \
-    do                                             \
-    {                                              \
-        if ((meta)->for_array.uninit)              \
-            (meta)->for_array.uninit(parr);        \
+#define CRA_SER_DEL_ARRAY(parr, arr, meta)  \
+    do                                      \
+    {                                       \
+        if ((meta)->for_array.uninit)       \
+            (meta)->for_array.uninit(parr); \
     } while (0)
 
 #define CRA_SER_NEW_LIST(szer, plist, list, meta, is_ptr, len1, len2, itemsize)            \

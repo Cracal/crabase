@@ -573,6 +573,9 @@ cra_bin_write_struct(CraSerializer *szer, const unsigned char *val, bool is_ptr,
 
     assert(val);
     assert(meta);
+    assert(meta->infos);
+    assert(meta->count > 0);
+    assert(meta->infos[0].offset == 0);
 
     CRA_SER_NESTING_INC(szer);
 
@@ -630,6 +633,9 @@ cra_bin_read_struct(CraSerializer *szer, unsigned char *val, bool is_ptr, const 
 
     assert(val);
     assert(meta);
+    assert(meta->infos);
+    assert(meta->count > 0);
+    assert(meta->infos[0].offset == 0);
 
     CRA_SER_NESTING_INC(szer);
 
@@ -722,6 +728,8 @@ cra_bin_write_array(CraSerializer *szer, const unsigned char *val, const CraSerM
 
     assert(val);
     assert(meta);
+    assert(meta->infos);
+    assert(meta->infos[0].offset == 0);
 
     CRA_SER_NESTING_INC(szer);
 
@@ -729,10 +737,11 @@ cra_bin_write_array(CraSerializer *szer, const unsigned char *val, const CraSerM
     memcpy(&count, val + meta->for_array.offsetof_len, sizeof(count));
     CRA_SER_CHECK_LIMIT(szer, count, >=, CRA_SER_LIST_MAX_COUNT);
 
-    array = val;
     // meta->count == 0 -> Array { T *data; ... }
     if (meta->count == 0)
-        memcpy(&array, array, sizeof(void *)); // array = *(T **)array;
+        memcpy(&array, val, sizeof(void *)); // array = *(T **)array;
+    else
+        array = val;
     assert(array || (!array && count == 0));
 
     u64 = array ? count + 1 : 0;
@@ -773,6 +782,8 @@ cra_bin_read_array(CraSerializer *szer, unsigned char *val, const CraSerMeta *me
 
     assert(val);
     assert(meta);
+    assert(meta->infos);
+    assert(meta->infos[0].offset == 0);
     CRA_UNUSED(id);
 
     CRA_SER_NESTING_INC(szer);
@@ -816,7 +827,7 @@ cra_bin_read_array(CraSerializer *szer, unsigned char *val, const CraSerMeta *me
     CRA_SER_NESTING_DEC(szer);
 
     if (!b)
-        CRA_SER_DEL_ARRAY(val, array, meta, index);
+        CRA_SER_DEL_ARRAY(val, array, meta);
     return b;
 }
 
@@ -833,8 +844,10 @@ cra_bin_write_list(CraSerializer *szer, const unsigned char *val, bool is_ptr, c
 
     assert(val);
     assert(meta);
+    assert(meta->infos);
     assert(meta->for_list.iter_init);
     assert(meta->for_list.iter_next);
+    assert(meta->infos[0].offset == 0);
 
     CRA_SER_NESTING_INC(szer);
 
@@ -907,8 +920,10 @@ cra_bin_read_list(CraSerializer *szer, unsigned char *val, bool is_ptr, const Cr
 
     assert(val);
     assert(meta);
+    assert(meta->infos);
     assert(meta->for_list.init);
     assert(meta->for_list.append);
+    assert(meta->infos[0].offset == 0);
     CRA_UNUSED(id);
 
     CRA_SER_NESTING_INC(szer);
@@ -980,8 +995,10 @@ cra_bin_write_dict(CraSerializer *szer, const unsigned char *val, bool is_ptr, c
 
     assert(val);
     assert(meta);
+    assert(meta->infos);
     assert(meta->for_dict.iter_init);
     assert(meta->for_dict.iter_next);
+    assert(meta->infos[0].offset == 0);
     assert(meta->infos[0].type <= CRA_SER_TYPE_STRING);
 
     CRA_SER_NESTING_INC(szer);
@@ -1066,8 +1083,10 @@ cra_bin_read_dict(CraSerializer *szer, unsigned char *val, bool is_ptr, const Cr
 
     assert(val);
     assert(meta);
+    assert(meta->infos);
     assert(meta->for_dict.init);
     assert(meta->for_dict.append);
+    assert(meta->infos[0].offset == 0);
     assert(meta->infos[0].type <= CRA_SER_TYPE_STRING);
     CRA_UNUSED(id);
 
