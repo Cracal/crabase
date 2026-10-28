@@ -418,37 +418,27 @@ cra_bin_write_value(CraSerializer       *szer,
     switch (info->type)
     {
         case CRA_SER_TYPE_BOOL:
-            CRA_SER_CHECK(cra_bin_write_bool(szer, val, info));
-            break;
+            return cra_bin_write_bool(szer, val, info);
         case CRA_SER_TYPE_VARINT:
-            CRA_SER_CHECK(cra_bin_write_varint_number(szer, val, info));
-            break;
+            return cra_bin_write_varint_number(szer, val, info);
         case CRA_SER_TYPE_32BITS:
         case CRA_SER_TYPE_64BITS:
-            CRA_SER_CHECK(cra_bin_write_number(szer, val, info));
-            break;
+            return cra_bin_write_number(szer, val, info);
         case CRA_SER_TYPE_STRING:
-            CRA_SER_CHECK(cra_bin_write_string(szer, val, info));
-            break;
+            return cra_bin_write_string(szer, val, info);
         case CRA_SER_TYPE_STRUCT:
-            CRA_SER_CHECK(cra_bin_write_struct(szer, val, info->flags & CRA_SER_FLAG_PTR, meta->metas[index]));
-            break;
+            return cra_bin_write_struct(szer, val, info->flags & CRA_SER_FLAG_PTR, meta->metas[index]);
         case CRA_SER_TYPE_LIST:
             if (info->flags & CRA_SER_FLAG_ARRAY)
-                CRA_SER_CHECK(cra_bin_write_array(szer, val, meta->metas[index]));
-            else
-                CRA_SER_CHECK(cra_bin_write_list(szer, val, info->flags & CRA_SER_FLAG_PTR, meta->metas[index]));
-            break;
+                return cra_bin_write_array(szer, val, meta->metas[index]);
+            return cra_bin_write_list(szer, val, info->flags & CRA_SER_FLAG_PTR, meta->metas[index]);
         case CRA_SER_TYPE_DICT:
-            CRA_SER_CHECK(cra_bin_write_dict(szer, val, info->flags & CRA_SER_FLAG_PTR, meta->metas[index]));
-            break;
+            return cra_bin_write_dict(szer, val, info->flags & CRA_SER_FLAG_PTR, meta->metas[index]);
 
         default:
             // unreachable
             abort();
     }
-
-    return true;
 }
 
 static bool
@@ -467,37 +457,27 @@ cra_bin_read_value(CraSerializer    *szer,
     switch (info->type)
     {
         case CRA_SER_TYPE_BOOL:
-            CRA_SER_CHECK(cra_bin_read_bool(szer, val, info));
-            break;
+            return cra_bin_read_bool(szer, val, info);
         case CRA_SER_TYPE_VARINT:
-            CRA_SER_CHECK(cra_bin_read_varint_number(szer, val, info));
-            break;
+            return cra_bin_read_varint_number(szer, val, info);
         case CRA_SER_TYPE_32BITS:
         case CRA_SER_TYPE_64BITS:
-            CRA_SER_CHECK(cra_bin_read_number(szer, val, info));
-            break;
+            return cra_bin_read_number(szer, val, info);
         case CRA_SER_TYPE_STRING:
-            CRA_SER_CHECK(cra_bin_read_string(szer, val, info));
-            break;
+            return cra_bin_read_string(szer, val, info);
         case CRA_SER_TYPE_STRUCT:
-            CRA_SER_CHECK(cra_bin_read_struct(szer, val, info->flags & CRA_SER_FLAG_PTR, meta->metas[index]));
-            break;
+            return cra_bin_read_struct(szer, val, info->flags & CRA_SER_FLAG_PTR, meta->metas[index]);
         case CRA_SER_TYPE_LIST:
             if (info->flags & CRA_SER_FLAG_ARRAY)
-                CRA_SER_CHECK(cra_bin_read_array(szer, val, meta->metas[index]));
-            else
-                CRA_SER_CHECK(cra_bin_read_list(szer, val, info->flags & CRA_SER_FLAG_PTR, meta->metas[index]));
-            break;
+                return cra_bin_read_array(szer, val, meta->metas[index]);
+            return cra_bin_read_list(szer, val, info->flags & CRA_SER_FLAG_PTR, meta->metas[index]);
         case CRA_SER_TYPE_DICT:
-            CRA_SER_CHECK(cra_bin_read_dict(szer, val, info->flags & CRA_SER_FLAG_PTR, meta->metas[index]));
-            break;
+            return cra_bin_read_dict(szer, val, info->flags & CRA_SER_FLAG_PTR, meta->metas[index]);
 
         default:
             // never reach here
             abort();
     }
-
-    return true;
 }
 
 static bool
