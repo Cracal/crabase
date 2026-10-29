@@ -165,8 +165,8 @@ cra_set_last_error(int err)
 #define CRA_MIN(a, b)          ((a) < (b) ? (a) : (b))
 #define CRA_CLAMP(v, max, min) ((v) > (max) ? (max) : ((v) < (min) ? (min) : (v)))
 
-#define _CRA_CAT(a, b) a##b
-#define CRA_CAT(a, b)  _CRA_CAT(a, b)
+#define CRA_CAT_(a, b) a##b
+#define CRA_CAT(a, b)  CRA_CAT_(a, b)
 #define CRA_UCAT(a, b) CRA_CAT(a, CRA_CAT(_, b))
 
 #define CRA_NARRAY(array) (sizeof(array) / sizeof((array)[0]))

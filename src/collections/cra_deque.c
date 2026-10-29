@@ -288,14 +288,15 @@ void
 cra_deque_uninit(CraDeque *deque)
 {
     assert(deque);
-    assert(deque->array);
-
-    for (size_t i = 0; i < deque->narray; ++i)
+    if (deque->array)
     {
-        if (deque->array[i])
-            cra_free(deque->array[i]);
+        for (size_t i = 0; i < deque->narray; ++i)
+        {
+            if (deque->array[i])
+                cra_free(deque->array[i]);
+        }
+        cra_free(deque->array);
     }
-    cra_free(deque->array);
     bzero(deque, sizeof(*deque));
 }
 

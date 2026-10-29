@@ -38,9 +38,8 @@ bool(cra_alist_init_with_size)(CraAList *list, size_t itemsize, size_t init_capa
 void(cra_alist_uninit)(CraAList *list)
 {
     assert(list);
-    assert(list->array);
-
-    cra_free(list->array);
+    if (list->array)
+        cra_free(list->array);
     bzero(list, sizeof(*list));
 }
 
@@ -125,7 +124,7 @@ cra_alist_reverse(CraAList *list)
     if (list->count < 2)
         return true;
 
-    CRA_TEMP_NEW(temp, list->itemsize);
+    CRA_TEMP_NEW(unsigned char, temp, list->itemsize);
     if (!temp)
         return false;
 
@@ -140,20 +139,20 @@ cra_alist_reverse(CraAList *list)
         end--;
     }
 
-    CRA_TEMP_DEL(temp, list->itemsize);
+    CRA_TEMP_DEL(unsigned char, temp, list->itemsize);
 
     return true;
 }
 
 static size_t
-cra_alist_partition(CraAList *list, cra_cmp_fn compare, size_t begin, size_t end, char *temp)
+cra_alist_partition(CraAList *list, cra_cmp_fn compare, size_t begin, size_t end, unsigned char *temp)
 {
-    size_t left, right;
-    char  *array;
+    size_t         left, right;
+    unsigned char *array;
 
     left = begin;
     right = end;
-    array = (char *)list->array;
+    array = (unsigned char *)list->array;
     // temp = array[right]
     memcpy(temp, array + right * list->itemsize, list->itemsize);
 
@@ -179,7 +178,7 @@ cra_alist_partition(CraAList *list, cra_cmp_fn compare, size_t begin, size_t end
 }
 
 static void
-cra_alist_quick_sort(CraAList *list, cra_cmp_fn compare, size_t begin, size_t end, char *temp)
+cra_alist_quick_sort(CraAList *list, cra_cmp_fn compare, size_t begin, size_t end, unsigned char *temp)
 {
     size_t middle = cra_alist_partition(list, compare, begin, end, temp);
     if (middle > 0 && middle - 1 > begin)
@@ -195,13 +194,13 @@ bool(cra_alist_sort)(CraAList *list, cra_cmp_fn compare)
     assert(list->array);
     if (list->count > 1) // count(array) >= 2
     {
-        CRA_TEMP_NEW(temp, list->itemsize);
+        CRA_TEMP_NEW(unsigned char, temp, list->itemsize);
         if (!temp)
             return false;
 
         cra_alist_quick_sort(list, compare, 0, list->count - 1, temp);
 
-        CRA_TEMP_DEL(temp, list->itemsize);
+        CRA_TEMP_DEL(unsigned char, temp, list->itemsize);
     }
     return true;
 }

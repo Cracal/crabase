@@ -8,81 +8,108 @@
  * @copyright Copyright (c) 2024
  *
  */
-#define __CRA_SER_INNER
-#include "serialize/cra_serialize.h"
-#include "cra_assert.h"
+#include "cra_serialize_inner.h"
 #include "cra_malloc.h"
 
-void
-cra_release_mgr_uninit(CraReleaseMgr *mgr, bool free_ptr)
+static inline const char *
+cra_ser_errcode_to_string(CraSerErr_e errcode)
 {
-    CraReleaseBlk *blk;
-    size_t         nnodes1;
-    if (free_ptr && mgr->count > 0)
+    switch (errcode)
     {
-        nnodes1 = CRA_NARRAY(mgr->nodes1);
-        for (size_t i = 0; i < mgr->count; ++i)
-        {
-            blk = i < nnodes1 ? mgr->nodes1 + i : mgr->nodes2 + (i - nnodes1);
-            if (blk->meta->init_i && blk->meta->init_i->uninit)
-                blk->meta->init_i->uninit(blk->ptr);
-            if (blk->meta->is_ptr)
-                cra_free(blk->ptr);
-        }
+        case CRA_SER_ERR_OK:
+            return CRA_SER_ERR_OK_STR;
+        case CRA_SER_ERR_NO_BUF:
+            return "No buffer space available";
+        case CRA_SER_ERR_NO_MEM:
+            return "No memory available";
+        case CRA_SER_ERR_NESTING:
+            return "Nesting level is too deep";
+        case CRA_SER_ERR_LENGTH_MAX:
+            return "Length exceeds maximum allowed size";
+        case CRA_SER_ERR_INIT_FAILED:
+            return "Initialization failed";
+        case CRA_SER_ERR_OUT_OF_RANGE:
+            return "Out of range";
+        case CRA_SER_ERR_APPEND_FAILED:
+            return "Append item failed";
+        case CRA_SER_ERR_INVALID_VALUE:
+            return "Invalid value";
+        case CRA_SER_ERR_TYPE_MISMATCH:
+            return "Type mismatch";
+        case CRA_SER_ERR_CANNOT_BE_NULL:
+            return "Value types cannot be null";
+        case CRA_SER_ERR_DUPLICATE_MEMBER:
+            return "Duplicate struct members";
+        case CRA_SER_ERR_SKIP_MEMBER_FAILED:
+            return "Skip struct member failed";
+
+        default:
+            return "Unknown error";
     }
-    if (mgr->nodes2)
-        cra_free(mgr->nodes2);
+}
+
+void
+cra_ser_error_set(CraSerializer *szer, CraSerErr_e errcode)
+{
+    szer->error.err = errcode;
+    const char *reason = cra_ser_errcode_to_string(errcode);
+    snprintf(szer->error.msg, sizeof(szer->error.msg), CRA_SER_ERR_FMT, reason);
+}
+
+void
+cra_ser_error_append(CraSerializer *szer, const CraStringView *name)
+{
+    assert(szer->error.err != CRA_SER_ERR_OK);
+
+    int len = (int)strlen(szer->error.msg) - 1;
+    snprintf(szer->error.msg + len, sizeof(szer->error.msg) - len, ":" CRA_SV_FMT ".", CRA_SV_ARG(*name));
+}
+
+void
+cra_ser_destroy_object(void *pobj, const CraSerMeta *meta, const CraSerInfo *info)
+{
+    bool  is_ptr = info->flags & CRA_SER_FLAG_PTR;
+    void *obj;
+
+    if (is_ptr)
+        memcpy(&obj, pobj, sizeof(void *));
+    else
+        obj = pobj;
+
+    assert(obj);
+    assert(pobj);
+
+    if (meta)
+    {
+        if (meta->type == CRA_SER_TYPE_STRUCT && meta->for_struct.uninit)
+            meta->for_struct.uninit(obj);
+        else if (meta->type == CRA_SER_TYPE_LIST && (meta->flags & CRA_SER_FLAG_ARRAY) && meta->for_array.uninit)
+            meta->for_array.uninit(pobj);
+        else if (meta->type == CRA_SER_TYPE_LIST && meta->for_list.uninit)
+            meta->for_list.uninit(obj);
+        else if (meta->type == CRA_SER_TYPE_DICT && meta->for_dict.uninit)
+            meta->for_dict.uninit(obj);
+    }
+
+    if (is_ptr)
+        cra_free(obj);
 }
 
 bool
-cra_release_mgr_add(CraReleaseMgr *mgr, void *ptr, const CraTypeMeta *meta)
+cra_check_id_unique(const CraSerMeta *meta, uint16_t *duplicate_id)
 {
-    CraReleaseBlk *blk;
-    size_t         nnodes1;
-
-    assert(ptr);
     assert(meta);
+    assert(meta->type == CRA_SER_TYPE_STRUCT);
 
-    nnodes1 = CRA_NARRAY(mgr->nodes1);
-    if (mgr->count == mgr->size)
+    CRA_SER_DEF_IDS_BITMAP(id_bitmap);
+    for (uint16_t i = 0; i < meta->count; i++)
     {
-        if (mgr->nodes2)
+        if (cra_ser_check_id_duplicate(id_bitmap, meta->for_struct.ids[i]))
         {
-            CraReleaseBlk *new_nodes2 =
-              (CraReleaseBlk *)cra_realloc(mgr->nodes2, sizeof(CraReleaseBlk) * (mgr->size)); // X: mgr->size + nndoes1
-            if (!new_nodes2)
-                return false;
-            mgr->nodes2 = new_nodes2;
+            if (duplicate_id)
+                *duplicate_id = meta->for_struct.ids[i];
+            return false;
         }
-        else
-        {
-            mgr->nodes2 = cra_malloc(sizeof(CraReleaseBlk) * nnodes1);
-            if (!mgr->nodes2)
-                return false;
-        }
-        mgr->size += nnodes1;
     }
-
-    blk = mgr->count < nnodes1 ? mgr->nodes1 + mgr->count : mgr->nodes2 + (mgr->count - nnodes1);
-    blk->meta = meta;
-    blk->ptr = ptr;
-
-    ++mgr->count;
     return true;
-}
-
-int
-cra_check_id_unique(const CraTypeMeta *meta)
-{
-    uint8_t      map = 0;
-    CraTypeMeta *m = (CraTypeMeta *)meta;
-
-    while (m->is_not_end)
-    {
-        if (map & (1 << m->id))
-            return m->id;
-        map |= (1 << m->id);
-        m++;
-    }
-    return -1;
 }

@@ -55,7 +55,6 @@ cra_llist_uninit(CraLList *list)
     CraLListNode *curr, *temp;
 
     assert(list);
-    assert(list->itemsize > 0);
 
     // destroy list nodes
     curr = list->head;
