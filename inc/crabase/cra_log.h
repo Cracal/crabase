@@ -84,19 +84,28 @@ cra_log_close(CraLogger *logger);
 CRA_API void
 cra_log_msg(CraLogger *logger, CraLogLv_e lv, const char *fmt, ...);
 #ifdef CRA_LOG_FILE_LINE
-#define cra_log_msg(logger, lv, fmt, ...)                                                      \
-    (void)(!!(logger) && cra_log_get_level(logger) <= (lv) &&                                  \
-           (cra_log_msg(logger, lv, fmt " -- %s:%d\n", ##__VA_ARGS__, __FILE__, __LINE__), 0))
+#define CRA_LOG_MAKE_ARGS(fmt, ...) fmt " -- %s:%d\n", __VA_ARGS__
+#define cra_log_msg(logger, lv, ...)                                                     \
+    do                                                                                   \
+    {                                                                                    \
+        if ((logger) && cra_log_get_level(logger) <= (lv))                               \
+            cra_log_msg(logger, lv, CRA_LOG_MAKE_ARGS(__VA_ARGS__, __FILE__, __LINE__)); \
+    } while (0)
 #else
-#define cra_log_msg(logger, lv, fmt, ...)                                                                            \
-    (void)(!!(logger) && cra_log_get_level(logger) <= (lv) && (cra_log_msg(logger, lv, fmt "\n", ##__VA_ARGS__), 0))
+#define CRA_LOG_MAKE_ARGS(fmt, ...) fmt "\n", __VA_ARGS__
+#define cra_log_msg(logger, lv, ...)                                    \
+    do                                                                  \
+    {                                                                   \
+        if ((logger) && cra_log_get_level(logger) <= (lv))              \
+            cra_log_msg(logger, lv, CRA_LOG_MAKE_ARGS(__VA_ARGS__, 0)); \
+    } while (0)
 #endif
 
-#define cra_log_trace(logger, fmt, ...) cra_log_msg(logger, CRA_LOG_LV_TRACE, fmt, ##__VA_ARGS__)
-#define cra_log_debug(logger, fmt, ...) cra_log_msg(logger, CRA_LOG_LV_DEBUG, fmt, ##__VA_ARGS__)
-#define cra_log_info(logger, fmt, ...)  cra_log_msg(logger, CRA_LOG_LV_INFO, fmt, ##__VA_ARGS__)
-#define cra_log_warn(logger, fmt, ...)  cra_log_msg(logger, CRA_LOG_LV_WARN, fmt, ##__VA_ARGS__)
-#define cra_log_error(logger, fmt, ...) cra_log_msg(logger, CRA_LOG_LV_ERROR, fmt, ##__VA_ARGS__)
-#define cra_log_fatal(logger, fmt, ...) cra_log_msg(logger, CRA_LOG_LV_FATAL, fmt, ##__VA_ARGS__)
+#define cra_log_trace(logger, ...) cra_log_msg(logger, CRA_LOG_LV_TRACE, __VA_ARGS__)
+#define cra_log_debug(logger, ...) cra_log_msg(logger, CRA_LOG_LV_DEBUG, __VA_ARGS__)
+#define cra_log_info(logger, ...)  cra_log_msg(logger, CRA_LOG_LV_INFO, __VA_ARGS__)
+#define cra_log_warn(logger, ...)  cra_log_msg(logger, CRA_LOG_LV_WARN, __VA_ARGS__)
+#define cra_log_error(logger, ...) cra_log_msg(logger, CRA_LOG_LV_ERROR, __VA_ARGS__)
+#define cra_log_fatal(logger, ...) cra_log_msg(logger, CRA_LOG_LV_FATAL, __VA_ARGS__)
 
 #endif

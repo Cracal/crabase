@@ -6,6 +6,7 @@
 #include "crabase/cra_assert.h"
 #include "crabase/cra_malloc.h"
 
+#if 0
 #define HELP_OPTION_LENGTH (sizeof("-h, --help") - 1)
 
 #define ERROR_BEGIN            "%s(ERROR): "
@@ -123,7 +124,7 @@ cra_mainarg_build(CraMainArg *ma, CraMainArgElement elements[], int nitems)
     for (i = 0, elem = elements; i < nitems; ++i, ++elem)
     {
 #define CRA_OPTIONS_FMT "Option '%s%s%s' "
-#define CRA_OPTIONS_ARG                                                                                \
+#define CRA_OPTIONS_ARG                                                                                 \
     elem->op ? elem->op : "", (elem->op && elem->option) ? ", " : "", elem->option ? elem->option : ""
 
         if (!elem->op && !elem->option)
@@ -452,3 +453,4 @@ cra_mainarg_stos_in_array(CraMainArgVal_u *retval, const char *opval, void *arra
     }
     return false;
 }
+#endif

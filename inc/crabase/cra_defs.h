@@ -70,8 +70,7 @@
 
 #if defined(__clang__)
 
-#error "TODO"
-
+#define CRA_COMPILER_CLANG
 #if defined(_MSC_VER)
 #define CRA_COMPILER_CLANG_CL
 #define CRA_COMPILER_NAME "Clang-cl"
@@ -119,7 +118,7 @@
 
 #if 1 // CRA_API
 
-#ifdef CRA_COMPILER_MSVC
+#if defined(CRA_COMPILER_MSVC) || defined(CRA_COMPILER_CLANG_CL)
 #define CRA_EXPORT_API __declspec(dllexport) CRA_EXTERN
 #define CRA_IMPORT_API __declspec(dllimport) CRA_EXTERN
 #else
@@ -183,14 +182,14 @@ cra_set_last_error(int err)
 #define container_of(ptr, type, member) ((type *)((char *)(ptr) - offsetof(type, member)))
 #endif
 
-#ifdef CRA_COMPILER_MSVC
-typedef ptrdiff_t ssize_t;
+#ifdef CRA_OS_WIN
+typedef SSIZE_T ssize_t;
 #endif
 #ifndef SSIZE_MAX
-#define SSIZE_MAX PTRDIFF_MAX
+#define SSIZE_MAX MAXSSIZE_T
 #endif
 #ifndef SSIZE_MIN
-#define SSIZE_MIN PTRDIFF_MIN
+#define SSIZE_MIN MINSSIZE_T
 #endif
 
 #ifdef CRA_COMPILER_MSVC

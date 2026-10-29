@@ -26,11 +26,12 @@
 
 #define CRA_DEQUE_ARRAY_PVAL(deque, array, index) ((array) + (index) * (deque)->itemsize)
 
-static inline bool
-cra_deque_is_pow2(size_t n)
-{
-    return n > 0 && (n & (n - 1)) == 0;
-}
+// static inline bool
+// cra_deque_is_pow2(size_t n)
+// {
+//     return n > 0 && (n & (n - 1)) == 0;
+// }
+#define CRA_DEQUE_IS_POW2(n) (n > 0 && (n & (n - 1)) == 0)
 
 static inline size_t
 cra_deque_get_next_pow2(size_t n)

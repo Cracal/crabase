@@ -8,6 +8,7 @@
  * @copyright Copyright (c) 2024
  *
  */
+#define _CRT_SECURE_NO_WARNINGS
 #include <float.h>
 #include "crabase/cra_malloc.h"
 #include "crabase/serialize/cra_bin_ser.h"
@@ -44,8 +45,8 @@ test_meta_with_struct(void)
     } MyDict;
     CRA_SER_DEF_STRUCT_META_AND_STRUCT(static, MyStruct0, NULL, (BOOL, b, 1), (INT8, i8, 2));
     CRA_SER_DEF_ARRAY_META_AND_ARRAY(static, (MyArray, 4), (STRING, 20));
-    CRA_SER_DEF_LIST_META(static, (MyList, MyListInt32), (INT32), NULL);
-    CRA_SER_DEF_DICT_META(static, (MyDict, MyDict), (UINT16), (STRING), NULL);
+    CRA_SER_DEF_LIST_META(static, (MyList, MyListInt32), (INT32), 0);
+    CRA_SER_DEF_DICT_META(static, (MyDict, MyDict), (UINT16), (STRING), 0);
     CRA_SER_DEF_STRUCT_META_AND_STRUCT(
 
       , MyStruct, init_mystruct,
@@ -279,7 +280,7 @@ test_meta_with_array(void)
     {
         unsigned char data[8];
     } MyList;
-    CRA_SER_DEF_LIST_META(static, (MyList, MyList), (FLOAT32), NULL);
+    CRA_SER_DEF_LIST_META(static, (MyList, MyList), (FLOAT32), 0);
     CRA_SER_DEF_ARRAY_META_AND_ARRAY(, (AL1), (LIST, MyList, &MyList_meta));
     CRA_SER_DEF_ARRAY_META_AND_ARRAY(, (AL2), (LIST, MyList, &MyList_meta, false));
     CRA_SER_DEF_ARRAY_META_AND_ARRAY(, (AL3), (LIST, MyList, &MyList_meta, true));
@@ -290,7 +291,7 @@ test_meta_with_array(void)
     {
         unsigned char data[8];
     } MyDict;
-    CRA_SER_DEF_DICT_META(static, (MyDict, MyDict), (UINT8), (STRING, 20), NULL);
+    CRA_SER_DEF_DICT_META(static, (MyDict, MyDict), (UINT8), (STRING, 20), 0);
     CRA_SER_DEF_ARRAY_META_AND_ARRAY(, (AD1), (DICT, MyDict, &MyDict_meta));
     CRA_SER_DEF_ARRAY_META_AND_ARRAY(, (AD2), (DICT, MyDict, &MyDict_meta, false));
     CRA_SER_DEF_ARRAY_META_AND_ARRAY(, (AD3), (DICT, MyDict, &MyDict_meta, true));
@@ -502,7 +503,7 @@ test_meta_with_list(void)
     CRA_SER_DEF_LIST_META(, (MyList, list1), (LIST, MyList, &b_meta), FUNCS);
     CRA_SER_DEF_LIST_META(, (MyList, list2), (LIST, MyList, &b_meta, false), FUNCS);
     CRA_SER_DEF_LIST_META(, (MyList, list3), (LIST, MyList, &b_meta, true), FUNCS);
-    CRA_SER_DEF_DICT_META(static, (MyDict, MyDict), (UINT16), (INT32, true), NULL);
+    CRA_SER_DEF_DICT_META(static, (MyDict, MyDict), (UINT16), (INT32, true), 0);
     CRA_SER_DEF_LIST_META(, (MyDict, dict1), (DICT, MyDict, &MyDict_meta), FUNCS);
     CRA_SER_DEF_LIST_META(, (MyDict, dict2), (DICT, MyDict, &MyDict_meta, false), FUNCS);
     CRA_SER_DEF_LIST_META(, (MyDict, dict3), (DICT, MyDict, &MyDict_meta, true), FUNCS);
@@ -659,7 +660,7 @@ test_meta_with_dict(void)
     CRA_SER_DEF_DICT_META(, (MyDict, stru), (STRING, 20), (STRUCT, MyStruct, &MyStruct_meta), FUNCS);
     CRA_SER_DEF_ARRAY_META_AND_ARRAY(static, (MyArray), (STRING, 200));
     CRA_SER_DEF_DICT_META(, (MyDict, arr), (STRING), (ARRAY, MyArray, &MyArray_meta), FUNCS);
-    CRA_SER_DEF_LIST_META(static, (MyList, MyList), (STRING), NULL);
+    CRA_SER_DEF_LIST_META(static, (MyList, MyList), (STRING), 0);
     CRA_SER_DEF_DICT_META(, (MyDict, list), (STRING), (LIST, MyList, &MyList_meta), FUNCS);
     CRA_SER_DEF_DICT_META(, (MyDict, dict), (STRING), (DICT, MyDict, &b_meta), FUNCS);
 

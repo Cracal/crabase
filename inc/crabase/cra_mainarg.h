@@ -12,6 +12,7 @@
 #define __CRABASE_CRA_MAINARG_H__
 #include "cra_defs.h"
 
+#if 0
 typedef union
 {
     bool    b;
@@ -72,7 +73,7 @@ cra_mainarg_get_val(CraMainArg *ma, char *option, CraMainArgVal_u default_val);
     cra_mainarg_get_val(ma, option, (CraMainArgVal_u){ .i = default_val }).i
 #define cra_mainarg_get_f(ma, option, default_val)                           \
     cra_mainarg_get_val(ma, option, (CraMainArgVal_u){ .f = default_val }).f
-#define cra_mainarg_get_s(ma, option, default_val)                           \
+#define cra_mainarg_get_s(ma, option, default_val)                            \
     cra_mainarg_get_val(ma, option, (CraMainArgVal_u){ .s = default_val }).s
 
 CRA_API int
@@ -86,7 +87,7 @@ cra_mainarg_get_pos_args_val(CraMainArg *ma, int index, CraMainArgVal_u default_
     cra_mainarg_get_pos_args_val(ma, index, (CraMainArgVal_u){ .i = default_val }, func, arg).i
 #define cra_mainarg_get_pos_args_f(ma, index, default_val, func, arg)                           \
     cra_mainarg_get_pos_args_val(ma, index, (CraMainArgVal_u){ .f = default_val }, func, arg).f
-#define cra_mainarg_get_pos_args_s(ma, index, default_val, func, arg)                           \
+#define cra_mainarg_get_pos_args_s(ma, index, default_val, func, arg)                            \
     cra_mainarg_get_pos_args_val(ma, index, (CraMainArgVal_u){ .s = default_val }, func, arg).s
 
 CRA_API void
@@ -122,5 +123,6 @@ cra_mainarg_stof_in_range(CraMainArgVal_u *retval, const char *opval, void *rang
 // `array`: char *array[] = {"str1", ..., "strN", NULL}.
 CRA_API bool
 cra_mainarg_stos_in_array(CraMainArgVal_u *retval, const char *opval, void *array);
+#endif
 
 #endif
