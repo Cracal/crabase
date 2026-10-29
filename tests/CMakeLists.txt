@@ -1,6 +1,9 @@
-cmake_minimum_required(VERSION 3.22.0)
+include(CTest)
+enable_testing()
 
-set(LIBS ${PROJECT_NAME} mem_detect_config)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+
+set(LIBS crabase)
 
 add_executable(test_atomic test_atomic.c)
 target_link_libraries(test_atomic ${LIBS})

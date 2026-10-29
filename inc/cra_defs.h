@@ -127,10 +127,14 @@
 #define CRA_IMPORT_API CRA_EXTERN
 #endif
 
-#ifdef CRA_BUILD_DLL
+#ifdef CRABASE_STATIC
+#define CRA_API CRA_EXTERN
+#else
+#ifdef CRABASE_EXPORT
 #define CRA_API CRA_EXPORT_API
 #else
 #define CRA_API CRA_IMPORT_API
+#endif
 #endif
 
 #endif // end CRA_API

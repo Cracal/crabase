@@ -12,7 +12,7 @@
 #define __CRA_THREAD_H__
 #include "cra_defs.h"
 
-#if !defined(__STDC_NO_THREADS__) && !(defined(CRA_COMPILER_MSVC) || defined(CRA_COMPILER_MINGW))
+#if !defined(__STDC_NO_THREADS__)
 
 #include <threads.h>
 
@@ -91,8 +91,7 @@ typedef unsigned long cra_tid_t;
 CRA_API cra_tid_t
 cra_get_current_tid(void);
 
-CRA_API
-const char *
+CRA_API const char *
 cra_get_current_tid_str(int *retlen);
 
 #endif
