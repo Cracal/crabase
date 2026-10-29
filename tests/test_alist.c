@@ -9,8 +9,8 @@
  *
  */
 #include <time.h>
-#include "cra_malloc.h"
-#include "collections/cra_alist.h"
+#include "crabase/cra_malloc.h"
+#include "crabase/collections/cra_alist.h"
 
 void
 test_new_delete(void)

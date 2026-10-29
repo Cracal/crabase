@@ -12,7 +12,9 @@ target_compile_options(crabase_options INTERFACE
 
 target_compile_options(crabase_options INTERFACE
     # MSVC
-    $<$<C_COMPILER_ID:MSVC>:/W4 /WX /utf-8>
+    $<$<C_COMPILER_ID:MSVC>:
+        /W4 /WX /utf-8 /std:c11
+    >
 )
 
 target_link_libraries(crabase_options INTERFACE

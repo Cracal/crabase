@@ -8,10 +8,10 @@
  * @copyright Copyright (c) 2024
  *
  */
-#include "serialize/cra_bin_ser.h"
+#include "crabase/serialize/cra_bin_ser.h"
 #include "cra_serialize_inner.h"
-#include "cra_endian.h"
-#include "cra_malloc.h"
+#include "crabase/cra_endian.h"
+#include "crabase/cra_malloc.h"
 
 // length/count encoding:
 //      0: null

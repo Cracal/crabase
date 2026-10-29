@@ -62,7 +62,7 @@ target_include_directories(crabase
 
 target_link_libraries(crabase PUBLIC crabase_options)
 if(CRABASE_LOG_FILE_LINE)
-    target_compile_definitions(crabase PRIVATE CRA_LOG_FILE_LINE)
+    target_compile_definitions(crabase PUBLIC CRA_LOG_FILE_LINE)
 endif()
 if(CRABASE_RANDOM_STR_INIT_HASHCODE)
     target_compile_definitions(crabase PRIVATE CRA_RANDOM_STR_INIT_HASHCODE)

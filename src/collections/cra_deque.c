@@ -8,8 +8,8 @@
  * @copyright Copyright (c) 2021
  *
  */
-#include "collections/cra_deque.h"
-#include "cra_malloc.h"
+#include "crabase/collections/cra_deque.h"
+#include "crabase/cra_malloc.h"
 
 #define CRA_DEQUE_ITEM_SHIFT 6
 #define CRA_DEQUE_ITEM_COUNT (1ULL << CRA_DEQUE_ITEM_SHIFT)

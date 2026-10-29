@@ -8,8 +8,8 @@
  * @copyright Copyright (c) 2024
  *
  */
-#include "threads/cra_lock.h"
-#include "threads/cra_thread.h"
+#include "crabase/threads/cra_lock.h"
+#include "crabase/threads/cra_thread.h"
 
 #if 1 // test thread
 

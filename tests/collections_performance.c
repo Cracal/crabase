@@ -8,12 +8,12 @@
  * @copyright Copyright (c) 2025
  *
  */
-#include "collections/cra_alist.h"
-#include "collections/cra_llist.h"
-#include "collections/cra_deque.h"
-#include "collections/cra_dict.h"
-#include "cra_malloc.h"
-#include "cra_time.h"
+#include "crabase/collections/cra_alist.h"
+#include "crabase/collections/cra_llist.h"
+#include "crabase/collections/cra_deque.h"
+#include "crabase/collections/cra_dict.h"
+#include "crabase/cra_malloc.h"
+#include "crabase/cra_time.h"
 
 static inline int
 rand_large(void)

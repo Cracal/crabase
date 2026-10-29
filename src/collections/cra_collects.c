@@ -8,10 +8,10 @@
  * @copyright Copyright (c) 2024
  *
  */
-#include "collections/cra_collects.h"
+#include "crabase/collections/cra_collects.h"
 
 #ifdef CRA_RANDOM_STR_INIT_HASHCODE
-#include "cra_atomic.h"
+#include "crabase/cra_atomic.h"
 #include <time.h>
 #ifdef CRA_OS_WIN
 #include <wincrypt.h>

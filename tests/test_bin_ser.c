@@ -9,9 +9,9 @@
  *
  */
 #include <float.h>
-#include "cra_malloc.h"
-#include "serialize/cra_bin_ser.h"
-#include "collections/cra_serializable.h"
+#include "crabase/cra_malloc.h"
+#include "crabase/serialize/cra_bin_ser.h"
+#include "crabase/collections/cra_serializable.h"
 
 // for cra_ser_check_id_duplicate & CRA_SER_DEF_IDS_BITMAP
 #include "../src/serialize/cra_serialize_inner.h"

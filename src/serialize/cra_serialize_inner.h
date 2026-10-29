@@ -10,9 +10,9 @@
  */
 #ifndef __CRA_SERIALIZE_INNER_H__
 #define __CRA_SERIALIZE_INNER_H__
-#include "serialize/cra_serialize.h"
-#include "cra_string.h"
-#include "cra_assert.h"
+#include "crabase/serialize/cra_serialize.h"
+#include "crabase/cra_string.h"
+#include "crabase/cra_assert.h"
 
 #define CRA_SER_NESTING_MAX 100
 

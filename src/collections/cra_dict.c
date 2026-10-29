@@ -8,8 +8,8 @@
  * @copyright Copyright (c) 2021
  *
  */
-#include "collections/cra_dict.h"
-#include "cra_malloc.h"
+#include "crabase/collections/cra_dict.h"
+#include "crabase/cra_malloc.h"
 
 #define CRA_DICT_MAX_CHAIN_LENGTH 16
 
