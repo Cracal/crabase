@@ -781,7 +781,7 @@ test_string_unicode(void)
                   "\"t1\":\"Hello, World! 123\","
                   "\"t2\":\"你好，世界！\","
                   "\"t3\":\"\\\" \\\\ \\/ \\b \\f \\n \\r \\t\","
-                  "\"t4\":\"\u0041\u4F60\u597D\","
+                  "\"t4\":\"\\u0041\\u4F60\\u597D\","
                   "\"t5\":\"\\uD83D\\uDE00\","
                   "\"t6\":\"哈哈，ABcd=1029\\n你好 😀\","
                   "\"t7\":\"\\u0001\\u0002\\u001F\""
@@ -809,9 +809,9 @@ test_string_unicode(void)
 
     len = sizeof(buffer);
     assert_always(cra_json_stringify(buffer, &len, &c2, &UniTestC_meta, false));
-    // printf("%s\n", buffer);
-    // printf("%s\n", t2);
-    // printf("%s\n", t1);
+    printf("%s\n", buffer);
+    printf("%s\n", t2);
+    printf("%s\n", t1);
     assert_always(strcmp(buffer, t2) == 0);
 
     assert_always(cra_json_parse(t1, sizeof(t1), &c1, &UniTestC_meta));
@@ -1183,7 +1183,7 @@ test_array(void)
 
 CRA_SER_DEF_LIST_META(static, (CraAList, ALI32), (INT32), CRA_ALIST_SRLZ);
 CRA_SER_DEF_LIST_META(static, (CraLList, LLStr), (STRING, 20), CRA_LLIST_SRLZ);
-CRA_DEQUE_DEF_SRLZ_UNINIT_FN(DeStr_uninit, char *, val, cra_free(val););
+CRA_DEQUE_DEF_SRLZ_UNINIT_FN(DeStr_uninit, char *, val, cra_free(val);)
 CRA_SER_DEF_LIST_META(static, (CraDeque, DeStr), (STRING), CRA_DEQUE_SRLZ_WITH_UNINIT(DeStr_uninit));
 
 CRA_SER_DEF_STRUCT_META_AND_STRUCT_AND_UNINIT(

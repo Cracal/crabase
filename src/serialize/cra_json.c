@@ -451,8 +451,8 @@ cra_json_read_string(CraSerializer *szer, unsigned char *val, const CraSerInfo *
     unsigned char *d;
     unsigned char *p;
     unsigned char *e;
-    uint32_t       cp;
-    uint32_t       lo;
+    uint32_t       cp = 0;
+    uint32_t       lo = 0;
 
     CHECK_TYPE(szer, info->type, CRA_SER_TYPE_STRING);
 
@@ -547,7 +547,8 @@ cra_json_read_string(CraSerializer *szer, unsigned char *val, const CraSerInfo *
                     p += l;
                     break;
                 }
-                // invalid_value; fall through
+                // invalid_value
+                // FALL-THROUGH
 
             default:
                 *p = '\0';
@@ -1460,6 +1461,7 @@ cra_json_read_list(CraSerializer *szer, unsigned char *val, bool is_ptr, const C
     const CraSerInfo *info;
     unsigned char    *list;
     unsigned char    *buff;
+    CraStringView     sv;
 
     assert(val);
     assert(meta);
@@ -1496,7 +1498,7 @@ cra_json_read_list(CraSerializer *szer, unsigned char *val, bool is_ptr, const C
         if (!cra_json_read_value(szer, value, meta, info, 0))
         {
         fail3:
-            CraStringView sv = CRA_STRING_VIEW_INIT_CONST("<<ListItem>>");
+            sv = cra_string_view_from_cstr("<<ListItem>>", sizeof("<<ListItem>>") - 1);
             cra_ser_error_append(szer, &sv);
             goto fail2;
         }
@@ -1539,6 +1541,7 @@ cra_json_write_dict(CraSerializer *szer, const unsigned char *val, bool is_ptr, 
     const unsigned char *dict;
     const CraSerInfo    *kinfo;
     const CraSerInfo    *vinfo;
+    CraStringView        sv;
 
     assert(val);
     assert(meta);
@@ -1596,7 +1599,7 @@ cra_json_write_dict(CraSerializer *szer, const unsigned char *val, bool is_ptr, 
         if (!cra_json_write_value(szer, value, meta, vinfo, 1))
         {
         fail2:
-            CraStringView sv = CRA_STRING_VIEW_INIT_CONST("<<DictItem>>");
+            sv = cra_string_view_from_cstr("<<DictItem>>", sizeof("<<DictItem>>") - 1);
             cra_ser_error_append(szer, &sv);
             goto fail;
         }
@@ -1623,6 +1626,7 @@ cra_json_read_dict(CraSerializer *szer, unsigned char *val, bool is_ptr, const C
     const CraSerInfo *vinfo;
     unsigned char    *dict;
     unsigned char    *buff;
+    CraStringView     sv;
 
     assert(val);
     assert(meta);
@@ -1684,7 +1688,7 @@ cra_json_read_dict(CraSerializer *szer, unsigned char *val, bool is_ptr, const C
                 cra_free(p);
             }
         fail3:
-            CraStringView sv = CRA_STRING_VIEW_INIT_CONST("<<DictItem>>");
+            sv = cra_string_view_from_cstr("<<DictItem>>", sizeof("<<DictItem>>") - 1);
             cra_ser_error_append(szer, &sv);
             goto fail2;
         }

@@ -1720,7 +1720,7 @@ test_array(void)
 
 CRA_SER_DEF_LIST_META(static, (CraAList, ALI32), (INT32), CRA_ALIST_SRLZ);
 CRA_SER_DEF_LIST_META(static, (CraLList, LLStr), (STRING, 20), CRA_LLIST_SRLZ);
-CRA_DEQUE_DEF_SRLZ_UNINIT_FN(DeStr_uninit, char *, val, cra_free(val););
+CRA_DEQUE_DEF_SRLZ_UNINIT_FN(DeStr_uninit, char *, val, cra_free(val);)
 CRA_SER_DEF_LIST_META(static, (CraDeque, DeStr), (STRING), CRA_DEQUE_SRLZ_WITH_UNINIT(DeStr_uninit));
 
 CRA_SER_DEF_STRUCT_META_AND_STRUCT_AND_UNINIT(
