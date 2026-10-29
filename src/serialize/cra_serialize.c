@@ -65,6 +65,36 @@ cra_ser_error_append(CraSerializer *szer, const CraStringView *name)
     snprintf(szer->error.msg + len, sizeof(szer->error.msg) - len, ":" CRA_SV_FMT ".", CRA_SV_ARG(*name));
 }
 
+void
+cra_ser_destroy_object(void *pobj, const CraSerMeta *meta, const CraSerInfo *info)
+{
+    bool  is_ptr = info->flags & CRA_SER_FLAG_PTR;
+    void *obj;
+
+    if (is_ptr)
+        memcpy(&obj, pobj, sizeof(void *));
+    else
+        obj = pobj;
+
+    assert(obj);
+    assert(pobj);
+
+    if (meta)
+    {
+        if (meta->type == CRA_SER_TYPE_STRUCT && meta->for_struct.uninit)
+            meta->for_struct.uninit(obj);
+        else if (meta->type == CRA_SER_TYPE_LIST && (meta->flags & CRA_SER_FLAG_ARRAY) && meta->for_array.uninit)
+            meta->for_array.uninit(pobj);
+        else if (meta->type == CRA_SER_TYPE_LIST && meta->for_list.uninit)
+            meta->for_list.uninit(obj);
+        else if (meta->type == CRA_SER_TYPE_DICT && meta->for_dict.uninit)
+            meta->for_dict.uninit(obj);
+    }
+
+    if (is_ptr)
+        cra_free(obj);
+}
+
 bool
 cra_check_id_unique(const CraSerMeta *meta, uint16_t *duplicate_id)
 {

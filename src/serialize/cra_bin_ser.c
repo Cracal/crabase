@@ -968,6 +968,7 @@ cra_bin_read_list(CraSerializer *szer, unsigned char *val, bool is_ptr, const Cr
         }
         if (!meta->for_list.append(list, value))
         {
+            cra_ser_destroy_object(value, meta->metas[0], info);
             cra_ser_error_set(szer, CRA_SER_ERR_APPEND_FAILED);
             goto fail;
         }
@@ -1148,6 +1149,7 @@ cra_bin_read_dict(CraSerializer *szer, unsigned char *val, bool is_ptr, const Cr
 
         if (!meta->for_dict.append(dict, key, value))
         {
+            cra_ser_destroy_object(value, meta->metas[1], vinfo);
             cra_ser_error_set(szer, CRA_SER_ERR_APPEND_FAILED);
             goto fail;
         }

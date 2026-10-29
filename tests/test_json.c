@@ -13,7 +13,7 @@
 #include "serialize/cra_json.h"
 #include "collections/cra_serializable.h"
 
-#define FORMAT true
+#define FORMAT false
 
 void
 test_bool(void)

@@ -267,6 +267,9 @@ cra_ser_error_set(CraSerializer *szer, CraSerErr_e errcode);
 void
 cra_ser_error_append(CraSerializer *szer, const CraStringView *name);
 
+void
+cra_ser_destroy_object(void *pobj, const CraSerMeta *meta, const CraSerInfo *info);
+
 static inline void
 cra_serializer_init(CraSerializer *szer, void *buf, size_t size, bool format)
 {
