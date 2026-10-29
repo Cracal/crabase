@@ -52,14 +52,6 @@ else()
 endif()
 add_library(crabase::crabase ALIAS crabase)
 
-target_include_directories(crabase
-    PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
-        $<INSTALL_INTERFACE:inc>
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
-)
-
 target_link_libraries(crabase PUBLIC crabase_options)
 if(CRABASE_LOG_FILE_LINE)
     target_compile_definitions(crabase PUBLIC CRA_LOG_FILE_LINE)
@@ -72,6 +64,13 @@ if(CRABASE_JSON_SAFE_INT)
 endif()
 
 
+target_include_directories(crabase
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+        $<INSTALL_INTERFACE:inc>
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
 
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
@@ -81,7 +80,11 @@ install(TARGETS crabase crabase_options
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    PUBLIC_HEADER DESTINATION inc
+)
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/inc/
+    DESTINATION inc
+    FILES_MATCHING PATTERN "*.h"
 )
 
 install(EXPORT crabaseTargets
