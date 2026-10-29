@@ -3,7 +3,7 @@ project(crabase VERSION 0.1.0 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
-set(CMAKE_C_EXTENSIONS OFF)
+# set(CMAKE_C_EXTENSIONS OFF)
 message(STATUS "c standard: ${CMAKE_C_STANDARD}")
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -13,7 +13,15 @@ set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release RelWithDebInf
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "Configuration types: ${CMAKE_CONFIGURATION_TYPES}")
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
+foreach(cfg DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${cfg} ${CMAKE_BINARY_DIR}/bin)
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_${cfg} ${CMAKE_BINARY_DIR}/bin)
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${cfg} ${CMAKE_BINARY_DIR}/lib)
+endforeach()
 
 option(CRABASE_BUILD_TESTS "Build tests" ON)
 option(CRABASE_BUILD_SHARED_LIBS "Build shared library" ON)
@@ -26,6 +34,8 @@ option(CRABASE_JSON_SAFE_INT "Force SAFE_INT in json" ON)
 include(cmake/crabaseOptions.cmake)
 
 if(CRABASE_BUILD_TESTS)
+    include(CTest)
+    enable_testing()
     add_subdirectory(tests)
 endif()
 
@@ -51,7 +61,6 @@ target_include_directories(crabase
 )
 
 target_link_libraries(crabase PUBLIC crabase_options)
-
 if(CRABASE_LOG_FILE_LINE)
     target_compile_definitions(crabase PRIVATE CRA_LOG_FILE_LINE)
 endif()
@@ -59,7 +68,7 @@ if(CRABASE_RANDOM_STR_INIT_HASHCODE)
     target_compile_definitions(crabase PRIVATE CRA_RANDOM_STR_INIT_HASHCODE)
 endif()
 if(CRABASE_JSON_SAFE_INT)
-    target_compile_definitions(crabase PRIVATE CRA_JSON_SAFE_INT)
+    target_compile_definitions(crabase PUBLIC CRA_JSON_SAFE_INT)
 endif()
 
 

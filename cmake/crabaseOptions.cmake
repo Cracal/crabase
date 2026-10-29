@@ -15,9 +15,9 @@ target_compile_options(crabase_options INTERFACE
     $<$<C_COMPILER_ID:MSVC>:/W4 /WX /utf-8>
 )
 
-target_compile_options(crabase_options INTERFACE
-    $<$<AND:$<PLATFORM_ID:Linux>, $<OR:$<C_COMPILER_ID:GNU>,$<C_COMPILER_ID:Clang>>>:
-        -lm
+target_link_libraries(crabase_options INTERFACE
+    $<$<AND:$<PLATFORM_ID:Linux>,$<OR:$<C_COMPILER_ID:GNU>,$<C_COMPILER_ID:Clang>>>:
+        m
     >
 )
 
