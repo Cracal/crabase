@@ -220,7 +220,7 @@ test_test(void)
 
     int  idx, key, val;
     int *check = (int *)cra_malloc(sizeof(int) * 100000);
-    bzero(check, sizeof(sizeof(int) * 100000));
+    memset(check, 0, sizeof(sizeof(int) * 100000));
     for (i = 0; i < 100; i++)
     {
         n = (rand() + 1) % 100000;

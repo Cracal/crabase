@@ -584,7 +584,7 @@ test_test(void)
 
     int idx, last_idx;
     int check[10000];
-    bzero(check, sizeof(check));
+    memset(check, 0, sizeof(check));
     for (i = 0; i < 100; i++)
     {
         last_idx = 0;

@@ -40,7 +40,7 @@ void(cra_alist_uninit)(CraAList *list)
     assert(list);
     if (list->array)
         cra_free(list->array);
-    bzero(list, sizeof(*list));
+    memset(list, 0, sizeof(*list));
 }
 
 static inline bool

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.22.0)
 project(crabase VERSION 0.1.0 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_EXTENSIONS ON)
+set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 message(STATUS "c standard: ${CMAKE_C_STANDARD}")
 
@@ -29,6 +29,8 @@ include(cmake/crabaseOptions.cmake)
 
 option(CRABASE_BUILD_TESTS "Build tests" ON)
 if(CRABASE_BUILD_TESTS)
+    include(CTest)
+    enable_testing()
     add_subdirectory(tests)
 endif()
 

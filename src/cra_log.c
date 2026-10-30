@@ -85,7 +85,7 @@ cra_log_unref(CraLogger *logger)
 
 static CraLogOutputAsync s_log_async = { .initialized_lock = CRA_ATOMIC_FLAG_INIT };
 
-#define cra_async_initialized_lock() while (cra_atomic_flag_test_and_set(&s_log_async.initialized_lock, CRA_MO_ACQUIRE))
+#define cra_async_initialized_lock()   while (cra_atomic_flag_test_and_set(&s_log_async.initialized_lock, CRA_MO_ACQUIRE))
 #define cra_async_initialized_unlock() cra_atomic_flag_clear(&s_log_async.initialized_lock, CRA_MO_RELEASE)
 
 static CraLogBuf *
@@ -554,7 +554,7 @@ cra_log_open(const char *name, CraLogLv_e lv, bool use_zulu, bool output_to_file
         exit(EXIT_FAILURE);
     }
 
-    bzero(logger, sizeof(*logger));
+    memset(logger, 0, sizeof(*logger));
 
     logger->level = lv;
     logger->refcnt = 1;

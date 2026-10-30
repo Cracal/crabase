@@ -46,7 +46,7 @@ cra_blockdq_uninit(CraBlockdq *deque)
     cra_cond_destroy(&deque->not_empty);
     cra_mutex_destroy(&deque->mutex);
 
-    // bzero(deque, sizeof(*deque));
+    // memset(deque, 0, sizeof(*deque));
 }
 
 void

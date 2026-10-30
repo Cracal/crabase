@@ -10,6 +10,8 @@
  */
 #ifndef __CRABASE_CRA_BUFFER_DEFS_H__
 #define __CRABASE_CRA_BUFFER_DEFS_H__
+#define _POSIX_C_SOURCE 200809L
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -195,8 +197,6 @@ typedef SSIZE_T ssize_t;
 #endif
 
 #ifdef CRA_OS_WIN
-
-#define bzero ZeroMemory
 
 #define cra_sleep(sec)   Sleep((sec) * 1000)
 #define cra_msleep(msec) Sleep(msec)

@@ -49,7 +49,7 @@ cra_freenodelist_put(CraLList *list, CraLListNode *node)
     assert(list);
     assert(node);
 
-    // bzero(node->val, sizeof(CraTimer_base *));
+    // memset(node->val, 0, sizeof(CraTimer_base *));
     cra_llist_insert_node(list, 0, node);
 }
 

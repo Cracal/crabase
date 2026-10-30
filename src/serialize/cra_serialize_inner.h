@@ -78,19 +78,19 @@ struct CraSerializer
             return false; \
     } while (0)
 
-#define CRA_SER_CALL_INIT(pp, p, is_ptr, fn, ...)                  \
-    do                                                             \
-    {                                                              \
-        if (!fn(p, __VA_ARGS__))                                   \
-        {                                                          \
-            if (is_ptr)                                            \
-            {                                                      \
-                cra_free(p);                                       \
-                bzero(pp, sizeof(void *)); /* *(T **)pp = NULL; */ \
-            }                                                      \
-            cra_ser_error_set(szer, CRA_SER_ERR_INIT_FAILED);      \
-            return false;                                          \
-        }                                                          \
+#define CRA_SER_CALL_INIT(pp, p, is_ptr, fn, ...)                      \
+    do                                                                 \
+    {                                                                  \
+        if (!fn(p, __VA_ARGS__))                                       \
+        {                                                              \
+            if (is_ptr)                                                \
+            {                                                          \
+                cra_free(p);                                           \
+                memset(pp, 0, sizeof(void *)); /* *(T **)pp = NULL; */ \
+            }                                                          \
+            cra_ser_error_set(szer, CRA_SER_ERR_INIT_FAILED);          \
+            return false;                                              \
+        }                                                              \
     } while (0)
 
 #define CRA_SER_NEW_OBJ(obj, size)                       \
@@ -110,11 +110,11 @@ struct CraSerializer
         if (fn)                                  \
             fn(p);                               \
         else                                     \
-            bzero(p, (meta)->size);              \
+            memset(p, 0, (meta)->size);          \
         if (is_ptr)                              \
         {                                        \
             cra_free(p);                         \
-            bzero(pp, sizeof(void *));           \
+            memset(pp, 0, sizeof(void *));       \
         }                                        \
     } while (0)
 
@@ -172,7 +172,7 @@ struct CraSerializer
             if ((meta)->for_struct.init)                                                       \
                 CRA_SER_CALL_INIT(pstru, stru, is_ptr, (meta)->for_struct.init, (meta)->size); \
             else                                                                               \
-                bzero(stru, (meta)->size);                                                     \
+                memset(stru, 0, (meta)->size);                                                 \
         }                                                                                      \
     } while (0)
 #define CRA_SER_DEL_STRUCT(pstru, stru, meta, is_ptr)                     \

@@ -668,7 +668,7 @@ test_string(void)
     struct Str out, in = { "hello pointer", "hello\tarray", NULL, "", "" };
 
     length = sizeof(buffer);
-    bzero(buffer, sizeof(buffer));
+    memset(buffer, 0, sizeof(buffer));
     assert_always(cra_json_stringify(buffer, &length, &in, &Str_meta, FORMAT));
     printf("%s\n", buffer);
     assert_always(cra_json_parse(buffer, length, &out, &Str_meta));
@@ -683,7 +683,7 @@ test_string(void)
 
     // small buffer
     length = 90;
-    bzero(&out, sizeof(out));
+    memset(&out, 0, sizeof(out));
     assert_always(!cra_json_stringify_err(buffer, &length, &in, &Str_meta, &err, FORMAT));
     assert_always(err.err == CRA_SER_ERR_NO_BUF);
     printf("%s\n", err.msg);
@@ -703,7 +703,7 @@ test_string(void)
 
     // type mismatch
     length = sizeof(buffer);
-    bzero(&out, sizeof(out));
+    memset(&out, 0, sizeof(out));
     assert_always(cra_json_stringify_err(buffer, &length, &in, &Str_meta, &err, FORMAT));
     assert_always(err.err == CRA_SER_ERR_OK);
     printf("%s\n", err.msg);
@@ -714,7 +714,7 @@ test_string(void)
 
     // char array too small
     length = sizeof(buffer);
-    bzero(&out, sizeof(out));
+    memset(&out, 0, sizeof(out));
     assert_always(cra_json_stringify_err(buffer, &length, &in, &Str_meta, &err, FORMAT));
     assert_always(err.err == CRA_SER_ERR_OK);
     printf("%s\n", err.msg);
@@ -980,11 +980,11 @@ init_n(void *stru, size_t size)
     n->n = NULL;
     n->v = 0;
     n->s = NULL;
-    bzero(&n->t, sizeof(n->t));
+    memset(&n->t, 0, sizeof(n->t));
     n->o = NULL;
-    bzero(&n->a, sizeof(n->a));
+    memset(&n->a, 0, sizeof(n->a));
     n->l = NULL;
-    bzero(&n->c, sizeof(n->c));
+    memset(&n->c, 0, sizeof(n->c));
     return true;
 }
 
