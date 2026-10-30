@@ -9,7 +9,7 @@
  *
  */
 #include "cra_serialize_inner.h"
-#include "cra_malloc.h"
+#include "crabase/cra_malloc.h"
 
 static inline const char *
 cra_ser_errcode_to_string(CraSerErr_e errcode)

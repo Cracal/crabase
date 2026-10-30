@@ -1,4 +1,5 @@
-#include "cra_filedir.h"
+#include "crabase/cra_filedir.h"
+#include "crabase/cra_malloc.h"
 
 #define IS_SLASH(c) CRA_IS_PATH_SEP(c)
 #define IS_ZERO(c)  (c == '\0')
@@ -6,17 +7,12 @@
 int
 cra_mkdirs(const char *path, cra_mode_t mode)
 {
-    char  *buf;
-    size_t start;
-    size_t len;
-    size_t i;
-
     if (path == NULL || IS_ZERO(*path))
         return EINVAL;
 
-    start = 0;
-    len = strlen(path);
-    buf = malloc(len + 1);
+    size_t       start = 0;
+    const size_t len = strlen(path);
+    CRA_TEMP_NEW(char, buf, len + 1);
     if (!buf)
         return ENOMEM;
 
@@ -26,7 +22,9 @@ cra_mkdirs(const char *path, cra_mode_t mode)
 
     /* C:\\ */
     if (len >= 2 && buf[1] == ':')
+    {
         start = 3;
+    }
     /* \\server\share */
     else if (len >= 2 && IS_SLASH(buf[0]) && IS_SLASH(buf[1]))
     {
@@ -58,10 +56,10 @@ cra_mkdirs(const char *path, cra_mode_t mode)
 
 #endif
 
-    int  err;
+    int  err = 0;
     char old;
 
-    for (i = start; i < len; ++i)
+    for (size_t i = start; i < len; ++i)
     {
         if (!IS_SLASH(buf[i]))
             continue;
@@ -75,10 +73,7 @@ cra_mkdirs(const char *path, cra_mode_t mode)
             {
                 err = cra_get_last_error();
                 if (err != EEXIST || !cra_is_dir(buf))
-                {
-                    free(buf);
-                    return err;
-                }
+                    goto end;
             }
         }
 
@@ -91,15 +86,13 @@ cra_mkdirs(const char *path, cra_mode_t mode)
         {
             err = cra_get_last_error();
             if (err != EEXIST || !cra_is_dir(buf))
-            {
-                free(buf);
-                return err;
-            }
+                goto end;
         }
     }
 
-    free(buf);
-    return 0;
+end:
+    CRA_TEMP_DEL(char, buf, len + 1);
+    return err;
 }
 
 char *

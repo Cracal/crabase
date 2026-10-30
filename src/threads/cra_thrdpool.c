@@ -8,11 +8,11 @@
  * @copyright Copyright (c) 2021
  *
  */
-#include "cra_assert.h"
-#include "cra_malloc.h"
-#include "threads/cra_cdl.h"
-#include "threads/cra_blockdq.h"
-#include "threads/cra_thrdpool.h"
+#include "crabase/cra_assert.h"
+#include "crabase/cra_malloc.h"
+#include "crabase/threads/cra_cdl.h"
+#include "crabase/threads/cra_blockdq.h"
+#include "crabase/threads/cra_thrdpool.h"
 
 static_assert((int)CRA_THRDPOOL_FULL_WAIT == (int)CRA_BLOCKDQ_FULL_WAIT,
               "CRA_THRDPOOL_FULL_WAIT != CRA_BLOCKDQ_FULL_WAIT");

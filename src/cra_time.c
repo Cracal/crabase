@@ -11,8 +11,8 @@
 #ifdef CRA_OS_LINUX
 #include <sys/time.h>
 #endif
-#include "cra_time.h"
-#include "cra_assert.h"
+#include "crabase/cra_time.h"
+#include "crabase/cra_assert.h"
 
 static inline uint64_t
 cra_mul_clamp_max(uint64_t a, uint64_t b)
@@ -83,7 +83,7 @@ static inline uint64_t
 cra_timespec_to_us(const struct timespec *ts)
 {
     uint64_t us = ts->tv_sec;
-    us = cra_add_clamp_max(us, 1000000);
+    us = cra_mul_clamp_max(us, 1000000);
     us = cra_add_clamp_max(us, ts->tv_nsec / 1000);
     return us;
 }

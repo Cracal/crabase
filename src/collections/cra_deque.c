@@ -8,8 +8,8 @@
  * @copyright Copyright (c) 2021
  *
  */
-#include "collections/cra_deque.h"
-#include "cra_malloc.h"
+#include "crabase/collections/cra_deque.h"
+#include "crabase/cra_malloc.h"
 
 #define CRA_DEQUE_ITEM_SHIFT 6
 #define CRA_DEQUE_ITEM_COUNT (1ULL << CRA_DEQUE_ITEM_SHIFT)
@@ -26,11 +26,12 @@
 
 #define CRA_DEQUE_ARRAY_PVAL(deque, array, index) ((array) + (index) * (deque)->itemsize)
 
-static inline bool
-cra_deque_is_pow2(size_t n)
-{
-    return n > 0 && (n & (n - 1)) == 0;
-}
+// static inline bool
+// cra_deque_is_pow2(size_t n)
+// {
+//     return n > 0 && (n & (n - 1)) == 0;
+// }
+#define cra_deque_is_pow2(n) (n > 0 && (n & (n - 1)) == 0)
 
 static inline size_t
 cra_deque_get_next_pow2(size_t n)

@@ -1,11 +1,12 @@
-#include "collections/cra_alist.h"
-#include "collections/cra_dict.h"
-#include "cra_mainarg.h"
-#include "cra_mempool.h"
-#include "cra_filedir.h"
-#include "cra_assert.h"
-#include "cra_malloc.h"
+#include "crabase/collections/cra_alist.h"
+#include "crabase/collections/cra_dict.h"
+#include "crabase/cra_mainarg.h"
+#include "crabase/cra_mempool.h"
+#include "crabase/cra_filedir.h"
+#include "crabase/cra_assert.h"
+#include "crabase/cra_malloc.h"
 
+#if 0
 #define HELP_OPTION_LENGTH (sizeof("-h, --help") - 1)
 
 #define ERROR_BEGIN            "%s(ERROR): "
@@ -123,7 +124,7 @@ cra_mainarg_build(CraMainArg *ma, CraMainArgElement elements[], int nitems)
     for (i = 0, elem = elements; i < nitems; ++i, ++elem)
     {
 #define CRA_OPTIONS_FMT "Option '%s%s%s' "
-#define CRA_OPTIONS_ARG                                                                                \
+#define CRA_OPTIONS_ARG                                                                                 \
     elem->op ? elem->op : "", (elem->op && elem->option) ? ", " : "", elem->option ? elem->option : ""
 
         if (!elem->op && !elem->option)
@@ -452,3 +453,4 @@ cra_mainarg_stos_in_array(CraMainArgVal_u *retval, const char *opval, void *arra
     }
     return false;
 }
+#endif

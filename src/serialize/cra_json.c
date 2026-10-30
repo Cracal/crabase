@@ -8,9 +8,9 @@
  * @copyright Copyright (c) 2024
  *
  */
+#include "crabase/serialize/cra_json.h"
 #include "cra_serialize_inner.h"
-#include "serialize/cra_json.h"
-#include "cra_malloc.h"
+#include "crabase/cra_malloc.h"
 #include <float.h>
 #include <math.h>
 
@@ -1619,7 +1619,6 @@ fail:
 static bool
 cra_json_read_dict(CraSerializer *szer, unsigned char *val, bool is_ptr, const CraSerMeta *meta)
 {
-    size_t            index;
     size_t            keysize;
     size_t            valsize;
     const CraSerInfo *kinfo;
@@ -1656,7 +1655,7 @@ cra_json_read_dict(CraSerializer *szer, unsigned char *val, bool is_ptr, const C
     if (*buff == '}')
         goto end;
 
-    for (index = 0; CRA_SER_ENOUGH(szer, sizeof("X")); ++index)
+    for (; CRA_SER_ENOUGH(szer, sizeof("X"));)
     {
         if (kinfo->type != CRA_SER_TYPE_STRING)
         {

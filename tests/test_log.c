@@ -8,10 +8,11 @@
  * @copyright Copyright (c) 2024
  *
  */
-#include "cra_log.h"
-#include "cra_time.h"
-#include "cra_malloc.h"
-#include "threads/cra_thrdpool.h"
+#define CRA_LOG_FILE_LINE
+#include "crabase/cra_log.h"
+#include "crabase/cra_time.h"
+#include "crabase/cra_malloc.h"
+#include "crabase/threads/cra_thrdpool.h"
 
 void
 test_log(void)

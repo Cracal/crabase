@@ -1,5 +1,7 @@
 @PACKAGE_INIT@
 
-include(
-    "${CMAKE_CURRENT_LIST_DIR}/crabaseTargets.cmake"
-)
+include(CMakeFindDendencyMacro)
+
+include("${CMAKE_CURRENT_LIST_DIR}/crabaseTargets.cmake")
+
+check_required_components(crabase)

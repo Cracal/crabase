@@ -8,10 +8,10 @@
  * @copyright Copyright (c) 2024
  *
  */
-#include "serialize/cra_bin_ser.h"
+#include "crabase/serialize/cra_bin_ser.h"
 #include "cra_serialize_inner.h"
-#include "cra_endian.h"
-#include "cra_malloc.h"
+#include "crabase/cra_endian.h"
+#include "crabase/cra_malloc.h"
 
 // length/count encoding:
 //      0: null
@@ -835,7 +835,6 @@ static bool
 cra_bin_write_list(CraSerializer *szer, const unsigned char *val, bool is_ptr, const CraSerMeta *meta)
 {
     size_t               st;
-    uint16_t             index;
     uint16_t             count;
     uint16_t             slotsize;
     unsigned char        iter[64] = { 0 };
@@ -887,7 +886,7 @@ cra_bin_write_list(CraSerializer *szer, const unsigned char *val, bool is_ptr, c
         cra_ser_error_set(szer, CRA_SER_ERR_NO_MEM);
         return false;
     }
-    for (index = 0; meta->for_list.iter_next(iter, value); ++index)
+    for (; meta->for_list.iter_next(iter, value);)
     {
         if (!cra_bin_write_value(szer, value, meta, info, 0))
         {
@@ -898,7 +897,6 @@ cra_bin_write_list(CraSerializer *szer, const unsigned char *val, bool is_ptr, c
         }
     }
     CRA_TEMP_DEL(unsigned char, value, slotsize);
-    assert(index == count);
 
 end:
     CRA_SER_NESTING_DEC(szer);
@@ -985,7 +983,6 @@ static bool
 cra_bin_write_dict(CraSerializer *szer, const unsigned char *val, bool is_ptr, const CraSerMeta *meta)
 {
     size_t               st;
-    uint16_t             index;
     uint16_t             count;
     uint16_t             keysize;
     uint16_t             valsize;
@@ -1045,7 +1042,7 @@ cra_bin_write_dict(CraSerializer *szer, const unsigned char *val, bool is_ptr, c
         return false;
     }
     unsigned char *value = key + keysize;
-    for (index = 0; meta->for_dict.iter_next(iter, key, value); ++index)
+    for (; meta->for_dict.iter_next(iter, key, value);)
     {
         if (!cra_bin_write_value(szer, key, meta, kinfo, 0))
             goto fail;
@@ -1059,7 +1056,6 @@ cra_bin_write_dict(CraSerializer *szer, const unsigned char *val, bool is_ptr, c
         }
     }
     CRA_TEMP_DEL(unsigned char, key, keysize + valsize);
-    assert(index == count);
 
 end:
     CRA_SER_NESTING_DEC(szer);

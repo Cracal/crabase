@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2024
  *
  */
-#include "threads/cra_blockdq.h"
+#include "crabase/threads/cra_blockdq.h"
 
 bool(cra_blockdq_init_with_size)(CraBlockdq      *deque,
                                  size_t           itemsize,

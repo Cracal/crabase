@@ -8,8 +8,8 @@
  * @copyright Copyright (c) 2024
  *
  */
-#include "cra_malloc.h"
-#include "cra_atomic.h"
+#include "crabase/cra_malloc.h"
+#include "crabase/cra_atomic.h"
 
 #ifdef CRA_OS_WIN
 

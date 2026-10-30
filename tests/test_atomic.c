@@ -8,9 +8,9 @@
  * @copyright Copyright (c) 2024
  *
  */
-#include "cra_assert.h"
-#include "cra_atomic.h"
-#include "threads/cra_thread.h"
+#include "crabase/cra_assert.h"
+#include "crabase/cra_atomic.h"
+#include "crabase/threads/cra_thread.h"
 
 void
 test_load_and_store(void)
