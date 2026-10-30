@@ -33,7 +33,7 @@ bool(cra_llist_init_with_size)(CraLList *list, size_t itemsize, size_t init_spar
     assert(list);
     assert(itemsize > 0);
 
-    bzero(list, sizeof(*list));
+    memset(list, 0, sizeof(*list));
     list->itemsize = itemsize;
 
     for (size_t i = 0; i < init_spare_node; ++i)
@@ -83,7 +83,7 @@ cra_llist_uninit(CraLList *list)
         CRA_LLIST_DESTROY_NODE(temp);
     }
 
-    bzero(list, sizeof(*list));
+    memset(list, 0, sizeof(*list));
 }
 
 void

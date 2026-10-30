@@ -597,7 +597,7 @@ cra_json_read_null(CraSerializer *szer, unsigned char *val, const CraSerInfo *in
         cra_ser_error_set(szer, CRA_SER_ERR_INVALID_VALUE);
         return false;
     }
-    bzero(val, sizeof(void *)); // *(T **)val = NULL;
+    memset(val, 0, sizeof(void *)); // *(T **)val = NULL;
     return true;
 }
 

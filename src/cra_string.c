@@ -88,7 +88,7 @@ cra_string_uninit(CraString *str)
         cra_free(str->_long.data);
     }
 
-    bzero(str, sizeof(CraString));
+    memset(str, 0, sizeof(CraString));
 }
 
 static inline bool

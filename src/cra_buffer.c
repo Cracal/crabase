@@ -20,7 +20,7 @@ cra_buffer_uninit(CraBuffer *buffer)
     assert(buffer->data);
 
     cra_free(buffer->data);
-    bzero(buffer, sizeof(*buffer));
+    memset(buffer, 0, sizeof(*buffer));
 }
 
 bool

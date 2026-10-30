@@ -117,7 +117,7 @@ __cra_calloc_dbg(size_t num, size_t size, char *file, int line)
 {
     void *ptr = __cra_malloc_dbg(num * size, file, line);
     if (ptr != NULL)
-        bzero(ptr, num * size);
+        memset(ptr, 0, num * size);
     return ptr;
 }
 

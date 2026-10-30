@@ -185,7 +185,7 @@ cra_dict_uninit(CraDict *dict)
         cra_free(dict->buckets);
     if (dict->entries)
         cra_free(dict->entries);
-    bzero(dict, sizeof(*dict));
+    memset(dict, 0, sizeof(*dict));
 }
 
 bool

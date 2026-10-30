@@ -59,7 +59,7 @@ cra_deque_expand_array(CraDeque *deque, size_t new_capacity)
     new_array = cra_malloc(new_capacity * sizeof(deque->array[0]));
     if (!new_array)
         return false;
-    bzero(new_array, new_capacity * sizeof(deque->array[0]));
+    memset(new_array, 0, new_capacity * sizeof(deque->array[0]));
 
     // move blocks to new array
     for (size_t i = 0, j = deque->front; i < deque->narray; ++i)
@@ -277,7 +277,7 @@ bool(cra_deque_init_with_size)(CraDeque *deque, size_t itemsize, size_t init_cap
     deque->array = cra_malloc(size);
     if (!deque->array)
         return false;
-    bzero(deque->array, size);
+    memset(deque->array, 0, size);
 
     CRA_DEQUE_EMPTY_INDEX(deque);
     deque->itemsize = itemsize;
@@ -298,7 +298,7 @@ cra_deque_uninit(CraDeque *deque)
         }
         cra_free(deque->array);
     }
-    bzero(deque, sizeof(*deque));
+    memset(deque, 0, sizeof(*deque));
 }
 
 void

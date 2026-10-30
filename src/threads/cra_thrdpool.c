@@ -151,7 +151,7 @@ cra_thrdpool_uninit(CraThrdPool *pool, bool wait_tasks)
     cra_dealloc(pool->taskque);
     cra_free(pool->workers);
 
-    bzero(pool, sizeof(*pool));
+    memset(pool, 0, sizeof(*pool));
 }
 
 bool
