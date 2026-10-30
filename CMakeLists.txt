@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.22.0)
 project(crabase VERSION 0.1.0 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_EXTENSIONS ON)
 set(CMAKE_C_STANDARD_REQUIRED ON)
-set(CMAKE_C_EXTENSIONS OFF)
 message(STATUS "c standard: ${CMAKE_C_STANDARD}")
 
 if(NOT CMAKE_BUILD_TYPE)

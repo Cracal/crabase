@@ -82,7 +82,6 @@ cra_cmp_string_p(const char **a, const char **b)
 
 #define CRA_UHASH_MAX SIZE_MAX
 #define CRA_HASH_MAX  SSIZE_MAX
-#define CRA_HASH_MIN  SSIZE_MIN
 typedef ssize_t    cra_hash_t;
 typedef size_t     cra_uhash_t;
 typedef cra_hash_t (*cra_hash_fn)(const void *val);

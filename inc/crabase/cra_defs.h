@@ -186,10 +186,7 @@ cra_set_last_error(int err)
 typedef SSIZE_T ssize_t;
 #endif
 #ifndef SSIZE_MAX
-#define SSIZE_MAX MAXSSIZE_T
-#endif
-#ifndef SSIZE_MIN
-#define SSIZE_MIN MINSSIZE_T
+#define SSIZE_MAX ((ssize_t)(SIZE_MAX >> 1))
 #endif
 
 #ifdef CRA_COMPILER_MSVC
