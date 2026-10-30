@@ -23,9 +23,7 @@ target_link_libraries(crabase_options INTERFACE
     >
 )
 
-option(ENABLE_MEMORY_LEAK_DETECTOR "Enable memory leak detector" ON)
-if(ENABLE_MEMORY_LEAK_DETECTOR)
-    target_compile_definitions(crabase_options INTERFACE
-        $<$<CONFIG:Debug>:CRABASE_DEBUG CRABASE_MEMORY_LEAK_DETECTOR>
-    )
+option(CRABASE_ENABLE_RANDOM_STRING_INIT_HASHCODE "Enable random string init hashcode" ON)
+if(CRABASE_ENABLE_RANDOM_STRING_INIT_HASHCODE)
+    target_compile_definitions(crabase_options INTERFACE CRA_RANDOM_STR_INIT_HASHCODE)
 endif()

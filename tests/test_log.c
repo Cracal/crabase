@@ -8,6 +8,7 @@
  * @copyright Copyright (c) 2024
  *
  */
+#define CRA_LOG_FILE_LINE
 #include "crabase/cra_log.h"
 #include "crabase/cra_time.h"
 #include "crabase/cra_malloc.h"

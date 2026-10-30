@@ -13,6 +13,7 @@ set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release RelWithDebInf
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "Configuration types: ${CMAKE_CONFIGURATION_TYPES}")
 
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -23,19 +24,11 @@ foreach(cfg DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${cfg} ${CMAKE_BINARY_DIR}/lib)
 endforeach()
 
-option(CRABASE_BUILD_TESTS "Build tests" ON)
-option(CRABASE_BUILD_SHARED_LIBS "Build shared library" ON)
-option(CRABASE_LOG_FILE_LINE "Add __FILE__ and __LINE__ to log" ON)
-option(CRABASE_RANDOM_STR_INIT_HASHCODE "Enable random string init hashcode" ON)
-option(CRABASE_JSON_SAFE_INT "Force SAFE_INT in json" ON)
-
-
 
 include(cmake/crabaseOptions.cmake)
 
+option(CRABASE_BUILD_TESTS "Build tests" ON)
 if(CRABASE_BUILD_TESTS)
-    include(CTest)
-    enable_testing()
     add_subdirectory(tests)
 endif()
 
@@ -43,6 +36,7 @@ endif()
 file(GLOB_RECURSE CRABASE_SRC CONFIGURE_DEPENDS src/*.c)
 file(GLOB_RECURSE CRABASE_INC CONFIGURE_DEPENDS inc/*.h)
 
+option(CRABASE_BUILD_SHARED_LIBS "Build shared library" ON)
 if(CRABASE_BUILD_SHARED_LIBS)
     add_library(crabase SHARED ${CRABASE_SRC} ${CRABASE_INC})
     target_compile_definitions(crabase PRIVATE CRABASE_EXPORT)
@@ -50,17 +44,21 @@ else()
     add_library(crabase STATIC ${CRABASE_SRC} ${CRABASE_INC})
     target_compile_definitions(crabase PUBLIC CRABASE_STATIC)
 endif()
+
 add_library(crabase::crabase ALIAS crabase)
 
-target_link_libraries(crabase PUBLIC crabase_options)
-if(CRABASE_LOG_FILE_LINE)
-    target_compile_definitions(crabase PUBLIC CRA_LOG_FILE_LINE)
-endif()
-if(CRABASE_RANDOM_STR_INIT_HASHCODE)
-    target_compile_definitions(crabase PRIVATE CRA_RANDOM_STR_INIT_HASHCODE)
-endif()
+target_link_libraries(crabase PRIVATE crabase_options)
+
+option(CRABASE_JSON_SAFE_INT "Force SAFE_INT in json" ON)
 if(CRABASE_JSON_SAFE_INT)
     target_compile_definitions(crabase PUBLIC CRA_JSON_SAFE_INT)
+endif()
+
+option(CRABASE_ENABLE_MEMORY_LEAK_DETECTOR "Enable memory leak detector" ON)
+if(CRABASE_ENABLE_MEMORY_LEAK_DETECTOR)
+    target_compile_definitions(crabase PUBLIC
+        $<$<CONFIG:Debug>:CRA_MEMORY_LEAK_DETECTOR>
+    )
 endif()
 
 
