@@ -41,7 +41,7 @@ test_thread_pool(void)
     cra_thrdpool_init(tp, num_threads, CRA_THRDPOOL_INFINITE_TASKS, CRA_THRDPOOL_FULL_WAIT);
 
     vals = (int *)cra_malloc(sizeof(*vals) * num_items);
-    bzero(vals, sizeof(*vals) * num_items);
+    memset(vals, 0, sizeof(*vals) * num_items);
 
     for (i = 0; i < num_items; i++)
     {
@@ -75,7 +75,7 @@ test_thread_pool2(void)
     cra_thrdpool_init(tp, num_threads, CRA_THRDPOOL_INFINITE_TASKS, CRA_THRDPOOL_FULL_WAIT);
 
     vals = (int *)cra_malloc(sizeof(*vals) * num_items);
-    bzero(vals, sizeof(*vals) * num_items);
+    memset(vals, 0, sizeof(*vals) * num_items);
 
     for (i = 0; i < num_items; i++)
     {
@@ -111,7 +111,7 @@ test_thread_pool3(void)
     cra_thrdpool_init(&tp, num_threads, 10, CRA_THRDPOOL_FULL_WAIT);
 
     vals = (int *)cra_malloc(sizeof(*vals) * num_items);
-    bzero(vals, sizeof(*vals) * num_items);
+    memset(vals, 0, sizeof(*vals) * num_items);
 
     for (i = 0; i < num_items; i++)
     {
@@ -154,7 +154,7 @@ test_thread_pool4(void)
     cra_thrdpool_init(&tp, num_threads, 10, CRA_THRDPOOL_FULL_DROP_NEWEST);
 
     vals = (int *)cra_malloc(sizeof(*vals) * num_items);
-    bzero(vals, sizeof(*vals) * num_items);
+    memset(vals, 0, sizeof(*vals) * num_items);
     drop_cnt = 0;
 
     for (i = 0; i < num_items; i++)
@@ -192,7 +192,7 @@ test_thread_pool5(void)
     cra_thrdpool_init(&tp, num_threads, 20, CRA_THRDPOOL_FULL_DROP_OLDEST);
 
     vals = (int *)cra_malloc(sizeof(*vals) * num_items);
-    bzero(vals, sizeof(*vals) * num_items);
+    memset(vals, 0, sizeof(*vals) * num_items);
     drop_cnt = 0;
 
     for (i = 0; i < num_items; i++)

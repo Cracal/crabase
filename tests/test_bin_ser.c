@@ -1247,7 +1247,7 @@ test_string(void)
 
     // small buffer
     length = 13;
-    bzero(&out, sizeof(out));
+    memset(&out, 0, sizeof(out));
     assert_always(!cra_bin_serialize_err(buffer, &length, &in, &Str_meta, &err));
     assert_always(err.err == CRA_SER_ERR_NO_BUF);
     printf("%s\n", err.msg);
@@ -1267,7 +1267,7 @@ test_string(void)
 
     // type mismatch
     length = sizeof(buffer);
-    bzero(&out, sizeof(out));
+    memset(&out, 0, sizeof(out));
     assert_always(cra_bin_serialize_err(buffer, &length, &in, &Str_meta, &err));
     assert_always(err.err == CRA_SER_ERR_OK);
     printf("%s\n", err.msg);
@@ -1278,7 +1278,7 @@ test_string(void)
 
     // char array too small
     length = sizeof(buffer);
-    bzero(&out, sizeof(out));
+    memset(&out, 0, sizeof(out));
     assert_always(cra_bin_serialize_err(buffer, &length, &in, &Str_meta, &err));
     assert_always(err.err == CRA_SER_ERR_OK);
     printf("%s\n", err.msg);
@@ -1349,7 +1349,7 @@ test_bytes(void)
 
     // small buffer
     length = 13;
-    bzero(&out, sizeof(out));
+    memset(&out, 0, sizeof(out));
     assert_always(!cra_bin_serialize_err(buffer, &length, &in, &MyBytes_meta, &err));
     assert_always(err.err == CRA_SER_ERR_NO_BUF);
     printf("%s\n", err.msg);
@@ -1369,7 +1369,7 @@ test_bytes(void)
 
     // type mismatch
     length = sizeof(buffer);
-    bzero(&out, sizeof(out));
+    memset(&out, 0, sizeof(out));
     assert_always(cra_bin_serialize_err(buffer, &length, &in, &MyBytes_meta, &err));
     assert_always(err.err == CRA_SER_ERR_OK);
     printf("%s\n", err.msg);
@@ -1380,7 +1380,7 @@ test_bytes(void)
 
     // char array too small
     length = sizeof(buffer);
-    bzero(&out, sizeof(out));
+    memset(&out, 0, sizeof(out));
     assert_always(cra_bin_serialize_err(buffer, &length, &in, &MyBytes_meta, &err));
     assert_always(err.err == CRA_SER_ERR_OK);
     printf("%s\n", err.msg);
@@ -1521,11 +1521,11 @@ init_n(void *stru, size_t size)
     n->n = NULL;
     n->v = 0;
     n->s = NULL;
-    bzero(&n->t, sizeof(n->t));
+    memset(&n->t, 0, sizeof(n->t));
     n->o = NULL;
-    bzero(&n->a, sizeof(n->a));
+    memset(&n->a, 0, sizeof(n->a));
     n->l = NULL;
-    bzero(&n->c, sizeof(n->c));
+    memset(&n->c, 0, sizeof(n->c));
     return true;
 }
 
@@ -2305,7 +2305,7 @@ test_to_file(void)
     fclose(fp);
 
     // read from file
-    bzero(buffer, sizeof(buffer));
+    memset(buffer, 0, sizeof(buffer));
     FILE *fp2 = fopen(filename, "rb");
     assert_always(fp2 != NULL);
     length = fread(buffer, 1, sizeof(buffer), fp2);

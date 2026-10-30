@@ -29,6 +29,8 @@ include(cmake/crabaseOptions.cmake)
 
 option(CRABASE_BUILD_TESTS "Build tests" ON)
 if(CRABASE_BUILD_TESTS)
+    include(CTest)
+    enable_testing()
     add_subdirectory(tests)
 endif()
 

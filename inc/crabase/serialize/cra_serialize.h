@@ -215,21 +215,21 @@ static_assert(false, "Please undefine `DICT` before including this header");
 
 #if 1 // field def
 
-#define CRA_SER_FIELD_DEF_BOOL(name, id)         bool name;
-#define CRA_SER_FIELD_DEF_ENUM(name, id, type)   type name;
-#define CRA_SER_FIELD_DEF_INT8(name, ...)        int8_t name;
-#define CRA_SER_FIELD_DEF_INT16(name, ...)       int16_t name;
-#define CRA_SER_FIELD_DEF_INT32(name, ...)       int32_t name;
-#define CRA_SER_FIELD_DEF_INT64(name, ...)       int64_t name;
-#define CRA_SER_FIELD_DEF_UINT8(name, ...)       uint8_t name;
-#define CRA_SER_FIELD_DEF_UINT16(name, ...)      uint16_t name;
-#define CRA_SER_FIELD_DEF_UINT32(name, ...)      uint32_t name;
-#define CRA_SER_FIELD_DEF_UINT64(name, ...)      uint64_t name;
-#define CRA_SER_FIELD_DEF_FLOAT32(name, ...)     float name;
-#define CRA_SER_FIELD_DEF_FLOAT64(name, ...)     double name;
-#define CRA_SER_FIELD_DEF_STRING2(name, id)      char *name;
-#define CRA_SER_FIELD_DEF_STRING3(name, id, len) char name[len];
-#define CRA_SER_FIELD_DEF_STRING(...)            CRA_CAT(CRA_SER_FIELD_DEF_STRING, CRA_CNT(__VA_ARGS__))(__VA_ARGS__)
+#define CRA_SER_FIELD_DEF_BOOL(name, id)                             bool name;
+#define CRA_SER_FIELD_DEF_ENUM(name, id, type)                       type name;
+#define CRA_SER_FIELD_DEF_INT8(name, ...)                            int8_t name;
+#define CRA_SER_FIELD_DEF_INT16(name, ...)                           int16_t name;
+#define CRA_SER_FIELD_DEF_INT32(name, ...)                           int32_t name;
+#define CRA_SER_FIELD_DEF_INT64(name, ...)                           int64_t name;
+#define CRA_SER_FIELD_DEF_UINT8(name, ...)                           uint8_t name;
+#define CRA_SER_FIELD_DEF_UINT16(name, ...)                          uint16_t name;
+#define CRA_SER_FIELD_DEF_UINT32(name, ...)                          uint32_t name;
+#define CRA_SER_FIELD_DEF_UINT64(name, ...)                          uint64_t name;
+#define CRA_SER_FIELD_DEF_FLOAT32(name, ...)                         float name;
+#define CRA_SER_FIELD_DEF_FLOAT64(name, ...)                         double name;
+#define CRA_SER_FIELD_DEF_STRING2(name, id)                          char *name;
+#define CRA_SER_FIELD_DEF_STRING3(name, id, len)                     char name[len];
+#define CRA_SER_FIELD_DEF_STRING(...)                                CRA_CAT(CRA_SER_FIELD_DEF_STRING, CRA_CNT(__VA_ARGS__))(__VA_ARGS__)
 #define CRA_SER_FIELD_DEF_STRUCT_(name, id, type, meta, is_ptr, ...) type CRA_SER_STAR##is_ptr name;
 #define CRA_SER_FIELD_DEF_STRUCT(...)                                CRA_SER_FIELD_DEF_STRUCT_(__VA_ARGS__, 0, 0)
 #define CRA_SER_FIELD_DEF_ARRAY(name, id, type, meta)                type name;
@@ -502,13 +502,13 @@ static_assert(false, "Please undefine `DICT` before including this header");
     sc const CraSerMeta *name##_metas[] = { CRA_ITER(CRA_UNTUPLE_M, CRA_SER_META_DEF, __VA_ARGS__) };                \
     sc const CraSerInfo  name##_infos[] = { CRA_ITER(CRA_SER_INFO_DEF, name, __VA_ARGS__) };                         \
     sc const CraSerMeta  name##_meta = {                                                                             \
-        .metas = name##_metas,                                                                                       \
-        .infos = name##_infos,                                                                                       \
-        .count = CRA_NARRAY(name##_infos),                                                                           \
-        .type = CRA_SER_TYPE_STRUCT,                                                                                 \
-        .size = sizeof(name),                                                                                        \
-        .for_struct = { CRA_ITER(CRA_UNTUPLE_M, CRA_SER_NAMES_DEF, __VA_ARGS__), name##_namei, name##_ids, init_fn,  \
-                        uninit_fn },                                                                                 \
+         .metas = name##_metas,                                                                                      \
+         .infos = name##_infos,                                                                                      \
+         .count = CRA_NARRAY(name##_infos),                                                                          \
+         .type = CRA_SER_TYPE_STRUCT,                                                                                \
+         .size = sizeof(name),                                                                                       \
+         .for_struct = { CRA_ITER(CRA_UNTUPLE_M, CRA_SER_NAMES_DEF, __VA_ARGS__), name##_namei, name##_ids, init_fn, \
+                         uninit_fn },                                                                                \
     }
 
 // @see CRA_SER_DEF_STRUCT_META_AND_STRUCT
@@ -517,7 +517,7 @@ static_assert(false, "Please undefine `DICT` before including this header");
     sc void CRA_CAT(name, _uninit)(name * stru)                                                       \
     {                                                                                                 \
         CRA_ITER(CRA_UNTUPLE_M, CRA_SER_FREE_STRUCT_FIELD, __VA_ARGS__)                               \
-        bzero(stru, sizeof(name));                                                                    \
+        memset(stru, 0, sizeof(name));                                                                \
     }                                                                                                 \
     CRA_SER_DEF_STRUCT_META(sc, name, init_fn, (void (*)(void *))CRA_CAT(name, _uninit), __VA_ARGS__)
 
@@ -558,14 +558,14 @@ static_assert(false, "Please undefine `DICT` before including this header");
     sc const CraSerInfo  CRA_CAT(CRA_GET_I(0, CRA_UNTUPLE array_def),                         \
                                  _infos)[] = { CRA_SER_ITEM_INFO_DEF(CRA_UNTUPLE item_def) }; \
     sc const CraSerMeta  CRA_CAT(CRA_GET_I(0, CRA_UNTUPLE array_def), _meta) = {              \
-        .metas = CRA_CAT(CRA_GET_I(0, CRA_UNTUPLE array_def), _metas),                        \
-        .infos = CRA_CAT(CRA_GET_I(0, CRA_UNTUPLE array_def), _infos),                        \
-        .count = CRA_GET_I(1, CRA_UNTUPLE array_def, 0),                                      \
-        .flags = CRA_SER_FLAG_ARRAY,                                                          \
-        .type = CRA_SER_TYPE_LIST,                                                            \
-        .size = sizeof(CRA_GET_I(0, CRA_UNTUPLE array_def)),                                  \
-        .for_array = { sizeof(((CRA_GET_I(0, CRA_UNTUPLE array_def) *)0) -> data[0]),         \
-                       offsetof(CRA_GET_I(0, CRA_UNTUPLE array_def), len), uninit_fn },       \
+         .metas = CRA_CAT(CRA_GET_I(0, CRA_UNTUPLE array_def), _metas),                       \
+         .infos = CRA_CAT(CRA_GET_I(0, CRA_UNTUPLE array_def), _infos),                       \
+         .count = CRA_GET_I(1, CRA_UNTUPLE array_def, 0),                                     \
+         .flags = CRA_SER_FLAG_ARRAY,                                                         \
+         .type = CRA_SER_TYPE_LIST,                                                           \
+         .size = sizeof(CRA_GET_I(0, CRA_UNTUPLE array_def)),                                 \
+         .for_array = { sizeof(((CRA_GET_I(0, CRA_UNTUPLE array_def) *)0) -> data[0]),        \
+                        offsetof(CRA_GET_I(0, CRA_UNTUPLE array_def), len), uninit_fn },      \
     }
 
 #define CRA_SER_FREE_ARRAY_DATA1() \
@@ -622,11 +622,11 @@ static_assert(false, "Please undefine `DICT` before including this header");
     sc const CraSerInfo  CRA_CAT(CRA_GET_I(1, CRA_UNTUPLE list_def),                              \
                                  _infos)[] = { CRA_SER_ITEM_INFO_DEF(CRA_UNTUPLE item_def) };     \
     sc const CraSerMeta  CRA_CAT(CRA_GET_I(1, CRA_UNTUPLE list_def), _meta) = {                   \
-        .metas = CRA_CAT(CRA_GET_I(1, CRA_UNTUPLE list_def), _metas),                             \
-        .infos = CRA_CAT(CRA_GET_I(1, CRA_UNTUPLE list_def), _infos),                             \
-        .type = CRA_SER_TYPE_LIST,                                                                \
-        .size = sizeof(CRA_GET_I(0, CRA_UNTUPLE list_def)),                                       \
-        .for_list = { __VA_ARGS__ },                                                              \
+         .metas = CRA_CAT(CRA_GET_I(1, CRA_UNTUPLE list_def), _metas),                            \
+         .infos = CRA_CAT(CRA_GET_I(1, CRA_UNTUPLE list_def), _infos),                            \
+         .type = CRA_SER_TYPE_LIST,                                                               \
+         .size = sizeof(CRA_GET_I(0, CRA_UNTUPLE list_def)),                                      \
+         .for_list = { __VA_ARGS__ },                                                             \
     }
 
 #endif // end list def
@@ -663,13 +663,13 @@ static_assert(false, "Please undefine `DICT` before including this header");
                                  _metas)[] = { CRA_SER_ITEM_META_DEF(CRA_UNTUPLE key_def),                \
                                                CRA_SER_ITEM_META_DEF(CRA_UNTUPLE val_def) };              \
     sc const CraSerInfo  CRA_CAT(CRA_GET_I(1, CRA_UNTUPLE dict_def), _infos)[] = { CRA_SER_ITEM_INFO_DEF( \
-      CRA_UNTUPLE key_def) CRA_SER_ITEM_INFO_DEF(CRA_UNTUPLE val_def) };                                  \
+      CRA_UNTUPLE key_def) CRA_SER_ITEM_INFO_DEF(CRA_UNTUPLE val_def) };                                 \
     sc const CraSerMeta  CRA_CAT(CRA_GET_I(1, CRA_UNTUPLE dict_def), _meta) = {                           \
-        .metas = CRA_CAT(CRA_GET_I(1, CRA_UNTUPLE dict_def), _metas),                                     \
-        .infos = CRA_CAT(CRA_GET_I(1, CRA_UNTUPLE dict_def), _infos),                                     \
-        .type = CRA_SER_TYPE_DICT,                                                                        \
-        .size = sizeof(CRA_GET_I(0, CRA_UNTUPLE dict_def)),                                               \
-        .for_dict = { __VA_ARGS__ },                                                                      \
+         .metas = CRA_CAT(CRA_GET_I(1, CRA_UNTUPLE dict_def), _metas),                                    \
+         .infos = CRA_CAT(CRA_GET_I(1, CRA_UNTUPLE dict_def), _infos),                                    \
+         .type = CRA_SER_TYPE_DICT,                                                                       \
+         .size = sizeof(CRA_GET_I(0, CRA_UNTUPLE dict_def)),                                              \
+         .for_dict = { __VA_ARGS__ },                                                                     \
     }
 
 #endif // end dict def
