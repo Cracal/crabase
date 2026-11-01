@@ -52,8 +52,8 @@ CRA_API bool
 cra_dict_init_with_size(CraDict    *dict,
                         size_t      key_size,
                         size_t      val_size,
-                        size_t      key_offset,
-                        size_t      val_offset,
+                        size_t      key_align,
+                        size_t      val_align,
                         size_t      init_capacity,
                         cra_hash_fn hash_key,
                         cra_cmp_fn  compare_key);
@@ -62,7 +62,7 @@ cra_dict_init_with_size(CraDict    *dict,
 #define cra_dict_init_with_size(TKey, TVal, dict, init_capacity, hash_key_fn, compare_key_fn)              \
     cra_dict_init_with_size(dict, sizeof(TKey), sizeof(TVal), alignof(TKey), alignof(TVal), init_capacity, \
                             (cra_hash_fn)(hash_key_fn), (cra_cmp_fn)(compare_key_fn))
-// bool init_with_size<TKey, TVal>(CraDict *dict, cra_hash_t (*hash)(const TKey *key),
+// bool init<TKey, TVal>(CraDict *dict, cra_hash_t (*hash)(const TKey *key),
 // int (*compare)(const TKey *a, const TKey *b))
 #define cra_dict_init(TKey, TVal, dict, hash_key_fn, compare_key_fn)                                  \
     cra_dict_init_with_size(TKey, TVal, dict, CRA_DICT_DEAFULT_CAPACITY, hash_key_fn, compare_key_fn)
