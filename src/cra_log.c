@@ -85,7 +85,7 @@ cra_log_unref(CraLogger *logger)
 
 static CraLogOutputAsync s_log_async = { .initialized_lock = CRA_ATOMIC_FLAG_INIT };
 
-#define cra_async_initialized_lock()   while (cra_atomic_flag_test_and_set(&s_log_async.initialized_lock, CRA_MO_ACQUIRE))
+#define cra_async_initialized_lock() while (cra_atomic_flag_test_and_set(&s_log_async.initialized_lock, CRA_MO_ACQUIRE))
 #define cra_async_initialized_unlock() cra_atomic_flag_clear(&s_log_async.initialized_lock, CRA_MO_RELEASE)
 
 static CraLogBuf *
@@ -234,7 +234,9 @@ static CRA_THRD_FUNC(cra_log_output_async_thread)
             }
         }
 
-        cra_swap_ptr((void **)&s_log_async.buffers1, (void **)&s_log_async.buffers2);
+        CraLList *temp = s_log_async.buffers1;
+        s_log_async.buffers1 = s_log_async.buffers2;
+        s_log_async.buffers2 = temp;
 
         cra_mutex_unlock(&s_log_async.mutex);
 

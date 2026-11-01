@@ -322,9 +322,9 @@ cra_bin_write_string(CraSerializer *szer, const unsigned char *val, const CraSer
     unsigned char *buf;
 
     if (info->flags & CRA_SER_FLAG_PTR)
-        memcpy(&str, val, sizeof(char *)); // str = *(char **)val;
+        str = *(char **)val;
     else
-        str = (const char *)val;
+        str = (char *)val;
 
     if (str)
     {
@@ -580,7 +580,7 @@ cra_bin_write_struct(CraSerializer *szer, const unsigned char *val, bool is_ptr,
     CRA_SER_NESTING_INC(szer);
 
     if (is_ptr)
-        memcpy(&stru, val, sizeof(void *)); // stru = *(T **)val
+        stru = *(const unsigned char **)val; // FIXME: strict aliasing violation
     else
         stru = val;
 
@@ -739,7 +739,7 @@ cra_bin_write_array(CraSerializer *szer, const unsigned char *val, const CraSerM
 
     // meta->count == 0 -> Array { T *data; ... }
     if (meta->count == 0)
-        memcpy(&array, val, sizeof(void *)); // array = *(T **)array;
+        array = *(const unsigned char **)val; // FIXME: strict aliasing violation
     else
         array = val;
     assert(array || (!array && count == 0));
@@ -851,7 +851,7 @@ cra_bin_write_list(CraSerializer *szer, const unsigned char *val, bool is_ptr, c
     CRA_SER_NESTING_INC(szer);
 
     if (is_ptr)
-        memcpy(&list, val, sizeof(void *)); // list = *(T **)val;
+        list = *(const unsigned char **)val; // FIXME: strict aliasing violation
     else
         list = val;
 
@@ -1002,7 +1002,7 @@ cra_bin_write_dict(CraSerializer *szer, const unsigned char *val, bool is_ptr, c
     CRA_SER_NESTING_INC(szer);
 
     if (is_ptr)
-        memcpy(&dict, val, sizeof(void *)); // dict = *(T **)val;
+        dict = *(const unsigned char **)val; // FIXME: strict aliasing violation
     else
         dict = val;
 

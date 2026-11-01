@@ -152,7 +152,7 @@ cra_alist_partition(CraAList *list, cra_cmp_fn compare, size_t begin, size_t end
 
     left = begin;
     right = end;
-    array = (unsigned char *)list->array;
+    array = list->array;
     // temp = array[right]
     memcpy(temp, array + right * list->itemsize, list->itemsize);
 
@@ -218,28 +218,16 @@ cra_alist_binary_seach(CraAList *list, cra_cmp_fn compare, void *val)
     while (left <= right)
     {
         mid = left + ((right - left) >> 1);
-        res = compare((char *)list->array + mid * list->itemsize, val);
+        res = compare(list->array + mid * list->itemsize, val);
         if (res < 0)
         {
             left = mid + 1; // val in [mid + 1, right]
         }
-        // else if (res > 0)
-        // {
-        //     if (mid == 0)
-        //         break;
-        //     right = mid - 1; // val in [left, mid - 1]
-        // }
-        // else
-        // {
-        //     if (mid == 0)
-        //         break;
-        //     right = mid - 1; // first (array[mid] < val) in [left, mid - 1]
-        // }
         else
         {
             if (mid == 0)
                 break;
-            right = mid - 1;
+            right = mid - 1; // val in [left, mid - 1]
         }
     }
     return left;

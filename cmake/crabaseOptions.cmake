@@ -5,7 +5,6 @@ target_compile_options(crabase_options INTERFACE
     $<$<OR:$<C_COMPILER_ID:GNU>,$<C_COMPILER_ID:Clang>>:
         -Wall -Werror -Wextra -pedantic
 
-        -Wno-cast-function-type
         -fvisibility=hidden
     >
 )

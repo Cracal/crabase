@@ -78,19 +78,19 @@ struct CraSerializer
             return false; \
     } while (0)
 
-#define CRA_SER_CALL_INIT(pp, p, is_ptr, fn, ...)                      \
-    do                                                                 \
-    {                                                                  \
-        if (!fn(p, __VA_ARGS__))                                       \
-        {                                                              \
-            if (is_ptr)                                                \
-            {                                                          \
-                cra_free(p);                                           \
-                memset(pp, 0, sizeof(void *)); /* *(T **)pp = NULL; */ \
-            }                                                          \
-            cra_ser_error_set(szer, CRA_SER_ERR_INIT_FAILED);          \
-            return false;                                              \
-        }                                                              \
+#define CRA_SER_CALL_INIT(pp, p, is_ptr, fn, ...)                             \
+    do                                                                        \
+    {                                                                         \
+        if (!fn(p, __VA_ARGS__))                                              \
+        {                                                                     \
+            if (is_ptr)                                                       \
+            {                                                                 \
+                cra_free(p);                                                  \
+                *(void **)(pp) = NULL; /* FIXME: strict aliasing violation */ \
+            }                                                                 \
+            cra_ser_error_set(szer, CRA_SER_ERR_INIT_FAILED);                 \
+            return false;                                                     \
+        }                                                                     \
     } while (0)
 
 #define CRA_SER_NEW_OBJ(obj, size)                       \
@@ -104,18 +104,18 @@ struct CraSerializer
         }                                                \
     } while (0)
 
-#define CRA_SER_DEL_OBJ(pp, p, meta, is_ptr, fn) \
-    do                                           \
-    {                                            \
-        if (fn)                                  \
-            fn(p);                               \
-        else                                     \
-            memset(p, 0, (meta)->size);          \
-        if (is_ptr)                              \
-        {                                        \
-            cra_free(p);                         \
-            memset(pp, 0, sizeof(void *));       \
-        }                                        \
+#define CRA_SER_DEL_OBJ(pp, p, meta, is_ptr, fn)                          \
+    do                                                                    \
+    {                                                                     \
+        if (fn)                                                           \
+            fn(p);                                                        \
+        else                                                              \
+            memset(p, 0, (meta)->size);                                   \
+        if (is_ptr)                                                       \
+        {                                                                 \
+            cra_free(p);                                                  \
+            *(void **)(pp) = NULL; /* FIXME: strict aliasing violation */ \
+        }                                                                 \
     } while (0)
 
 #define CRA_SER_CHECK_NULLABLE(szer, is_null)                \
@@ -125,29 +125,29 @@ struct CraSerializer
         return false;                                        \
     }
 
-#define CRA_SER_NEW_STRING(szer, pstr, str, info, len1, len2)                \
-    do                                                                       \
-    {                                                                        \
-        if ((info)->flags & CRA_SER_FLAG_PTR) /* char * */                   \
-        {                                                                    \
-            if (len1 > 0)                                                    \
-            {                                                                \
-                CRA_SER_NEW_OBJ(str, len1);                                  \
-                str[len2] = '\0';                                            \
-            }                                                                \
-            else                                                             \
-            {                                                                \
-                str = NULL;                                                  \
-            }                                                                \
-            memcpy(pstr, &(str), sizeof(char *)); /* *(char**)pstr = str; */ \
-        }                                                                    \
-        else /* char[N] */                                                   \
-        {                                                                    \
-            CRA_SER_CHECK_NULLABLE(szer, len1 == 0)                          \
-            CRA_SER_CHECK_RANGE(szer, len2, >=, (info)->size);               \
-            str = pstr;                                                      \
-            str[len2] = '\0';                                                \
-        }                                                                    \
+#define CRA_SER_NEW_STRING(szer, pstr, str, info, len1, len2)  \
+    do                                                         \
+    {                                                          \
+        if ((info)->flags & CRA_SER_FLAG_PTR) /* char * */     \
+        {                                                      \
+            if (len1 > 0)                                      \
+            {                                                  \
+                CRA_SER_NEW_OBJ(str, len1);                    \
+                str[len2] = '\0';                              \
+            }                                                  \
+            else                                               \
+            {                                                  \
+                str = NULL;                                    \
+            }                                                  \
+            *(char **)(pstr) = (char *)str;                    \
+        }                                                      \
+        else /* char[N] */                                     \
+        {                                                      \
+            CRA_SER_CHECK_NULLABLE(szer, len1 == 0)            \
+            CRA_SER_CHECK_RANGE(szer, len2, >=, (info)->size); \
+            str = pstr;                                        \
+            str[len2] = '\0';                                  \
+        }                                                      \
     } while (0)
 
 #define CRA_SER_NEW_STRUCT(szer, pstru, stru, meta, is_ptr, is_null)                           \
@@ -159,7 +159,7 @@ struct CraSerializer
                 CRA_SER_NEW_OBJ(stru, (meta)->size);                                           \
             else                                                                               \
                 stru = NULL;                                                                   \
-            memcpy(pstru, &(stru), sizeof(void *));                                            \
+            *(void **)(pstru) = stru; /* FIXME: strict aliasing violation */                   \
         }                                                                                      \
         else                                                                                   \
         {                                                                                      \
@@ -187,7 +187,7 @@ struct CraSerializer
                 CRA_SER_NEW_OBJ(arr, (len2 > 0 ? len2 : 1) * (meta)->for_array.size_of_slot); \
             else                                                                              \
                 arr = NULL;                                                                   \
-            memcpy(parr, &(arr), sizeof(void *)); /* *(void **)parr = arr; */                 \
+            *(void **)(parr) = arr; /* FIXME: strict aliasing violation */                    \
         }                                                                                     \
         else                                                                                  \
         {                                                                                     \
@@ -212,7 +212,7 @@ struct CraSerializer
                 CRA_SER_NEW_OBJ(list, (meta)->size);                                       \
             else                                                                           \
                 list = NULL;                                                               \
-            memcpy(plist, &(list), sizeof(void *)); /* *(void **)plist = list; */          \
+            *(void **)(plist) = list; /* FIXME: strict aliasing violation */               \
         }                                                                                  \
         else                                                                               \
         {                                                                                  \
@@ -234,7 +234,7 @@ struct CraSerializer
                 CRA_SER_NEW_OBJ(dict, (meta)->size);                                               \
             else                                                                                   \
                 dict = NULL;                                                                       \
-            memcpy(pdict, &(dict), sizeof(void *)); /* *(void **)pdict = dict; */                  \
+            *(void **)(pdict) = dict; /* FIXME: strict aliasing violation */                       \
         }                                                                                          \
         else                                                                                       \
         {                                                                                          \
