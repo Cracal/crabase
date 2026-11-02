@@ -2,6 +2,7 @@
 #include "crabase/cra_assert.h"
 #include "crabase/cra_malloc.h"
 
+#if 0
 static bool
 cra_mempool_make_block(CraMemPool *pool)
 {
@@ -100,3 +101,4 @@ cra_mempool_dealloc(CraMemPool *pool, void *ptr)
     assert(ptr);
     cra_alist_append(&pool->stack, &ptr);
 }
+#endif
