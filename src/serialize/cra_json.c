@@ -1681,9 +1681,8 @@ cra_json_read_dict(CraSerializer *szer, unsigned char *val, bool is_ptr, const C
         fail4:
             if (kinfo->flags & CRA_SER_FLAG_PTR)
             {
-                unsigned char *p;
                 assert(kinfo->type == CRA_SER_TYPE_STRING);
-                memcpy(&p, key, sizeof(void *));
+                char *p = *(char **)key;
                 cra_free(p);
             }
         fail3:

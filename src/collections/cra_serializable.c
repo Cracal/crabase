@@ -12,7 +12,7 @@ cra_alist_srlz_iter_init(void *iter, size_t itersize, void *list, size_t *retcou
     assert(list);
     assert(retcount);
     CRA_UNUSED(itersize);
-    assert(itersize >= sizeof(CraAListIter) + sizeof(void *));
+    assert(itersize >= sizeof(CraAListIter) + sizeof(CraAList *));
 
     CraAList *l = (CraAList *)list;
     *retcount = (size_t)l->count;
@@ -55,7 +55,7 @@ cra_llist_srlz_iter_init(void *iter, size_t itersize, void *list, size_t *retcou
     assert(list);
     assert(retcount);
     CRA_UNUSED(itersize);
-    assert(itersize >= sizeof(CraLListIter) + sizeof(void *));
+    assert(itersize >= sizeof(CraLListIter) + sizeof(CraLList *));
 
     CraLList *l = (CraLList *)list;
     *retcount = (size_t)l->count;
@@ -98,7 +98,7 @@ cra_deque_srlz_iter_init(void *iter, size_t itersize, void *list, size_t *retcou
     assert(list);
     assert(retcount);
     CRA_UNUSED(itersize);
-    assert(itersize >= sizeof(CraDequeIter) + sizeof(void *));
+    assert(itersize >= sizeof(CraDequeIter) + sizeof(CraDeque *));
 
     CraDeque *l = (CraDeque *)list;
     *retcount = (size_t)l->count;
@@ -141,7 +141,7 @@ cra_dict_srlz_iter_init(void *iter, size_t itersize, void *dict, size_t *retcoun
     assert(dict);
     assert(retcount);
     CRA_UNUSED(itersize);
-    assert(itersize >= sizeof(CraDictIter) + sizeof(void *));
+    assert(itersize >= sizeof(CraDictIter) + sizeof(CraDict *));
 
     CraDict *d = (CraDict *)dict;
     *retcount = (size_t)d->count;
