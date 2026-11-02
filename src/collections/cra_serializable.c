@@ -1,5 +1,8 @@
 #include "crabase/collections/cra_serializable.h"
 
+#define SET_OBJ(iter, itype, otype, obj) *((otype **)((unsigned char *)(iter) + sizeof(itype))) = obj
+#define GET_OBJ(iter, itype, otype)      *((otype **)((unsigned char *)(iter) + sizeof(itype)))
+
 #if 1 // for alist
 
 void
@@ -9,11 +12,11 @@ cra_alist_srlz_iter_init(void *iter, size_t itersize, void *list, size_t *retcou
     assert(list);
     assert(retcount);
     CRA_UNUSED(itersize);
-    assert(itersize >= sizeof(CraAListIter) + sizeof(void *));
+    assert(itersize >= sizeof(CraAListIter) + sizeof(CraAList *));
 
     CraAList *l = (CraAList *)list;
     *retcount = (size_t)l->count;
-    memcpy((unsigned char *)iter + sizeof(CraAListIter), &l, sizeof(void *)); // iter->list = l
+    SET_OBJ(iter, CraAListIter, CraAList, l);
 }
 
 bool
@@ -22,7 +25,7 @@ cra_alist_srlz_iter_next(void *iter, void *retitem)
     assert(iter);
     CraAList     *list;
     CraAListIter *it = (CraAListIter *)iter;
-    memcpy(&list, (unsigned char *)it + sizeof(CraAListIter), sizeof(void *)); // list = iter->list
+    list = GET_OBJ(iter, CraAListIter, CraAList);
     return CraAList_iter_next(it, list, retitem);
 }
 
@@ -52,11 +55,11 @@ cra_llist_srlz_iter_init(void *iter, size_t itersize, void *list, size_t *retcou
     assert(list);
     assert(retcount);
     CRA_UNUSED(itersize);
-    assert(itersize >= sizeof(CraLListIter) + sizeof(void *));
+    assert(itersize >= sizeof(CraLListIter) + sizeof(CraLList *));
 
     CraLList *l = (CraLList *)list;
     *retcount = (size_t)l->count;
-    memcpy((unsigned char *)iter + sizeof(CraLListIter), &l, sizeof(void *)); // iter->list = l
+    SET_OBJ(iter, CraLListIter, CraLList, l);
 }
 
 bool
@@ -65,7 +68,7 @@ cra_llist_srlz_iter_next(void *iter, void *retitem)
     assert(iter);
     CraLList     *list;
     CraLListIter *it = (CraLListIter *)iter;
-    memcpy(&list, (unsigned char *)it + sizeof(CraLListIter), sizeof(void *)); // list = iter->list
+    list = GET_OBJ(iter, CraLListIter, CraLList);
     return CraLList_iter_next(it, list, retitem);
 }
 
@@ -95,11 +98,11 @@ cra_deque_srlz_iter_init(void *iter, size_t itersize, void *list, size_t *retcou
     assert(list);
     assert(retcount);
     CRA_UNUSED(itersize);
-    assert(itersize >= sizeof(CraDequeIter) + sizeof(void *));
+    assert(itersize >= sizeof(CraDequeIter) + sizeof(CraDeque *));
 
     CraDeque *l = (CraDeque *)list;
     *retcount = (size_t)l->count;
-    memcpy((unsigned char *)iter + sizeof(CraDequeIter), &l, sizeof(void *)); // iter->list = l
+    SET_OBJ(iter, CraDequeIter, CraDeque, l);
 }
 
 bool
@@ -108,7 +111,7 @@ cra_deque_srlz_iter_next(void *iter, void *retitem)
     assert(iter);
     CraDeque     *list;
     CraDequeIter *it = (CraDequeIter *)iter;
-    memcpy(&list, (unsigned char *)it + sizeof(CraDequeIter), sizeof(void *)); // list = iter->list
+    list = GET_OBJ(iter, CraDequeIter, CraDeque);
     return CraDeque_iter_next(it, list, retitem);
 }
 
@@ -138,11 +141,11 @@ cra_dict_srlz_iter_init(void *iter, size_t itersize, void *dict, size_t *retcoun
     assert(dict);
     assert(retcount);
     CRA_UNUSED(itersize);
-    assert(itersize >= sizeof(CraDictIter) + sizeof(void *));
+    assert(itersize >= sizeof(CraDictIter) + sizeof(CraDict *));
 
     CraDict *d = (CraDict *)dict;
     *retcount = (size_t)d->count;
-    memcpy((unsigned char *)iter + sizeof(CraDictIter), &d, sizeof(void *)); // iter->dict = d
+    SET_OBJ(iter, CraDictIter, CraDict, d);
 }
 
 bool
@@ -151,7 +154,7 @@ cra_dict_srlz_iter_next(void *iter, void *retkey, void *retval)
     assert(iter);
     CraDict     *dict;
     CraDictIter *it = (CraDictIter *)iter;
-    memcpy(&dict, (unsigned char *)it + sizeof(CraDictIter), sizeof(void *)); // dict = iter->dict;
+    dict = GET_OBJ(iter, CraDictIter, CraDict);
     return CraDict_iter_next(it, dict, retkey, retval);
 }
 

@@ -208,14 +208,6 @@ typedef SSIZE_T ssize_t;
 
 #endif
 
-static inline void
-cra_swap_ptr(void **ptr1, void **ptr2)
-{
-    void *temp = *ptr1;
-    *ptr1 = *ptr2;
-    *ptr2 = temp;
-}
-
 #define CRA_FOREACH_NEXT_DEF(Type) bool CRA_CAT(Type, _iter_next)(CRA_CAT(Type, Iter) * it, Type * obj, void *retval)
 #define CRA_FOREACH_PREV_DEF(Type) bool CRA_CAT(Type, _iter_prev)(CRA_CAT(Type, Iter) * it, Type * obj, void *retval)
 #define CRA_FOREACH_NEXT_DEF2(Type)                                                                  \

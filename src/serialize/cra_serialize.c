@@ -69,12 +69,7 @@ void
 cra_ser_destroy_object(void *pobj, const CraSerMeta *meta, const CraSerInfo *info)
 {
     bool  is_ptr = info->flags & CRA_SER_FLAG_PTR;
-    void *obj;
-
-    if (is_ptr)
-        memcpy(&obj, pobj, sizeof(void *));
-    else
-        obj = pobj;
+    void *obj = is_ptr ? *(char **)pobj : pobj; // FIXME: strict aliasing violation
 
     assert(obj);
     assert(pobj);

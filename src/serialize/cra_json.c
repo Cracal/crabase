@@ -374,7 +374,7 @@ cra_json_write_string(CraSerializer *szer, const unsigned char *val, size_t len,
     bool                 normal;
 
     if (is_ptr)
-        memcpy(&p, val, sizeof(unsigned char *)); // p = *(unsigned char**)val;
+        p = (unsigned char *)(*(char **)val);
     else
         p = val;
 
@@ -597,7 +597,7 @@ cra_json_read_null(CraSerializer *szer, unsigned char *val, const CraSerInfo *in
         cra_ser_error_set(szer, CRA_SER_ERR_INVALID_VALUE);
         return false;
     }
-    memset(val, 0, sizeof(void *)); // *(T **)val = NULL;
+    *(void **)val = NULL; // FIXME: strict aliasing violation
     return true;
 }
 
@@ -1118,7 +1118,7 @@ cra_json_write_struct(CraSerializer *szer, const unsigned char *val, bool is_ptr
     assert(meta->infos[0].offset == 0);
 
     if (is_ptr)
-        memcpy(&stru, val, sizeof(void *)); // stru = *(T **)val;
+        stru = *(void **)val; // FIXME: strict aliasing violation
     else
         stru = val;
 
@@ -1278,7 +1278,7 @@ cra_json_write_array(CraSerializer *szer, const unsigned char *val, const CraSer
     CRA_SER_CHECK_LIMIT(szer, count, >=, CRA_SER_LIST_MAX_COUNT);
 
     if (meta->count == 0)
-        memcpy(&array, val, sizeof(void *)); // array = *(T **)val;
+        array = *(void **)val; // FIXME: strict aliasing violation
     else
         array = val;
     assert(array || (!array && count == 0));
@@ -1410,7 +1410,7 @@ cra_json_write_list(CraSerializer *szer, const unsigned char *val, bool is_ptr, 
     assert(meta->infos[0].offset == 0);
 
     if (is_ptr)
-        memcpy(&list, val, sizeof(void *)); // list = *(T **)val;
+        list = *(void **)val; // FIXME: strict aliasing violation
     else
         list = val;
 
@@ -1552,7 +1552,7 @@ cra_json_write_dict(CraSerializer *szer, const unsigned char *val, bool is_ptr, 
     assert(meta->infos[0].type <= CRA_SER_TYPE_STRING);
 
     if (is_ptr)
-        memcpy(&dict, val, sizeof(void *)); // dict = *(T **)val;
+        dict = *(void **)val; // FIXME: strict aliasing violation
     else
         dict = val;
 
@@ -1681,9 +1681,8 @@ cra_json_read_dict(CraSerializer *szer, unsigned char *val, bool is_ptr, const C
         fail4:
             if (kinfo->flags & CRA_SER_FLAG_PTR)
             {
-                unsigned char *p;
                 assert(kinfo->type == CRA_SER_TYPE_STRING);
-                memcpy(&p, key, sizeof(void *));
+                char *p = *(char **)key;
                 cra_free(p);
             }
         fail3:

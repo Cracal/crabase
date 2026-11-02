@@ -18,7 +18,7 @@ see [documentation](docs/)
 
 ## threads
 
-- locker (mutex & conditional variable)
+- lock (mutex & conditional variable)
 - blocking double-ended queue
 - count down latch
 - thread pool
@@ -29,7 +29,6 @@ see [documentation](docs/)
 - atomic
 - buffer
 - logger
-- memory pool(object pool)
 - reference count
 - time wheel
 - time

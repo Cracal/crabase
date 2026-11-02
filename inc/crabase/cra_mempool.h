@@ -12,6 +12,7 @@
 #define __CRABASE_CRA_MEMPOOL_H__
 #include "collections/cra_alist.h"
 
+#if 0
 typedef struct CraMemPool
 {
     size_t   item_size;
@@ -35,5 +36,6 @@ cra_mempool_alloc(CraMemPool *pool);
 
 CRA_API void
 cra_mempool_dealloc(CraMemPool *pool, void *ptr);
+#endif
 
 #endif
