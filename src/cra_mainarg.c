@@ -1,456 +1,131 @@
-#include "crabase/collections/cra_alist.h"
-#include "crabase/collections/cra_dict.h"
 #include "crabase/cra_mainarg.h"
-#include "crabase/cra_mempool.h"
-#include "crabase/cra_filedir.h"
-#include "crabase/cra_assert.h"
 #include "crabase/cra_malloc.h"
 
-#if 0
-#define HELP_OPTION_LENGTH (sizeof("-h, --help") - 1)
-
-#define ERROR_BEGIN            "%s(ERROR): "
-#define ERROR_ENDT             " Use '-h' or '--help' for help.\n"
-#define ERROR_END              "\n\n"
-#define PRINT_ERROR(fmt, ...)  fprintf(stderr, ERROR_BEGIN fmt ERROR_END, ma->program, ##__VA_ARGS__)
-#define PRINT_ERRORT(fmt, ...) fprintf(stderr, ERROR_BEGIN fmt ERROR_ENDT, ma->program, ##__VA_ARGS__)
-#define PRINT_ERROR_EXIT(fmt, ...)       \
-    do                                   \
-    {                                    \
-        PRINT_ERROR(fmt, ##__VA_ARGS__); \
-        exit(EXIT_FAILURE);              \
-    } while (0)
-#define PRINT_ERRORT_EXIT(fmt, ...)       \
-    do                                    \
-    {                                     \
-        PRINT_ERRORT(fmt, ##__VA_ARGS__); \
-        exit(EXIT_FAILURE);               \
-    } while (0)
-
-typedef struct CraMainArgItem CraMainArgItem;
-
-struct CraMainArgItem
-{
-    CraMainArgElement *element;
-    CraMainArgVal_u    val;
-    bool               assigned;
-};
+#define X CRA_MAINARG_LENGTH
+static const CraMainArgItem item_help = CRA_MAINARG_ITEM_DEF3('h', "help", "Display this help screen");
+static const CraMainArgItem item_version = CRA_MAINARG_ITEM_DEF3('v', "version", "Display version information");
+#undef X
 
 static void
-cra_mainarg_get_count(CraMainArgElement elements[], int *noption, int *nitem)
+cra_mainarg_print_help(const CraMainArg *ma)
 {
-    CraMainArgElement *elem;
+    printf("%s\nUsage: %s\n\n", ma->description, ma->usage);
 
-    assert(elements);
-    assert(noption);
-    assert(nitem);
-
-    *noption = *nitem = 0;
-    for (elem = elements; memcmp(elem, &(CraMainArgElement){ NULL }, sizeof(CraMainArgElement)) != 0; ++elem)
+    int longest = item_version.length;
+    for (const CraMainArgItem *item = ma->items; item->desc; ++item)
     {
-        ++(*nitem);
-        *noption += (!!elem->op + !!elem->option);
+        if (item->option && item->length > longest)
+            longest = item->length;
     }
-}
 
-static inline char *
-cra_mainarg_clear_op(char *op)
-{
-    assert(op);
-    if (*op == '-')
-        ++op;
-    if (*op == '-')
-        ++op;
-    return op;
-}
+    int desc_start = longest + 2;
+    assert(desc_start > 0);
 
-static void
-cra_mainarg_add_item(CraMainArg *ma, CraMainArgItem *item)
-{
-    assert(ma);
-    assert(item);
-
-    char              *name;
-    int                tipstart = 2;
-    CraMainArgElement *elem = item->element;
-
-    if (elem->op)
+    printf("Options:\n");
+    printf("  -%c, --%s%*.s%s\n", item_help.op, item_help.option, desc_start - item_help.length, "", item_help.desc);
+    printf("  -%c, --%s%*.s%s\n", item_version.op, item_version.option, desc_start - item_version.length, "",
+           item_version.desc);
+    for (const CraMainArgItem *item = ma->items; item->desc; ++item)
     {
-        name = elem->op;
-        if (*name != '-' || *(name + 1) == '\0' || *(name + 2) != '\0')
-            PRINT_ERROR_EXIT("Invalid option: '%s'. correct: '-X'.", elem->op);
-        ++name;
-        if (!cra_dict_add(ma->items, &name, &item))
-        {
-            --name;
-            goto add_error;
-        }
+        if (item->op != CRA_MA_LONG_OP)
+            printf("  -%c", item->op);
+        else
+            printf("    ");
+        if (item->option)
+            printf("%c --%s", item->op != CRA_MA_LONG_OP ? ',' : ' ', item->option);
+        if (item->val)
+            printf(" %s", item->val);
+        if (!item->option)
+            printf("    ");
+        printf("%*.s%s\n", desc_start - item->length, "", item->desc);
     }
-    if (elem->option)
+    printf("\n");
+}
+
+static const CraMainArgItem *
+cra_mainarg_match_option(const CraMainArgItem *items, const char *arg)
+{
+    if (*arg == '-' && *arg != '\0')
+        ++arg;
+    if (*arg == '-' && *arg != '\0')
+        ++arg;
+
+//               short option                                  long option
+#define XX(item) (*arg == (item)->op && *(arg + 1) == '\0') || ((item)->option && strcmp((item)->option, arg) == 0)
+
+    if (XX(&item_help))
+        return &item_help;
+    if (XX(&item_version))
+        return &item_version;
+
+    for (const CraMainArgItem *item = items; item->desc; ++item)
     {
-        int len;
-        name = elem->option;
-        len = (int)strlen(name);
-        if (len < 4 || *name != '-' || *(name + 1) != '-')
-            PRINT_ERROR_EXIT("Invalid option: '%s'. correct: '--X..X'.", elem->option);
-        name += 2;
-        if (!cra_dict_add(ma->items, &name, &item))
-        {
-            name -= 2;
-            goto add_error;
-        }
-        tipstart = tipstart + 2 + len;
+        if (XX(item))
+            return item;
     }
-    tipstart += (elem->valtip ? (int)strlen(elem->valtip) + 1 : 0);
-    if (tipstart > ma->tipstart)
-        ma->tipstart = tipstart;
-    return;
 
-add_error:
-    PRINT_ERROR_EXIT("Option '%s' already exists.", name);
+#undef XX
+
+    return NULL;
 }
 
-static void
-cra_mainarg_build(CraMainArg *ma, CraMainArgElement elements[], int nitems)
+bool
+cra_mainarg_parse(const CraMainArg *ma, int argc, const char *argv[], void *user_data)
 {
-    int                i;
-    CraMainArgItem    *item;
-    CraMainArgElement *elem;
-
-    assert(ma);
-    assert(elements);
-    assert(nitems > 0);
-
-    for (i = 0, elem = elements; i < nitems; ++i, ++elem)
-    {
-#define CRA_OPTIONS_FMT "Option '%s%s%s' "
-#define CRA_OPTIONS_ARG                                                                                 \
-    elem->op ? elem->op : "", (elem->op && elem->option) ? ", " : "", elem->option ? elem->option : ""
-
-        if (!elem->op && !elem->option)
-            PRINT_ERROR_EXIT("`op` and `option` cannot both be null.");
-        if (!elem->optip)
-            PRINT_ERROR_EXIT(CRA_OPTIONS_FMT "requires an `optip`.", CRA_OPTIONS_ARG);
-        if ((elem->func && !elem->valtip))
-            PRINT_ERROR_EXIT(CRA_OPTIONS_FMT "requires a `valtip`.", CRA_OPTIONS_ARG);
-        if ((!elem->func && elem->valtip))
-            PRINT_ERROR_EXIT(CRA_OPTIONS_FMT "does not require an `valtip`.", CRA_OPTIONS_ARG);
-
-#undef CRA_OPTIONS_FMT
-#undef CRA_OPTIONS_ARG
-
-        item = (CraMainArgItem *)cra_mempool_alloc(ma->pool);
-        if (item == NULL)
-            PRINT_ERROR_EXIT("Failed to allocate memory for CraMainArgItem.");
-        item->element = elem;
-        item->val.i = 0;
-        item->assigned = false;
-        cra_mainarg_add_item(ma, item);
-    }
-}
-
-void
-cra_mainarg_init(CraMainArg *ma, char *program, const char *intro, const char *usage, CraMainArgElement options[])
-{
-    int noption, nitem;
-
-    assert(ma);
-    assert(intro);
-    assert(usage);
-    assert(program);
-    assert(options);
-
-    ma->tipstart = (int)HELP_OPTION_LENGTH;
-    ma->program = cra_basename(program);
-    ma->introduction = intro;
-    ma->usage = usage;
-    ma->items = cra_alloc(CraDict);
-    ma->pool = cra_alloc(CraMemPool);
-    ma->pos_args = cra_alloc(CraAList);
-
-    if (!ma->items || !ma->pool || !ma->pos_args)
-        PRINT_ERROR_EXIT("Failed to allocate memory for CraMainArg.");
-
-    cra_mainarg_get_count(options, &noption, &nitem);
-
-    if (noption == 0 || nitem == 0)
-        PRINT_ERROR_EXIT("The option array 'options' cannot be empty.");
-
-    if (!cra_dict_init_with_size(char *, CraMainArgItem *, ma->items, noption, cra_hash_string1_p, cra_cmp_string_p))
-    {
-        PRINT_ERROR_EXIT("Failed to initialize items.");
-    }
-    if (!cra_alist_init(char *, ma->pos_args))
-        PRINT_ERROR_EXIT("Failed to initialize pos_args.");
-    if (!cra_mempool_init(ma->pool, sizeof(CraMainArgItem), nitem, 1))
-        PRINT_ERROR_EXIT("Failed to initialize memory pool for CraMainArgItem.");
-
-    cra_mainarg_build(ma, options, nitem);
-}
-
-void
-cra_mainarg_uninit(CraMainArg *ma)
-{
-    assert(ma);
-    cra_dict_uninit(ma->items);
-    cra_alist_uninit(ma->pos_args);
-    cra_mempool_uninit_no_check(ma->pool);
-    cra_dealloc(ma->items);
-    cra_dealloc(ma->pool);
-    cra_dealloc(ma->pos_args);
-}
-
-void
-cra_mainarg_parse_args(CraMainArg *ma, int argc, char *argv[])
-{
-    char           *option;
-    char           *opval;
-    CraMainArgItem *item;
-
     assert(ma);
     assert(argv);
-    assert(argc > 0);
+    assert(ma->items);
+    assert(ma->usage);
+    assert(ma->version);
+    assert(ma->parse);
+
+    int                   op;
+    const char           *arg;
+    const char           *option;
+    const char           *value;
+    const CraMainArgItem *item;
 
     for (int i = 1; i < argc; ++i)
     {
-        option = cra_mainarg_clear_op(argv[i]);
-        if (!cra_dict_get(ma->items, &option, &item))
+        arg = argv[i];
+        item = cra_mainarg_match_option(ma->items, arg);
+        if (!item)
         {
-            // print help?
-            if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
-            {
-                cra_mainarg_print_help(ma);
-                exit(EXIT_SUCCESS);
-            }
-
-            // add to pos_args
-            cra_alist_append(ma->pos_args, &argv[i]);
-            continue;
-        }
-
-        item->assigned = true;
-        if (item->element->func)
-        {
-            if (++i < argc)
-                opval = argv[i];
-            else
-                PRINT_ERRORT_EXIT("Option '%s' requires a value.", argv[i - 1]);
-
-            if (!item->element->func(&item->val, opval, item->element->arg))
-                PRINT_ERRORT_EXIT("The value '%s' is invalid for option '%s'.", opval, argv[i - 1]);
+            op = CRA_MA_NON_OP;
+            option = NULL;
+            value = arg;
         }
         else
         {
-            item->val.b = true;
+            if (item == &item_help)
+            {
+                cra_mainarg_print_help(ma);
+                return false;
+            }
+            if (item == &item_version)
+            {
+                printf("%s\n\n", ma->version);
+                return false;
+            }
+
+            if (item->val && ++i >= argc)
+            {
+                fprintf(stderr, "Missing value for option: %s\n", arg);
+                goto fail;
+            }
+            op = item->op;
+            option = item->option;
+            value = item->val ? argv[i] : NULL;
+        }
+
+        if (!ma->parse(op, option, value, user_data))
+        {
+            fprintf(stderr, "Failed to parse option: %s\n", arg);
+        fail:
+            fprintf(stderr, "Type '-h' or '--help' for help.\n\n");
+            return false;
         }
     }
-}
 
-CraMainArgVal_u
-cra_mainarg_get_val(CraMainArg *ma, char *option, CraMainArgVal_u default_val)
-{
-    char           *name;
-    CraMainArgItem *item;
-
-    assert(ma);
-    assert(option);
-
-    name = cra_mainarg_clear_op(option);
-    if (!cra_dict_get(ma->items, &name, &item))
-        PRINT_ERRORT_EXIT("Unknown option: '%s'.", option);
-
-    if (item->assigned)
-        return item->val;
-    return default_val;
-}
-
-int
-cra_mainarg_get_pos_args_count(CraMainArg *ma)
-{
-    assert(ma);
-    return (int)ma->pos_args->count;
-}
-
-CraMainArgVal_u
-cra_mainarg_get_pos_args_val(CraMainArg *ma, int index, CraMainArgVal_u default_val, cra_mainarg_fn func, void *arg)
-{
-    char           *str;
-    CraMainArgVal_u val;
-
-    assert(ma);
-    assert(func);
-    assert(index >= 0);
-
-    if (!cra_alist_get(ma->pos_args, index, &str))
-        return default_val;
-
-    if (!func(&val, str, arg))
-        PRINT_ERROR_EXIT("Invalid item: '%s'.", str);
-    return val;
-}
-
-void
-cra_mainarg_print_help(CraMainArg *ma)
-{
-    int                l;
-    CraMainArgElement *elem;
-    CraMainArgItem    *last;
-    CraMainArgItem    *item;
-
-    assert(ma);
-
-    printf("%s\n", ma->introduction);
-    printf("Usage: %s %s\n\n", ma->program, ma->usage);
-
-    last = NULL;
-    printf("Options:\n");
-    printf("  -h, --help  %*.sShow options\n", ma->tipstart - (int)HELP_OPTION_LENGTH, "");
-    CRA_FOREACH(CraDict, ma->items, NULL, &item)
-    {
-        if (item == last)
-            continue;
-
-        last = item;
-        elem = item->element;
-        //   [-X][, ][--X..X][ len(valtip)]  len(optip)
-        l = printf("  %s%s%s", elem->op ? elem->op : "  ", elem->option ? (elem->op ? ", " : "  ") : "",
-                   elem->option ? elem->option : "");
-        if (elem->valtip)
-            l += printf(" %s", elem->valtip);
-        printf("  %*.s%s\n", ma->tipstart - (l - 2), "", elem->optip);
-    }
-}
-
-// ====================
-
-bool
-cra_mainarg_stob(CraMainArgVal_u *retval, const char *opval, void *_)
-{
-    assert(retval);
-    assert(opval);
-    assert(!_);
-    CRA_UNUSED(_);
-    return cra_mainarg_stob_values(retval, opval, (char *[]){ "on", "off" });
-}
-
-bool
-cra_mainarg_stoi(CraMainArgVal_u *retval, const char *opval, void *_)
-{
-    assert(retval);
-    assert(opval);
-    assert(!_);
-    CRA_UNUSED(_);
-
-    char   *end = NULL;
-    int64_t i = strtoll(opval, &end, 10);
-    if (end != opval)
-    {
-        retval->i = i;
-        return true;
-    }
-    return false;
-}
-
-bool
-cra_mainarg_stof(CraMainArgVal_u *retval, const char *opval, void *_)
-{
-    assert(retval);
-    assert(opval);
-    assert(!_);
-    CRA_UNUSED(_);
-
-    char  *end = NULL;
-    double f = strtod(opval, &end);
-    if (end != opval)
-    {
-        retval->f = f;
-        return true;
-    }
-    return false;
-}
-
-bool
-cra_mainarg_stos(CraMainArgVal_u *retval, const char *opval, void *_)
-{
-    assert(retval);
-    assert(opval);
-    assert(!_);
-    CRA_UNUSED(_);
-
-    retval->s = (char *)opval;
     return true;
 }
-
-bool
-cra_mainarg_stob_values(CraMainArgVal_u *retval, const char *opval, void *values)
-{
-    assert(retval);
-    assert(opval);
-    assert(values);
-
-    char **strs = (char **)values;
-    assert(!!strs[0] && !!strs[1]);
-
-    if (strcmp(opval, strs[0]) == 0)
-    {
-        retval->b = true;
-        return true;
-    }
-    if (strcmp(opval, strs[1]) == 0)
-    {
-        retval->b = false;
-        return true;
-    }
-    return false;
-}
-
-bool
-cra_mainarg_stoi_in_range(CraMainArgVal_u *retval, const char *opval, void *range)
-{
-    assert(retval);
-    assert(opval);
-    assert(range);
-
-    int64_t *ints = (int64_t *)range;
-    assert(ints[0] < ints[1]);
-
-    if (!cra_mainarg_stoi(retval, opval, NULL))
-        return false;
-    return retval->i >= ints[0] && retval->i < ints[1];
-}
-
-bool
-cra_mainarg_stof_in_range(CraMainArgVal_u *retval, const char *opval, void *range)
-{
-    assert(retval);
-    assert(opval);
-    assert(range);
-
-    double *dbls = (double *)range;
-    assert(dbls[0] < dbls[1]);
-
-    if (!cra_mainarg_stof(retval, opval, NULL))
-        return false;
-    return retval->f >= dbls[0] && retval->f < dbls[1];
-}
-
-bool
-cra_mainarg_stos_in_array(CraMainArgVal_u *retval, const char *opval, void *array)
-{
-    assert(retval);
-    assert(opval);
-    assert(array);
-
-    char **strs = (char **)array;
-    while (*strs)
-    {
-        if (strcmp(opval, *strs) == 0)
-        {
-            retval->s = (char *)opval;
-            return true;
-        }
-        ++strs;
-    }
-    return false;
-}
-#endif

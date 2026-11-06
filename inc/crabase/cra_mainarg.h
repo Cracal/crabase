@@ -10,119 +10,70 @@
  */
 #ifndef __CRABASE_CRA_MAINARG_H__
 #define __CRABASE_CRA_MAINARG_H__
-#include "cra_defs.h"
+#include "cra_macro.h"
 
-#if 0
-typedef union
+typedef struct CraMainArgItem CraMainArgItem;
+typedef struct CraMainArg     CraMainArg;
+
+// [-o][, --option] [val]  desc
+struct CraMainArgItem
 {
-    bool    b;
-    int64_t i;
-    double  f;
-    char   *s;
-} CraMainArgVal_u;
-
-typedef struct CraDict           CraDict;
-typedef struct CraAList          CraAList;
-typedef struct CraMemPool        CraMemPool;
-typedef struct CraMainArg        CraMainArg;
-typedef struct CraMainArgElement CraMainArgElement;
-
-typedef bool (*cra_mainarg_fn)(CraMainArgVal_u *retval, const char *opval, void *arg);
-
-struct CraMainArgElement
-{
-    char          *op;
-    char          *option;
-    char          *valtip;
-    char          *optip;
-    cra_mainarg_fn func;
-    void          *arg;
+    int         op;     // 1. short option, 2. key of long option
+    int         length; // len(option) + len(val) + 1
+    const char *option;
+    const char *val;
+    const char *desc;
 };
-
-#define CRA_MAINARG_ELEMENT_BEGIN(name) CraMainArgElement name[] = {
-#define CRA_MAINARG_ELEMENT_END() {0}}
-#define CRA_MAINARG_ELEMENT_SET(op, option, valtip, optip, func, arg) { op, option, valtip, optip, func, arg },
-#define CRA_MAINARG_ELEMENT_BOL(op, option, optip) CRA_MAINARG_ELEMENT_SET(op, option, NULL, optip, NULL, NULL)
-#define CRA_MAINARG_ELEMENT_VAL                    CRA_MAINARG_ELEMENT_SET
 
 struct CraMainArg
 {
-    int         tipstart;
-    const char *introduction;
-    char       *program;
-    const char *usage;
-    CraDict    *items;    // Dict<char *, Item *>
-    CraMemPool *pool;     // MemPool<Item>
-    CraAList   *pos_args; // AList<char *>
+    const CraMainArgItem *items;
+    const char           *usage;
+    const char           *version;
+    const char           *description;
+
+    bool (*parse)(int op, const char *option, const char *value, void *user_data);
 };
 
-CRA_API void
-cra_mainarg_init(CraMainArg *ma, char *program, const char *intro, const char *usage, CraMainArgElement options[]);
+#define CRA_MAINARG_IS_STR(str) _Generic((0, str), char *: 1, const char *: 1, default: 0)
+#define CRA_MAINARG_LEN_OF_STR(str, amount)                                                          \
+    _Generic((0, str), char *: sizeof(str) - amount, const char *: sizeof(str) - amount, default: 0)
 
-CRA_API void
-cra_mainarg_uninit(CraMainArg *ma);
+#define CRA_MAINARG_ITEM_CHECK3(op, option, desc)                                                               \
+    static_assert(op != 'v' && op != 'h', "version and help options are reserved");                             \
+    static_assert(op != 0 || CRA_MAINARG_IS_STR(option), "at least one of short option or long option must be " \
+                                                         "set");                                                \
+    static_assert(!CRA_MAINARG_IS_STR(option) || CRA_MAINARG_LEN_OF_STR(option, 0) > 2,                         \
+                  "long option must be at least 2 characters long");                                            \
+    static_assert(CRA_MAINARG_IS_STR(desc), "desc must be set");
+#define CRA_MAINARG_ITEM_CHECK4(op, option, val, desc) CRA_MAINARG_ITEM_CHECK3(op, option, desc)
+#define CRA_MAINARG_ITEM_CHECK(...) CRA_CAT(CRA_MAINARG_ITEM_CHECK, CRA_CNT(__VA_ARGS__))(__VA_ARGS__)
 
-CRA_API void
-cra_mainarg_parse_args(CraMainArg *ma, int argc, char *argv[]);
+#define CRA_MAINARG_LENGTH(option, val) CRA_MAINARG_LEN_OF_STR(option, 1) + CRA_MAINARG_LEN_OF_STR(val, 0)
 
-CRA_API CraMainArgVal_u
-cra_mainarg_get_val(CraMainArg *ma, char *option, CraMainArgVal_u default_val);
-#define cra_mainarg_get_b(ma, option, default_val)                           \
-    cra_mainarg_get_val(ma, option, (CraMainArgVal_u){ .b = default_val }).b
-#define cra_mainarg_get_i(ma, option, default_val)                           \
-    cra_mainarg_get_val(ma, option, (CraMainArgVal_u){ .i = default_val }).i
-#define cra_mainarg_get_f(ma, option, default_val)                           \
-    cra_mainarg_get_val(ma, option, (CraMainArgVal_u){ .f = default_val }).f
-#define cra_mainarg_get_s(ma, option, default_val)                            \
-    cra_mainarg_get_val(ma, option, (CraMainArgVal_u){ .s = default_val }).s
+#define CRA_MAINARG_ITEM_DEF3(op, option, desc)      { op, CRA_MAINARG_LENGTH(option, 0), option, NULL, desc }
+#define CRA_MAINARG_ITEM_DEF4(op, option, val, desc) { op, CRA_MAINARG_LENGTH(option, val), option, val, desc }
+#define CRA_MAINARG_ITEM_DEF(...)                    CRA_CAT(CRA_MAINARG_ITEM_DEF, CRA_CNT(__VA_ARGS__))(__VA_ARGS__),
 
-CRA_API int
-cra_mainarg_get_pos_args_count(CraMainArg *ma);
+// name: name of the main arg variant
+// version: version of the program
+// usage: usage of the program command line
+// description: description of the program
+// parse_fn: parse function: bool (*)(int op, const char *option, const char *value, void *user_data)
+// ...: options definitions: (op: char, option: char * [, val: char *],  desc: char *)
+//       ('4', "ipv4", "Force IPv4 address")
+//       ('d', "debug", "<level>", "Set debug level")
+//       (0, "debug", "<level>", "Set debug level")   op == 0 -> no short option
+//       ('d', NULL, "<level>", "Set debug level")    option == NULL -> no long option
+#define CRA_MAINARG_DEF(name, version, usage, description, parse_fn, ...)                                      \
+    CRA_ITER(CRA_UNTUPLE_M, CRA_MAINARG_ITEM_CHECK, __VA_ARGS__)                                               \
+    const CraMainArgItem name##_items[] = { CRA_ITER(CRA_UNTUPLE_M, CRA_MAINARG_ITEM_DEF, __VA_ARGS__){ 0 } }; \
+    const CraMainArg     name = { name##_items, usage, version, description, parse_fn }
 
-CRA_API CraMainArgVal_u
-cra_mainarg_get_pos_args_val(CraMainArg *ma, int index, CraMainArgVal_u default_val, cra_mainarg_fn func, void *arg);
-#define cra_mainarg_get_pos_args_b(ma, index, default_val, func, arg)                           \
-    cra_mainarg_get_pos_args_val(ma, index, (CraMainArgVal_u){ .b = default_val }, func, arg).b
-#define cra_mainarg_get_pos_args_i(ma, index, default_val, func, arg)                           \
-    cra_mainarg_get_pos_args_val(ma, index, (CraMainArgVal_u){ .i = default_val }, func, arg).i
-#define cra_mainarg_get_pos_args_f(ma, index, default_val, func, arg)                           \
-    cra_mainarg_get_pos_args_val(ma, index, (CraMainArgVal_u){ .f = default_val }, func, arg).f
-#define cra_mainarg_get_pos_args_s(ma, index, default_val, func, arg)                            \
-    cra_mainarg_get_pos_args_val(ma, index, (CraMainArgVal_u){ .s = default_val }, func, arg).s
-
-CRA_API void
-cra_mainarg_print_help(CraMainArg *ma);
-
-// ============================
-
-// `opval` = "on" or "off"
-CRA_API bool
-cra_mainarg_stob(CraMainArgVal_u *retval, const char *opval, void *_);
+#define CRA_MA_NON_OP  (-1)
+#define CRA_MA_LONG_OP (0)
 
 CRA_API bool
-cra_mainarg_stoi(CraMainArgVal_u *retval, const char *opval, void *_);
-
-CRA_API bool
-cra_mainarg_stof(CraMainArgVal_u *retval, const char *opval, void *_);
-
-CRA_API bool
-cra_mainarg_stos(CraMainArgVal_u *retval, const char *opval, void *_);
-
-// `values`: char *values[2] = {"true str", "false str"}
-CRA_API bool
-cra_mainarg_stob_values(CraMainArgVal_u *retval, const char *opval, void *values);
-
-// `range`: int64_t range[2] = {min, max}. [min, max)
-CRA_API bool
-cra_mainarg_stoi_in_range(CraMainArgVal_u *retval, const char *opval, void *range);
-
-// `range`: double range[2] = {min, max}. [min, max)
-CRA_API bool
-cra_mainarg_stof_in_range(CraMainArgVal_u *retval, const char *opval, void *range);
-
-// `array`: char *array[] = {"str1", ..., "strN", NULL}.
-CRA_API bool
-cra_mainarg_stos_in_array(CraMainArgVal_u *retval, const char *opval, void *array);
-#endif
+cra_mainarg_parse(const CraMainArg *ma, int argc, const char *argv[], void *user_data);
 
 #endif
