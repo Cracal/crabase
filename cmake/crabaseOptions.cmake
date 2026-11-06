@@ -2,7 +2,7 @@ add_library(crabase_options INTERFACE)
 
 target_compile_options(crabase_options INTERFACE
     # GCC/Clang
-    $<$<OR:$<C_COMPILER_ID:GNU>,$<C_COMPILER_ID:Clang>>:
+    $<$<OR:$<C_COMPILER_ID:GNU>,$<AND:$<C_COMPILER_ID:Clang>,$<NOT:$<C_COMPILER_FRONTEND_VARIANT:MSVC>>>>:
         -Wall -Werror -Wextra -pedantic
 
         -fvisibility=hidden
@@ -10,8 +10,8 @@ target_compile_options(crabase_options INTERFACE
 )
 
 target_compile_options(crabase_options INTERFACE
-    # MSVC
-    $<$<C_COMPILER_ID:MSVC>:
+    # MSVC/Clangcl
+    $<$<OR:$<C_COMPILER_ID:MSVC>,$<AND:$<C_COMPILER_ID:Clang>,$<C_COMPILER_FRONTEND_VARIANT:MSVC>>>:
         /W4 /WX /utf-8 /std:c11
     >
 )
