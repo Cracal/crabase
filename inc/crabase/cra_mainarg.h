@@ -35,9 +35,9 @@ struct CraMainArg
     bool (*parse)(int op, const char *option, const char *value, void *user_data);
 };
 
-#define CRA_MAINARG_IS_STR(str) _Generic((0, str), char *: 1, const char *: 1, default: 0)
-#define CRA_MAINARG_LEN_OF_STR(str, amount)                                                          \
-    _Generic((0, str), char *: sizeof(str) - amount, const char *: sizeof(str) - amount, default: 0)
+#define CRA_MAINARG_IS_STR(str) _Generic(((void)0, str), char *: 1, const char *: 1, default: 0)
+#define CRA_MAINARG_LEN_OF_STR(str, amount)                                                                \
+    _Generic(((void)0, str), char *: sizeof(str) - amount, const char *: sizeof(str) - amount, default: 0)
 
 #define CRA_MAINARG_ITEM_CHECK3(op, option, desc)                                                               \
     static_assert(op != 'v' && op != 'h', "version and help options are reserved");                             \
@@ -47,7 +47,7 @@ struct CraMainArg
                   "long option must be at least 2 characters long");                                            \
     static_assert(CRA_MAINARG_IS_STR(desc), "desc must be set");
 #define CRA_MAINARG_ITEM_CHECK4(op, option, val, desc) CRA_MAINARG_ITEM_CHECK3(op, option, desc)
-#define CRA_MAINARG_ITEM_CHECK(...) CRA_CAT(CRA_MAINARG_ITEM_CHECK, CRA_CNT(__VA_ARGS__))(__VA_ARGS__)
+#define CRA_MAINARG_ITEM_CHECK(...)                    CRA_CAT(CRA_MAINARG_ITEM_CHECK, CRA_CNT(__VA_ARGS__))(__VA_ARGS__)
 
 #define CRA_MAINARG_LENGTH(option, val) CRA_MAINARG_LEN_OF_STR(option, 1) + CRA_MAINARG_LEN_OF_STR(val, 0)
 
