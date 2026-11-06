@@ -195,7 +195,7 @@ test_get_val_parser(int op, const char *option, const char *value, void *user_da
             return true;
         case 'd':
             assert(value != NULL);
-            values->delay = atof(value);
+            values->delay = (float)atof(value);
             if (values->delay < 1.0 || values->delay > 60.0)
             {
                 printf("delay must be between 1.0 and 60.0\n");
