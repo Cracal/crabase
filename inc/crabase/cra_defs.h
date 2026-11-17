@@ -10,8 +10,6 @@
  */
 #ifndef __CRABASE_CRA_BUFFER_DEFS_H__
 #define __CRABASE_CRA_BUFFER_DEFS_H__
-#define _POSIX_C_SOURCE 200809L
-#define _GNU_SOURCE
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>

@@ -16,6 +16,13 @@ target_compile_options(crabase_options INTERFACE
     >
 )
 
+target_compile_definitions(crabase_options INTERFACE
+    $<$<AND:$<PLATFORM_ID:Linux>,$<OR:$<C_COMPILER_ID:GNU>,$<C_COMPILER_ID:Clang>>>:
+        _POSIX_C_SOURCE=200809L
+        _GNU_SOURCE
+    >
+)
+
 target_link_libraries(crabase_options INTERFACE
     $<$<AND:$<PLATFORM_ID:Linux>,$<OR:$<C_COMPILER_ID:GNU>,$<C_COMPILER_ID:Clang>>>:
         m
