@@ -95,14 +95,14 @@ free_nodes(CraTimerNode *head)
 static inline void
 bitmap_set(uint64_t *bitmap, int layer, int index)
 {
-    int idx = layer == 0 ? index : index + (1ull << (BASE_BITS + (layer - 1) * UPPER_BITS));
+    int idx = layer == 0 ? index : index + BASE_SIZE + ((layer - 1) << UPPER_BITS);
     bitmap[idx >> 6] |= (1ull << (idx & 63));
 }
 
 static inline void
 bitmap_clr(uint64_t *bitmap, int layer, int index)
 {
-    int idx = layer == 0 ? index : index + (1ull << (BASE_BITS + (layer - 1) * UPPER_BITS));
+    int idx = layer == 0 ? index : index + BASE_SIZE + ((layer - 1) << UPPER_BITS);
     bitmap[idx >> 6] &= ~(1ull << (idx & 63));
 }
 

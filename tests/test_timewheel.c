@@ -233,9 +233,11 @@ test_timer_clear(void)
 
 static CRA_TIMER_FN_DEF(on_timeout5)
 {
-    // printt("timer[%" PRId32 "ms]: expired\n", delay);
     if (wheel)
+    {
+        // printt("timer[%" PRId32 "ms]: expired\n", delay);
         cra_timewheel_add(wheel, delay, user_data, on_timeout5);
+    }
 }
 
 static uint64_t last = 0;
@@ -266,7 +268,11 @@ static CRA_TIMER_FN_DEF(on_timeout6)
 void
 test(void)
 {
-    int n = 1000000;
+#ifdef NDEBUG
+    int n = 10000000;
+#else
+    int n = 100000;
+#endif
 
     CraTimewheel wheel;
     cra_timewheel_init(&wheel);
@@ -274,7 +280,10 @@ test(void)
     uint64_t start = cra_monotonic_ms();
     for (int i = 0; i < n; ++i)
     {
-        cra_timewheel_add(&wheel, (rand() + 10) % 800000, NULL, on_timeout5);
+        int t = rand() + 10;
+        if (t <= 0)
+            t = 100;
+        cra_timewheel_add(&wheel, t, NULL, on_timeout5);
     }
     int cnt = 10;
     cra_timewheel_add(&wheel, 1000, &cnt, on_timeout6);
