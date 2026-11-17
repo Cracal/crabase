@@ -1,19 +1,13 @@
 add_library(crabase_options INTERFACE)
 
+if(CMAKE_C_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
+    set(CRABASE_MSVC_OPTIONS /W4 /WX /utf-8 /std:c11)
+else()
+    set(CRABASE_GNU_OPTIONS -Wall -Werror -Wextra -pedantic -fvisibility=hidden)
+endif()
 target_compile_options(crabase_options INTERFACE
-    # GCC/Clang
-    $<$<OR:$<C_COMPILER_ID:GNU>,$<AND:$<C_COMPILER_ID:Clang>,$<NOT:$<C_COMPILER_FRONTEND_VARIANT:MSVC>>>>:
-        -Wall -Werror -Wextra -pedantic
-
-        -fvisibility=hidden
-    >
-)
-
-target_compile_options(crabase_options INTERFACE
-    # MSVC/Clangcl
-    $<$<OR:$<C_COMPILER_ID:MSVC>,$<AND:$<C_COMPILER_ID:Clang>,$<C_COMPILER_FRONTEND_VARIANT:MSVC>>>:
-        /W4 /WX /utf-8 /std:c11
-    >
+    ${CRABASE_MSVC_OPTIONS}
+    ${CRABASE_GNU_OPTIONS}
 )
 
 target_compile_definitions(crabase_options INTERFACE
