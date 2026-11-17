@@ -5,6 +5,11 @@
 #include "crabase/cra_refcnt.h"
 #include "crabase/cra_timewheel.h"
 
+#ifdef CRA_OS_WINDOWS
+#include <mmsystem.h>
+#pragma comment(lib, "winmm.lib")
+#endif
+
 static inline void
 printt(const char *fmt, ...)
 {
@@ -13,69 +18,84 @@ printt(const char *fmt, ...)
 
     cra_datetime_now(&dt, false);
 
-    printf("%4d-%02d-%02d %02d:%02d:%02d.%-6d ", dt.year, dt.mon, dt.day, dt.hour, dt.min, dt.sec, dt.usec);
+    int ms = dt.sec * 1000 + dt.usec / 1000;
+    printf("%4d-%02d-%02d %02d:%02d:%02d.%-6d [%5dms] ", dt.year, dt.mon, dt.day, dt.hour, dt.min, dt.sec, dt.usec, ms);
     va_start(ap, fmt);
     vprintf(fmt, ap);
     va_end(ap);
 }
 
-static void
-on_timeout1(CraTimer_base *timer)
+static CRA_TIMER_FN_DEF(on_timeout1)
 {
-    printt("timeout! [timer: 0x%x, tick: %ums, repeat: %u]\n", timer, timer->timeout_ms, timer->repeat);
-}
-
-typedef struct
-{
-    CraTimer_base  base;
-    CraTimer_base *t1;
-} MyTimer;
-
-static bool flag;
-
-static void
-on_timeout2(CraTimer_base *timer)
-{
-    MyTimer *t = (MyTimer *)timer;
-
-    if (t->t1)
+    if (!wheel)
     {
-        cra_timer_base_cancel(t->t1);
-        printt("timeout! [timer: 0x%x, tick: %ums, repeat: %u] kill t1[0x%x]\n", timer, timer->timeout_ms,
-               timer->repeat, t->t1);
-        t->t1 = NULL;
+        printt("timer[%" PRId32 "ms]: add failed\n", delay);
+        return;
+    }
+
+    if (*(bool *)user_data)
+    {
+        printt("timer[%" PRId32 "ms]: expired\n", delay);
+        cra_timewheel_add(wheel, delay, user_data, on_timeout1);
     }
     else
     {
+        printt("timer[%" PRId32 "ms]: has been canceled\n", delay);
+    }
+}
+
+static bool flag;
+
+static CRA_TIMER_FN_DEF(on_timeout2)
+{
+    if (!wheel)
+    {
+        printt("timer[%" PRId32 "ms]: add failed\n", delay);
         flag = false;
-        printt("timeout! [timer: 0x%x]: stop timewheel!\n", timer);
+        return;
+    }
+
+    if (!user_data)
+    {
+        printt("timer[%" PRId32 "ms]: expired. no condition\n", delay);
+        flag = false;
+        return;
+    }
+
+    if (*(bool *)user_data)
+    {
+        *(bool *)user_data = false;
+        printt("timer[%" PRId32 "ms]: expired. clear condition\n", delay);
+        cra_timewheel_add(wheel, delay, NULL, on_timeout2);
     }
 }
 
 void
 test_timewheel(void)
 {
-    CraTimer_base t1;
-    MyTimer       t2;
-    CraTimewheel  wheel;
+    CraTimewheel wheel;
+    cra_timewheel_init(&wheel);
+    wheel.ticks = UINT32_MAX - 100;
 
-    assert_always(cra_timewheel_init(&wheel, 50, 20));
+    bool condition = true;
+    cra_timewheel_add(&wheel, 1000, &condition, on_timeout1);
+    cra_timewheel_add(&wheel, 5000, &condition, on_timeout2);
 
-    cra_timer_base_init(&t1, CRA_TIMER_INFINITE, 1000, on_timeout1, NULL);
-    cra_timer_base_init((CraTimer_base *)&t2, 2, 5000, on_timeout2, NULL);
-    t2.t1 = &t1;
-
-    assert_always(cra_timewheel_add(&wheel, &t1));
-    assert_always(cra_timewheel_add(&wheel, (CraTimer_base *)&t2));
+    printt("start timewheel\n");
 
     flag = true;
+    uint32_t timestamp = 1000;
+    int32_t  timeout = cra_timewheel_update(&wheel, timestamp);
     while (flag)
     {
-        cra_msleep(50);
-        cra_timewheel_tick(&wheel);
+        // cra_msleep(timeout);
+        // timestamp += timeout;
+        cra_msleep(timeout / 2);
+        timestamp += timeout / 2;
+        timeout = cra_timewheel_update(&wheel, timestamp);
     }
 
-    cra_timewheel_release_all_free_timers(&wheel);
+    printt("stop timewheel\n");
 
     cra_timewheel_uninit(&wheel);
 }
@@ -84,186 +104,231 @@ test_timewheel(void)
 
 typedef struct
 {
-    int           begin;
-    CraTimer_base base;
-    char         *end;
-
+    int     begin;
+    int     cnt;
+    char   *end;
     CraRef *ref;
-} MyTimer2;
+} MyTimerData;
 
 static void
-on_uninit_mytimer2(void *timer)
+on_mytimerdata_uninit(void *data)
 {
-    MyTimer2 *t = (MyTimer2 *)timer;
-    printt("free MyTimer2{begin: %d, end: \"%s\"}[0x%x]\n", t->begin, t->end, t);
+    MyTimerData *d = (MyTimerData *)data;
+    printt("uninit MyTimerData{begin: %d, end: \"%s\"}\n", d->begin, d->end);
 }
 
-static void
-on_cancel(CraTimer_base *timer)
+static CRA_TIMER_FN_DEF(set_flag_to_false)
 {
-    MyTimer2 *t = container_of(timer, MyTimer2, base);
-    cra_ref_unref(t->ref);
-
     flag = false;
+    printt("timer[%" PRId32 "ms]: set flag to false\n", delay);
+    CRA_UNUSED(wheel);
+    CRA_UNUSED(user_data);
 }
 
-static void
-on_timeout3(CraTimer_base *timer)
+static CRA_TIMER_FN_DEF(on_timeout3)
 {
-    MyTimer2 *t = container_of(timer, MyTimer2, base);
-    printt("timeout! [timer: 0x%x, tick: %ums, repeat: %u, refcnt: %u, begin: %d, end: \"%s\"]\n", timer,
-           timer->timeout_ms, timer->repeat, t->ref->cnt, t->begin, t->end);
+    assert_always(wheel);
+    assert_always(user_data);
+    MyTimerData *d = (MyTimerData *)user_data;
+    printt("timer[%" PRId32 "ms]: expired. begin: %d, end: \"%s\", cnt: %d, refcnt: %d\n", delay, d->begin, d->end,
+           d->cnt, (int)d->ref->cnt);
+    if (--d->cnt == 0)
+    {
+        cra_ref_unref(d->ref);
+        printt("timer[%" PRId32 "ms]: unref()\n", delay);
+
+        cra_timewheel_add(wheel, 1000, NULL, set_flag_to_false);
+    }
+    else
+    {
+        cra_timewheel_add(wheel, delay, user_data, on_timeout3);
+    }
+}
+
+static CRA_TIMER_FN_DEF(on_timeout4)
+{
+    assert_always(wheel);
+    assert_always(user_data);
+    printt("timer[%" PRId32 "ms]: unref()\n", delay);
+    cra_ref_unref((CraRef *)user_data);
 }
 
 void
 test_timewheel2(void)
 {
-    CraRef   *ref = cra_ref_make(sizeof(MyTimer2), on_uninit_mytimer2);
-    MyTimer2 *t = (MyTimer2 *)cra_ref_get_ptr_uncheck(ref);
-    cra_timer_base_init(&t->base, 10, 500, on_timeout3, on_cancel);
-    t->end = "hello world";
-    t->begin = 100;
-    t->ref = ref;
-
     CraTimewheel *wheel = cra_alloc(CraTimewheel);
-    assert_always(cra_timewheel_init(wheel, 50, 25));
-    assert_always(cra_timewheel_add(wheel, &t->base));
+    cra_timewheel_init(wheel);
+
+    CraRef      *ref = cra_ref_make(sizeof(MyTimerData), on_mytimerdata_uninit);
+    MyTimerData *data = (MyTimerData *)cra_ref_get_ptr_uncheck(ref);
+    data->end = "hello world";
+    data->begin = 100;
+    data->cnt = 10;
+    data->ref = ref;
+
+    cra_ref_ref(ref);
+    cra_timewheel_add(wheel, 500, data, on_timeout3);
+    cra_ref_ref(ref);
+    cra_timewheel_add(wheel, 3000, ref, on_timeout4);
+    cra_ref_unref(ref);
 
     flag = true;
+    int32_t timeout = cra_timewheel_update(wheel, cra_monotonic_ms());
     while (flag)
     {
-        cra_msleep(50);
-        cra_timewheel_tick(wheel);
+        cra_msleep(timeout);
+        timeout = cra_timewheel_update(wheel, cra_monotonic_ms());
     }
 
     cra_timewheel_uninit(wheel);
     cra_dealloc(wheel);
-}
-
-static void
-stop_timewheel(CraTimer_base *timer)
-{
-    printt("timer[timeout: %ums, repeat: %u]: stop timing wheel.\n", timer->timeout_ms, timer->repeat);
-    flag = false;
 }
 
 void
 test_timeout_less_than_tick(void)
 {
-    CraTimer_base timer;
-    cra_timer_base_init(&timer, 3, 8, on_timeout1, stop_timewheel);
-
     CraTimewheel wheel;
-    assert_always(cra_timewheel_init(&wheel, 1000, 64));
+    cra_timewheel_init(&wheel);
 
-    assert_always(cra_timewheel_add(&wheel, &timer));
+    bool condition = true;
+    cra_timewheel_add(&wheel, 1, &condition, on_timeout1);
+    cra_timewheel_add(&wheel, 3000, NULL, set_flag_to_false);
 
     flag = true;
+    int32_t timeout = cra_timewheel_update(&wheel, cra_monotonic_ms());
     while (flag)
     {
-        cra_sleep(1);
-        cra_timewheel_tick(&wheel);
+        cra_msleep(timeout);
+        timeout = cra_timewheel_update(&wheel, cra_monotonic_ms());
     }
 
     cra_timewheel_uninit(&wheel);
 }
 
-static void
-on_remove(CraTimer_base *timer)
-{
-    printt("remove timer[%u, %u].\n", timer->timeout_ms, timer->repeat);
-    cra_dealloc(timer);
-}
-
 void
 test_timer_clear(void)
 {
-    CraTimer_base *t1, *t2, *t3, *t4, *stop;
-    CraTimewheel  *wheel;
-
+    CraTimewheel *wheel;
     wheel = cra_alloc(CraTimewheel);
-    assert_always(cra_timewheel_init(wheel, 50, 20));
+    cra_timewheel_init(wheel);
 
-    t1 = cra_alloc(CraTimer_base);
-    t2 = cra_alloc(CraTimer_base);
-    t3 = cra_alloc(CraTimer_base);
-    t4 = cra_alloc(CraTimer_base);
-    stop = cra_alloc(CraTimer_base);
-    cra_timer_base_init(t1, CRA_TIMER_INFINITE, 500, on_timeout1, on_remove);
-    cra_timer_base_init(t2, CRA_TIMER_INFINITE, 1000, on_timeout1, on_remove);
-    cra_timer_base_init(t3, CRA_TIMER_INFINITE, 2000, on_timeout1, on_remove);
-    cra_timer_base_init(t4, CRA_TIMER_INFINITE, 3000, on_timeout1, on_remove);
-    cra_timer_base_init(stop, 1, 10000, stop_timewheel, on_remove);
-
-    assert_always(cra_timewheel_add(wheel, t1));
-    assert_always(cra_timewheel_add(wheel, t2));
-    assert_always(cra_timewheel_add(wheel, t3));
-    assert_always(cra_timewheel_add(wheel, t4));
-    assert_always(cra_timewheel_add(wheel, stop));
+    bool condition = true;
+    cra_timewheel_add(wheel, 500, &condition, on_timeout1);
+    cra_timewheel_add(wheel, 1000, &condition, on_timeout1);
+    cra_timewheel_add(wheel, 2000, &condition, on_timeout1);
+    cra_timewheel_add(wheel, 3000, &condition, on_timeout1);
+    cra_timewheel_add(wheel, 10000, NULL, set_flag_to_false);
 
     flag = true;
+    int32_t timeout = cra_timewheel_update(wheel, cra_monotonic_ms());
     while (flag)
     {
-        cra_msleep(50);
-        cra_timewheel_tick(wheel);
+        cra_msleep(timeout);
+        timeout = cra_timewheel_update(wheel, cra_monotonic_ms());
     }
 
     cra_timewheel_uninit(wheel);
     cra_dealloc(wheel);
 }
 
-static void
-on_timeout_cancel_self(CraTimer_base *timer)
+static CRA_TIMER_FN_DEF(on_timeout5)
 {
-    static int i = 3;
-    if (i-- <= 0)
+    if (wheel)
     {
-        printt("timer[timeout: %ums, repeat: %u]: cancel self\n", timer->timeout_ms, timer->repeat);
-        // cra_timer_base_cancel(timer);
-        // cra_timer_base_cls_active(timer);
-        cra_timer_base_set_deactive(timer);
-    }
-    else
-    {
-        printt("timer[timeout: %ums, repeat: %u]: timeout!\n", timer->timeout_ms, timer->repeat);
+        // printt("timer[%" PRId32 "ms]: expired\n", delay);
+        cra_timewheel_add(wheel, delay, user_data, on_timeout5);
     }
 }
 
-void
-test_timer_cancel_self(void)
+static uint64_t last = 0;
+static CRA_TIMER_FN_DEF(on_timeout6)
 {
-    CraTimewheel  timewheel;
-    CraTimer_base timer1, timer2;
+    if (!wheel)
+        return;
 
-    assert_always(cra_timewheel_init(&timewheel, 50, 20));
-    cra_timer_base_init(&timer1, CRA_TIMER_INFINITE, 1000, on_timeout_cancel_self, NULL);
-    cra_timer_base_init(&timer2, 1, 7000, stop_timewheel, NULL);
-
-    assert_always(cra_timewheel_add(&timewheel, &timer1));
-    assert_always(cra_timewheel_add(&timewheel, &timer2));
-
-    flag = true;
-    while (flag)
+    uint64_t now = cra_monotonic_ms();
+    if (last == 0)
     {
-        cra_msleep(50);
-        cra_timewheel_tick(&timewheel);
+        last = now;
+        printt("timer[%" PRId32 "ms]: first expired\n", delay);
+    }
+    else
+    {
+        uint64_t delta = now - last;
+        printt("timer[%" PRId32 "ms]: delta: %" PRIu64 "ms\n", delay, delta);
+        last = now;
     }
 
-    cra_timewheel_uninit(&timewheel);
+    if (--(*(int *)user_data) > 0)
+        cra_timewheel_add(wheel, delay, user_data, on_timeout6);
+    else
+        flag = false;
+}
+
+void
+test(void)
+{
+#ifdef NDEBUG
+    int n = 10000000;
+#else
+    int n = 100000;
+#endif
+
+    CraTimewheel wheel;
+    cra_timewheel_init(&wheel);
+
+    uint64_t start = cra_monotonic_ms();
+    for (int i = 0; i < n; ++i)
+    {
+        int t = rand() + 10;
+        if (t <= 0)
+            t = 100;
+        cra_timewheel_add(&wheel, t, NULL, on_timeout5);
+    }
+    int cnt = 10;
+    cra_timewheel_add(&wheel, 1000, &cnt, on_timeout6);
+    uint64_t end = cra_monotonic_ms();
+
+    printt("add %d timers, cost %" PRIu64 "ms\n", n, end - start);
+
+    flag = true;
+    uint64_t timestamp = cra_monotonic_ms();
+    int32_t  timeout = cra_timewheel_update(&wheel, timestamp);
+    while (flag)
+    {
+        cra_msleep(timeout);
+        // timestamp += timeout;
+        timestamp = cra_monotonic_ms();
+        timeout = cra_timewheel_update(&wheel, timestamp);
+    }
+
+    start = cra_monotonic_ms();
+    cra_timewheel_uninit(&wheel);
+    end = cra_monotonic_ms();
+    printt("uninit cost %" PRIu64 "ms\n", end - start);
 }
 
 int
 main(void)
 {
-    test_timewheel();
+#ifdef CRA_OS_WINDOWS
+    timeBeginPeriod(1);
+#endif
+
+    // test_timewheel();
+    // printf("----------------------- ^_^ -----------------------\n");
+    // test_timewheel2();
+    // printf("----------------------- ^_^ -----------------------\n");
+    // test_timeout_less_than_tick();
+    // printf("----------------------- ^_^ -----------------------\n");
+    // test_timer_clear();
+    // printf("----------------------- ^_^ -----------------------\n");
+    test();
     printf("----------------------- ^_^ -----------------------\n");
-    test_timewheel2();
-    printf("----------------------- ^_^ -----------------------\n");
-    test_timeout_less_than_tick();
-    printf("----------------------- ^_^ -----------------------\n");
-    test_timer_clear();
-    printf("----------------------- ^_^ -----------------------\n");
-    test_timer_cancel_self();
+
+#ifdef CRA_OS_WINDOWS
+    timeEndPeriod(1);
+#endif
 
     cra_memory_leak_report();
     return 0;

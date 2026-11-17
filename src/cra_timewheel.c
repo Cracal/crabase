@@ -1,283 +1,326 @@
 #include "crabase/cra_timewheel.h"
-#include "crabase/collections/cra_llist.h"
 #include "crabase/cra_malloc.h"
 
-#if 1 // free node list
+// short name
 
-static inline CraLList *
-cra_freenodelist_new(void)
+#define TICK_MS     CRA_TIMER_TICK_MS
+#define BASE_BITS   CRA_TIMER_BASE_BITS
+#define BASE_SIZE   CRA_TIMER_BASE_SIZE
+#define BASE_MASK   (BASE_SIZE - 1)
+#define UPPER_BITS  CRA_TIMER_UPPER_BITS
+#define UPPER_SIZE  CRA_TIMER_UPPER_SIZE
+#define UPPER_MASK  (UPPER_SIZE - 1)
+#define UPPER_MAX   CRA_TIMER_UPPER_MAX
+#define SLOT_NUM    CRA_TIMER_SLOT_NUM
+#define BITMAP_SIZE CRA_TIMER_BITMAP_SIZE
+
+struct CraTimerNode
 {
-    CraLList *list = cra_alloc(CraLList);
-    if (!list)
-        return NULL;
-    if (!cra_llist_init(CraLListNode *, list))
+    CraTimerNode *next;
+
+    uint32_t ticks;
+    int32_t  time_ms;
+    void    *user_data;
+    CRA_TIMER_FN_DEF((*cb));
+};
+
+static_assert(TICK_MS > 0, "TICK_MS must be greater than 0");
+
+static inline CraTimerNode *
+get_free_node(CraTimewheel *wheel)
+{
+    assert(wheel);
+    if (wheel->list)
     {
-        cra_dealloc(list);
-        return NULL;
+        CraTimerNode *node = wheel->list;
+        wheel->list = node->next;
+        return node;
     }
-    return list;
+    return cra_malloc(sizeof(CraTimerNode));
 }
 
 static inline void
-cra_freenodelist_delete(CraLList *list)
+put_free_node(CraTimewheel *wheel, CraTimerNode *node)
 {
-    assert(list);
-    cra_llist_uninit(list);
-    cra_dealloc(list);
+    assert(node);
+    assert(wheel);
+    node->next = wheel->list;
+    wheel->list = node;
 }
 
-static inline CraLListNode *
-cra_freenodelist_get(CraLList *list)
+static inline void
+free_all_free_nodes(CraTimewheel *wheel)
 {
-    assert(list);
-    CraLListNode *node;
-    if (list->count > 0)
+    assert(wheel);
+    for (CraTimerNode *temp, *node = wheel->list; node;)
     {
-        node = list->head;
-        cra_llist_remove_node(list, node, false);
+        temp = node;
+        node = node->next;
+        cra_free(temp);
     }
-    else
-    {
-        node = cra_llist_create_node(list->itemsize);
-    }
+    wheel->list = NULL;
+}
+
+static inline void
+link_head(CraTimerNode **phead, CraTimerNode *node)
+{
+    assert(node);
+    assert(phead);
+    node->next = *phead;
+    *phead = node;
+}
+
+static inline CraTimerNode *
+clear_head(CraTimerNode **phead)
+{
+    assert(phead);
+    CraTimerNode *node = *phead;
+    *phead = NULL;
     return node;
 }
 
 static inline void
-cra_freenodelist_put(CraLList *list, CraLListNode *node)
+free_nodes(CraTimerNode *head)
 {
-    assert(list);
-    assert(node);
+    for (CraTimerNode *temp; head;)
+    {
+        temp = head;
+        head = head->next;
 
-    // memset(node->val, 0, sizeof(CraTimer_base *));
-    cra_llist_insert_node(list, 0, node);
+        temp->cb(NULL, temp->time_ms, temp->user_data);
+        cra_free(temp);
+    }
 }
 
-#endif // end free node list
+static inline void
+bitmap_set(uint64_t *bitmap, int layer, int index)
+{
+    int idx = layer == 0 ? index : index + BASE_SIZE + ((layer - 1) << UPPER_BITS);
+    bitmap[idx >> 6] |= (1ull << (idx & 63));
+}
+
+static inline void
+bitmap_clr(uint64_t *bitmap, int layer, int index)
+{
+    int idx = layer == 0 ? index : index + BASE_SIZE + ((layer - 1) << UPPER_BITS);
+    bitmap[idx >> 6] &= ~(1ull << (idx & 63));
+}
+
+static inline int
+bitmap_ctzll(uint64_t val)
+{
+#if defined(CRA_COMPILER_GCC) || defined(CRA_COMPILER_CLANG)
+    return __builtin_ctzll(val);
+#elif defined(CRA_COMPILER_MSVC)
+    DWORD i;
+    _BitScanForward64(&i, val);
+    return (int)i;
+#else
+    int i = 0;
+    while (!(val & 1))
+    {
+        val >>= 1;
+        ++i;
+    }
+    return i;
+#endif
+}
+
+static inline int32_t
+get_next_timeout(CraTimewheel *wheel)
+{
+    if (wheel->ntimers == 0)
+        return -1;
+
+    uint32_t  min_ticks = UINT32_MAX;
+    uint64_t *bitmap = wheel->bitmap;
+    for (int i = 0; i < 4; ++i)
+    {
+        uint64_t val = bitmap[i];
+        while (val)
+        {
+            int idx = bitmap_ctzll(val);
+            assert(wheel->base[(i << 6) + idx]);
+            uint32_t ticks = wheel->base[(i << 6) + idx]->ticks - wheel->ticks;
+            if (ticks < min_ticks)
+                min_ticks = ticks;
+            val &= val - 1;
+        }
+    }
+    bitmap += 4;
+    for (int i = 0; i < (int)BITMAP_SIZE - 4; ++i)
+    {
+        uint64_t val = bitmap[i];
+        while (val)
+        {
+            int idx = bitmap_ctzll(val);
+            assert(wheel->upper[i][idx]);
+            uint32_t ticks = wheel->upper[i][idx]->ticks - wheel->ticks;
+            if (ticks < min_ticks)
+                min_ticks = ticks;
+            val &= val - 1;
+        }
+    }
+
+    return (int32_t)(min_ticks * TICK_MS);
+}
+
+// ===========================================
 
 void
-cra_timer_base_init(CraTimer_base    *base,
-                    uint32_t          repeat,
-                    uint32_t          timeout_ms,
-                    cra_timer_base_fn on_timeout,
-                    cra_timer_base_fn on_remove_timer)
-{
-    assert(base);
-    assert(repeat > 0);
-    assert(timeout_ms > 0);
-    assert(on_timeout != NULL);
-
-    cra_timer_base_set_active(base);
-    cra_timer_base_set_repeat(base, repeat);
-    cra_timer_base_set_timeout(base, timeout_ms);
-    base->on_timeout = on_timeout;
-    base->on_remove_timer = on_remove_timer;
-}
-
-#define CRA_TIMER_IN_NODE(node) (*(CraTimer_base **)(node)->val)
-
-static bool
-__cra_timewheel_init(CraTimewheel *wheel, uint32_t tick_ms, uint32_t wheel_size, CraLList *freenodelist)
-{
-    wheel->wheel_buckets = (CraLList *)cra_calloc(wheel_size, sizeof(CraLList));
-    if (!wheel->wheel_buckets)
-        return false;
-
-    wheel->tick_ms = tick_ms;
-    wheel->current = 0;
-    wheel->wheel_size = wheel_size;
-    wheel->freenodelist = freenodelist;
-    wheel->upper_wheel = NULL;
-    return true;
-}
-
-static bool
-cra_timewheel_add_node_to(CraTimewheel *wheel, CraLListNode *timernode, uint32_t remain_timeout_ms)
-{
-    remain_timeout_ms = CRA_MAX(remain_timeout_ms, wheel->tick_ms);
-    uint32_t  bucket = ((wheel->current + remain_timeout_ms / wheel->tick_ms) % wheel->wheel_size);
-    CraLList *list = &wheel->wheel_buckets[bucket];
-    if (list->itemsize == 0)
-    {
-        if (!cra_llist_init(CraTimer_base *, list))
-            return false;
-    }
-    return cra_llist_insert_node(list, 0, timernode);
-}
-
-static bool
-cra_timewheel_add_node(CraTimewheel *wheel, CraLListNode *timernode)
-{
-    CraTimer_base *timer = CRA_TIMER_IN_NODE(timernode);
-    if (timer->timeout_ms >= wheel->tick_ms * wheel->wheel_size)
-    {
-        if (!wheel->upper_wheel)
-        {
-            wheel->upper_wheel = cra_alloc(CraTimewheel);
-            if (!wheel->upper_wheel)
-                return false;
-            if (!__cra_timewheel_init(wheel->upper_wheel, wheel->tick_ms * wheel->wheel_size, wheel->wheel_size,
-                                      wheel->freenodelist))
-            {
-                cra_dealloc(wheel->upper_wheel);
-                wheel->upper_wheel = NULL;
-                return false;
-            }
-        }
-        return cra_timewheel_add_node(wheel->upper_wheel, timernode);
-    }
-    return cra_timewheel_add_node_to(wheel, timernode, timer->timeout_ms);
-}
-
-static void
-cra_timewheel_tick_inner(CraTimewheel *wheel, CraTimewheel *lower_wheel)
-{
-    if (++wheel->current == wheel->wheel_size)
-    {
-        wheel->current = 0;
-        if (wheel->upper_wheel)
-            cra_timewheel_tick_inner(wheel->upper_wheel, wheel);
-    }
-
-    CraLList      *list;
-    CraLListNode  *curr;
-    CraTimer_base *timer;
-
-    list = &wheel->wheel_buckets[wheel->current];
-    if (list->itemsize == 0)
-        return;
-
-    while (list->head)
-    {
-        curr = list->head;
-        timer = CRA_TIMER_IN_NODE(curr);
-        cra_llist_remove_node(list, curr, false);
-
-        if (!timer->active)
-        {
-        release_timer:
-            if (timer->on_remove_timer)
-                timer->on_remove_timer(timer);
-            cra_freenodelist_put(wheel->freenodelist, curr);
-            continue;
-        }
-
-        if (!lower_wheel)
-        {
-            timer->on_timeout(timer);
-
-            if (timer->active &&
-                (timer->repeat == CRA_TIMER_INFINITE || (--timer->repeat > 0 && timer->repeat != CRA_TIMER_INFINITE)))
-            {
-                if (!cra_timewheel_add_node(wheel, curr))
-                {
-                    fprintf(stderr,
-                            "cra_timewheel_tick_inner: add TIMER(timeout_ms = %u, repeat = %u) to wheel failed\n",
-                            timer->timeout_ms, timer->repeat);
-                    goto release_timer;
-                }
-            }
-            else
-            {
-                goto release_timer;
-            }
-        }
-        else
-        {
-            if (!cra_timewheel_add_node_to(lower_wheel, curr, timer->timeout_ms % wheel->tick_ms))
-            {
-                fprintf(stderr,
-                        "cra_timewheel_tick_inner: add TIMER(timeout_ms = %u, repeat = %u) to lower wheel failed\n",
-                        timer->timeout_ms, timer->repeat);
-                goto release_timer;
-            }
-        }
-    }
-}
-
-bool
-cra_timewheel_init(CraTimewheel *wheel, uint32_t tick_ms, uint32_t wheel_size)
+cra_timewheel_init(CraTimewheel *wheel)
 {
     assert(wheel);
-    assert(tick_ms > 0);
-    assert(wheel_size > 0);
-
-    CraLList *freenodelist = cra_freenodelist_new();
-    if (!freenodelist)
-        return false;
-    return __cra_timewheel_init(wheel, tick_ms, wheel_size, freenodelist);
+    memset(wheel, 0, sizeof(CraTimewheel));
 }
 
 void
 cra_timewheel_uninit(CraTimewheel *wheel)
 {
-    CraLList *list;
-
     assert(wheel);
-    assert(wheel->freenodelist);
-    assert(wheel->wheel_buckets);
-
-    if (wheel->upper_wheel)
+    uint64_t *bitmap = wheel->bitmap;
+    for (int i = 0; i < 4; ++i)
     {
-        cra_timewheel_uninit(wheel->upper_wheel);
-        cra_dealloc(wheel->upper_wheel);
-    }
-    for (uint32_t i = 0; i < wheel->wheel_size; ++i)
-    {
-        list = &wheel->wheel_buckets[i];
-        if (list->itemsize > 0)
+        uint64_t val = bitmap[i];
+        while (val)
         {
-            CraTimer_base *timer;
-            CRA_FOREACH(CraLList, list, &timer)
-            {
-                if (timer->on_remove_timer)
-                    timer->on_remove_timer(timer);
-            }
-            cra_llist_uninit(list);
+            int idx = bitmap_ctzll(val);
+            assert(wheel->base[(i << 6) + idx]);
+            free_nodes(wheel->base[(i << 6) + idx]);
+            val &= val - 1;
         }
     }
-    if (!wheel->upper_wheel)
-        cra_freenodelist_delete(wheel->freenodelist);
-    cra_free(wheel->wheel_buckets);
+    bitmap += 4;
+    for (int i = 0; i < (int)BITMAP_SIZE - 4; ++i)
+    {
+        uint64_t val = bitmap[i];
+        while (val)
+        {
+            int idx = bitmap_ctzll(val);
+            assert(wheel->upper[i][idx]);
+            free_nodes(wheel->upper[i][idx]);
+            val &= val - 1;
+        }
+    }
+    free_all_free_nodes(wheel);
+}
+
+static void
+cra_timewheel_add_node(CraTimewheel *wheel, CraTimerNode *node)
+{
+    if (wheel->ntimers == UINT32_MAX)
+    {
+        node->cb(NULL, node->time_ms, node->user_data);
+        put_free_node(wheel, node);
+        return;
+    }
+    ++wheel->ntimers;
+
+    int      index;
+    uint32_t ticks = node->ticks - wheel->ticks;
+    if (ticks < BASE_SIZE)
+    {
+        index = node->ticks & BASE_MASK;
+        link_head(&wheel->base[index], node);
+        if (wheel->base[index] == node)
+            bitmap_set(wheel->bitmap, 0, index);
+    }
+    else
+    {
+        int      i = 0;
+        uint32_t size = BASE_SIZE << UPPER_BITS;
+        for (; i < UPPER_MAX - 1 && ticks >= size; ++i)
+            size <<= UPPER_BITS;
+        index = (int)((node->ticks >> (BASE_BITS + i * UPPER_BITS)) & UPPER_MASK);
+        link_head(&wheel->upper[i][index], node);
+        if (wheel->upper[i][index] == node)
+            bitmap_set(wheel->bitmap, i + 1, index);
+    }
 }
 
 void
-cra_timewheel_release_all_free_timers(CraTimewheel *wheel)
+cra_timewheel_add(CraTimewheel *wheel, int32_t delay_ms, void *user_data, CRA_TIMER_FN_DEF(cb))
 {
-    CraLListNode *node;
-
+    assert(cb);
     assert(wheel);
-    assert(wheel->freenodelist);
+    assert(delay_ms > 0);
 
-    while (wheel->freenodelist->head)
+    CraTimerNode *timer = get_free_node(wheel);
+    if (!timer)
     {
-        node = wheel->freenodelist->head;
-        cra_llist_remove_node(wheel->freenodelist, node, false);
-        cra_dealloc(node);
+        cb(NULL, delay_ms, user_data); // add failed, tell external handle it
+        return;
     }
 
-    assert(wheel->freenodelist->count == 0);
+    timer->ticks = wheel->ticks + delay_ms / TICK_MS;
+    timer->user_data = user_data;
+    timer->time_ms = delay_ms;
+    timer->cb = cb;
+
+    cra_timewheel_add_node(wheel, timer);
 }
 
-bool
-cra_timewheel_add(CraTimewheel *wheel, CraTimer_base *timer)
-{
-    assert(wheel);
-    assert(timer);
-
-    CraLListNode *node = cra_freenodelist_get(wheel->freenodelist);
-    if (node)
-    {
-        CRA_TIMER_IN_NODE(node) = timer;
-        if (cra_timewheel_add_node(wheel, node))
-            return true;
-    }
-    return false;
-}
-
-void
+static void
 cra_timewheel_tick(CraTimewheel *wheel)
 {
+    int           index;
+    CraTimerNode *timer;
+    uint32_t      size = BASE_SIZE;
+    uint32_t      current = ++wheel->ticks;
+    uint32_t      ticks = current >> BASE_BITS;
+    for (int i = 0; i < 4 && (current & (size - 1)) == 0; ++i, size <<= UPPER_BITS, ticks >>= UPPER_BITS)
+    {
+        index = (int)(ticks & UPPER_MASK);
+        if (index == 0 || !(timer = clear_head(&wheel->upper[i][index])))
+            continue;
+
+        bitmap_clr(wheel->bitmap, i + 1, index);
+        for (CraTimerNode *temp; timer;)
+        {
+            temp = timer;
+            timer = timer->next;
+            --wheel->ntimers;
+            cra_timewheel_add_node(wheel, temp);
+        }
+    }
+
+    index = current & BASE_MASK;
+    if (!!(timer = clear_head(&wheel->base[index])))
+    {
+        bitmap_clr(wheel->bitmap, 0, index);
+        for (CraTimerNode *temp; timer;)
+        {
+            temp = timer;
+            timer = timer->next;
+            --wheel->ntimers;
+            temp->cb(wheel, temp->time_ms, temp->user_data);
+            put_free_node(wheel, temp);
+        }
+    }
+}
+
+int32_t
+cra_timewheel_update(CraTimewheel *wheel, uint64_t now_ms)
+{
     assert(wheel);
-    cra_timewheel_tick_inner(wheel, NULL);
+    assert(now_ms > 0);
+
+    if (wheel->last_ms == 0)
+        wheel->last_ms = now_ms;
+    if (now_ms < wheel->last_ms)
+        now_ms = wheel->last_ms;
+
+    int32_t  diff = 0;
+    uint32_t ticks = (uint32_t)((now_ms - wheel->last_ms) / TICK_MS);
+    if (ticks > 0)
+    {
+        // wheel->last_ms = now_ms;
+        wheel->last_ms += ticks * TICK_MS;
+        diff = (int32_t)(now_ms - wheel->last_ms);
+
+        while (ticks--)
+            cra_timewheel_tick(wheel);
+    }
+
+    return get_next_timeout(wheel) - diff;
 }

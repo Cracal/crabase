@@ -285,8 +285,8 @@ cra_serializer_init(CraSerializer *szer, void *buf, size_t size, bool format)
 static inline bool
 cra_ser_check_id_duplicate(uint8_t *bitmap, uint16_t id)
 {
-    uint16_t index = id >> 3;      // id / 8
-    uint8_t  mask = 1 << (id & 7); // id % 8
+    uint16_t index = id >> 3;
+    uint8_t  mask = 1 << (id & 7);
 
     if (bitmap[index] & mask)
         return true;
