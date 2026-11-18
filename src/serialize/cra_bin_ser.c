@@ -9,9 +9,9 @@
  *
  */
 #include "crabase/serialize/cra_bin_ser.h"
-#include "cra_serialize_inner.h"
 #include "crabase/cra_endian.h"
 #include "crabase/cra_malloc.h"
+#include "cra_serialize.h"
 
 // length/count encoding:
 //      0: null

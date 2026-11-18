@@ -8,8 +8,8 @@
  * @copyright Copyright (c) 2026
  *
  */
-#ifndef __CRA_SERIALIZE_INNER_H__
-#define __CRA_SERIALIZE_INNER_H__
+#ifndef __SERIALIZE_CRA_SERIALIZE_H__
+#define __SERIALIZE_CRA_SERIALIZE_H__
 #include "crabase/serialize/cra_serialize.h"
 #include "crabase/cra_string.h"
 #include "crabase/cra_assert.h"

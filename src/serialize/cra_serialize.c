@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2024
  *
  */
-#include "cra_serialize_inner.h"
+#include "cra_serialize.h"
 #include "crabase/cra_malloc.h"
 
 static inline const char *

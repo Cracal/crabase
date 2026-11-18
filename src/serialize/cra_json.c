@@ -9,8 +9,8 @@
  *
  */
 #include "crabase/serialize/cra_json.h"
-#include "cra_serialize_inner.h"
 #include "crabase/cra_malloc.h"
+#include "cra_serialize.h"
 #include <float.h>
 #include <math.h>
 

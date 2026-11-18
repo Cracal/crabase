@@ -8,8 +8,8 @@
  * @copyright Copyright (c) 2021
  *
  */
-#ifndef __CRABASE_CRA_BUFFER_DEFS_H__
-#define __CRABASE_CRA_BUFFER_DEFS_H__
+#ifndef __CRABASE_CRA_DEFS_H__
+#define __CRABASE_CRA_DEFS_H__
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>

@@ -15,6 +15,8 @@
 #include "cra_deque.h"
 #include "cra_dict.h"
 
+#define CRA_SRLZ_UNTUPLE(...) __VA_ARGS__
+
 #define CRA_LIST_DEF_SRLZ_UNINIT_FN(name, fn, list_type, item_type, item_name, release_item_code) \
     static void name(void *obj)                                                                   \
     {                                                                                             \
@@ -25,9 +27,7 @@
         if (list->count > 0)                                                                      \
         {                                                                                         \
             CRA_FOREACH(list_type, list, &item_name)                                              \
-            {                                                                                     \
-                release_item_code                                                                 \
-            }                                                                                     \
+            CRA_SRLZ_UNTUPLE release_item_code                                                    \
         }                                                                                         \
                                                                                                   \
         fn(list);                                                                                 \
@@ -244,9 +244,7 @@ cra_dict_srlz_append(void *dict, void *key, void *val);
         if (dict->count > 0)                                                                         \
         {                                                                                            \
             CRA_FOREACH(CraDict, dict, &key_name, &val_name)                                         \
-            {                                                                                        \
-                release_item_code                                                                    \
-            }                                                                                        \
+            CRA_SRLZ_UNTUPLE release_item_code                                                       \
         }                                                                                            \
                                                                                                      \
         cra_dict_uninit(dict);                                                                       \

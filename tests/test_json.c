@@ -1183,7 +1183,7 @@ test_array(void)
 
 CRA_SER_DEF_LIST_META(static, (CraAList, ALI32), (INT32), CRA_ALIST_SRLZ);
 CRA_SER_DEF_LIST_META(static, (CraLList, LLStr), (STRING, 20), CRA_LLIST_SRLZ);
-CRA_DEQUE_DEF_SRLZ_UNINIT_FN(DeStr_uninit, char *, val, cra_free(val);)
+CRA_DEQUE_DEF_SRLZ_UNINIT_FN(DeStr_uninit, char *, val, ({ cra_free(val); }))
 CRA_SER_DEF_LIST_META(static, (CraDeque, DeStr), (STRING), CRA_DEQUE_SRLZ_WITH_UNINIT(DeStr_uninit));
 
 CRA_SER_DEF_STRUCT_META_AND_STRUCT_AND_UNINIT(
@@ -1562,27 +1562,36 @@ test_dict(void)
 
 CRA_SER_DEF_STRUCT_META_AND_STRUCT_AND_UNINIT(static, A, NULL, (STRING, str, 1));
 CRA_SER_DEF_ARRAY_META_AND_ARRAY_AND_UNINIT(static, (ArrStr), (STRING));
-CRA_ALIST_DEF_SRLZ_UNINIT_FN(AListA_uninit, A *, a, A_uninit(a); cra_free(a);)
+CRA_ALIST_DEF_SRLZ_UNINIT_FN(AListA_uninit, A *, a, ({
+                                 A_uninit(a);
+                                 cra_free(a);
+                             }))
 CRA_SER_DEF_LIST_META(static,
                       (CraAList, AListA),
                       (STRUCT, A, &A_meta, true),
                       CRA_ALIST_SRLZ_WITH_UNINIT(AListA_uninit));
-CRA_LLIST_DEF_SRLZ_UNINIT_FN(LListA_uninit, A *, a, A_uninit(a); cra_free(a);)
+CRA_LLIST_DEF_SRLZ_UNINIT_FN(LListA_uninit, A *, a, ({
+                                 A_uninit(a);
+                                 cra_free(a);
+                             }))
 CRA_SER_DEF_LIST_META(static,
                       (CraLList, LListA),
                       (STRUCT, A, &A_meta, true),
                       CRA_LLIST_SRLZ_WITH_UNINIT(LListA_uninit));
-CRA_DEQUE_DEF_SRLZ_UNINIT_FN(DequeA_uninit, A *, a, A_uninit(a); cra_free(a);)
+CRA_DEQUE_DEF_SRLZ_UNINIT_FN(DequeA_uninit, A *, a, ({
+                                 A_uninit(a);
+                                 cra_free(a);
+                             }))
 CRA_SER_DEF_LIST_META(static,
                       (CraDeque, DequeA),
                       (STRUCT, A, &A_meta, true),
                       CRA_DEQUE_SRLZ_WITH_UNINIT(DequeA_uninit));
 CRA_DICT_DEF_SRLZ_INIT_FN(DictA_init, char *, A *, cra_hash_string1_p, cra_cmp_string_p)
-CRA_DICT_DEF_SRLZ_UNINIT_FN(DictA_uninit, char *, key, A *, val, {
-    cra_free(key);
-    A_uninit(val);
-    cra_free(val);
-})
+CRA_DICT_DEF_SRLZ_UNINIT_FN(DictA_uninit, char *, key, A *, val, ({
+                                cra_free(key);
+                                A_uninit(val);
+                                cra_free(val);
+                            }))
 CRA_SER_DEF_DICT_META(static,
                       (CraDict, DictA),
                       (STRING),

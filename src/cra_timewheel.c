@@ -147,6 +147,9 @@ get_next_timeout(CraTimewheel *wheel)
             val &= val - 1;
         }
     }
+    if (min_ticks != UINT32_MAX)
+        goto end;
+
     bitmap += 4;
     for (int i = 0; i < (int)BITMAP_SIZE - 4; ++i)
     {
@@ -160,8 +163,12 @@ get_next_timeout(CraTimewheel *wheel)
                 min_ticks = ticks;
             val &= val - 1;
         }
+
+        if (min_ticks != UINT32_MAX)
+            break;
     }
 
+end:
     return (int32_t)(min_ticks * TICK_MS);
 }
 
