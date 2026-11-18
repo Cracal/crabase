@@ -75,6 +75,18 @@ target_include_directories(crabase
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
+configure_package_config_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/crabaseConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/crabaseConfig.cmake
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/crabase
+)
+
+write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/crabaseConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion
+)
+
 install(TARGETS crabase crabase_options
     EXPORT crabaseTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -93,14 +105,8 @@ install(EXPORT crabaseTargets
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/crabase
 )
 
-configure_package_config_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/crabaseConfig.cmake.in
+install(FILES
     ${CMAKE_CURRENT_BINARY_DIR}/crabaseConfig.cmake
-    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/crabase
-)
-
-write_basic_package_version_file(
     ${CMAKE_CURRENT_BINARY_DIR}/crabaseConfigVersion.cmake
-    VERSION ${PROJECT_VERSION}
-    COMPATIBILITY SameMajorVersion
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/crabase
 )
