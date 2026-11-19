@@ -141,7 +141,7 @@
 #if 1 // cra_[get|set]_last_error()
 
 #ifdef CRA_OS_WIN
-#define cra_get_last_error GetLastError
+#define cra_get_last_error (int)GetLastError
 #define cra_set_last_error SetLastError
 #else
 #include <errno.h>
