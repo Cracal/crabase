@@ -140,7 +140,7 @@
 
 #if 1 // cra_[get|set]_last_error()
 
-#ifdef CRA_COMPILER_MSVC
+#ifdef CRA_OS_WIN
 #define cra_get_last_error GetLastError
 #define cra_set_last_error SetLastError
 #else
