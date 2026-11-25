@@ -534,12 +534,12 @@ void
 cra_log_config(CraLogger *logger, unsigned int max_file_size, const char *log_dir)
 {
     assert(logger);
-    assert(log_dir);
     assert(logger->to_file);
-    assert(max_file_size >= CRA_LOG_BUF_SIZE);
 
-    logger->file_size_max = max_file_size;
-    cra_log_make_log_dir(logger, log_dir);
+    if (max_file_size > 0)
+        logger->file_size_max = CRA_MAX(max_file_size, CRA_LOG_BUF_SIZE);
+    if (log_dir)
+        cra_log_make_log_dir(logger, log_dir);
 }
 
 CraLogger *
