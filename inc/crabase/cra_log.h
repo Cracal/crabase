@@ -26,13 +26,12 @@ typedef enum
 
 typedef struct CraLogger CraLogger;
 
-#define CRA_LOG_BUF_SIZE     (4 * 1024 * 1024) // 4MB
+#define CRA_LOG_BUF_SIZE     ((4 * 1024 * 1024) - sizeof(unsigned int)) // 4MB
 #define CRA_LOG_BUF_MAX_CNT  32
 #define CRA_LOG_BUF_INIT_CNT 2
 
 #define CRA_LOG_FILENAME_MAX     1024
 #define CRA_LOG_OUTPUT_INTERVAL  3000                // 3s
-#define CRA_LOG_FLUSH_INTERVAL   (10 * 60 * 1000)    // 10 min
 #define CRA_LOG_DEFAULT_DIR      "./log/"            // default log dir
 #define CRA_LOG_DEFAULT_FILE_MAX (100 * 1024 * 1024) // 100MB
 

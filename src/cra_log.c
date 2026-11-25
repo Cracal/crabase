@@ -28,6 +28,7 @@ struct CraLogBuf
     unsigned int len;
     char         buf[CRA_LOG_BUF_SIZE];
 };
+static_assert(CRA_LOG_BUF_SIZE <= UINT_MAX, "CRA_LOG_BUF_SIZE must be less than UINT_MAX");
 
 struct CraLogOutputAsync
 {
@@ -49,9 +50,9 @@ struct CraLogger
     CraLogLv_e         level; // must be first member
     cra_atomic_int32_t refcnt;
     char               name[CRA_LOG_NAME_MAX];
-    short              tz_hour;
-    uint8_t            active   : 4;
-    uint8_t            use_zulu : 4;
+    int8_t             tz_hour;
+    bool               active;
+    bool               use_zulu;
     bool               to_file; // if 1, then log to file
     // for async log output(to file) only
     unsigned int       file_size_max;
@@ -61,9 +62,9 @@ struct CraLogger
     CraLogBuf         *buffer;
     FILE              *fp;
     size_t             index; // index in loggers
-    uint64_t           last_flush;
     uint64_t           last_roll;
 };
+static_assert(offsetof(CraLogger, level) == 0, "level must be first member");
 
 #define cra_log_ref(logger) cra_atomic_inc(&(logger)->refcnt, CRA_MO_RELAXED)
 static inline void
@@ -133,7 +134,6 @@ cra_log_output_async_roll_file(CraLogger *log, uint64_t now, uint64_t day)
     if (log->fp)
     {
         fclose(log->fp);
-        log->last_flush = now;
     }
 
     // make new filename
@@ -162,10 +162,9 @@ cra_log_output_async_roll_file(CraLogger *log, uint64_t now, uint64_t day)
 }
 
 static void
-cra_log_output_async_write_to_file(CraLogBuf *buf)
+cra_log_output_async_write_to_file(CraLogBuf *buf, uint64_t now, bool flush)
 {
     uint64_t   day;
-    uint64_t   now;
     CraLogger *log;
 
     assert(buf);
@@ -173,9 +172,7 @@ cra_log_output_async_write_to_file(CraLogBuf *buf)
     assert(buf->len > 0);
 
     log = buf->log;
-
-    now = cra_datetime_epoch_us();
-    day = now / (24 * 60 * 60 * 1000000);
+    day = now / ((uint64_t)24 * 60 * 60 * 1000000);
 
     // create new file conditions:
     // 1. fp is NULL (check before write)
@@ -200,11 +197,10 @@ cra_log_output_async_write_to_file(CraLogBuf *buf)
         cra_log_output_async_roll_file(log, now, day);
     }
 
-    // check if need to flush file
-    else if (now - log->last_flush > CRA_LOG_FLUSH_INTERVAL)
+    // check if it need to flush file
+    else if (flush)
     {
         fflush(log->fp);
-        log->last_flush = now;
     }
 }
 
@@ -224,7 +220,7 @@ static CRA_THRD_FUNC(cra_log_output_async_thread)
 
             for (size_t i = 0; i < s_log_async.loggers.count; ++i)
             {
-                if (!cra_alist_get(&s_log_async.loggers, i, &logger) || (!logger->buffer || logger->buffer->len == 0))
+                if (!cra_alist_get(&s_log_async.loggers, i, &logger) || !logger->buffer || logger->buffer->len == 0)
                     continue;
 
                 cra_log_ref(logger);
@@ -242,7 +238,7 @@ static CRA_THRD_FUNC(cra_log_output_async_thread)
 
         while (cra_llist_pop_front(s_log_async.buffers2, &buf))
         {
-            cra_log_output_async_write_to_file(buf);
+            cra_log_output_async_write_to_file(buf, cra_datetime_epoch_us(), false);
             cra_log_unref(buf->log);
 
             cra_mutex_lock(&s_log_async.mutex);
@@ -253,7 +249,7 @@ static CRA_THRD_FUNC(cra_log_output_async_thread)
 
     while (cra_llist_pop_front(s_log_async.buffers1, &buf))
     {
-        cra_log_output_async_write_to_file(buf);
+        cra_log_output_async_write_to_file(buf, cra_datetime_epoch_us(), false);
         cra_log_unref(buf->log);
 
         cra_log_output_async_del_buf(buf);
@@ -351,7 +347,7 @@ cra_log_output_async_uninit(void)
 }
 
 static void
-cra_log_output_async_append(CraLogger *logger, const char *msg, int len)
+cra_log_output_async_append(CraLogger *logger, const char *msg, int len, CraLogLv_e level, uint64_t now)
 {
     assert(logger->active);
     assert(s_log_async.initialized);
@@ -368,10 +364,9 @@ cra_log_output_async_append(CraLogger *logger, const char *msg, int len)
         if (!logger->buffer)
         {
 #ifdef _DEBUG
-            fprintf(stderr, "Logger: no log buffer available, this message will be dropped.\n");
+            fprintf(stderr, "Logger: no any log buffer available, this message will be dropped.\n");
 #endif
-            cra_mutex_unlock(&s_log_async.mutex);
-            return;
+            goto end;
         }
 
         assert(sizeof(logger->buffer->buf) >= (size_t)len);
@@ -390,6 +385,20 @@ cra_log_output_async_append(CraLogger *logger, const char *msg, int len)
 copy_msg:
     memcpy(logger->buffer->buf + logger->buffer->len, msg, len);
     logger->buffer->len += len;
+
+    // if level is fatal, then flush buffer
+    if (level == CRA_LOG_LV_FATAL)
+    {
+        CRA_FOREACH(CraAList, &s_log_async.loggers, &logger)
+        {
+            if (logger->buffer && logger->buffer->len > 0)
+            {
+                logger->buffer->log = logger;
+                cra_log_output_async_write_to_file(logger->buffer, now, true);
+                logger->buffer->len = 0;
+            }
+        }
+    }
 
 end:
     cra_mutex_unlock(&s_log_async.mutex);
@@ -577,7 +586,7 @@ cra_log_open(const char *name, CraLogLv_e lv, bool use_zulu, bool output_to_file
         local = mktime(&local_tm);
         utc = mktime(&utc_tm);
 
-        logger->tz_hour = (short)((local - utc) / (3600));
+        logger->tz_hour = (int8_t)((local - utc) / (3600));
     }
 
     if (output_to_file)
@@ -660,7 +669,7 @@ void(cra_log_msg)(CraLogger *logger, CraLogLv_e lv, const char *fmt, ...)
     }
     else
     {
-        n = snprintf(msg + 20, sizeof(msg) - 20, "%d%+03hd:00", us, logger->tz_hour);
+        n = snprintf(msg + 20, sizeof(msg) - 20, "%d%+03" PRId8 ":00", us, logger->tz_hour);
         memset(msg + 20 + n, ' ', 13 - n);
         n += (13 - n);
     }
@@ -701,7 +710,7 @@ void(cra_log_msg)(CraLogger *logger, CraLogLv_e lv, const char *fmt, ...)
     if (logger->to_file)
     {
         // log to file
-        cra_log_output_async_append(logger, msg, n);
+        cra_log_output_async_append(logger, msg, n, lv, epoch);
     }
     else
     {

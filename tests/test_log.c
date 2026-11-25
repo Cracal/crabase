@@ -66,6 +66,7 @@ test_log_to_file(void)
     cra_log_warn(logger1, "hello warn");
     cra_log_error(logger1, "hello error");
     cra_log_fatal(logger1, "hello fatal");
+    // exit(-1);
     // cra_msleep(500);
 
     logger2 = cra_log_open("TestLogB", CRA_LOG_LV_INFO, true, true);
