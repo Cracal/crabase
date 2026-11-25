@@ -131,10 +131,47 @@ test_buffer(void)
     cra_buffer_uninit(&buffer);
 }
 
+void
+test_buf_fixed(void)
+{
+    CraBufFixed *buf = cra_buf_fixed_new(128);
+    assert_always(buf != NULL);
+    assert_always(buf->size == 128);
+    assert_always(buf->curr == 0);
+    assert_always(cra_buf_fixed_get_remaining_size(buf) == 128);
+
+    assert_always(cra_buf_fixed_append(buf, "hello", 5));
+    assert_always(buf->curr == 5);
+    assert_always(cra_buf_fixed_get_remaining_size(buf) == 123);
+    assert_always(strncmp((char *)buf->data, "hello", 5) == 0);
+    char buff[1000] = { 0 };
+    assert_always(!cra_buf_fixed_append(buf, buff, sizeof(buff)));
+    assert_always(buf->curr == 5);
+    assert_always(cra_buf_fixed_get_remaining_size(buf) == 123);
+    assert_always(strncmp((char *)buf->data, "hello", 5) == 0);
+
+    assert_always(cra_buf_fixed_retrieve(buf, buff, 5) == 5);
+    assert_always(strncmp(buff, "hello", 5) == 0);
+    assert_always(buf->curr == 0);
+    assert_always(cra_buf_fixed_get_remaining_size(buf) == 128);
+
+    assert_always(0 == cra_buf_fixed_retrieve(buf, buff, sizeof(buff)));
+    assert_always(0 == cra_buf_fixed_retrieve_size(buf, 100));
+
+    cra_buf_fixed_append_size(buf, 100);
+    assert_always(buf->curr == 100);
+    assert_always(cra_buf_fixed_get_remaining_size(buf) == 128 - 100);
+    assert_always(50 == cra_buf_fixed_retrieve_size(buf, 50));
+    assert_always(50 == cra_buf_fixed_retrieve_size(buf, 50));
+
+    cra_buf_fixed_del(buf);
+}
+
 int
 main(void)
 {
     test_buffer();
+    test_buf_fixed();
     cra_memory_leak_report();
     return 0;
 }

@@ -1,6 +1,25 @@
 #include "crabase/cra_buffer.h"
 #include "crabase/cra_malloc.h"
 
+CraBufFixed *
+cra_buf_fixed_new(uint32_t size)
+{
+    assert(size > 0);
+    CraBufFixed *buf = cra_malloc(sizeof(*buf) + size);
+    if (!buf)
+        return NULL;
+    buf->size = size;
+    buf->curr = 0;
+    return buf;
+}
+
+void
+cra_buf_fixed_del(CraBufFixed *buf)
+{
+    assert(buf);
+    cra_free(buf);
+}
+
 bool
 cra_buffer_init(CraBuffer *buffer, size_t init_size)
 {
