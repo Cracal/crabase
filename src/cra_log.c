@@ -61,8 +61,8 @@ struct CraLogger
     CraLogBuf         *buffer;
     FILE              *fp;
     size_t             index; // index in loggers
-    time_t             last_flush;
-    time_t             last_roll;
+    uint64_t           last_flush;
+    uint64_t           last_roll;
 };
 
 #define cra_log_ref(logger) cra_atomic_inc(&(logger)->refcnt, CRA_MO_RELAXED)
@@ -121,7 +121,7 @@ cra_log_output_async_del_buf(CraLogBuf *buf)
 }
 
 static void
-cra_log_output_async_roll_file(CraLogger *log, time_t now, time_t day)
+cra_log_output_async_roll_file(CraLogger *log, uint64_t now, uint64_t day)
 {
     // if user is not call cra_log_config(), then use default config
     if (log->file_size_max == 0)
@@ -141,7 +141,7 @@ cra_log_output_async_roll_file(CraLogger *log, time_t now, time_t day)
     // "path/to/logname_yyyyMMdd_hhmmss_SSSSSSZ.log"
 
     CraDateTime dt;
-    cra_datetime_now(&dt, log->use_zulu);
+    cra_datetime_from_epoch(&dt, now, log->use_zulu);
     snprintf(log->filename + log->filename_time_start, sizeof(log->filename) - log->filename_time_start,
              "%04d%02d%02d_%02d%02d%02d_%d%s.log", dt.year, dt.mon, dt.day, dt.hour, dt.min, dt.sec, dt.usec,
              log->use_zulu ? "Z" : "");
@@ -164,8 +164,8 @@ cra_log_output_async_roll_file(CraLogger *log, time_t now, time_t day)
 static void
 cra_log_output_async_write_to_file(CraLogBuf *buf)
 {
-    time_t     day;
-    time_t     now;
+    uint64_t   day;
+    uint64_t   now;
     CraLogger *log;
 
     assert(buf);
@@ -174,8 +174,8 @@ cra_log_output_async_write_to_file(CraLogBuf *buf)
 
     log = buf->log;
 
-    now = time(NULL);
-    day = now / (24 * 60 * 60);
+    now = cra_datetime_epoch_us();
+    day = now / (24 * 60 * 60 * 1000000);
 
     // create new file conditions:
     // 1. fp is NULL (check before write)
@@ -434,7 +434,7 @@ cra_log_output_async_del_logger(CraLogger *logger)
         fprintf(stderr, "Logger: no logger found.\n");
         exit(EXIT_FAILURE);
     }
-    // if last logger is not logger, insert it to logger index position
+    // if last logger is not equal to logger, insert it to logger's index position
     if (last_logger != logger)
     {
         last_logger->index = logger->index;
@@ -590,6 +590,7 @@ void
 cra_log_close(CraLogger *logger)
 {
     assert(logger);
+    assert(logger->active);
     logger->active = false;
     if (logger->to_file)
         cra_log_output_async_del_logger(logger);
