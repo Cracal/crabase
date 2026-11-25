@@ -13,7 +13,15 @@
 #include "cra_defs.h"
 #include "cra_assert.h"
 
-typedef struct CraBuffer CraBuffer;
+typedef struct CraBufFixed CraBufFixed;
+typedef struct CraBuffer   CraBuffer;
+
+struct CraBufFixed
+{
+    uint32_t      size;   // capacity
+    uint32_t      curr;   // current size
+    unsigned char data[]; // data
+};
 
 struct CraBuffer
 {
@@ -22,6 +30,58 @@ struct CraBuffer
     size_t         widx; // write index
     unsigned char *data; // data
 };
+
+CRA_API CraBufFixed *
+cra_buf_fixed_new(uint32_t size);
+
+CRA_API void
+cra_buf_fixed_del(CraBufFixed *buf);
+
+static inline uint32_t
+cra_buf_fixed_get_remaining_size(CraBufFixed *buf)
+{
+    return buf->size - buf->curr;
+}
+
+static inline bool
+cra_buf_fixed_append(CraBufFixed *buf, const void *data, uint32_t len)
+{
+    if (cra_buf_fixed_get_remaining_size(buf) < len)
+        return false;
+    memcpy(buf->data + buf->curr, data, len);
+    buf->curr += len;
+    return true;
+}
+
+static inline uint32_t
+cra_buf_fixed_retrieve(CraBufFixed *buf, void *data, uint32_t len)
+{
+    uint32_t n = CRA_MIN(len, buf->curr);
+    if (n > 0)
+    {
+        memcpy(data, buf->data, n);
+        buf->curr -= n;
+    }
+    return n;
+}
+
+static inline void
+cra_buf_fixed_append_size(CraBufFixed *buf, uint32_t len)
+{
+    uint32_t n = CRA_MIN(len, cra_buf_fixed_get_remaining_size(buf));
+    buf->curr += n;
+}
+
+static inline uint32_t
+cra_buf_fixed_retrieve_size(CraBufFixed *buf, uint32_t len)
+{
+    uint32_t n = CRA_MIN(len, buf->curr);
+    if (n > 0)
+        buf->curr -= n;
+    return n;
+}
+
+// =================
 
 CRA_API bool
 cra_buffer_init(CraBuffer *buffer, size_t init_size);
