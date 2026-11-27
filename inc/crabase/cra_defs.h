@@ -194,6 +194,10 @@ typedef SSIZE_T ssize_t;
 #pragma warning(disable : 4200)
 #endif
 
+#ifndef __has_include
+#define __has_include(x) 0
+#endif
+
 #ifdef CRA_OS_WIN
 
 #define cra_sleep(sec)   Sleep((sec) * 1000)

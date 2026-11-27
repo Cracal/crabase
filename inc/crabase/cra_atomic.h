@@ -12,13 +12,13 @@
 #define __CRABASE_CRA_ATOMIC_H__
 #include "cra_defs.h"
 
-#if !defined(__STDC_NO_ATOMICS__)
+#if __has_include(<stdatomic.h>) && !defined(__STDC_NO_ATOMICS__)
 
 // stdatomic
 #include <stdatomic.h>
 #define CRA_USE_STDATOMIC
 
-#elif defined(CRA_COMPILER_GNUC) && ((__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7))
+#elif defined(__ATOMIC_RELAXED) || defined(__ATOMIC_SEQ_CST)
 
 // __atomic
 #define CRA_USE___ATOMIC
@@ -28,7 +28,7 @@
 // Interlocked
 #define CRA_USE_INTERLOCKED
 
-#elif defined(CRA_COMPILER_GNUC)
+#elif defined(__GNUC__)
 
 // __sync
 #define CRA_USE___SYNC
@@ -41,17 +41,30 @@
 
 // ========================== type ==========================
 
+#if defined(CRA_USE_INTERLOCKED)
+
+#define __CRA_ATOMIC_DO_WITHOUT_PTR(XX, ...)  \
+    XX(LONG, int32_t, int32_t, __VA_ARGS__)   \
+    XX(LONG64, int64_t, int64_t, __VA_ARGS__)
+#define __CRA_ATOMIC_DO(XX, ...)                 \
+    XX(PVOID, PVOID, ptr_t, __VA_ARGS__)         \
+    __CRA_ATOMIC_DO_WITHOUT_PTR(XX, __VA_ARGS__)
+
+#else
+
+#define __CRA_ATOMIC_DO_WITHOUT_PTR(XX, ...) \
+    XX(int32_t, int32_t, __VA_ARGS__)        \
+    XX(int64_t, int64_t, __VA_ARGS__)
+#define __CRA_ATOMIC_DO(XX, ...)                 \
+    XX(void *, ptr_t, __VA_ARGS__)               \
+    __CRA_ATOMIC_DO_WITHOUT_PTR(XX, __VA_ARGS__)
+
+#endif
+
 #if defined(CRA_USE_STDATOMIC)
 
 typedef atomic_flag cra_atomic_flag_t;
 #define CRA_ATOMIC_FLAG_INIT ATOMIC_FLAG_INIT
-
-#define __CRA_ATOMIC_DO_WITHOUT_PTR(XX, x) \
-    XX(int32_t, int32_t, x)                \
-    XX(int64_t, int64_t, x)
-#define __CRA_ATOMIC_DO(XX, x)         \
-    XX(void *, ptr_t, x)               \
-    __CRA_ATOMIC_DO_WITHOUT_PTR(XX, x)
 
 #define CRA_ATOMIC_XX(type, name, x) typedef _Atomic(type) cra_atomic_##name;
 __CRA_ATOMIC_DO(CRA_ATOMIC_XX, x)
@@ -62,13 +75,6 @@ __CRA_ATOMIC_DO(CRA_ATOMIC_XX, x)
 typedef volatile CHAR cra_atomic_flag_t;
 #define CRA_ATOMIC_FLAG_INIT 0
 
-#define __CRA_ATOMIC_DO_WITHOUT_PTR(XX, x) \
-    XX(LONG, int32_t, int32_t, x)          \
-    XX(LONG64, int64_t, int64_t, x)
-#define __CRA_ATOMIC_DO(XX, x)         \
-    XX(PVOID, PVOID, ptr_t, x)         \
-    __CRA_ATOMIC_DO_WITHOUT_PTR(XX, x)
-
 #define CRA_ATOMIC_XX(type, t, name, x) typedef type cra_atomic_##name;
 __CRA_ATOMIC_DO(CRA_ATOMIC_XX, x)
 #undef CRA_ATOMIC_XX
@@ -77,13 +83,6 @@ __CRA_ATOMIC_DO(CRA_ATOMIC_XX, x)
 
 typedef bool cra_atomic_flag_t;
 #define CRA_ATOMIC_FLAG_INIT false
-
-#define __CRA_ATOMIC_DO_WITHOUT_PTR(XX, x) \
-    XX(int32_t, int32_t, x)                \
-    XX(int64_t, int64_t, x)
-#define __CRA_ATOMIC_DO(XX, x)         \
-    XX(void *, ptr_t, x)               \
-    __CRA_ATOMIC_DO_WITHOUT_PTR(XX, x)
 
 #define CRA_ATOMIC_XX(type, name, x) typedef type cra_atomic_##name;
 __CRA_ATOMIC_DO(CRA_ATOMIC_XX, x)
@@ -143,209 +142,505 @@ typedef enum
 
 #if defined(CRA_USE_STDATOMIC)
 
-// bool flag_test_and_set(cra_atomic_flag_t *p, CraMemoryOrder_e order)
-#define cra_atomic_flag_test_and_set(p, order) atomic_flag_test_and_set_explicit(p, order)
-// void flag_clear(cra_atomic_flag_t *p, CraMemoryOrder_e order)
-#define cra_atomic_flag_clear(p, order)        atomic_flag_clear_explicit(p, order)
+static inline bool
+cra_atomic_flag_test_and_set(cra_atomic_flag_t *p, CraMemoryOrder_e order)
+{
+    return atomic_flag_test_and_set_explicit(p, order);
+}
+static inline void
+cra_atomic_flag_clear(cra_atomic_flag_t *p, CraMemoryOrder_e order)
+{
+    atomic_flag_clear_explicit(p, order);
+}
 
-#define __CRA_ATOMIC_XX_FUNC_DEF(type, name, fname) , cra_atomic_##name * : fname
-#define __CRA_ATOMIC_FUNC_DEF(DO, fname, p, ...)    _Generic((p)DO(__CRA_ATOMIC_XX_FUNC_DEF, fname))(p, __VA_ARGS__)
+// load
+#define CRA_ATOMIC_XX(type, name, x)                                                       \
+    static inline type cra_atomic_load##name(cra_atomic_##name *p, CraMemoryOrder_e order) \
+    {                                                                                      \
+        return atomic_load_explicit(p, order);                                             \
+    }
+__CRA_ATOMIC_DO(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
+// store
+#define CRA_ATOMIC_XX(type, name, x)                                                                    \
+    static inline void cra_atomic_store##name(cra_atomic_##name *p, type value, CraMemoryOrder_e order) \
+    {                                                                                                   \
+        atomic_store_explicit(p, value, order);                                                         \
+    }
+__CRA_ATOMIC_DO(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
 
-// T load(Atomic(T) *p, CraMemoryOrder_e order)
-#define cra_atomic_load(p, order)         __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO, atomic_load_explicit, p, order)
-// void store(Atomic(T) *p, T value, CraMemoryOrder_e order)
-#define cra_atomic_store(p, value, order) __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO, atomic_store_explicit, p, value, order)
+// fetch_add
+#define CRA_ATOMIC_XX(type, name, x)                                                                        \
+    static inline type cra_atomic_fetch_add##name(cra_atomic_##name *p, type value, CraMemoryOrder_e order) \
+    {                                                                                                       \
+        return atomic_fetch_add_explicit(p, value, order);                                                  \
+    }
+__CRA_ATOMIC_DO_WITHOUT_PTR(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
+// fetch_sub
+#define CRA_ATOMIC_XX(type, name, x)                                                                        \
+    static inline type cra_atomic_fetch_sub##name(cra_atomic_##name *p, type value, CraMemoryOrder_e order) \
+    {                                                                                                       \
+        return atomic_fetch_sub_explicit(p, value, order);                                                  \
+    }
+__CRA_ATOMIC_DO_WITHOUT_PTR(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
+// fetch_or
+#define CRA_ATOMIC_XX(type, name, x)                                                                       \
+    static inline type cra_atomic_fetch_or##name(cra_atomic_##name *p, type value, CraMemoryOrder_e order) \
+    {                                                                                                      \
+        return atomic_fetch_or_explicit(p, value, order);                                                  \
+    }
+__CRA_ATOMIC_DO_WITHOUT_PTR(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
+// fetch_and
+#define CRA_ATOMIC_XX(type, name, x)                                                                        \
+    static inline type cra_atomic_fetch_and##name(cra_atomic_##name *p, type value, CraMemoryOrder_e order) \
+    {                                                                                                       \
+        return atomic_fetch_and_explicit(p, value, order);                                                  \
+    }
+__CRA_ATOMIC_DO_WITHOUT_PTR(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
+// fetch_xor
+#define CRA_ATOMIC_XX(type, name, x)                                                                        \
+    static inline type cra_atomic_fetch_xor##name(cra_atomic_##name *p, type value, CraMemoryOrder_e order) \
+    {                                                                                                       \
+        return atomic_fetch_xor_explicit(p, value, order);                                                  \
+    }
+__CRA_ATOMIC_DO_WITHOUT_PTR(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
 
-// T fetch_add(Atomic(T) *p, T value, CraMemoryOrder_e order)
-#define cra_atomic_fetch_add(p, value, order)                                                      \
-    __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO_WITHOUT_PTR, atomic_fetch_add_explicit, p, value, order)
-// T fetch_sub(Atomic(T) *p, T value, CraMemoryOrder_e order)
-#define cra_atomic_fetch_sub(p, value, order)                                                      \
-    __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO_WITHOUT_PTR, atomic_fetch_sub_explicit, p, value, order)
-// T fetch_or(Atomic(T) *p, T value, CraMemoryOrder_e order)
-#define cra_atomic_fetch_or(p, value, order)                                                      \
-    __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO_WITHOUT_PTR, atomic_fetch_or_explicit, p, value, order)
-// T fetch_and(Atomic(T) *p, T value, CraMemoryOrder_e order)
-#define cra_atomic_fetch_and(p, value, order)                                                      \
-    __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO_WITHOUT_PTR, atomic_fetch_and_explicit, p, value, order)
-// T fetch_xor(Atomic(T) *p, T value, CraMemoryOrder_e order)
-#define cra_atomic_fetch_xor(p, value, order)                                                      \
-    __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO_WITHOUT_PTR, atomic_fetch_xor_explicit, p, value, order)
+// exchange
+#define CRA_ATOMIC_XX(type, name, x)                                                                       \
+    static inline type cra_atomic_exchange##name(cra_atomic_##name *p, type value, CraMemoryOrder_e order) \
+    {                                                                                                      \
+        return atomic_exchange_explicit(p, value, order);                                                  \
+    }
+__CRA_ATOMIC_DO(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
 
-// T exchange(Atomic(T) *p, T value, CraMemoryOrder_e order)
-#define cra_atomic_exchange(p, value, order)                                          \
-    __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO, atomic_exchange_explicit, p, value, order)
-
-// bool compare_exchange_weak(Atomic(T) *p, T *expected, T value, CraMemoryOrder_e success, CraMemoryOrder_e failure)
-#define cra_atomic_compare_exchange_weak(p, expected, value, success, failure) \
-    __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO, atomic_compare_exchange_weak_explicit, p, expected, value, success, failure)
-// bool compare_exchange_strong(Atomic(T) *p, T *expected, T value, CraMemoryOrder_e success, CraMemoryOrder_e
-// failure)
-#define cra_atomic_compare_exchange_strong(p, expected, value, success, failure)                                 \
-    __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO, atomic_compare_exchange_strong_explicit, p, expected, value, success, \
-                          failure)
+// compare_exchange_weak
+#define CRA_ATOMIC_XX(type, name, x)                                                                              \
+    static inline bool cra_atomic_compare_exchange_weak##name(cra_atomic_##name *p, type *expected, type value,   \
+                                                              CraMemoryOrder_e success, CraMemoryOrder_e failure) \
+    {                                                                                                             \
+        return atomic_compare_exchange_weak_explicit(p, expected, value, success, failure);                       \
+    }
+__CRA_ATOMIC_DO(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
+// compare_exchange_strong
+#define CRA_ATOMIC_XX(type, name, x)                                                                                \
+    static inline bool cra_atomic_compare_exchange_strong##name(cra_atomic_##name *p, type *expected, type value,   \
+                                                                CraMemoryOrder_e success, CraMemoryOrder_e failure) \
+    {                                                                                                               \
+        return atomic_compare_exchange_strong_explicit(p, expected, value, success, failure);                       \
+    }
+__CRA_ATOMIC_DO(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
 
 #elif defined(CRA_USE___ATOMIC)
 
-// bool flag_test_and_set(cra_atomic_flag_t *p, CraMemoryOrder_e order)
-#define cra_atomic_flag_test_and_set(p, order) __atomic_test_and_set(p, order)
-// void flag_clear(cra_atomic_flag_t *p, CraMemoryOrder_e order)
-#define cra_atomic_flag_clear(p, order)        __atomic_clear(p, order)
+static inline bool
+cra_atomic_flag_test_and_set(cra_atomic_flag_t *p, CraMemoryOrder_e order)
+{
+    return __atomic_test_and_set(p, order);
+}
+static inline void
+cra_atomic_flag_clear(cra_atomic_flag_t *p, CraMemoryOrder_e order)
+{
+    __atomic_clear(p, order);
+}
 
-#define __CRA_ATOMIC_XX_FUNC_DEF(type, name, fname) , cra_atomic_##name * : fname
-#define __CRA_ATOMIC_FUNC_DEF(DO, fname, p, ...)    _Generic((p)DO(__CRA_ATOMIC_XX_FUNC_DEF, fname))(p, __VA_ARGS__)
+// load
+#define CRA_ATOMIC_XX(type, name, x)                                                       \
+    static inline type cra_atomic_load##name(cra_atomic_##name *p, CraMemoryOrder_e order) \
+    {                                                                                      \
+        return __atomic_load_n(p, order);                                                  \
+    }
+__CRA_ATOMIC_DO(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
+// store
+#define CRA_ATOMIC_XX(type, name, x)                                                                    \
+    static inline void cra_atomic_store##name(cra_atomic_##name *p, type value, CraMemoryOrder_e order) \
+    {                                                                                                   \
+        __atomic_store_n(p, value, order);                                                              \
+    }
+__CRA_ATOMIC_DO(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
 
-// T load(Atomic(T) *p, CraMemoryOrder_e order)
-#define cra_atomic_load(p, order)                   __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO, __atomic_load_n, p, order)
-// void store(Atomic(T) *p, T value, CraMemoryOrder_e order)
-#define cra_atomic_store(p, value, order) __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO, __atomic_store_n, p, value, order)
+// fetch_add
+#define CRA_ATOMIC_XX(type, name, x)                                                                        \
+    static inline type cra_atomic_fetch_add##name(cra_atomic_##name *p, type value, CraMemoryOrder_e order) \
+    {                                                                                                       \
+        return __atomic_fetch_add(p, value, order);                                                         \
+    }
+__CRA_ATOMIC_DO_WITHOUT_PTR(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
+// fetch_sub
+#define CRA_ATOMIC_XX(type, name, x)                                                                        \
+    static inline type cra_atomic_fetch_sub##name(cra_atomic_##name *p, type value, CraMemoryOrder_e order) \
+    {                                                                                                       \
+        return __atomic_fetch_sub(p, value, order);                                                         \
+    }
+__CRA_ATOMIC_DO_WITHOUT_PTR(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
+// fetch_or
+#define CRA_ATOMIC_XX(type, name, x)                                                                       \
+    static inline type cra_atomic_fetch_or##name(cra_atomic_##name *p, type value, CraMemoryOrder_e order) \
+    {                                                                                                      \
+        return __atomic_fetch_or(p, value, order);                                                         \
+    }
+__CRA_ATOMIC_DO_WITHOUT_PTR(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
+// fetch_and
+#define CRA_ATOMIC_XX(type, name, x)                                                                        \
+    static inline type cra_atomic_fetch_and##name(cra_atomic_##name *p, type value, CraMemoryOrder_e order) \
+    {                                                                                                       \
+        return __atomic_fetch_and(p, value, order);                                                         \
+    }
+__CRA_ATOMIC_DO_WITHOUT_PTR(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
+// fetch_xor
+#define CRA_ATOMIC_XX(type, name, x)                                                                        \
+    static inline type cra_atomic_fetch_xor##name(cra_atomic_##name *p, type value, CraMemoryOrder_e order) \
+    {                                                                                                       \
+        return __atomic_fetch_xor(p, value, order);                                                         \
+    }
+__CRA_ATOMIC_DO_WITHOUT_PTR(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
 
-// T fetch_add(Atomic(T) *p, T value, CraMemoryOrder_e order)
-#define cra_atomic_fetch_add(p, value, order)                                                \
-    __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO_WITHOUT_PTR, __atomic_fetch_add, p, value, order)
-// T fetch_sub(Atomic(T) *p, T value, CraMemoryOrder_e order)
-#define cra_atomic_fetch_sub(p, value, order)                                                \
-    __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO_WITHOUT_PTR, __atomic_fetch_sub, p, value, order)
-// T fetch_or(Atomic(T) *p, T value, CraMemoryOrder_e order)
-#define cra_atomic_fetch_or(p, value, order)                                                \
-    __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO_WITHOUT_PTR, __atomic_fetch_or, p, value, order)
-// T fetch_and(Atomic(T) *p, T value, CraMemoryOrder_e order)
-#define cra_atomic_fetch_and(p, value, order)                                                \
-    __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO_WITHOUT_PTR, __atomic_fetch_and, p, value, order)
-// T fetch_xor(Atomic(T) *p, T value, CraMemoryOrder_e order)
-#define cra_atomic_fetch_xor(p, value, order)                                                \
-    __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO_WITHOUT_PTR, __atomic_fetch_xor, p, value, order)
+// exchange
+#define CRA_ATOMIC_XX(type, name, x)                                                                       \
+    static inline type cra_atomic_exchange##name(cra_atomic_##name *p, type value, CraMemoryOrder_e order) \
+    {                                                                                                      \
+        return __atomic_exchange_n(p, value, order);                                                       \
+    }
+__CRA_ATOMIC_DO(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
 
-// T exchange(Atomic(T) *p, T value, CraMemoryOrder_e order)
-#define cra_atomic_exchange(p, value, order)                                      \
-    __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO, __atomic_exchange_n, p, value, order)
-
-// bool compare_exchange_weak(Atomic(T) *p, T *expected, T value, CraMemoryOrder_e success, CraMemoryOrder_e failure)
-#define cra_atomic_compare_exchange_weak(p, expected, value, success, failure)                                       \
-    __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO, __atomic_compare_exchange_n, p, expected, value, true, success, failure)
-// bool compare_exchange_strong(Atomic(T) *p, T *expected, T value, CraMemoryOrder_e success, CraMemoryOrder_e
-// failure)
-#define cra_atomic_compare_exchange_strong(p, expected, value, success, failure)                                     \
-    __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO, __atomic_compare_exchange_n, p, expected, value, false, success, failure)
+// compare_exchange_weak
+#define CRA_ATOMIC_XX(type, name, x)                                                                              \
+    static inline bool cra_atomic_compare_exchange_weak##name(cra_atomic_##name *p, type *expected, type value,   \
+                                                              CraMemoryOrder_e success, CraMemoryOrder_e failure) \
+    {                                                                                                             \
+        return __atomic_compare_exchange_n(p, expected, value, true, success, failure);                           \
+    }
+__CRA_ATOMIC_DO(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
+// compare_exchange_strong
+#define CRA_ATOMIC_XX(type, name, x)                                                                                \
+    static inline bool cra_atomic_compare_exchange_strong##name(cra_atomic_##name *p, type *expected, type value,   \
+                                                                CraMemoryOrder_e success, CraMemoryOrder_e failure) \
+    {                                                                                                               \
+        return __atomic_compare_exchange_n(p, expected, value, false, success, failure);                            \
+    }
+__CRA_ATOMIC_DO(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
 
 #elif defined(CRA_USE_INTERLOCKED)
 
-// bool flag_test_and_set(cra_atomic_flag_t *p, CraMemoryOrder_e order)
-#define cra_atomic_flag_test_and_set(p, order) (bool)InterlockedExchange8(p, 1)
-// void flag_clear(cra_atomic_flag_t *p, CraMemoryOrder_e order)
-#define cra_atomic_flag_clear(p, order)        (void)InterlockedExchange8(p, 0)
+static inline bool
+cra_atomic_flag_test_and_set(cra_atomic_flag_t *p, CraMemoryOrder_e order)
+{
+    CRA_UNUSED(order);
+    return InterlockedExchange8(p, 1);
+}
+static inline void
+cra_atomic_flag_clear(cra_atomic_flag_t *p, CraMemoryOrder_e order)
+{
+    CRA_UNUSED(order);
+    (void)InterlockedExchange8(p, 0);
+}
 
 #define __CRA_INTERLOCKED_XX_FUNCptr_t(fname)   fname##Pointer
 #define __CRA_INTERLOCKED_XX_FUNCint64_t(fname) fname##64
 #define __CRA_INTERLOCKED_XX_FUNCint32_t(fname) fname
+#define __CRA_INTERLOCKED_XX_FUNC(name, fname)  CRA_CAT(__CRA_INTERLOCKED_XX_FUNC, name)(fname)
 
-#define __CRA_ATOMIC_XX_FUNC_DEF(type, t, name, fname)                      \
-    , cra_atomic_##name * : CRA_CAT(__CRA_INTERLOCKED_XX_FUNC, name)(fname)
-#define __CRA_ATOMIC_FUNC_DEF(DO, fname, p, ...) _Generic((p)DO(__CRA_ATOMIC_XX_FUNC_DEF, fname))(p, __VA_ARGS__)
+// load
+#define CRA_ATOMIC_XX(type, t, name, x)                                                    \
+    static inline type cra_atomic_load##name(cra_atomic_##name *p, CraMemoryOrder_e order) \
+    {                                                                                      \
+        CRA_UNUSED(order);                                                                 \
+        return __CRA_INTERLOCKED_XX_FUNC(name, InterlockedCompareExchange)(p, 0, 0);       \
+    }
+__CRA_ATOMIC_DO(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
+// store
+#define CRA_ATOMIC_XX(type, t, name, x)                                                              \
+    static inline void cra_atomic_store##name(cra_atomic_##name *p, t value, CraMemoryOrder_e order) \
+    {                                                                                                \
+        CRA_UNUSED(order);                                                                           \
+        (void)__CRA_INTERLOCKED_XX_FUNC(name, InterlockedExchange)(p, value);                        \
+    }
+__CRA_ATOMIC_DO(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
 
-// T load(Atomic(T) *p, CraMemoryOrder_e order)
-#define cra_atomic_load(p, order)         __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO, InterlockedCompareExchange, p, 0, 0)
-// void store(Atomic(T) *p, T value, CraMemoryOrder_e order)
-#define cra_atomic_store(p, value, order) (void)__CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO, InterlockedExchange, p, value)
+// fetch_add
+#define CRA_ATOMIC_XX(type, t, name, x)                                                                  \
+    static inline type cra_atomic_fetch_add##name(cra_atomic_##name *p, t value, CraMemoryOrder_e order) \
+    {                                                                                                    \
+        CRA_UNUSED(order);                                                                               \
+        return __CRA_INTERLOCKED_XX_FUNC(name, InterlockedExchangeAdd)(p, value);                        \
+    }
+__CRA_ATOMIC_DO_WITHOUT_PTR(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
+// fetch_sub
+#define CRA_ATOMIC_XX(type, t, name, x)                                                                  \
+    static inline type cra_atomic_fetch_sub##name(cra_atomic_##name *p, t value, CraMemoryOrder_e order) \
+    {                                                                                                    \
+        CRA_UNUSED(order);                                                                               \
+        return __CRA_INTERLOCKED_XX_FUNC(name, InterlockedExchangeAdd)(p, -value);                       \
+    }
+__CRA_ATOMIC_DO_WITHOUT_PTR(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
+// fetch_or
+#define CRA_ATOMIC_XX(type, t, name, x)                                                                 \
+    static inline type cra_atomic_fetch_or##name(cra_atomic_##name *p, t value, CraMemoryOrder_e order) \
+    {                                                                                                   \
+        CRA_UNUSED(order);                                                                              \
+        return __CRA_INTERLOCKED_XX_FUNC(name, InterlockedOr)(p, value);                                \
+    }
+__CRA_ATOMIC_DO_WITHOUT_PTR(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
+// fetch_and
+#define CRA_ATOMIC_XX(type, t, name, x)                                                                  \
+    static inline type cra_atomic_fetch_and##name(cra_atomic_##name *p, t value, CraMemoryOrder_e order) \
+    {                                                                                                    \
+        CRA_UNUSED(order);                                                                               \
+        return __CRA_INTERLOCKED_XX_FUNC(name, InterlockedAnd)(p, value);                                \
+    }
+__CRA_ATOMIC_DO_WITHOUT_PTR(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
+// fetch_xor
+#define CRA_ATOMIC_XX(type, t, name, x)                                                                  \
+    static inline type cra_atomic_fetch_xor##name(cra_atomic_##name *p, t value, CraMemoryOrder_e order) \
+    {                                                                                                    \
+        CRA_UNUSED(order);                                                                               \
+        return __CRA_INTERLOCKED_XX_FUNC(name, InterlockedXor)(p, value);                                \
+    }
+__CRA_ATOMIC_DO_WITHOUT_PTR(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
 
-// T fetch_add(Atomic(T) *p, T value, CraMemoryOrder_e order)
-#define cra_atomic_fetch_add(p, value, order)                                             \
-    __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO_WITHOUT_PTR, InterlockedExchangeAdd, p, value)
-// T fetch_sub(Atomic(T) *p, T value, CraMemoryOrder_e order)
-#define cra_atomic_fetch_sub(p, value, order) cra_atomic_fetch_add(p, -(value), order)
-// T fetch_or(Atomic(T) *p, T value, CraMemoryOrder_e order)
-#define cra_atomic_fetch_or(p, value, order) __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO_WITHOUT_PTR, InterlockedOr, p, value)
-// T fetch_and(Atomic(T) *p, T value, CraMemoryOrder_e order)
-#define cra_atomic_fetch_and(p, value, order)                                     \
-    __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO_WITHOUT_PTR, InterlockedAnd, p, value)
-// T fetch_xor(Atomic(T) *p, T value, CraMemoryOrder_e order)
-#define cra_atomic_fetch_xor(p, value, order)                                     \
-    __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO_WITHOUT_PTR, InterlockedXor, p, value)
+// exchange
+#define CRA_ATOMIC_XX(type, t, name, x)                                                                 \
+    static inline type cra_atomic_exchange##name(cra_atomic_##name *p, t value, CraMemoryOrder_e order) \
+    {                                                                                                   \
+        CRA_UNUSED(order);                                                                              \
+        return __CRA_INTERLOCKED_XX_FUNC(name, InterlockedExchange)(p, value);                          \
+    }
+__CRA_ATOMIC_DO(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
 
-// T exchange(Atomic(T) *p, T value, CraMemoryOrder_e order)
-#define cra_atomic_exchange(p, value, order) __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO, InterlockedExchange, p, value)
+// compare_exchange_weak
+#define CRA_ATOMIC_XX(type, t, name, x)                                                                           \
+    static inline bool cra_atomic_compare_exchange_weak##name(cra_atomic_##name *p, t *expected, t value,         \
+                                                              CraMemoryOrder_e success, CraMemoryOrder_e failure) \
+    {                                                                                                             \
+        CRA_UNUSED(success);                                                                                      \
+        CRA_UNUSED(failure);                                                                                      \
+        t old = (t)__CRA_INTERLOCKED_XX_FUNC(name, InterlockedCompareExchange)(p, value, *expected);              \
+        if (old != *expected)                                                                                     \
+        {                                                                                                         \
+            *expected = old;                                                                                      \
+            return false;                                                                                         \
+        }                                                                                                         \
+        return true;                                                                                              \
+    }
+__CRA_ATOMIC_DO(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
+// compare_exchange_strong
+#define CRA_ATOMIC_XX(type, t, name, x)                                                                             \
+    static inline bool cra_atomic_compare_exchange_strong##name(cra_atomic_##name *p, t *expected, t value,         \
+                                                                CraMemoryOrder_e success, CraMemoryOrder_e failure) \
+    {                                                                                                               \
+        CRA_UNUSED(success);                                                                                        \
+        CRA_UNUSED(failure);                                                                                        \
+        t old = (t)__CRA_INTERLOCKED_XX_FUNC(name, InterlockedCompareExchange)(p, value, *expected);                \
+        if (old != *expected)                                                                                       \
+        {                                                                                                           \
+            *expected = old;                                                                                        \
+            return false;                                                                                           \
+        }                                                                                                           \
+        return true;                                                                                                \
+    }
+__CRA_ATOMIC_DO(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
 
 // bool compare_exchange_weak(Atomic(T) *p, T *expected, T value, CraMemoryOrder_e success, CraMemoryOrder_e failure)
-#define cra_atomic_compare_exchange_weak(p, expected, value, success, failure)                 \
+#define cra_atomic_compare_exchange_weak(p, expected, value, success, failure)                \
     __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO, CraInterlockedCompareExchange, p, expected, value)
 // bool compare_exchange_strong(Atomic(T) *p, T *expected, T value, CraMemoryOrder_e success, CraMemoryOrder_e
 // failure)
 #define cra_atomic_compare_exchange_strong(p, expected, value, success, failure)              \
     __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO, CraInterlockedCompareExchange, p, expected, value)
 
-#define CRA_ATOMIC_XX(type, t, name, fname)                                                                          \
-    static inline bool CRA_CAT(__CRA_INTERLOCKED_XX_FUNC, name)(fname)(cra_atomic_##name * p, t * expected, t value) \
-    {                                                                                                                \
-        type old = CRA_CAT(__CRA_INTERLOCKED_XX_FUNC, name)(InterlockedCompareExchange)(p, value, *expected);        \
-        if (old != *expected)                                                                                        \
-        {                                                                                                            \
-            *expected = old;                                                                                         \
-            return false;                                                                                            \
-        }                                                                                                            \
-        return true;                                                                                                 \
-    }
+#define CRA_ATOMIC_XX(type, t, name, fname) \
+    static inline bool CRA_CAT(__CRA_INTERLOCKED_XX_FUNC, name)(fname)(cra_atomic_##name * p, t * expected, t value) {}
 __CRA_ATOMIC_DO(CRA_ATOMIC_XX, CraInterlockedCompareExchange)
 #undef CRA_ATOMIC_XX
 
 #elif defined(CRA_USE___SYNC)
 
-// bool flag_test_and_set(cra_atomic_flag_t *p, CraMemoryOrder_e order)
-#define cra_atomic_flag_test_and_set(p, order) __sync_lock_test_and_set(p, 1)
-// void flag_clear(cra_atomic_flag_t *p, CraMemoryOrder_e order)
-#define cra_atomic_flag_clear(p, order)        __sync_lock_release(p)
+static inline bool
+cra_atomic_flag_test_and_set(cra_atomic_flag_t *p, CraMemoryOrder_e order)
+{
+    CRA_UNUSED(order);
+    return __sync_lock_test_and_set(p, 1);
+}
+static inline void
+cra_atomic_flag_clear(cra_atomic_flag_t *p, CraMemoryOrder_e order)
+{
+    CRA_UNUSED(order);
+    __sync_lock_release(p);
+}
 
-#define __CRA_ATOMIC_XX_FUNC_DEF(type, name, fname) , cra_atomic_##name * : fname
-#define __CRA_ATOMIC_FUNC_DEF(DO, fname, p, ...)    _Generic((p)DO(__CRA_ATOMIC_XX_FUNC_DEF, fname))(p, __VA_ARGS__)
-
-// T load(Atomic(T) *p, CraMemoryOrder_e order)
-#define cra_atomic_load(p, order)                   __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO, __sync_fetch_and_or, p, 0)
-// void store(Atomic(T) *p, T value, CraMemoryOrder_e order)
-#define cra_atomic_store(p, value, order) __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO, __sync_lock_test_and_set, p, value)
-
-// T fetch_add(Atomic(T) *p, T value, CraMemoryOrder_e order)
-#define cra_atomic_fetch_add(p, value, order)                                           \
-    __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO_WITHOUT_PTR, __sync_fetch_and_add, p, value)
-// T fetch_sub(Atomic(T) *p, T value, CraMemoryOrder_e order)
-#define cra_atomic_fetch_sub(p, value, order)                                           \
-    __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO_WITHOUT_PTR, __sync_fetch_and_sub, p, value)
-// T fetch_or(Atomic(T) *p, T value, CraMemoryOrder_e order)
-#define cra_atomic_fetch_or(p, value, order)                                           \
-    __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO_WITHOUT_PTR, __sync_fetch_and_or, p, value)
-// T fetch_and(Atomic(T) *p, T value, CraMemoryOrder_e order)
-#define cra_atomic_fetch_and(p, value, order)                                           \
-    __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO_WITHOUT_PTR, __sync_fetch_and_and, p, value)
-// T fetch_xor(Atomic(T) *p, T value, CraMemoryOrder_e order)
-#define cra_atomic_fetch_xor(p, value, order)                                           \
-    __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO_WITHOUT_PTR, __sync_fetch_and_xor, p, value)
-
-// T exchange(Atomic(T) *p, T value, CraMemoryOrder_e order)
-#define cra_atomic_exchange(p, value, order) __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO, __sync_lock_test_and_set, p, value)
-
-// bool compare_exchange_weak(Atomic(T) *p, T *expected, T value, CraMemoryOrder_e success, CraMemoryOrder_e failure)
-#define cra_atomic_compare_exchange_weak(p, expected, value, success, failure)                  \
-    __CRA_ATOMIC_FUNC_DEF2(__CRA_ATOMIC_DO, cra_sync_val_compare_and_swap, p, expected, value)
-// bool compare_exchange_strong(Atomic(T) *p, T *expected, T value, CraMemoryOrder_e success, CraMemoryOrder_e
-// failure)
-#define cra_atomic_compare_exchange_strong(p, expected, value, success, failure)               \
-    __CRA_ATOMIC_FUNC_DEF2(__CRA_ATOMIC_DO, cra_sync_val_compare_and_swap, p, expected, value)
-
-#define __CRA_ATOMIC_XX_FUNC_DEF2(type, name, fname) , cra_atomic_##name * : _##fname##name
-#define __CRA_ATOMIC_FUNC_DEF2(DO, fname, p, ...)    _Generic((p)DO(__CRA_ATOMIC_XX_FUNC_DEF2, fname))(p, __VA_ARGS__)
-
-#define CRA_ATOMIC_XX(type, name, fname)                                                \
-    static inline bool _##fname##name(cra_atomic_##name *p, type *expected, type value) \
-    {                                                                                   \
-        type old = __sync_val_compare_and_swap(p, *expected, value);                    \
-        if (old != *expected)                                                           \
-        {                                                                               \
-            *expected = old;                                                            \
-            return false;                                                               \
-        }                                                                               \
-        return true;                                                                    \
+// load
+#define CRA_ATOMIC_XX(type, name, x)                                                       \
+    static inline type cra_atomic_load##name(cra_atomic_##name *p, CraMemoryOrder_e order) \
+    {                                                                                      \
+        CRA_UNUSED(order);                                                                 \
+        return __sync_fetch_and_or(p, 0);                                                  \
     }
-__CRA_ATOMIC_DO(CRA_ATOMIC_XX, cra_sync_val_compare_and_swap)
+__CRA_ATOMIC_DO(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
+// store
+#define CRA_ATOMIC_XX(type, name, x)                                                                    \
+    static inline void cra_atomic_store##name(cra_atomic_##name *p, type value, CraMemoryOrder_e order) \
+    {                                                                                                   \
+        CRA_UNUSED(order);                                                                              \
+        (void)__sync_lock_test_and_set(p, value);                                                       \
+    }
+__CRA_ATOMIC_DO(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
+
+// fetch_add
+#define CRA_ATOMIC_XX(type, name, x)                                                                        \
+    static inline type cra_atomic_fetch_add##name(cra_atomic_##name *p, type value, CraMemoryOrder_e order) \
+    {                                                                                                       \
+        CRA_UNUSED(order);                                                                                  \
+        return __sync_fetch_and_add(p, value);                                                              \
+    }
+__CRA_ATOMIC_DO_WITHOUT_PTR(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
+// fetch_sub
+#define CRA_ATOMIC_XX(type, name, x)                                                                        \
+    static inline type cra_atomic_fetch_sub##name(cra_atomic_##name *p, type value, CraMemoryOrder_e order) \
+    {                                                                                                       \
+        CRA_UNUSED(order);                                                                                  \
+        return __sync_fetch_and_sub(p, value);                                                              \
+    }
+__CRA_ATOMIC_DO_WITHOUT_PTR(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
+// fetch_or
+#define CRA_ATOMIC_XX(type, name, x)                                                                       \
+    static inline type cra_atomic_fetch_or##name(cra_atomic_##name *p, type value, CraMemoryOrder_e order) \
+    {                                                                                                      \
+        CRA_UNUSED(order);                                                                                 \
+        return __sync_fetch_and_or(p, value);                                                              \
+    }
+__CRA_ATOMIC_DO_WITHOUT_PTR(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
+// fetch_and
+#define CRA_ATOMIC_XX(type, name, x)                                                                        \
+    static inline type cra_atomic_fetch_and##name(cra_atomic_##name *p, type value, CraMemoryOrder_e order) \
+    {                                                                                                       \
+        CRA_UNUSED(order);                                                                                  \
+        return __sync_fetch_and_and(p, value);                                                              \
+    }
+__CRA_ATOMIC_DO_WITHOUT_PTR(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
+// fetch_xor
+#define CRA_ATOMIC_XX(type, name, x)                                                                        \
+    static inline type cra_atomic_fetch_xor##name(cra_atomic_##name *p, type value, CraMemoryOrder_e order) \
+    {                                                                                                       \
+        CRA_UNUSED(order);                                                                                  \
+        return __sync_fetch_and_xor(p, value);                                                              \
+    }
+__CRA_ATOMIC_DO_WITHOUT_PTR(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
+
+// exchange
+#define CRA_ATOMIC_XX(type, name, x)                                                                       \
+    static inline type cra_atomic_exchange##name(cra_atomic_##name *p, type value, CraMemoryOrder_e order) \
+    {                                                                                                      \
+        CRA_UNUSED(order);                                                                                 \
+        return __sync_lock_test_and_set(p, value);                                                         \
+    }
+__CRA_ATOMIC_DO(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
+
+// compare_exchange_weak
+#define CRA_ATOMIC_XX(type, name, x)                                                                              \
+    static inline bool cra_atomic_compare_exchange_weak##name(cra_atomic_##name *p, type *expected, type value,   \
+                                                              CraMemoryOrder_e success, CraMemoryOrder_e failure) \
+    {                                                                                                             \
+        CRA_UNUSED(success);                                                                                      \
+        CRA_UNUSED(failure);                                                                                      \
+        type old = __sync_val_compare_and_swap(p, *expected, value);                                              \
+        if (old != *expected)                                                                                     \
+        {                                                                                                         \
+            *expected = old;                                                                                      \
+            return false;                                                                                         \
+        }                                                                                                         \
+        return true;                                                                                              \
+    }
+__CRA_ATOMIC_DO(CRA_ATOMIC_XX, )
+#undef CRA_ATOMIC_XX
+// compare_exchange_strong
+#define CRA_ATOMIC_XX(type, name, x)                                                                                \
+    static inline bool cra_atomic_compare_exchange_strong##name(cra_atomic_##name *p, type *expected, type value,   \
+                                                                CraMemoryOrder_e success, CraMemoryOrder_e failure) \
+    {                                                                                                               \
+        CRA_UNUSED(success);                                                                                        \
+        CRA_UNUSED(failure);                                                                                        \
+        type old = __sync_val_compare_and_swap(p, *expected, value);                                                \
+        if (old != *expected)                                                                                       \
+        {                                                                                                           \
+            *expected = old;                                                                                        \
+            return false;                                                                                           \
+        }                                                                                                           \
+        return true;                                                                                                \
+    }
+__CRA_ATOMIC_DO(CRA_ATOMIC_XX, )
 #undef CRA_ATOMIC_XX
 
 #endif
+
+#define __CRA_ATOMIC_XX_FUNC_DEF(type, name, fname) , cra_atomic_##name * : cra_atomic_##fname##name
+#define __CRA_ATOMIC_FUNC_DEF(DO, fname, p, ...)    _Generic((p)DO(__CRA_ATOMIC_XX_FUNC_DEF, fname))(p, __VA_ARGS__)
+
+// T load(Atomic(T) *p, CraMemoryOrder_e order)
+#define cra_atomic_load(p, order)         __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO, load, p, order)
+// void store(Atomic(T) *p, T value, CraMemoryOrder_e order)
+#define cra_atomic_store(p, value, order) __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO, store, p, value, order)
+
+// T fetch_add(Atomic(T) *p, T value, CraMemoryOrder_e order)
+#define cra_atomic_fetch_add(p, value, order)                                      \
+    __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO_WITHOUT_PTR, fetch_add, p, value, order)
+// T fetch_sub(Atomic(T) *p, T value, CraMemoryOrder_e order)
+#define cra_atomic_fetch_sub(p, value, order)                                      \
+    __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO_WITHOUT_PTR, fetch_sub, p, value, order)
+// T fetch_or(Atomic(T) *p, T value, CraMemoryOrder_e order)
+#define cra_atomic_fetch_or(p, value, order)                                      \
+    __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO_WITHOUT_PTR, fetch_or, p, value, order)
+// T fetch_and(Atomic(T) *p, T value, CraMemoryOrder_e order)
+#define cra_atomic_fetch_and(p, value, order)                                      \
+    __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO_WITHOUT_PTR, fetch_and, p, value, order)
+// T fetch_xor(Atomic(T) *p, T value, CraMemoryOrder_e order)
+#define cra_atomic_fetch_xor(p, value, order)                                      \
+    __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO_WITHOUT_PTR, fetch_xor, p, value, order)
+
+// T exchange(Atomic(T) *p, T value, CraMemoryOrder_e order)
+#define cra_atomic_exchange(p, value, order) __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO, exchange, p, value, order)
+
+// bool compare_exchange_weak(Atomic(T) *p, T *expected, T value, CraMemoryOrder_e success, CraMemoryOrder_e failure)
+#define cra_atomic_compare_exchange_weak(p, expected, value, success, failure)                          \
+    __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO, compare_exchange_weak, p, expected, value, success, failure)
+// bool compare_exchange_strong(Atomic(T) *p, T *expected, T value, CraMemoryOrder_e success, CraMemoryOrder_e
+// failure)
+#define cra_atomic_compare_exchange_strong(p, expected, value, success, failure)                          \
+    __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO, compare_exchange_strong, p, expected, value, success, failure)
 
 #endif
