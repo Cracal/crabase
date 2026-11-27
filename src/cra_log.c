@@ -66,11 +66,11 @@ struct CraLogger
 };
 static_assert(offsetof(CraLogger, level) == 0, "level must be first member");
 
-#define cra_log_ref(logger) cra_atomic_inc(&(logger)->refcnt, CRA_MO_RELAXED)
+#define cra_log_ref(logger) cra_atomic_fetch_add(&(logger)->refcnt, 1, cra_memory_order_relaxed)
 static inline void
 cra_log_unref(CraLogger *logger)
 {
-    if (cra_atomic_dec(&logger->refcnt, CRA_MO_ACQ_REL) == 1)
+    if (cra_atomic_fetch_sub(&logger->refcnt, 1, cra_memory_order_acq_rel) == 1)
     {
         assert(!logger->active);
         assert(logger->buffer == NULL);
@@ -86,8 +86,9 @@ cra_log_unref(CraLogger *logger)
 
 static CraLogOutputAsync s_log_async = { .initialized_lock = CRA_ATOMIC_FLAG_INIT };
 
-#define cra_async_initialized_lock() while (cra_atomic_flag_test_and_set(&s_log_async.initialized_lock, CRA_MO_ACQUIRE))
-#define cra_async_initialized_unlock() cra_atomic_flag_clear(&s_log_async.initialized_lock, CRA_MO_RELEASE)
+#define cra_async_initialized_lock()                                                              \
+    while (cra_atomic_flag_test_and_set(&s_log_async.initialized_lock, cra_memory_order_acquire))
+#define cra_async_initialized_unlock() cra_atomic_flag_clear(&s_log_async.initialized_lock, cra_memory_order_release)
 
 static CraLogBuf *
 cra_log_output_async_get_buf(void)

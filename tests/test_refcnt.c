@@ -535,7 +535,7 @@ static void
 ref_multi_check(void *pi)
 {
     CRA_UNUSED(pi);
-    cra_atomic_inc(&ref_multi_num, CRA_MO_RELAXED);
+    cra_atomic_fetch_add(&ref_multi_num, 1, cra_memory_order_relaxed);
 }
 
 static void
@@ -585,7 +585,7 @@ static void
 weak_ref_multi_check(void *pi)
 {
     CRA_UNUSED(pi);
-    cra_atomic_inc(&weak_ref_multi_num, CRA_MO_RELAXED);
+    cra_atomic_fetch_add(&weak_ref_multi_num, 1, cra_memory_order_relaxed);
 }
 
 static void
@@ -595,11 +595,11 @@ weak_ref_multi_task_func(void *arg)
 
     if (cra_weak_ref_acquire(ref) == NULL)
     {
-        cra_atomic_inc(&weak_ref_multi_acquire_fail_num, CRA_MO_RELAXED);
+        cra_atomic_fetch_add(&weak_ref_multi_acquire_fail_num, 1, cra_memory_order_relaxed);
     }
     else
     {
-        cra_atomic_inc(&weak_ref_multi_acquire_success_num, CRA_MO_RELAXED);
+        cra_atomic_fetch_add(&weak_ref_multi_acquire_success_num, 1, cra_memory_order_relaxed);
 
         // cra_msleep(20);
 

@@ -82,8 +82,8 @@ struct CraMallocCB
 
 static CraMallocData s_mdata = { 0 };
 
-#define CRA_MALLOC_LOCK()   while (cra_atomic_flag_test_and_set(&s_mdata.mem_lock, CRA_MO_ACQUIRE))
-#define CRA_MALLOC_UNLOCK() cra_atomic_flag_clear(&s_mdata.mem_lock, CRA_MO_RELEASE)
+#define CRA_MALLOC_LOCK()   while (cra_atomic_flag_test_and_set(&s_mdata.mem_lock, cra_memory_order_acquire))
+#define CRA_MALLOC_UNLOCK() cra_atomic_flag_clear(&s_mdata.mem_lock, cra_memory_order_release)
 
 static inline void
 __cra_malloc_set_block(CraMallocCB *node, size_t size, char *file, int line)
@@ -105,8 +105,8 @@ __cra_malloc_dbg(size_t size, char *file, int line)
     if (node != NULL)
     {
         __cra_malloc_set_block(node, size, file, line);
-        cra_atomic_inc(&s_mdata.nalloc, CRA_MO_RELAXED);
-        cra_atomic_add(&s_mdata.alloc_bytes, size, CRA_MO_RELAXED);
+        cra_atomic_fetch_add(&s_mdata.nalloc, 1, cra_memory_order_relaxed);
+        cra_atomic_fetch_add(&s_mdata.alloc_bytes, size, cra_memory_order_relaxed);
         return node->block;
     }
     return NULL;
@@ -160,7 +160,7 @@ __cra_realloc_dbg(void *ptr, size_t newsize, char *file, int line)
 
     CRA_MALLOC_UNLOCK();
 
-    cra_atomic_add(&s_mdata.alloc_bytes, diff, CRA_MO_RELAXED);
+    cra_atomic_fetch_add(&s_mdata.alloc_bytes, diff, cra_memory_order_relaxed);
 
     return ret;
 }
@@ -188,8 +188,8 @@ __cra_free_dbg(void *ptr)
 
             CRA_MALLOC_UNLOCK();
 
-            cra_atomic_inc(&s_mdata.nfree, CRA_MO_RELAXED);
-            cra_atomic_add(&s_mdata.free_bytes, size, CRA_MO_RELAXED);
+            cra_atomic_fetch_add(&s_mdata.nfree, 1, cra_memory_order_relaxed);
+            cra_atomic_fetch_add(&s_mdata.free_bytes, size, cra_memory_order_relaxed);
             return;
         }
         last = curr;

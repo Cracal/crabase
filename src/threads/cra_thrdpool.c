@@ -61,7 +61,7 @@ static CRA_THRD_FUNC(cra_thrdpool_worker)
         if ((cra_blockdq_pop_front)(pool->taskque, &task))
         {
             assert(task.excute0);
-            cra_atomic_dec(&pool->idlecnt, CRA_MO_RELAXED);
+            cra_atomic_fetch_sub(&pool->idlecnt, 1, cra_memory_order_relaxed);
             switch (task.count)
             {
                 case 0:
@@ -81,7 +81,7 @@ static CRA_THRD_FUNC(cra_thrdpool_worker)
                     abort();
                     break;
             }
-            cra_atomic_inc(&pool->idlecnt, CRA_MO_RELAXED);
+            cra_atomic_fetch_add(&pool->idlecnt, 1, cra_memory_order_relaxed);
         }
         else
         {

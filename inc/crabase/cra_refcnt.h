@@ -42,14 +42,14 @@ cra_ref_head_init(CraRefHead *head)
 static inline void
 cra_ref_head_ref(CraRefHead *head)
 {
-    cra_atomic_inc(&head->cnt, CRA_MO_RELAXED);
+    cra_atomic_fetch_add(&head->cnt, 1, cra_memory_order_relaxed);
 }
 
 // reference count -1
 static inline bool
 cra_ref_head_unref(CraRefHead *head)
 {
-    if (cra_atomic_dec(&head->cnt, CRA_MO_ACQ_REL) == 1)
+    if (cra_atomic_fetch_sub(&head->cnt, 1, cra_memory_order_acq_rel) == 1)
         return true;
     return false;
 }
@@ -70,14 +70,14 @@ cra_weak_ref_head_init(CraWeakRefHead *head)
 static inline void
 cra_weak_ref_head_ref(CraWeakRefHead *head)
 {
-    cra_atomic_inc(&head->weak_cnt, CRA_MO_RELAXED);
+    cra_atomic_fetch_add(&head->weak_cnt, 1, cra_memory_order_relaxed);
 }
 
 // weak reference count -1
 static inline bool
 cra_weak_ref_head_unref(CraWeakRefHead *head)
 {
-    if (cra_atomic_dec(&head->weak_cnt, CRA_MO_ACQ_REL) == 1)
+    if (cra_atomic_fetch_sub(&head->weak_cnt, 1, cra_memory_order_acq_rel) == 1)
         return true;
     return false;
 }
@@ -86,13 +86,16 @@ cra_weak_ref_head_unref(CraWeakRefHead *head)
 static inline bool
 cra_weak_ref_head_acquire(CraWeakRefHead *head)
 {
-    int32_t old = cra_atomic_load(&head->cnt, CRA_MO_RELAXED);
+    int32_t old = cra_atomic_load(&head->cnt, cra_memory_order_relaxed);
 
     while (old > 0)
     {
         // try +1
-        if (cra_atomic_cas_weak(&head->cnt, &old, old + 1, CRA_MO_ACQUIRE, CRA_MO_RELAXED))
+        if (cra_atomic_compare_exchange_weak(&head->cnt, &old, old + 1, cra_memory_order_acquire,
+                                             cra_memory_order_relaxed))
+        {
             return true;
+        }
 
         // CAS failed, try again
     }
@@ -105,7 +108,7 @@ cra_weak_ref_head_acquire(CraWeakRefHead *head)
 static inline bool
 cra_weak_ref_head_release(CraWeakRefHead *head)
 {
-    if (cra_atomic_dec(&head->cnt, CRA_MO_ACQ_REL) == 1)
+    if (cra_atomic_fetch_sub(&head->cnt, 1, cra_memory_order_acq_rel) == 1)
         return true;
     return false;
 }

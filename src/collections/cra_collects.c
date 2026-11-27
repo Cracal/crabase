@@ -22,8 +22,8 @@
 #endif
 
 static cra_atomic_flag_t s_hash_lock = CRA_ATOMIC_FLAG_INIT;
-#define LOCK()   while (cra_atomic_flag_test_and_set(&s_hash_lock, CRA_MO_ACQUIRE))
-#define UNLOCK() cra_atomic_flag_clear(&s_hash_lock, CRA_MO_RELEASE)
+#define LOCK()   while (cra_atomic_flag_test_and_set(&s_hash_lock, cra_memory_order_acquire))
+#define UNLOCK() cra_atomic_flag_clear(&s_hash_lock, cra_memory_order_release)
 
 static cra_hash_t
 cra_get_init_hash(void)
