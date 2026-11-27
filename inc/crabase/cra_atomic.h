@@ -23,7 +23,7 @@
 // __atomic
 #define CRA_USE___ATOMIC
 
-#elif defined(CRA_COMPILER_MSVC)
+#elif defined(CRA_COMPILER_MSVC) || defined(CRA_COMPILER_CLANG_CL)
 
 // Interlocked
 #define CRA_USE_INTERLOCKED
@@ -359,11 +359,11 @@ cra_atomic_flag_clear(cra_atomic_flag_t *p, CraMemoryOrder_e order)
 #define __CRA_INTERLOCKED_XX_FUNC(name, fname)  CRA_CAT(__CRA_INTERLOCKED_XX_FUNC, name)(fname)
 
 // load
-#define CRA_ATOMIC_XX(type, t, name, x)                                                    \
-    static inline type cra_atomic_load##name(cra_atomic_##name *p, CraMemoryOrder_e order) \
-    {                                                                                      \
-        CRA_UNUSED(order);                                                                 \
-        return __CRA_INTERLOCKED_XX_FUNC(name, InterlockedCompareExchange)(p, 0, 0);       \
+#define CRA_ATOMIC_XX(type, t, name, x)                                                 \
+    static inline t cra_atomic_load##name(cra_atomic_##name *p, CraMemoryOrder_e order) \
+    {                                                                                   \
+        CRA_UNUSED(order);                                                              \
+        return __CRA_INTERLOCKED_XX_FUNC(name, InterlockedCompareExchange)(p, 0, 0);    \
     }
 __CRA_ATOMIC_DO(CRA_ATOMIC_XX, )
 #undef CRA_ATOMIC_XX
@@ -466,19 +466,6 @@ __CRA_ATOMIC_DO(CRA_ATOMIC_XX, )
         return true;                                                                                                \
     }
 __CRA_ATOMIC_DO(CRA_ATOMIC_XX, )
-#undef CRA_ATOMIC_XX
-
-// bool compare_exchange_weak(Atomic(T) *p, T *expected, T value, CraMemoryOrder_e success, CraMemoryOrder_e failure)
-#define cra_atomic_compare_exchange_weak(p, expected, value, success, failure)                \
-    __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO, CraInterlockedCompareExchange, p, expected, value)
-// bool compare_exchange_strong(Atomic(T) *p, T *expected, T value, CraMemoryOrder_e success, CraMemoryOrder_e
-// failure)
-#define cra_atomic_compare_exchange_strong(p, expected, value, success, failure)              \
-    __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO, CraInterlockedCompareExchange, p, expected, value)
-
-#define CRA_ATOMIC_XX(type, t, name, fname) \
-    static inline bool CRA_CAT(__CRA_INTERLOCKED_XX_FUNC, name)(fname)(cra_atomic_##name * p, t * expected, t value) {}
-__CRA_ATOMIC_DO(CRA_ATOMIC_XX, CraInterlockedCompareExchange)
 #undef CRA_ATOMIC_XX
 
 #elif defined(CRA_USE___SYNC)
@@ -608,8 +595,12 @@ __CRA_ATOMIC_DO(CRA_ATOMIC_XX, )
 
 #endif
 
+#ifdef CRA_USE_INTERLOCKED
+#define __CRA_ATOMIC_XX_FUNC_DEF(type, t, name, fname) , cra_atomic_##name * : cra_atomic_##fname##name
+#else
 #define __CRA_ATOMIC_XX_FUNC_DEF(type, name, fname) , cra_atomic_##name * : cra_atomic_##fname##name
-#define __CRA_ATOMIC_FUNC_DEF(DO, fname, p, ...)    _Generic((p)DO(__CRA_ATOMIC_XX_FUNC_DEF, fname))(p, __VA_ARGS__)
+#endif
+#define __CRA_ATOMIC_FUNC_DEF(DO, fname, p, ...) _Generic((p)DO(__CRA_ATOMIC_XX_FUNC_DEF, fname))(p, __VA_ARGS__)
 
 // T load(Atomic(T) *p, CraMemoryOrder_e order)
 #define cra_atomic_load(p, order)         __CRA_ATOMIC_FUNC_DEF(__CRA_ATOMIC_DO, load, p, order)

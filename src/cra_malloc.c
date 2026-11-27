@@ -222,6 +222,9 @@ __cra_memory_leak_report(void)
     }
     CRA_MALLOC_UNLOCK();
 
-    printf("%" PRId32 " allocs, %" PRId32 " frees\n", s_mdata.nalloc, s_mdata.nfree);
-    printf("%" PRId64 " bytes allocated, %" PRId64 " bytes freed\n\n", s_mdata.alloc_bytes, s_mdata.free_bytes);
+    printf("%" PRId32 " allocs, %" PRId32 " frees\n", cra_atomic_load(&s_mdata.nalloc, cra_memory_order_relaxed),
+           cra_atomic_load(&s_mdata.nfree, cra_memory_order_relaxed));
+    printf("%" PRId64 " bytes allocated, %" PRId64 " bytes freed\n\n",
+           cra_atomic_load(&s_mdata.alloc_bytes, cra_memory_order_relaxed),
+           cra_atomic_load(&s_mdata.free_bytes, cra_memory_order_relaxed));
 }

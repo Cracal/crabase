@@ -569,8 +569,8 @@ test_ref_multi(void)
 
     cra_thrdpool_uninit(&pool, true);
 
-    printf("ref_multi_num = %d\n", ref_multi_num);
-    assert_always(ref_multi_num == 1);
+    printf("ref_multi_num = %" PRId32 "\n", cra_atomic_load(&ref_multi_num, cra_memory_order_relaxed));
+    assert_always(cra_atomic_load(&ref_multi_num, cra_memory_order_relaxed) == 1);
 }
 
 #endif // end ref(multi threads)
@@ -630,11 +630,13 @@ test_weak_ref_multi(void)
 
     cra_thrdpool_uninit(&pool, true);
 
-    printf("weak_ref_multi_num = %d\n"
-           "weak_ref_multi_acquire_fail_num = %d\n"
-           "weak_ref_multi_acquire_success_num = %d\n",
-           weak_ref_multi_num, weak_ref_multi_acquire_fail_num, weak_ref_multi_acquire_success_num);
-    assert_always(weak_ref_multi_num == 1);
+    printf("weak_ref_multi_num = %" PRId32 "\n"
+           "weak_ref_multi_acquire_fail_num = %" PRId32 "\n"
+           "weak_ref_multi_acquire_success_num = %" PRId32 "\n",
+           cra_atomic_load(&weak_ref_multi_num, cra_memory_order_relaxed),
+           cra_atomic_load(&weak_ref_multi_acquire_fail_num, cra_memory_order_relaxed),
+           cra_atomic_load(&weak_ref_multi_acquire_success_num, cra_memory_order_relaxed));
+    assert_always(cra_atomic_load(&weak_ref_multi_num, cra_memory_order_relaxed) == 1);
 }
 
 #endif // end weak ref(multi threads)
